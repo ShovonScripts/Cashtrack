@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from 'expo-rout
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { LoadingScreen } from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
@@ -11,14 +12,13 @@ import { DebtProvider } from '@/context/debt-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
-import { getInitials } from '@/utils/expense';
 
 SplashScreen.preventAutoHideAsync();
 
 /** Holds the navigator back until the saved expenses have been read. */
 function Navigation() {
   const theme = useTheme();
-  const { isLoading, profile } = useExpenses();
+  const { isLoading } = useExpenses();
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -71,9 +71,7 @@ function Navigation() {
         { backgroundColor: theme.accentMuted },
         pressed && styles.profileButtonPressed,
       ]}>
-      <ThemedText type="smallBold" style={{ color: theme.accent }}>
-        {getInitials(profile.name)}
-      </ThemedText>
+      <MaterialCommunityIcons name="cog-outline" size={20} color={theme.accent} />
     </Pressable>
   );
 
@@ -98,7 +96,7 @@ function Navigation() {
       <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
       <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
       <Stack.Screen name="reports" options={{ title: 'Monthly reports' }} />
-      <Stack.Screen name="about" options={{ title: 'About Spendly' }} />
+      <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
       <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
       <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
       <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />

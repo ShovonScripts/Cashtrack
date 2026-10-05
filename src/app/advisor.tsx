@@ -4,18 +4,24 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Radius, Spacing } from '@/constants/theme';
+import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
+import { useIncome } from '@/context/income-context';
 import { useTheme } from '@/hooks/use-theme';
-import { getBudgetInsights, getCategoryMonthlySpend, type BudgetInsight } from '@/utils/advisor';
+import { getBudgetInsights, getCategoryMonthlySpend, getSmartFinancialIntelligence, type BudgetInsight } from '@/utils/advisor';
+import { calculateMonthlyCashFlow } from '@/utils/income';
 import { sumAmounts } from '@/utils/expense';
 
 export default function AdvisorScreen() {
   const theme = useTheme();
   const { expenses, categoryLimits, categories, formatAmount } = useExpenses();
+  const { incomeList } = useIncome();
   const now = new Date();
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
   const insights = getBudgetInsights(expenses, categoryLimits, now);
+  const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
+  const intelligence = getSmartFinancialIntelligence({ expenses, totalIncome: cashFlow.moneyIn, month: now });
+
   const monthTotal = sumAmounts(expenses.filter((expense) => {
     const date = new Date(expense.date);
     return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
@@ -35,6 +41,35 @@ export default function AdvisorScreen() {
           <ThemedText type="subtitle" style={styles.title}>Spending advisor</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">{monthLabel} · based on the expenses and limits you set</ThemedText>
         </View>
+
+        {/* Smart Financial Intelligence Card */}
+        <Card style={styles.intelligenceCard}>
+          <View style={styles.intelligenceHeader}>
+            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>💡 Smart Financial Intelligence</ThemedText>
+            <View style={[styles.statusBadge, { backgroundColor: intelligence.financialHealthStatus === 'Excellent' ? 'rgba(39, 174, 96, 0.25)' : intelligence.financialHealthStatus === 'Overspending' ? 'rgba(235, 87, 87, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
+              <ThemedText type="caption" style={{ color: intelligence.financialHealthStatus === 'Excellent' ? '#2ecc71' : intelligence.financialHealthStatus === 'Overspending' ? '#ff6b6b' : '#FFFFFF', fontWeight: '700' }}>
+                {intelligence.financialHealthStatus}
+              </ThemedText>
+            </View>
+          </View>
+          <ThemedText type="small" style={styles.intelligenceTip}>
+            {intelligence.smartTip}
+          </ThemedText>
+          <View style={styles.intelligenceMetrics}>
+            <View style={styles.intelMetric}>
+              <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Projected Total</ThemedText>
+              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>{formatAmount(intelligence.projectedMonthSpend)}</ThemedText>
+            </View>
+            <View style={styles.intelMetric}>
+              <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Daily Burn Rate</ThemedText>
+              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>{formatAmount(intelligence.dailyBurnRate)} / day</ThemedText>
+            </View>
+            <View style={styles.intelMetric}>
+              <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Savings Rate</ThemedText>
+              <ThemedText type="smallBold" style={{ color: intelligence.savingsRate >= 0 ? '#2ecc71' : '#ff6b6b' }}>{intelligence.savingsRate}%</ThemedText>
+            </View>
+          </View>
+        </Card>
 
         <Card style={{ ...styles.summaryCard, backgroundColor: insights.some((item) => item.level === 'over') ? 'rgba(200,37,44,0.09)' : theme.accentMuted }}>
           <ThemedText type="caption" themeColor="textSecondary">SPENT THIS MONTH</ThemedText>
@@ -163,6 +198,36 @@ const styles = StyleSheet.create({
   intro: { gap: Spacing.one },
   eyebrow: { letterSpacing: 1.1, fontWeight: '700' },
   title: { fontSize: 30, lineHeight: 36 },
+  intelligenceCard: {
+    gap: Spacing.two,
+    backgroundColor: Brand.deep,
+    borderWidth: 0,
+  },
+  intelligenceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+  },
+  intelligenceTip: {
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 20,
+  },
+  intelligenceMetrics: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.15)',
+    paddingTop: Spacing.two,
+  },
+  intelMetric: {
+    flex: 1,
+    gap: 2,
+  },
   summaryCard: { gap: Spacing.one, borderWidth: 0 },
   summaryValue: { fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'] },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.one },

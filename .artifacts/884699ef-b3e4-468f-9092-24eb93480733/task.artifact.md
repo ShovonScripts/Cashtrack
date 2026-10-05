@@ -1,0 +1,3 @@
+- [ ] Add `"type": "module"` to package.json
+- [ ] Add unit tests for storage / preference validation in `tests/storage.test.ts`
+- [ ] Run test suite, typecheck, lint, and web export verification

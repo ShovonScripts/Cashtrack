@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
@@ -10,10 +11,10 @@ import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import type { GenderOption, UserProfile } from '@/types/preferences';
 
-const GENDER_CHOICES: { label: string; value: GenderOption }[] = [
-  { label: 'Woman', value: 'woman' },
-  { label: 'Man', value: 'man' },
-  { label: 'Prefer not to say', value: '' },
+const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
+  { label: 'Woman', value: 'woman', icon: 'human-female' },
+  { label: 'Man', value: 'man', icon: 'human-male' },
+  { label: 'Other', value: '', icon: 'account-outline' },
 ];
 
 export default function ProfileScreen() {
@@ -50,20 +51,20 @@ export default function ProfileScreen() {
         </View>
 
         <Card style={styles.formCard}>
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Name</ThemedText>
-            <TextInput
-              value={name}
-              onChangeText={(value) => { setName(value.slice(0, 50)); setSaved(false); }}
-              placeholder="What should we call you?"
-              placeholderTextColor={theme.textSecondary}
-              autoCapitalize="words"
-              accessibilityLabel="Your name"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
-
           <View style={styles.rowFields}>
+            <View style={[styles.field, styles.nameField]}>
+              <ThemedText type="smallBold">Name</ThemedText>
+              <TextInput
+                value={name}
+                onChangeText={(value) => { setName(value.slice(0, 50)); setSaved(false); }}
+                placeholder="What should we call you?"
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="words"
+                accessibilityLabel="Your name"
+                style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+              />
+            </View>
+
             <View style={[styles.field, styles.ageField]}>
               <ThemedText type="smallBold">Age <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
               <TextInput
@@ -76,30 +77,36 @@ export default function ProfileScreen() {
                 style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
               />
             </View>
+          </View>
 
-            <View style={[styles.field, styles.genderField]}>
-              <ThemedText type="smallBold">Gender <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
-              <View style={styles.choiceGrid}>
-                {GENDER_CHOICES.map((choice) => {
-                  const selected = gender === choice.value;
-                  return (
-                    <Pressable
-                      key={choice.value}
-                      onPress={() => { setGender(selected ? '' : choice.value); setSaved(false); }}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.choice,
-                        {
-                          borderColor: selected ? theme.accent : theme.border,
-                          backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
-                        },
-                      ]}>
-                      <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>{choice.label}</ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
+          <View style={styles.field}>
+            <ThemedText type="smallBold">Gender <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
+            <View style={styles.choiceGrid}>
+              {GENDER_CHOICES.map((choice) => {
+                const selected = gender === choice.value;
+                return (
+                  <Pressable
+                    key={choice.value}
+                    onPress={() => { setGender(selected ? '' : choice.value); setSaved(false); }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={choice.label}
+                    style={[
+                      styles.choice,
+                      {
+                        borderColor: selected ? theme.accent : theme.border,
+                        backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
+                      },
+                    ]}>
+                    <MaterialCommunityIcons
+                      name={choice.icon}
+                      size={18}
+                      color={selected ? theme.text : theme.textSecondary}
+                    />
+                    <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>{choice.label}</ThemedText>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
           {!ageIsValid && (
@@ -174,15 +181,15 @@ const styles = StyleSheet.create({
   container: { width: '100%', maxWidth: 700, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
   title: { fontSize: 30, lineHeight: 36 },
-  formCard: { gap: Spacing.three },
-  field: { gap: Spacing.one },
-  rowFields: { flexDirection: 'row', gap: Spacing.three },
-  ageField: { width: 110 },
-  genderField: { flex: 1 },
-  input: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 16 },
-  choiceGrid: { gap: Spacing.one },
-  choice: { minHeight: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, justifyContent: 'center' },
-  saveButton: { minHeight: 48, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
+  formCard: { gap: Spacing.two, padding: Spacing.three },
+  field: { gap: 4 },
+  rowFields: { flexDirection: 'row', gap: Spacing.two },
+  nameField: { flex: 1 },
+  ageField: { width: 88 },
+  input: { minHeight: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 15 },
+  choiceGrid: { flexDirection: 'row', gap: Spacing.two },
+  choice: { flex: 1, minHeight: 38, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
+  saveButton: { minHeight: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.half },
   saveText: { color: '#FFFFFF' },
   sectionHeading: { gap: Spacing.one, marginTop: Spacing.one },
   linkRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },

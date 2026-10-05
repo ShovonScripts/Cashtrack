@@ -1,5 +1,7 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 import { Card, CardDivider } from '@/components/card';
 import { CategoryBreakdown } from '@/components/category-breakdown';
@@ -53,31 +55,51 @@ function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]
   const days = getWeekSpending(expenses, today);
   const maxAmount = Math.max(...days.map((day) => day.amount), 1);
   const weeklyTotal = days.reduce((total, day) => total + day.amount, 0);
+  const dailyAvg = Math.round(weeklyTotal / 7);
+
+  const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
+  const selectedDay = selectedDayIndex !== null ? days[selectedDayIndex] : null;
 
   return (
     <Card style={styles.weekCard}>
       <View style={styles.sectionTitleRow}>
         <View style={styles.sectionTitleCopy}>
-          <ThemedText type="defaultBold">This week</ThemedText>
+          <ThemedText type="defaultBold">
+            {selectedDay ? new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(selectedDay.date) : 'This week'}
+          </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary">
-            Your spending, day by day
+            {selectedDay ? (selectedDay.amount > 0 ? `Spent ${formatAmount(selectedDay.amount)}` : 'No expenses recorded') : `Daily avg: ${formatAmount(dailyAvg)}`}
           </ThemedText>
         </View>
-        <ThemedText type="smallBold" style={{ color: theme.accent }}>
-          {formatAmount(weeklyTotal)}
-        </ThemedText>
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            setSelectedDayIndex(null);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Reset view to weekly total"
+          style={[styles.weekTotalBadge, { backgroundColor: theme.accentMuted }]}>
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>
+            {selectedDay ? formatAmount(selectedDay.amount) : formatAmount(weeklyTotal)}
+          </ThemedText>
+        </Pressable>
       </View>
 
       <View
         style={styles.chart}
         accessible
         accessibilityLabel={`Spending over the last seven days totals ${formatAmount(weeklyTotal)}`}>
-        {days.map((day) => {
+        {days.map((day, index) => {
           const isToday = day.date.toDateString() === today.toDateString();
+          const isSelected = selectedDayIndex === index;
           const barHeight = day.amount > 0 ? Math.max(8, (day.amount / maxAmount) * 74) : 5;
           return (
-            <View
+            <Pressable
               key={day.date.toISOString()}
+              onPress={() => {
+                triggerHaptic();
+                setSelectedDayIndex(isSelected ? null : index);
+              }}
               style={styles.chartColumn}
               accessible
               accessibilityLabel={`${new Intl.DateTimeFormat('en', { weekday: 'long' }).format(day.date)}: ${formatAmount(day.amount)}`}>
@@ -87,18 +109,20 @@ function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]
                     styles.bar,
                     {
                       height: barHeight,
-                      backgroundColor: isToday ? theme.accent : theme.accentMuted,
+                      backgroundColor: isSelected ? '#FFFFFF' : isToday ? theme.accent : theme.accentMuted,
+                      borderColor: isSelected ? theme.accent : 'transparent',
+                      borderWidth: isSelected ? 2 : 0,
                     },
                   ]}
                 />
               </View>
               <ThemedText
                 type="caption"
-                themeColor={isToday ? 'text' : 'textSecondary'}
-                style={isToday ? styles.todayLabel : undefined}>
+                themeColor={isSelected || isToday ? 'text' : 'textSecondary'}
+                style={isSelected || isToday ? styles.todayLabel : undefined}>
                 {day.label}
               </ThemedText>
-            </View>
+            </Pressable>
           );
         })}
       </View>
@@ -342,6 +366,14 @@ function InsightLine({ insight, formatAmount }: { insight: BudgetInsight; format
   );
 }
 
+function triggerHaptic() {
+  if (Platform.OS !== 'web') {
+    try {
+      void Haptics.selectionAsync();
+    } catch {}
+  }
+}
+
 export default function DashboardScreen() {
   const { expenses, profile, categoryLimits, formatAmount, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
   const { incomeList } = useIncome();
@@ -350,11 +382,28 @@ export default function DashboardScreen() {
   const monthSpend = totalForMonth(expenses, now);
   const todaySpend = totalForDate(expenses, now);
   const recent = sortByDateDesc(expenses).slice(0, RECENT_LIMIT);
-  const monthExpenseCount = expenses.filter((expense) => {
+
+  const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('All');
+  const availableCategories = ['All', ...new Set(expenses.map((e) => e.category))];
+  const filteredRecent = (selectedFilterCategory === 'All'
+    ? recent
+    : expenses.filter((e) => e.category === selectedFilterCategory)
+  ).slice(0, RECENT_LIMIT);
+
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonthSpend = totalForMonth(expenses, lastMonth);
+  const diffAmount = monthSpend - lastMonthSpend;
+  const diffPercent = lastMonthSpend > 0 ? Math.round((Math.abs(diffAmount) / lastMonthSpend) * 100) : 0;
+
+  const todayExpenseCount = expenses.filter((expense) => {
     const date = new Date(expense.date);
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+    return (
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear()
+    );
   }).length;
-  const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
+  const todayLabel = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'short' }).format(now);
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
 
   return (
@@ -377,21 +426,24 @@ export default function DashboardScreen() {
         <ThemedView type="card" style={styles.hero}>
           <View style={styles.heroContent}>
             <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>MONTHLY SPENDING</ThemedText>
+              <ThemedText type="caption" style={styles.heroLabel}>DAILY SPENDING</ThemedText>
               <View style={styles.monthPill}>
-                <ThemedText type="caption" style={styles.monthPillText}>{monthLabel}</ThemedText>
+                <ThemedText type="caption" style={styles.monthPillText}>{todayLabel}</ThemedText>
               </View>
             </View>
             <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(monthSpend)}
+              {formatAmount(todaySpend)}
             </ThemedText>
             <ThemedText type="small" style={styles.heroSubtext}>
-              {monthExpenseCount === 0
-                ? 'Your month starts here. Add your first expense.'
-                : `${monthExpenseCount} ${monthExpenseCount === 1 ? 'expense' : 'expenses'} recorded this month`}
+              {todayExpenseCount === 0
+                ? 'No expenses recorded today. Add your first.'
+                : `${todayExpenseCount} ${todayExpenseCount === 1 ? 'expense' : 'expenses'} recorded today`}
             </ThemedText>
             <Pressable
-              onPress={() => router.push('/add-expense')}
+              onPress={() => {
+                triggerHaptic();
+                router.push('/add-expense');
+              }}
               accessibilityRole="button"
               accessibilityLabel="Add an expense"
               style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
@@ -413,12 +465,21 @@ export default function DashboardScreen() {
 
         <View style={styles.summaryRow}>
           <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
-              <ThemedText type="smallBold" style={{ color: theme.accent }}>↗</ThemedText>
+            <View style={styles.metricHeaderRow}>
+              <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
+                <ThemedText type="smallBold" style={{ color: theme.accent }}>↓</ThemedText>
+              </View>
+              {lastMonthSpend > 0 && (
+                <View style={[styles.trendBadge, { backgroundColor: diffAmount <= 0 ? 'rgba(39, 174, 96, 0.15)' : 'rgba(235, 87, 87, 0.15)' }]}>
+                  <ThemedText type="caption" style={{ color: diffAmount <= 0 ? '#27AE60' : theme.danger, fontWeight: '700', fontSize: 10 }}>
+                    {diffAmount <= 0 ? `↓ ${diffPercent}%` : `↑ ${diffPercent}%`}
+                  </ThemedText>
+                </View>
+              )}
             </View>
-            <ThemedText type="caption" themeColor="textSecondary">SPENT TODAY</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">MONTHLY SPENDING</ThemedText>
             <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(todaySpend)}
+              {formatAmount(monthSpend)}
             </ThemedText>
           </Card>
           <Card style={styles.metricCard}>
@@ -446,7 +507,10 @@ export default function DashboardScreen() {
           {expenses.length > 0 && (
             <Pressable
               accessibilityRole="button"
-              onPress={() => router.push('/expenses')}
+              onPress={() => {
+                triggerHaptic();
+                router.push('/expenses');
+              }}
               hitSlop={10}
               style={({ pressed }) => [styles.seeAll, pressed && styles.pressed]}>
               <ThemedText type="smallBold" style={{ color: theme.accent }}>See all  →</ThemedText>
@@ -454,15 +518,42 @@ export default function DashboardScreen() {
           )}
         </View>
 
+        {expenses.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipScroll}>
+            {availableCategories.slice(0, 6).map((cat) => {
+              const selected = selectedFilterCategory === cat;
+              return (
+                <Pressable
+                  key={cat}
+                  onPress={() => {
+                    triggerHaptic();
+                    setSelectedFilterCategory(cat);
+                  }}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: selected ? theme.accent : theme.cardMuted,
+                      borderColor: selected ? theme.accent : theme.border,
+                    },
+                  ]}>
+                  <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontWeight: '700' }}>
+                    {cat}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        )}
+
         <Card padded={false}>
-          {recent.length === 0 ? (
+          {filteredRecent.length === 0 ? (
             <EmptyState
-              title="A fresh start"
-              message="Add your first expense and it will show up here."
+              title="No transactions"
+              message={selectedFilterCategory === 'All' ? "Add your first expense and it will show up here." : `No expenses found in "${selectedFilterCategory}".`}
               tone={theme.accent}
             />
           ) : (
-            recent.map((expense, index) => (
+            filteredRecent.map((expense, index) => (
               <View key={expense.id}>
                 {index > 0 && <CardDivider />}
                 <ExpenseListItem expense={expense} />
@@ -470,6 +561,22 @@ export default function DashboardScreen() {
             ))
           )}
         </Card>
+
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/about');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="About CashTrack and support"
+          style={({ pressed }) => [
+            styles.compactSupportCard,
+            { backgroundColor: theme.cardMuted, borderColor: theme.border },
+            pressed && styles.pressed,
+          ]}>
+          <ThemedText type="smallBold">♥  About CashTrack & Support</ThemedText>
+        </Pressable>
+
         <ThemedText type="caption" themeColor="textSecondary" style={styles.footer}>
           Small steps make a clearer picture.
         </ThemedText>
@@ -594,10 +701,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  metricHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  trendBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Radius.small,
+  },
   metricValue: {
     fontSize: 18,
     lineHeight: 24,
     fontVariant: ['tabular-nums'],
+  },
+  filterChipScroll: {
+    gap: Spacing.two,
+    paddingBottom: Spacing.half,
+  },
+  filterChip: {
+    height: 32,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   heroCard: {
     backgroundColor: Brand.deep,
@@ -671,8 +800,30 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: Spacing.two,
   },
+  compactSupportCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   weekCard: {
     gap: Spacing.three,
+  },
+  weekTotalBadge: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.half,
+    borderRadius: Radius.pill,
+  },
+  selectedDayBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.two,
+    borderRadius: Radius.medium,
+    marginTop: Spacing.one,
   },
   sectionTitleRow: {
     flexDirection: 'row',

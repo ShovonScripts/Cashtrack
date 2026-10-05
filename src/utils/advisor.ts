@@ -1,5 +1,5 @@
-import type { Expense } from '@/types/expense';
-import { sumAmounts } from '@/utils/expense';
+import type { Expense } from '../types/expense.ts';
+import { sumAmounts } from './expense.ts';
 
 export type BudgetNoticeLevel = 'over' | 'near' | 'pace';
 
@@ -11,6 +11,17 @@ export type BudgetInsight = {
   remaining: number;
   percentUsed: number;
   projectedSpend: number;
+};
+
+export type FinancialHealthStatus = 'Excellent' | 'Good' | 'Caution' | 'Overspending';
+
+export type FinancialIntelligence = {
+  projectedMonthSpend: number;
+  dailyBurnRate: number;
+  daysRemaining: number;
+  savingsRate: number;
+  financialHealthStatus: FinancialHealthStatus;
+  smartTip: string;
 };
 
 function isInMonth(isoDate: string, month: Date): boolean {
@@ -57,4 +68,60 @@ export function getMonthExpenses(expenses: Expense[], month: Date): Expense[] {
   return expenses
     .filter((expense) => isInMonth(expense.date, month))
     .sort((first, second) => new Date(second.date).getTime() - new Date(first.date).getTime());
+}
+
+export function getSmartFinancialIntelligence({
+  expenses,
+  totalIncome,
+  month = new Date(),
+}: {
+  expenses: Expense[];
+  totalIncome: number;
+  month?: Date;
+}): FinancialIntelligence {
+  const monthExpenses = getMonthExpenses(expenses, month);
+  const totalSpent = sumAmounts(monthExpenses);
+
+  const today = new Date();
+  const isCurrentMonth = month.getFullYear() === today.getFullYear() && month.getMonth() === today.getMonth();
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const daysElapsed = isCurrentMonth ? Math.max(1, today.getDate()) : daysInMonth;
+  const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
+
+  const dailyBurnRate = totalSpent / daysElapsed;
+  const projectedMonthSpend = isCurrentMonth ? totalSpent + (dailyBurnRate * daysRemaining) : totalSpent;
+
+  const netCashFlow = totalIncome - totalSpent;
+  const savingsRate = totalIncome > 0 ? Math.round((netCashFlow / totalIncome) * 100) : 0;
+
+  let healthStatus: FinancialHealthStatus = 'Good';
+  if (totalSpent > totalIncome && totalIncome > 0) {
+    healthStatus = 'Overspending';
+  } else if (savingsRate >= 30) {
+    healthStatus = 'Excellent';
+  } else if (savingsRate >= 10) {
+    healthStatus = 'Good';
+  } else {
+    healthStatus = 'Caution';
+  }
+
+  let smartTip = 'Keep tracking your daily expenses to maintain a balanced budget.';
+  if (healthStatus === 'Overspending') {
+    smartTip = 'You are currently spending more than your recorded income. Try reviewing discretionary categories.';
+  } else if (healthStatus === 'Excellent') {
+    smartTip = `Great job! You're saving ${savingsRate}% of your income. Consider allocating surplus to your financial pots.`;
+  } else if (projectedMonthSpend > totalIncome && totalIncome > 0) {
+    smartTip = `At your current daily burn rate (${Math.round(dailyBurnRate)}/day), your projected monthly spending exceeds your income.`;
+  } else {
+    smartTip = `You have ${daysRemaining} days left this month. You're averaging well against your limits.`;
+  }
+
+  return {
+    projectedMonthSpend,
+    dailyBurnRate,
+    daysRemaining,
+    savingsRate,
+    financialHealthStatus: healthStatus,
+    smartTip,
+  };
 }

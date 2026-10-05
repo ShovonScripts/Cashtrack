@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
@@ -11,6 +11,13 @@ import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import type { IncomeRecord } from '@/types/income';
+import type { RecurringFrequency } from '@/types/expense';
+
+const FREQUENCIES: { label: string; value: RecurringFrequency }[] = [
+  { label: 'Monthly', value: 'monthly' },
+  { label: 'Weekly', value: 'weekly' },
+  { label: 'Yearly', value: 'yearly' },
+];
 
 export default function IncomeScreen() {
   const theme = useTheme();
@@ -19,6 +26,8 @@ export default function IncomeScreen() {
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringFrequency, setRecurringFrequency] = useState<RecurringFrequency>('monthly');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -37,9 +46,12 @@ export default function IncomeScreen() {
         amount: parsed,
         note: note.trim(),
         date: new Date().toISOString(),
+        isRecurring,
+        recurringFrequency: isRecurring ? recurringFrequency : undefined,
       });
       setAmount('');
       setNote('');
+      setIsRecurring(false);
       setMessage('Income added successfully.');
     } catch {
       setMessage('Could not save income. Please try again.');
@@ -95,6 +107,45 @@ export default function IncomeScreen() {
             />
           </View>
 
+          <View style={styles.switchRow}>
+            <View style={styles.switchCopy}>
+              <ThemedText type="smallBold">Recurring Income</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">Repeat automatically each period</ThemedText>
+            </View>
+            <Switch
+              value={isRecurring}
+              onValueChange={setIsRecurring}
+              trackColor={{ false: theme.border, true: theme.accent }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {isRecurring && (
+            <View style={styles.field}>
+              <ThemedText type="smallBold">Frequency</ThemedText>
+              <View style={styles.freqGrid}>
+                {FREQUENCIES.map((f) => {
+                  const selected = recurringFrequency === f.value;
+                  return (
+                    <Pressable
+                      key={f.value}
+                      onPress={() => setRecurringFrequency(f.value)}
+                      accessibilityRole="button"
+                      style={[
+                        styles.freqChip,
+                        {
+                          borderColor: selected ? theme.accent : theme.border,
+                          backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
+                        },
+                      ]}>
+                      <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>{f.label}</ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
           {message ? (
             <ThemedText type="caption" themeColor={message.includes('successfully') ? 'accent' : 'danger'}>
               {message}
@@ -145,7 +196,9 @@ function IncomeItem({ item, formatAmount, onDelete }: { item: IncomeRecord; form
           <MaterialCommunityIcons name="arrow-down-left" size={20} color="#27AE60" />
         </View>
         <View style={styles.itemInfo}>
-          <ThemedText type="smallBold" numberOfLines={1}>{item.note || 'Income'}</ThemedText>
+          <ThemedText type="smallBold" numberOfLines={1}>
+            {item.note || 'Income'} {item.isRecurring ? `(${item.recurringFrequency})` : ''}
+          </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary">{formatDate(item.date)}</ThemedText>
         </View>
         <ThemedText type="defaultBold" style={{ color: '#27AE60' }}>+{formatAmount(item.amount)}</ThemedText>
@@ -169,6 +222,10 @@ const styles = StyleSheet.create({
   formCard: { gap: Spacing.three },
   field: { gap: Spacing.one },
   input: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 16 },
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  switchCopy: { flex: 1, gap: 2 },
+  freqGrid: { flexDirection: 'row', gap: Spacing.two },
+  freqChip: { flex: 1, minHeight: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
   addButton: { minHeight: 48, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.one },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },

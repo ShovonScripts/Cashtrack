@@ -8,4 +8,16 @@ const config = getDefaultConfig(__dirname);
 // Expo currently marks as alpha.
 config.resolver.assetExts.push('wasm');
 
+// Send Cross-Origin Isolation headers required by expo-sqlite on web during development
+config.server = {
+  ...config.server,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+      res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+      return middleware(req, res, next);
+    };
+  },
+};
+
 module.exports = config;

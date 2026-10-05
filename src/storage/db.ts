@@ -28,7 +28,11 @@ CREATE TABLE IF NOT EXISTS income_transactions (
   id TEXT PRIMARY KEY NOT NULL,
   amount REAL NOT NULL CHECK (amount > 0),
   date TEXT NOT NULL,
-  note TEXT NOT NULL DEFAULT ''
+  note TEXT NOT NULL DEFAULT '',
+  is_recurring INTEGER NOT NULL DEFAULT 0,
+  recurring_frequency TEXT,
+  recurring_end_date TEXT,
+  recurring_parent_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_income_date
@@ -61,6 +65,21 @@ let initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
   await db.execAsync(SCHEMA_SQL);
+
+  // Idempotent column additions for recurring income on existing databases
+  try {
+    await db.execAsync('ALTER TABLE income_transactions ADD COLUMN is_recurring INTEGER NOT NULL DEFAULT 0;');
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE income_transactions ADD COLUMN recurring_frequency TEXT;');
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE income_transactions ADD COLUMN recurring_end_date TEXT;');
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE income_transactions ADD COLUMN recurring_parent_id TEXT;');
+  } catch {}
+
   return db;
 }
 

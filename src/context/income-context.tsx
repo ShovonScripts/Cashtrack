@@ -15,6 +15,7 @@ import {
   updateIncome as updateIncomeRepo,
   deleteIncome as deleteIncomeRepo,
 } from '@/storage/income-repository';
+import { processRecurringIncome } from '@/utils/recurring-income';
 
 type IncomeContextValue = {
   incomeList: IncomeRecord[];
@@ -42,8 +43,9 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
     async function load() {
       try {
         const rows = await getAllIncome();
+        const processed = processRecurringIncome(rows);
         if (!cancelled) {
-          setIncomeList(rows);
+          setIncomeList(processed);
         }
       } catch (error) {
         console.error('[cashtrack] Failed to load income transactions', error);
@@ -65,30 +67,38 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
       amount: draft.amount,
       date: draft.date ?? new Date().toISOString(),
       note: draft.note ?? '',
+      isRecurring: draft.isRecurring ?? false,
+      recurringFrequency: draft.recurringFrequency,
+      recurringEndDate: draft.recurringEndDate,
     };
     await insertIncome(record);
-    setIncomeList((current) => [record, ...current]);
+    setIncomeList((current) => processRecurringIncome([record, ...current]));
     return record;
   }, []);
 
   const updateIncome = useCallback(async (id: string, changes: IncomeDraft) => {
     await updateIncomeRepo(id, changes);
     setIncomeList((current) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              amount: changes.amount,
-              note: changes.note ?? item.note,
-            }
-          : item
+      processRecurringIncome(
+        current.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                amount: changes.amount,
+                note: changes.note ?? item.note,
+                isRecurring: changes.isRecurring ?? item.isRecurring,
+                recurringFrequency: changes.recurringFrequency ?? item.recurringFrequency,
+                recurringEndDate: changes.recurringEndDate ?? item.recurringEndDate,
+              }
+            : item
+        )
       )
     );
   }, []);
 
   const deleteIncome = useCallback(async (id: string) => {
     await deleteIncomeRepo(id);
-    setIncomeList((current) => current.filter((item) => item.id !== id));
+    setIncomeList((current) => current.filter((item) => item.id !== id && item.recurringParentId !== id));
   }, []);
 
   const getIncome = useCallback(

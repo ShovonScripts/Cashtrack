@@ -61,10 +61,10 @@ export function calculateCashFlowForecast({
     })
     .reduce((sum, e) => sum + e.amount, 0);
 
-  // Planned active goal contributions due this month
+  // Planned active goal contributions due this month (using monthly required equivalent)
   const plannedGoalContributions = goals
     .filter((g) => !g.isCompleted)
-    .reduce((sum, g) => sum + g.frequencyRequired, 0);
+    .reduce((sum, g) => sum + g.monthlyRequired, 0);
 
   const expectedRemainingIncome = 0; // Conservative: no phantom income
 

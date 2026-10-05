@@ -28,6 +28,7 @@ export type GoalWithProgress = MoneyGoal & {
   isCompleted: boolean;
   contributions: GoalContribution[];
   frequencyRequired: number;
+  monthlyRequired: number;
 };
 
 type GoalContextValue = {
@@ -113,6 +114,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         isCompleted: calc.isCompleted || goal.status === 'completed',
         contributions: goalContribs,
         frequencyRequired: calc.frequencyRequired,
+        monthlyRequired: calc.monthlyRequired,
       };
     });
   }, [rawGoals, contributions]);

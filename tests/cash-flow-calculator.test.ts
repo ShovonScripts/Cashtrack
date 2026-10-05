@@ -31,6 +31,7 @@ test('calculateCashFlowForecast projects end of month position accurately', () =
       isCompleted: false,
       contributions: [],
       frequencyRequired: 4000,
+      monthlyRequired: 4000,
     },
   ];
 

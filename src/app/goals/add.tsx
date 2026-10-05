@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native
 import { router } from 'expo-router';
 
 import { Card } from '@/components/card';
+import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
@@ -25,7 +26,11 @@ export default function AddGoalScreen() {
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
   const [frequency, setFrequency] = useState<GoalFrequency>('monthly');
-  const [deadlineMonths, setDeadlineMonths] = useState('6');
+  const [deadlineDate, setDeadlineDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return d;
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -33,7 +38,6 @@ export default function AddGoalScreen() {
     if (isSubmitting) return;
     const trimmedTitle = title.trim();
     const parsedTarget = Number(targetAmount);
-    const months = Number(deadlineMonths);
 
     if (!trimmedTitle) {
       setMessage('Please enter a goal or pot title.');
@@ -43,23 +47,17 @@ export default function AddGoalScreen() {
       setMessage('Please enter a valid target amount greater than zero.');
       return;
     }
-    if (!Number.isFinite(months) || months <= 0) {
-      setMessage('Please enter a valid timeline in months.');
-      return;
-    }
 
     setIsSubmitting(true);
     setMessage('');
     try {
       const startDate = new Date().toISOString();
-      const deadline = new Date();
-      deadline.setMonth(deadline.getMonth() + months);
 
       await addGoal({
         title: trimmedTitle,
         targetAmount: parsedTarget,
         startDate,
-        deadlineDate: deadline.toISOString(),
+        deadlineDate: deadlineDate.toISOString(),
         frequency,
       });
 
@@ -77,7 +75,7 @@ export default function AddGoalScreen() {
         <View style={styles.intro}>
           <ThemedText type="subtitle" style={styles.title}>Create a financial pot</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Plan ahead for travel, investments, or major future purchases.
+            Plan ahead for travel, investments, or major future purchases with a target deadline.
           </ThemedText>
         </View>
 
@@ -109,16 +107,8 @@ export default function AddGoalScreen() {
           </View>
 
           <View style={styles.field}>
-            <ThemedText type="smallBold">Timeline (Months to achieve)</ThemedText>
-            <TextInput
-              value={deadlineMonths}
-              onChangeText={(val) => { setDeadlineMonths(val.replace(/[^0-9]/g, '')); setMessage(''); }}
-              placeholder="6"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="number-pad"
-              accessibilityLabel="Timeline in months"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
+            <ThemedText type="smallBold">Target Deadline Date</ThemedText>
+            <DatePicker value={deadlineDate} onChange={setDeadlineDate} />
           </View>
 
           <View style={styles.field}>

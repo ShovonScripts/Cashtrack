@@ -74,8 +74,10 @@ export async function updateGoalStatus(id: string, status: GoalStatus): Promise<
 
 export async function deleteGoal(id: string): Promise<void> {
   const db = await initDatabase();
-  await db.runAsync('DELETE FROM goal_contributions WHERE goal_id = ?', id);
-  await db.runAsync('DELETE FROM money_goals WHERE id = ?', id);
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM goal_contributions WHERE goal_id = ?', id);
+    await db.runAsync('DELETE FROM money_goals WHERE id = ?', id);
+  });
 }
 
 export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {

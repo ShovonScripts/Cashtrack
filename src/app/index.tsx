@@ -5,6 +5,7 @@ import { Card, CardDivider } from '@/components/card';
 import { CategoryBreakdown } from '@/components/category-breakdown';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
+import { MoneySummaryCard } from '@/components/money-summary-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -12,8 +13,10 @@ import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
+import { useIncome } from '@/context/income-context';
 import { useTheme } from '@/hooks/use-theme';
 import { sortByDateDesc, sumAmounts, totalForDate, totalForMonth } from '@/utils/expense';
+import { calculateMonthlyCashFlow } from '@/utils/income';
 import type { Expense } from '@/types/expense';
 import { getBudgetInsights, type BudgetInsight } from '@/utils/advisor';
 
@@ -217,7 +220,6 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
         style={({ pressed }) => [styles.heroBottomAction, pressed && styles.pressed]}>
         <ThemedText type="smallBold" style={styles.heroBottomActionText}>View debts  →</ThemedText>
       </Pressable>
-
       <View pointerEvents="none" style={styles.heroOrbLarge} />
       <View pointerEvents="none" style={styles.heroOrbSmall} />
     </View>
@@ -314,6 +316,7 @@ function InsightLine({ insight, formatAmount }: { insight: BudgetInsight; format
 
 export default function DashboardScreen() {
   const { expenses, profile, categoryLimits, formatAmount, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
+  const { incomeList } = useIncome();
   const theme = useTheme();
   const now = new Date();
   const monthSpend = totalForMonth(expenses, now);
@@ -324,6 +327,7 @@ export default function DashboardScreen() {
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }).length;
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
+  const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
 
   return (
     <ScrollView
@@ -369,6 +373,13 @@ export default function DashboardScreen() {
           <View pointerEvents="none" style={styles.heroOrbLarge} />
           <View pointerEvents="none" style={styles.heroOrbSmall} />
         </ThemedView>
+
+        <MoneySummaryCard
+          moneyIn={cashFlow.moneyIn}
+          moneyOut={cashFlow.moneyOut}
+          net={cashFlow.net}
+          formatAmount={formatAmount}
+        />
 
         <View style={styles.summaryRow}>
           <Card style={styles.metricCard}>
@@ -449,95 +460,311 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
-    padding: Spacing.four,
-    gap: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    paddingTop: Spacing.three,
+    gap: Spacing.four,
   },
-  greeting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  greetingCopy: { gap: Spacing.one },
-  greetingTitle: { fontSize: 28, lineHeight: 34 },
+  greeting: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  greetingCopy: {
+    gap: 2,
+  },
+  greetingTitle: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
   hero: {
     backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
     overflow: 'hidden',
-    minHeight: 222,
+  },
+  heroContent: {
+    gap: Spacing.one,
+    zIndex: 1,
+  },
+  heroTopline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 1,
+  },
+  monthPill: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  monthPillText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  heroValue: {
+    color: '#FFFFFF',
+    fontSize: 38,
+    lineHeight: 46,
+    fontVariant: ['tabular-nums'],
+  },
+  heroSubtext: {
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: Spacing.one,
+  },
+  addButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.pill,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+    marginTop: Spacing.one,
+  },
+  addButtonText: {
+    color: Brand.deep,
+  },
+  heroOrbLarge: {
+    position: 'absolute',
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    right: -90,
+    top: -100,
+    backgroundColor: 'rgba(139,123,255,0.2)',
+  },
+  heroOrbSmall: {
+    position: 'absolute',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    right: 14,
+    bottom: -90,
+    backgroundColor: 'rgba(176,76,252,0.2)',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+  },
+  metricCard: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  metricIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  heroContent: { gap: Spacing.two, zIndex: 1 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  monthPill: { borderRadius: Radius.pill, backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: Spacing.two, paddingVertical: Spacing.one },
-  monthPillText: { color: '#FFFFFF' },
-  heroValue: { color: '#FFFFFF', fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'] },
-  heroSubtext: { color: 'rgba(255,255,255,0.75)' },
-  addButton: { alignSelf: 'flex-start', backgroundColor: '#FFFFFF', borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, marginTop: Spacing.one },
-  addButtonText: { color: Brand.deep },
-  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
-  heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },
+  metricValue: {
+    fontSize: 18,
+    lineHeight: 24,
+    fontVariant: ['tabular-nums'],
+  },
   heroCard: {
     backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
     overflow: 'hidden',
-    justifyContent: 'center',
+    position: 'relative',
+    gap: Spacing.three,
   },
-  heroAddButton: { backgroundColor: '#FFFFFF', borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.one },
-  heroAddButtonText: { color: Brand.deep, fontSize: 13, fontWeight: '700' },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.two },
-  heroStat: { flex: 1, gap: Spacing.half },
-  heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroNetRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.15)', paddingTop: Spacing.two },
-  heroNetText: { color: 'rgba(255,255,255,0.8)' },
-  heroBottomAction: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.15)',
-    paddingTop: Spacing.three,
-    marginTop: Spacing.two,
+  heroSummaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    zIndex: 1,
+    gap: Spacing.two,
+  },
+  heroStat: {
+    flex: 1,
+    gap: 2,
+  },
+  heroStatLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11,
+  },
+  heroStatVal: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    lineHeight: 28,
+    fontVariant: ['tabular-nums'],
+  },
+  heroDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 36,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  heroNetRow: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.15)',
+    paddingTop: Spacing.two,
+  },
+  heroNetText: {
+    color: 'rgba(255,255,255,0.8)',
+  },
+  heroAddButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.pill,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+  },
+  heroAddButtonText: {
+    color: Brand.deep,
+  },
+  heroBottomAction: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: Radius.medium,
+    minHeight: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   heroBottomActionText: {
     color: '#FFFFFF',
-    fontSize: 15,
   },
-  summaryRow: { flexDirection: 'row', gap: Spacing.three },
-  metricCard: { flex: 1, gap: Spacing.one, minWidth: 0 },
-  metricIcon: { width: 30, height: 30, borderRadius: Radius.small, alignItems: 'center', justifyContent: 'center', marginBottom: Spacing.one },
-  metricValue: { fontSize: 18, lineHeight: 25, fontVariant: ['tabular-nums'] },
-  advisorCard: { gap: Spacing.three },
-  advisorHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  advisorIcon: { width: 36, height: 36, borderRadius: Radius.medium, backgroundColor: 'rgba(139,123,255,0.14)', alignItems: 'center', justifyContent: 'center' },
-  noticeCount: { width: 26, height: 26, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  advisorStatus: { gap: Spacing.one },
-  insightList: { gap: Spacing.three },
-  insightRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.two },
-  insightMarker: { width: 8, height: 8, borderRadius: Radius.pill, marginTop: 6 },
-  insightCopy: { flex: 1, gap: Spacing.one },
-  advisorActions: { flexDirection: 'row', alignItems: 'center', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.two },
-  advisorAction: { flex: 1, minHeight: 40, justifyContent: 'center' },
-  actionDivider: { width: StyleSheet.hairlineWidth, height: 20, marginHorizontal: Spacing.two },
-  weekCard: { gap: Spacing.three },
-  budgetCard: { gap: Spacing.three },
-  budgetEmpty: { gap: Spacing.one, borderRadius: Radius.medium, padding: Spacing.three },
-  budgetRow: { gap: Spacing.two },
-  budgetLabelRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  budgetDot: { width: 8, height: 8, borderRadius: Radius.pill },
-  budgetCategory: { flex: 1 },
-  budgetTrack: { height: 8, borderRadius: Radius.pill, overflow: 'hidden' },
-  budgetFill: { height: '100%', borderRadius: Radius.pill },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  sectionTitleCopy: { gap: Spacing.one },
-  chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: Spacing.two, minHeight: 112 },
-  chartColumn: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: Spacing.one, minWidth: 0 },
-  barTrack: { height: 74, width: '100%', justifyContent: 'flex-end', alignItems: 'center' },
-  bar: { width: 16, maxWidth: '72%', borderRadius: Radius.pill },
-  todayLabel: { fontWeight: '700' },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.one },
-  seeAll: { paddingVertical: Spacing.two, paddingLeft: Spacing.two },
-  footer: { textAlign: 'center', paddingTop: Spacing.one },
-  pressed: { opacity: 0.72 },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  seeAll: {
+    paddingVertical: 4,
+  },
+  footer: {
+    textAlign: 'center',
+    paddingVertical: Spacing.two,
+  },
+  weekCard: {
+    gap: Spacing.three,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sectionTitleCopy: {
+    gap: 2,
+  },
+  chart: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 100,
+    paddingTop: Spacing.two,
+  },
+  chartColumn: {
+    flex: 1,
+    alignItems: 'center',
+    gap: Spacing.one,
+  },
+  barTrack: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    width: 20,
+    alignItems: 'center',
+  },
+  bar: {
+    width: 14,
+    borderRadius: Radius.small,
+  },
+  todayLabel: {
+    fontWeight: '700',
+  },
+  budgetCard: {
+    gap: Spacing.three,
+  },
+  budgetEmpty: {
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    gap: 2,
+  },
+  budgetRow: {
+    gap: 6,
+  },
+  budgetLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  budgetDot: {
+    width: 8,
+    height: 8,
+    borderRadius: Radius.pill,
+    marginRight: 6,
+  },
+  budgetCategory: {
+    flex: 1,
+  },
+  budgetTrack: {
+    height: 6,
+    borderRadius: Radius.pill,
+    overflow: 'hidden',
+  },
+  budgetFill: {
+    height: '100%',
+    borderRadius: Radius.pill,
+  },
+  advisorCard: {
+    gap: Spacing.three,
+  },
+  advisorHeading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  advisorIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(139,123,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noticeCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+  },
+  advisorStatus: {
+    gap: 2,
+  },
+  insightList: {
+    gap: Spacing.two,
+  },
+  insightRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.three,
+  },
+  insightMarker: {
+    width: 8,
+    height: 8,
+    borderRadius: Radius.pill,
+    marginTop: 6,
+  },
+  insightCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  advisorActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.three,
+  },
+  advisorAction: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  actionDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 20,
+  },
+  pressed: {
+    opacity: 0.75,
+  },
 });

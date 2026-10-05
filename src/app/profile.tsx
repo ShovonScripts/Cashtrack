@@ -130,6 +130,8 @@ export default function ProfileScreen() {
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink title="App tour & guide" detail="Replay welcome walkthrough and features guide" onPress={() => setShowOnboarding(true)} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <SettingsLink title="Money In" detail="Record salary, freelance, or additional income" onPress={() => router.push('/income')} />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink title="Lend & borrow" detail="Track money lent and borrowed (IOUs)" onPress={() => router.push('/debts')} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink title="Manage categories" detail="Create, rename, or remove categories" onPress={() => router.push('/categories')} />

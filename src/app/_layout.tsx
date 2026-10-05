@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { SpendlyLogo } from '@/components/spendly-logo';
 import { ExpenseProvider, useExpenses } from '@/context/expense-context';
 import { DebtProvider } from '@/context/debt-context';
+import { IncomeProvider } from '@/context/income-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
@@ -85,6 +86,7 @@ function Navigation() {
         contentStyle: { backgroundColor: theme.background },
       }}>
       <Stack.Screen name="index" options={{ headerTitle: () => <SpendlyLogo />, headerRight: renderProfileButton }} />
+      <Stack.Screen name="income" options={{ title: 'Money In' }} />
       <Stack.Screen name="expenses" options={{ title: 'Expenses', headerRight: renderAddButton }} />
       <Stack.Screen name="debts" options={{ title: 'Lend & Borrow', headerRight: renderAddDebtButton }} />
       <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
@@ -171,8 +173,10 @@ export default function RootLayout() {
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       <ExpenseProvider>
         <DebtProvider>
-          <AnimatedSplashOverlay />
-          <Navigation />
+          <IncomeProvider>
+            <AnimatedSplashOverlay />
+            <Navigation />
+          </IncomeProvider>
         </DebtProvider>
       </ExpenseProvider>
     </ThemeProvider>

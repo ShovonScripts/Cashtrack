@@ -58,6 +58,41 @@ CREATE TABLE IF NOT EXISTS goal_contributions (
 
 CREATE INDEX IF NOT EXISTS idx_goal_contributions_goal
 ON goal_contributions (goal_id, date DESC);
+
+CREATE TABLE IF NOT EXISTS financial_reminders (
+  id TEXT PRIMARY KEY NOT NULL,
+  title TEXT NOT NULL,
+  amount REAL,
+  is_variable_amount INTEGER NOT NULL DEFAULT 0,
+  category TEXT NOT NULL,
+  due_date TEXT NOT NULL,
+  original_due_date TEXT,
+  repeat_type TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'upcoming',
+  notes TEXT NOT NULL DEFAULT '',
+  total_amount REAL,
+  installment_amount REAL,
+  total_installments INTEGER,
+  paid_installments INTEGER DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reminders_duedate
+ON financial_reminders (due_date ASC);
+
+CREATE TABLE IF NOT EXISTS reminder_payments (
+  id TEXT PRIMARY KEY NOT NULL,
+  reminder_id TEXT NOT NULL,
+  amount REAL NOT NULL CHECK (amount > 0),
+  paid_date TEXT NOT NULL,
+  expense_id TEXT,
+  notes TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_reminder_payments_reminder
+ON reminder_payments (reminder_id, paid_date DESC);
 `;
 
 let initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
@@ -78,6 +113,9 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   } catch {}
   try {
     await db.execAsync('ALTER TABLE income_transactions ADD COLUMN recurring_parent_id TEXT;');
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE financial_reminders ADD COLUMN original_due_date TEXT;');
   } catch {}
 
   return db;

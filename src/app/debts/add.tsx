@@ -5,6 +5,8 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { useDebts } from '@/context/debt-context';
+import { useExpenses } from '@/context/expense-context';
+import { useIncome } from '@/context/income-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { DebtType } from '@/types/debt';
@@ -12,6 +14,8 @@ import type { DebtType } from '@/types/debt';
 export default function AddDebtScreen() {
   const theme = useTheme();
   const { addDebt } = useDebts();
+  const { addExpense } = useExpenses();
+  const { addIncome } = useIncome();
 
   const [personName, setPersonName] = useState('');
   const [amountText, setAmountText] = useState('');
@@ -20,6 +24,7 @@ export default function AddDebtScreen() {
   const [hasDueDate, setHasDueDate] = useState(false);
   const [dueDate, setDueDate] = useState(() => new Date());
   const [note, setNote] = useState('');
+  const [affectBalance, setAffectBalance] = useState(false);
   const [error, setError] = useState('');
 
   const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
@@ -29,7 +34,7 @@ export default function AddDebtScreen() {
     Number.isFinite(parsedAmount) &&
     parsedAmount > 0;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!isValid) {
       setError('Please provide a valid person name and an amount greater than zero.');
       return;
@@ -43,6 +48,24 @@ export default function AddDebtScreen() {
       dueDate: hasDueDate ? dueDate.toISOString() : null,
       note: note.trim().slice(0, 200),
     });
+
+    if (affectBalance) {
+      if (type === 'lent') {
+        addExpense({
+          amount: parsedAmount,
+          category: 'Lending',
+          date: date.toISOString(),
+          note: `Lent to ${personName.trim()}${note ? ` · ${note.trim()}` : ''}`,
+        });
+      } else {
+        await addIncome({
+          amount: parsedAmount,
+          date: date.toISOString(),
+          note: `Borrowed from ${personName.trim()}${note ? ` · ${note.trim()}` : ''}`,
+          isRecurring: false,
+        });
+      }
+    }
 
     router.back();
   };
@@ -120,6 +143,25 @@ export default function AddDebtScreen() {
             />
           </View>
 
+          {/* Affect Balance Option */}
+          <View style={styles.field}>
+            <View style={styles.dueDateHeader}>
+              <View style={styles.toggleLabelCopy}>
+                <ThemedText type="smallBold">Affect main balance</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">
+                  {type === 'lent' ? 'Automatically log as an expense' : 'Automatically log as income'}
+                </ThemedText>
+              </View>
+              <Pressable
+                onPress={() => setAffectBalance(!affectBalance)}
+                style={[styles.toggleBadge, { backgroundColor: affectBalance ? theme.accent : theme.cardMuted, borderColor: theme.border }]}>
+                <ThemedText type="smallBold" style={{ color: affectBalance ? '#FFFFFF' : theme.textSecondary }}>
+                  {affectBalance ? 'YES' : 'NO'}
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+
           {/* Date */}
           <View style={styles.field}>
             <ThemedText type="caption" themeColor="textSecondary">TRANSACTION DATE</ThemedText>
@@ -190,6 +232,7 @@ const styles = StyleSheet.create({
   amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
   noteInput: { minHeight: 70, textAlignVertical: 'top' },
   dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  toggleLabelCopy: { flex: 1, gap: 2, paddingRight: Spacing.two },
   toggleBadge: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.half, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
   saveButtonDisabled: { opacity: 0.4 },

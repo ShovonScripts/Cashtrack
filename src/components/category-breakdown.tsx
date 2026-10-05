@@ -1,9 +1,11 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
+import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Radius, Spacing } from '@/constants/theme';
+import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { sumAmounts } from '@/utils/expense';
 import type { Expense } from '@/types/expense';
@@ -16,6 +18,7 @@ export function CategoryBreakdown({
   formatAmount: (amount: number) => string;
 }) {
   const theme = useTheme();
+  const { categoryIcons } = useExpenses();
   const now = new Date();
   const monthExpenses = expenses.filter((expense) => {
     const date = new Date(expense.date);
@@ -54,7 +57,7 @@ export function CategoryBreakdown({
           return (
             <View key={category} style={styles.row}>
               <View style={styles.labelRow}>
-                <View style={[styles.dot, { backgroundColor: color }]} />
+                <CategoryIcon category={category} customIcons={categoryIcons} color={color} size={16} containerSize={32} />
                 <ThemedText type="smallBold" style={styles.categoryName}>{category}</ThemedText>
                 <ThemedText type="caption" themeColor="textSecondary">
                   {formatAmount(amount)} ({Math.round(percentage)}%)
@@ -78,7 +81,6 @@ const styles = StyleSheet.create({
   list: { gap: Spacing.two },
   row: { gap: Spacing.one },
   labelRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  dot: { width: 8, height: 8, borderRadius: Radius.pill },
   categoryName: { flex: 1 },
   track: { height: 6, borderRadius: Radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: Radius.pill },

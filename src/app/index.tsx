@@ -17,6 +17,7 @@ import { useExpenses } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
 import { useIncome } from '@/context/income-context';
 import { useGoals } from '@/context/goal-context';
+import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { sortByDateDesc, sumAmounts, totalForDate, totalForMonth } from '@/utils/expense';
 import { calculateMonthlyCashFlow } from '@/utils/income';
@@ -216,6 +217,59 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
           style={({ pressed }) => [styles.planBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
           <ThemedText type="smallBold" style={{ color: theme.accent }}>Plan  →</ThemedText>
         </Pressable>
+      </View>
+    </Card>
+  );
+}
+
+function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) => string }) {
+  const { reminders } = useFinancialReminders();
+  const theme = useTheme();
+
+  const activeReminders = reminders
+    .filter((r) => r.derivedStatus !== 'paid' && r.derivedStatus !== 'skipped')
+    .sort((a, b) => a.daysUntilDue - b.daysUntilDue)
+    .slice(0, 3);
+
+  if (activeReminders.length === 0) return null;
+
+  const safeFormat = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
+
+  return (
+    <Card style={styles.billsWidgetCard}>
+      <View style={styles.sectionTitleRow}>
+        <View style={styles.sectionTitleCopy}>
+          <ThemedText type="defaultBold">Upcoming bills</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">Payments requiring your attention</ThemedText>
+        </View>
+        <Pressable onPress={() => router.push('/bills' as any)} accessibilityRole="button" hitSlop={8}>
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>View all →</ThemedText>
+        </Pressable>
+      </View>
+
+      <View style={styles.billsList}>
+        {activeReminders.map((rem) => {
+          const isOverdue = rem.derivedStatus === 'overdue';
+          const isDueToday = rem.derivedStatus === 'due_today';
+          const color = isOverdue ? theme.danger : isDueToday ? '#BD7119' : theme.accent;
+          const statusText = isOverdue ? `${Math.abs(rem.daysUntilDue)}d overdue` : isDueToday ? 'Due today' : `In ${rem.daysUntilDue}d`;
+
+          return (
+            <Pressable
+              key={rem.id}
+              onPress={() => router.push({ pathname: '/bills/pay/[id]', params: { id: rem.id } })}
+              style={({ pressed }) => [styles.billWidgetRow, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
+              <View style={[styles.billDot, { backgroundColor: color }]} />
+              <View style={styles.billWidgetCopy}>
+                <ThemedText type="smallBold" numberOfLines={1}>{rem.title}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">{statusText}</ThemedText>
+              </View>
+              <ThemedText type="smallBold" style={{ color }}>
+                {safeFormat(rem.amount)}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
       </View>
     </Card>
   );
@@ -462,6 +516,7 @@ export default function DashboardScreen() {
         />
 
         <MoneyPlanSummaryCard formatAmount={formatAmount} />
+        <UpcomingBillsWidget formatAmount={formatAmount} />
 
         <View style={styles.summaryRow}>
           <Card style={styles.metricCard}>
@@ -811,6 +866,28 @@ const styles = StyleSheet.create({
   },
   weekCard: {
     gap: Spacing.three,
+  },
+  billsWidgetCard: {
+    gap: Spacing.three,
+  },
+  billsList: {
+    gap: Spacing.two,
+  },
+  billWidgetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+  },
+  billDot: {
+    width: 8,
+    height: 8,
+    borderRadius: Radius.pill,
+  },
+  billWidgetCopy: {
+    flex: 1,
+    gap: 2,
   },
   weekTotalBadge: {
     paddingHorizontal: Spacing.three,

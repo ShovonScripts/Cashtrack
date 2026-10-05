@@ -11,6 +11,7 @@ import { ExpenseProvider, useExpenses } from '@/context/expense-context';
 import { DebtProvider } from '@/context/debt-context';
 import { IncomeProvider } from '@/context/income-context';
 import { GoalProvider } from '@/context/goal-context';
+import { FinancialRemindersProvider } from '@/context/financial-reminders-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
@@ -62,6 +63,24 @@ function Navigation() {
     </Pressable>
   );
 
+  const renderAddBillButton = () => (
+    <Pressable
+      onPress={() => router.push('/bills/add')}
+      accessibilityRole="button"
+      accessibilityLabel="Add a bill or reminder"
+      hitSlop={8}
+      style={({ pressed }) => [
+        styles.addButton,
+        { backgroundColor: theme.accent },
+        pressed && styles.addButtonPressed,
+      ]}>
+      <View style={styles.addIcon}>
+        <ThemedText type="defaultBold" style={styles.addIconText}>＋</ThemedText>
+      </View>
+      <ThemedText type="smallBold" style={styles.addButtonText}>Add</ThemedText>
+    </Pressable>
+  );
+
   const renderProfileButton = () => (
     <Pressable
       onPress={() => router.push('/profile')}
@@ -96,6 +115,9 @@ function Navigation() {
       <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
       <Stack.Screen name="debts/[id]" options={{ title: 'Debt Details' }} />
       <Stack.Screen name="debts/[id]/edit" options={{ title: 'Edit Debt' }} />
+      <Stack.Screen name="bills" options={{ title: 'Bills & Reminders', headerRight: renderAddBillButton }} />
+      <Stack.Screen name="bills/add" options={{ title: 'Add Bill / Reminder', presentation: 'modal' }} />
+      <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />
       <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
       <Stack.Screen name="country" options={{ title: 'Country & currency' }} />
       <Stack.Screen name="categories" options={{ title: 'Manage categories' }} />
@@ -179,8 +201,10 @@ export default function RootLayout() {
         <DebtProvider>
           <IncomeProvider>
             <GoalProvider>
-              <AnimatedSplashOverlay />
-              <Navigation />
+              <FinancialRemindersProvider>
+                <AnimatedSplashOverlay />
+                <Navigation />
+              </FinancialRemindersProvider>
             </GoalProvider>
           </IncomeProvider>
         </DebtProvider>

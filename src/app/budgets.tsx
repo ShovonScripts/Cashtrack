@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
+import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Radius, Spacing } from '@/constants/theme';
@@ -10,14 +12,23 @@ import { useTheme } from '@/hooks/use-theme';
 import { sumAmounts } from '@/utils/expense';
 import { getBudgetInsights } from '@/utils/advisor';
 
+function triggerHaptic() {
+  if (Platform.OS !== 'web') {
+    try {
+      void Haptics.selectionAsync();
+    } catch {}
+  }
+}
+
 export default function BudgetsScreen() {
   const theme = useTheme();
-  const { expenses, categories, categoryLimits, setCategoryLimit, formatAmount } = useExpenses();
+  const { expenses, categories, categoryLimits, setCategoryLimit, formatAmount, country, categoryIcons } = useExpenses();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const now = new Date();
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
   const insights = getBudgetInsights(expenses, categoryLimits, now);
+  const currencySymbol = country.symbol.trim();
 
   const spentThisMonth = (category: string) => sumAmounts(expenses.filter((expense) => {
     const date = new Date(expense.date);
@@ -25,6 +36,7 @@ export default function BudgetsScreen() {
   }));
 
   const saveLimit = (category: string) => {
+    triggerHaptic();
     const raw = (drafts[category] ?? (categoryLimits[category] === undefined ? '' : String(categoryLimits[category]))).trim();
     const amount = raw ? Number(raw) : null;
     if (amount === null || !Number.isFinite(amount) || amount <= 0) {
@@ -37,6 +49,7 @@ export default function BudgetsScreen() {
   };
 
   const removeLimit = (category: string) => {
+    triggerHaptic();
     setCategoryLimit(category, null);
     setDrafts((current) => ({ ...current, [category]: '' }));
     setMessage(`${category} limit removed.`);
@@ -74,20 +87,30 @@ export default function BudgetsScreen() {
           return (
             <Card key={category} style={styles.categoryCard}>
               <View style={styles.categoryHeading}>
-                <View style={[styles.dot, { backgroundColor: getCategoryColor(category) }]} />
+                <CategoryIcon category={category} customIcons={categoryIcons} color={getCategoryColor(category)} size={16} containerSize={32} />
                 <ThemedText type="defaultBold" style={styles.categoryName}>{category}</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">{formatAmount(spent)} spent</ThemedText>
+                <View style={[styles.statusPill, { backgroundColor: limit !== undefined ? (isOver ? 'rgba(235, 87, 87, 0.15)' : 'rgba(39, 174, 96, 0.15)') : theme.cardMuted }]}>
+                  <ThemedText type="caption" style={{ color: limit !== undefined ? (isOver ? theme.danger : '#27AE60') : theme.textSecondary, fontWeight: '700' }}>
+                    {limit !== undefined ? (isOver ? 'Over Limit' : 'Active') : 'No Limit'}
+                  </ThemedText>
+                </View>
               </View>
+
+              <ThemedText type="caption" themeColor="textSecondary">
+                Spent <ThemedText type="smallBold" style={{ color: theme.text }}>{formatAmount(spent)}</ThemedText>{limit !== undefined ? ` of ${formatAmount(limit)} limit` : ''}
+              </ThemedText>
+
               {limit !== undefined && (
                 <View style={styles.progressBlock}>
                   <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
                     <View style={[styles.fill, { width: `${progress * 100}%`, backgroundColor: accent }]} />
                   </View>
                   <ThemedText type="caption" themeColor={isOver ? 'danger' : 'textSecondary'}>
-                    {isOver ? `${formatAmount(spent - limit)} over limit` : `${formatAmount(limit - spent)} remaining · ${formatAmount(limit)} limit`}
+                    {isOver ? `${formatAmount(spent - limit)} over limit` : `${formatAmount(limit - spent)} remaining`}
                   </ThemedText>
                 </View>
               )}
+
               {notice && (
                 <ThemedText type="caption" style={[styles.budgetNotice, { color: notice.level === 'over' ? theme.danger : notice.level === 'near' ? '#BD7119' : theme.accent }]}>
                   {notice.level === 'over'
@@ -97,16 +120,17 @@ export default function BudgetsScreen() {
                       : `At this pace, month-end spending may reach ${formatAmount(notice.projectedSpend)}.`}
                 </ThemedText>
               )}
+
               <View style={styles.limitEntry}>
                 <View style={[styles.moneyInput, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-                  <ThemedText type="small" themeColor="textSecondary">৳</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">{currencySymbol}</ThemedText>
                   <TextInput
                     value={draft}
                     onChangeText={(value) => { setDrafts((current) => ({ ...current, [category]: value.replace(/[^0-9.]/g, '') })); setMessage(''); }}
                     placeholder="Monthly limit"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="decimal-pad"
-                    accessibilityLabel={`${category} monthly spending limit in taka`}
+                    accessibilityLabel={`${category} monthly spending limit`}
                     style={[styles.limitInput, { color: theme.text }]}
                   />
                 </View>
@@ -142,19 +166,19 @@ const styles = StyleSheet.create({
   title: { fontSize: 30, lineHeight: 36 },
   summary: { gap: Spacing.one, borderWidth: 0 },
   summaryAmount: { fontSize: 28, lineHeight: 36 },
-  categoryCard: { gap: Spacing.three },
+  categoryCard: { gap: Spacing.two },
   categoryHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  dot: { width: 10, height: 10, borderRadius: Radius.pill },
   categoryName: { flex: 1 },
+  statusPill: { paddingHorizontal: Spacing.two, paddingVertical: 2, borderRadius: Radius.pill },
   progressBlock: { gap: Spacing.one },
   budgetNotice: { fontWeight: '700' },
   track: { height: 8, borderRadius: Radius.pill, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: Radius.pill },
-  limitEntry: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  moneyInput: { flex: 1, minWidth: 0, minHeight: 46, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingHorizontal: Spacing.two },
+  limitEntry: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: 4 },
+  moneyInput: { flex: 1, minWidth: 0, minHeight: 46, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingHorizontal: Spacing.three },
   limitInput: { flex: 1, minWidth: 0, fontSize: 15, paddingVertical: Spacing.two },
-  saveButton: { minHeight: 44, borderRadius: Radius.medium, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.three },
+  saveButton: { minHeight: 46, borderRadius: Radius.medium, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.four },
   saveText: { color: '#FFFFFF' },
-  removeButton: { width: 40, height: 44, alignItems: 'center', justifyContent: 'center' },
+  removeButton: { width: 40, height: 46, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.7 },
 });

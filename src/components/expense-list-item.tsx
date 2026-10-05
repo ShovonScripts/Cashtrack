@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategoryColor } from '@/constants/categories';
@@ -15,7 +16,7 @@ type ExpenseListItemProps = {
 };
 
 export function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
-  const { formatAmount } = useExpenses();
+  const { formatAmount, categoryIcons } = useExpenses();
   const handlePress = () => {
     if (onPress) {
       onPress();
@@ -33,7 +34,7 @@ export function ExpenseListItem({ expense, onPress }: ExpenseListItemProps) {
       accessibilityRole="button"
       accessibilityLabel={`${title}, ${expense.category}, ${formatAmount(expense.amount)}, ${formatDate(expense.date)}`}
       style={({ pressed }) => [styles.container, pressed && styles.pressed]}>
-      <View style={[styles.rail, { backgroundColor: accent }]} />
+      <CategoryIcon category={expense.category} customIcons={categoryIcons} color={accent} size={18} containerSize={40} />
 
       <View style={styles.details}>
         <ThemedText type="defaultBold" numberOfLines={1}>
@@ -68,12 +69,6 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.6,
-  },
-  rail: {
-    width: 3,
-    alignSelf: 'stretch',
-    minHeight: Spacing.five,
-    borderRadius: Radius.pill,
   },
   details: {
     flex: 1,

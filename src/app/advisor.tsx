@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
@@ -11,6 +12,14 @@ import { useTheme } from '@/hooks/use-theme';
 import { getBudgetInsights, getCategoryMonthlySpend, getSmartFinancialIntelligence, type BudgetInsight } from '@/utils/advisor';
 import { calculateMonthlyCashFlow } from '@/utils/income';
 import { sumAmounts } from '@/utils/expense';
+
+function triggerHaptic() {
+  if (Platform.OS !== 'web') {
+    try {
+      void Haptics.selectionAsync();
+    } catch {}
+  }
+}
 
 export default function AdvisorScreen() {
   const theme = useTheme();
@@ -42,34 +51,40 @@ export default function AdvisorScreen() {
           <ThemedText type="small" themeColor="textSecondary">{monthLabel} · based on the expenses and limits you set</ThemedText>
         </View>
 
-        {/* Smart Financial Intelligence Card */}
-        <Card style={styles.intelligenceCard}>
-          <View style={styles.intelligenceHeader}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>💡 Smart Financial Intelligence</ThemedText>
-            <View style={[styles.statusBadge, { backgroundColor: intelligence.financialHealthStatus === 'Excellent' ? 'rgba(39, 174, 96, 0.25)' : intelligence.financialHealthStatus === 'Overspending' ? 'rgba(235, 87, 87, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
-              <ThemedText type="caption" style={{ color: intelligence.financialHealthStatus === 'Excellent' ? '#2ecc71' : intelligence.financialHealthStatus === 'Overspending' ? '#ff6b6b' : '#FFFFFF', fontWeight: '700' }}>
-                {intelligence.financialHealthStatus}
-              </ThemedText>
+        {/* Smart Financial Intelligence Hero Card */}
+        <View style={styles.intelligenceCard}>
+          <View style={styles.intelligenceContent}>
+            <View style={styles.intelligenceHeader}>
+              <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>💡 Smart Financial Intelligence</ThemedText>
+              <View style={[styles.statusBadge, { backgroundColor: intelligence.financialHealthStatus === 'Excellent' ? 'rgba(39, 174, 96, 0.25)' : intelligence.financialHealthStatus === 'Overspending' ? 'rgba(235, 87, 87, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
+                <ThemedText type="caption" style={{ color: intelligence.financialHealthStatus === 'Excellent' ? '#2ecc71' : intelligence.financialHealthStatus === 'Overspending' ? '#ff6b6b' : '#FFFFFF', fontWeight: '700' }}>
+                  {intelligence.financialHealthStatus}
+                </ThemedText>
+              </View>
+            </View>
+            <ThemedText type="small" style={styles.intelligenceTip}>
+              {intelligence.smartTip}
+            </ThemedText>
+            <View style={styles.intelligenceMetrics}>
+              <View style={styles.intelMetric}>
+                <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Projected Total</ThemedText>
+                <ThemedText type="smallBold" style={styles.intelMetricValue}>{formatAmount(intelligence.projectedMonthSpend)}</ThemedText>
+              </View>
+              <View style={styles.intelDivider} />
+              <View style={styles.intelMetric}>
+                <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Daily Burn Rate</ThemedText>
+                <ThemedText type="smallBold" style={styles.intelMetricValue}>{formatAmount(intelligence.dailyBurnRate)}/day</ThemedText>
+              </View>
+              <View style={styles.intelDivider} />
+              <View style={styles.intelMetric}>
+                <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Savings Rate</ThemedText>
+                <ThemedText type="smallBold" style={{ color: intelligence.savingsRate >= 0 ? '#2ecc71' : '#ff6b6b' }}>{intelligence.savingsRate}%</ThemedText>
+              </View>
             </View>
           </View>
-          <ThemedText type="small" style={styles.intelligenceTip}>
-            {intelligence.smartTip}
-          </ThemedText>
-          <View style={styles.intelligenceMetrics}>
-            <View style={styles.intelMetric}>
-              <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Projected Total</ThemedText>
-              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>{formatAmount(intelligence.projectedMonthSpend)}</ThemedText>
-            </View>
-            <View style={styles.intelMetric}>
-              <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Daily Burn Rate</ThemedText>
-              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>{formatAmount(intelligence.dailyBurnRate)} / day</ThemedText>
-            </View>
-            <View style={styles.intelMetric}>
-              <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Savings Rate</ThemedText>
-              <ThemedText type="smallBold" style={{ color: intelligence.savingsRate >= 0 ? '#2ecc71' : '#ff6b6b' }}>{intelligence.savingsRate}%</ThemedText>
-            </View>
-          </View>
-        </Card>
+          <View pointerEvents="none" style={styles.heroOrbLarge} />
+          <View pointerEvents="none" style={styles.heroOrbSmall} />
+        </View>
 
         <Card style={{ ...styles.summaryCard, backgroundColor: insights.some((item) => item.level === 'over') ? 'rgba(200,37,44,0.09)' : theme.accentMuted }}>
           <ThemedText type="caption" themeColor="textSecondary">SPENT THIS MONTH</ThemedText>
@@ -86,7 +101,13 @@ export default function AdvisorScreen() {
             <ThemedText type="defaultBold">Budget notices</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">Heads-ups at 80%, over-limit alerts, and spending pace.</ThemedText>
           </View>
-          <Pressable onPress={() => router.push('/budgets')} accessibilityRole="button" hitSlop={8}>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/budgets');
+            }}
+            accessibilityRole="button"
+            hitSlop={8}>
             <ThemedText type="smallBold" style={{ color: theme.accent }}>Limits</ThemedText>
           </Pressable>
         </View>
@@ -166,13 +187,14 @@ function NoticeCard({ insight, formatAmount }: { insight: BudgetInsight; formatA
       : `Based on spending so far, this category could reach ${formatAmount(insight.projectedSpend)} by month-end.`;
 
   return (
-    <Card style={styles.noticeCard}>
+    <Card style={{ ...styles.noticeCard, borderLeftWidth: 4, borderLeftColor: color }}>
       <View style={styles.noticeHeading}>
-        <View style={[styles.noticeDot, { backgroundColor: color }]} />
         <ThemedText type="defaultBold" style={styles.noticeTitle}>{title}</ThemedText>
-        <ThemedText type="caption" style={{ color, fontWeight: '700' }}>
-          {isOver ? 'OVER' : insight.level === 'near' ? `${Math.round(insight.percentUsed * 100)}%` : 'PACE'}
-        </ThemedText>
+        <View style={[styles.noticePill, { backgroundColor: isOver ? 'rgba(235, 87, 87, 0.15)' : insight.level === 'near' ? 'rgba(189, 113, 25, 0.15)' : theme.accentMuted }]}>
+          <ThemedText type="caption" style={{ color, fontWeight: '700' }}>
+            {isOver ? 'OVER' : insight.level === 'near' ? `${Math.round(insight.percentUsed * 100)}%` : 'PACE'}
+          </ThemedText>
+        </View>
       </View>
       <ThemedText type="small" themeColor="textSecondary">{body}</ThemedText>
       <View style={styles.noticeNumbers}>
@@ -186,7 +208,13 @@ function NoticeCard({ insight, formatAmount }: { insight: BudgetInsight; formatA
 function ActionButton({ title, onPress }: { title: string; onPress: () => void }) {
   const theme = useTheme();
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [styles.actionButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+    <Pressable
+      onPress={() => {
+        triggerHaptic();
+        onPress();
+      }}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.actionButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
       <ThemedText type="smallBold" style={styles.actionText}>{title}</ThemedText>
     </Pressable>
   );
@@ -199,9 +227,16 @@ const styles = StyleSheet.create({
   eyebrow: { letterSpacing: 1.1, fontWeight: '700' },
   title: { fontSize: 30, lineHeight: 36 },
   intelligenceCard: {
-    gap: Spacing.two,
     backgroundColor: Brand.deep,
-    borderWidth: 0,
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
+    overflow: 'hidden',
+    position: 'relative',
+    gap: Spacing.two,
+  },
+  intelligenceContent: {
+    gap: Spacing.two,
+    zIndex: 1,
   },
   intelligenceHeader: {
     flexDirection: 'row',
@@ -209,8 +244,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   statusBadge: {
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 2,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 3,
     borderRadius: Radius.pill,
   },
   intelligenceTip: {
@@ -219,14 +254,43 @@ const styles = StyleSheet.create({
   },
   intelligenceMetrics: {
     flexDirection: 'row',
-    gap: Spacing.two,
+    alignItems: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.15)',
+    borderTopColor: 'rgba(255,255,255,0.2)',
     paddingTop: Spacing.two,
+    marginTop: Spacing.half,
   },
   intelMetric: {
     flex: 1,
     gap: 2,
+  },
+  intelMetricValue: {
+    color: '#FFFFFF',
+    fontVariant: ['tabular-nums'],
+  },
+  intelDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginHorizontal: Spacing.two,
+  },
+  heroOrbLarge: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    right: -80,
+    top: -90,
+    backgroundColor: 'rgba(139,123,255,0.2)',
+  },
+  heroOrbSmall: {
+    position: 'absolute',
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    right: 14,
+    bottom: -90,
+    backgroundColor: 'rgba(176,76,252,0.2)',
   },
   summaryCard: { gap: Spacing.one, borderWidth: 0 },
   summaryValue: { fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'] },
@@ -234,8 +298,8 @@ const styles = StyleSheet.create({
   sectionCopy: { gap: Spacing.one },
   noticeList: { gap: Spacing.two },
   noticeCard: { gap: Spacing.two },
-  noticeHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  noticeDot: { width: 9, height: 9, borderRadius: Radius.pill },
+  noticeHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
+  noticePill: { paddingHorizontal: Spacing.two, paddingVertical: 2, borderRadius: Radius.small },
   noticeTitle: { flex: 1 },
   noticeNumbers: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two, paddingTop: Spacing.one },
   emptyCard: { alignItems: 'center', gap: Spacing.two },

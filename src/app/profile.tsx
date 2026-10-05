@@ -17,6 +17,38 @@ const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof M
   { label: 'Other', value: '', icon: 'account-outline' },
 ];
 
+function SettingsLink({
+  title,
+  detail,
+  icon,
+  iconColor,
+  onPress,
+}: {
+  title: string;
+  detail: string;
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  iconColor: string;
+  onPress: () => void;
+}) {
+  const theme = useTheme();
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.linkRow, pressed && styles.linkPressed]}>
+      <View style={[styles.iconBadge, { backgroundColor: `${iconColor}1E` }]}>
+        <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
+      </View>
+      <View style={styles.linkCopy}>
+        <ThemedText type="smallBold">{title}</ThemedText>
+        <ThemedText type="caption" themeColor="textSecondary">{detail}</ThemedText>
+      </View>
+      <MaterialCommunityIcons name="chevron-right" size={22} color={theme.textSecondary} />
+    </Pressable>
+  );
+}
+
 export default function ProfileScreen() {
   const theme = useTheme();
   const { profile, country, updateProfile } = useExpenses();
@@ -46,10 +78,11 @@ export default function ProfileScreen() {
         <View style={styles.intro}>
           <ThemedText type="subtitle" style={styles.title}>Your profile</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Personalize CashTrack. These details stay on this device.
+            Personalize CashTrack. These details stay private on this device.
           </ThemedText>
         </View>
 
+        {/* Card 1: User Identity Details */}
         <Card style={styles.formCard}>
           <View style={styles.rowFields}>
             <View style={[styles.field, styles.nameField]}>
@@ -119,60 +152,63 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             accessibilityState={{ disabled: !ageIsValid }}
             style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.accent }, pressed && styles.pressed, !ageIsValid && styles.disabled]}>
-            <ThemedText type="defaultBold" style={styles.saveText}>{saved ? 'Saved ✓' : 'Save profile'}</ThemedText>
+            {saved ? (
+              <View style={styles.savedRow}>
+                <MaterialCommunityIcons name="check" size={18} color="#FFFFFF" />
+                <ThemedText type="defaultBold" style={styles.saveText}>Saved</ThemedText>
+              </View>
+            ) : (
+              <ThemedText type="defaultBold" style={styles.saveText}>Save profile</ThemedText>
+            )}
           </Pressable>
         </Card>
 
+        {/* Card 2: App Preferences */}
         <View style={styles.sectionHeading}>
-          <ThemedText type="defaultBold">Make CashTrack yours</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">Organize spending around your life.</ThemedText>
+          <ThemedText type="defaultBold">App Preferences</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">Customize region & onboarding</ThemedText>
         </View>
 
         <Card padded={false}>
           <SettingsLink
             title="Country & currency"
             detail={`${country.name} · ${country.currencyCode} ${country.symbol.trim()}`}
+            icon="earth"
+            iconColor="#2D9CDB"
             onPress={() => router.push('/country')}
           />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="App tour & guide" detail="Replay welcome walkthrough and features guide" onPress={() => setShowOnboarding(true)} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="Money In" detail="Record salary, freelance, or additional income" onPress={() => router.push('/income')} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="Money Plan & Pots" detail="Proactive financial planning and savings targets" onPress={() => router.push('/goals')} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="Lend & borrow" detail="Track money lent and borrowed (IOUs)" onPress={() => router.push('/debts')} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="Manage categories" detail="Create, rename, or remove categories" onPress={() => router.push('/categories')} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="Category limits" detail="Set monthly spending limits" onPress={() => router.push('/budgets')} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="Advisor & monthly reports" detail="Review budget notices and export a PDF/CSV" onPress={() => router.push('/advisor')} />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink title="About CashTrack & support" detail="Privacy promise and support the developer" onPress={() => router.push('/about')} />
+          <SettingsLink
+            title="App tour & guide"
+            detail="Replay welcome walkthrough and features guide"
+            icon="compass-outline"
+            iconColor="#7667F2"
+            onPress={() => setShowOnboarding(true)}
+          />
+        </Card>
+
+        {/* Card 3: About & Support */}
+        <View style={styles.sectionHeading}>
+          <ThemedText type="defaultBold">About & Privacy</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">System info & privacy promise</ThemedText>
+        </View>
+
+        <Card padded={false}>
+          <SettingsLink
+            title="About CashTrack & support"
+            detail="Privacy promise, version info & developer support"
+            icon="information-outline"
+            iconColor="#5077C8"
+            onPress={() => router.push('/about')}
+          />
         </Card>
 
         <ThemedText type="caption" themeColor="textSecondary" style={styles.privacyNote}>
-          Your profile and expenses are stored locally on this device. CashTrack does not need your personal details to track spending.
+          Your profile and expenses are stored locally on this device. CashTrack does not transmit your personal details to external servers.
         </ThemedText>
       </View>
       <OnboardingModal visible={showOnboarding} onClose={() => setShowOnboarding(false)} />
     </ScrollView>
-  );
-}
-
-function SettingsLink({ title, detail, onPress }: { title: string; detail: string; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.linkRow, pressed && styles.linkPressed]}>
-      <View style={styles.linkCopy}>
-        <ThemedText type="smallBold">{title}</ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary">{detail}</ThemedText>
-      </View>
-      <ThemedText type="subtitle" themeColor="textSecondary" style={styles.chevron}>›</ThemedText>
-    </Pressable>
   );
 }
 
@@ -190,14 +226,21 @@ const styles = StyleSheet.create({
   choiceGrid: { flexDirection: 'row', gap: Spacing.two },
   choice: { flex: 1, minHeight: 38, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
   saveButton: { minHeight: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.half },
+  savedRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   saveText: { color: '#FFFFFF' },
-  sectionHeading: { gap: Spacing.one, marginTop: Spacing.one },
-  linkRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
+  sectionHeading: { gap: 2, marginTop: Spacing.one },
+  linkRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
+  iconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   linkCopy: { flex: 1, gap: Spacing.half },
-  chevron: { fontSize: 24, lineHeight: 28 },
   divider: { height: StyleSheet.hairlineWidth, marginHorizontal: Spacing.four },
-  privacyNote: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three },
-  linkPressed: { opacity: 0.6 },
+  privacyNote: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three, marginTop: Spacing.one },
+  linkPressed: { opacity: 0.7 },
   pressed: { opacity: 0.75 },
   disabled: { opacity: 0.5 },
 });

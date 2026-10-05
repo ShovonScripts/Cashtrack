@@ -18,7 +18,16 @@ export function CategoryIcon({
 }) {
   const name = getCategorySymbolName(category, customIcons);
   return (
-    <View style={[styles.container, { width: containerSize, height: containerSize, backgroundColor: `${color}22` }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          width: containerSize,
+          height: containerSize,
+          borderRadius: Math.round(containerSize / 3),
+          backgroundColor: `${color}22`,
+        },
+      ]}>
       <MaterialCommunityIcons name={name as any} size={size} color={color} />
     </View>
   );
@@ -26,7 +35,6 @@ export function CategoryIcon({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },

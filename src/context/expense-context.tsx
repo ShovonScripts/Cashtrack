@@ -81,9 +81,12 @@ type ExpenseContextValue = {
   setCategoryIcon: (category: string, icon: string) => void;
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (completed: boolean) => void;
+  themeMode: 'light' | 'dark' | 'system';
+  setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
+  toggleThemeMode: () => void;
 };
 
-const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
+export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
 
 export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, dispatch] = useReducer(expenseReducer, []);
@@ -269,6 +272,17 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, hasCompletedOnboarding: completed }));
   }, []);
 
+  const setThemeMode = useCallback((mode: 'light' | 'dark' | 'system') => {
+    setPreferences((current) => ({ ...current, themeMode: mode }));
+  }, []);
+
+  const toggleThemeMode = useCallback(() => {
+    setPreferences((current) => ({
+      ...current,
+      themeMode: current.themeMode === 'dark' ? 'light' : 'dark',
+    }));
+  }, []);
+
   const value = useMemo(() => ({
     expenses,
     isLoading,
@@ -281,6 +295,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     categoryIcons: preferences.categoryIcons,
     hasCompletedOnboarding: preferences.hasCompletedOnboarding ?? false,
     setHasCompletedOnboarding,
+    themeMode: preferences.themeMode ?? 'system',
+    setThemeMode,
+    toggleThemeMode,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -311,6 +328,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setCategoryLimit,
     setCategoryIcon,
     setHasCompletedOnboarding,
+    setThemeMode,
+    toggleThemeMode,
   ]);
 
   return <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>;

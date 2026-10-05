@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native'
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
+import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
@@ -23,7 +24,7 @@ function triggerHaptic() {
 
 export default function AdvisorScreen() {
   const theme = useTheme();
-  const { expenses, categoryLimits, categories, formatAmount } = useExpenses();
+  const { expenses, categoryLimits, categories, categoryIcons, formatAmount } = useExpenses();
   const { incomeList } = useIncome();
   const now = new Date();
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
@@ -128,7 +129,7 @@ export default function AdvisorScreen() {
         ) : (
           <View style={styles.noticeList}>
             {insights.map((insight) => (
-              <NoticeCard key={insight.category} insight={insight} formatAmount={formatAmount} />
+              <NoticeCard key={insight.category} insight={insight} formatAmount={formatAmount} categoryIcons={categoryIcons} />
             ))}
           </View>
         )}
@@ -144,7 +145,7 @@ export default function AdvisorScreen() {
                 <View key={item.category}>
                   {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
                   <View style={styles.uncappedRow}>
-                    <View style={[styles.categoryDot, { backgroundColor: getCategoryColor(item.category) }]} />
+                    <CategoryIcon category={item.category} customIcons={categoryIcons} color={getCategoryColor(item.category)} size={15} containerSize={26} />
                     <ThemedText type="smallBold" style={styles.uncappedName}>{item.category}</ThemedText>
                     <ThemedText type="smallBold">{formatAmount(item.spent)}</ThemedText>
                   </View>
@@ -171,7 +172,15 @@ export default function AdvisorScreen() {
   );
 }
 
-function NoticeCard({ insight, formatAmount }: { insight: BudgetInsight; formatAmount: (amount: number) => string }) {
+function NoticeCard({
+  insight,
+  formatAmount,
+  categoryIcons,
+}: {
+  insight: BudgetInsight;
+  formatAmount: (amount: number) => string;
+  categoryIcons?: Record<string, string>;
+}) {
   const theme = useTheme();
   const isOver = insight.level === 'over';
   const color = isOver ? theme.danger : insight.level === 'near' ? '#BD7119' : theme.accent;
@@ -189,6 +198,13 @@ function NoticeCard({ insight, formatAmount }: { insight: BudgetInsight; formatA
   return (
     <Card style={{ ...styles.noticeCard, borderLeftWidth: 4, borderLeftColor: color }}>
       <View style={styles.noticeHeading}>
+        <CategoryIcon
+          category={insight.category}
+          customIcons={categoryIcons}
+          color={color}
+          size={15}
+          containerSize={26}
+        />
         <ThemedText type="defaultBold" style={styles.noticeTitle}>{title}</ThemedText>
         <View style={[styles.noticePill, { backgroundColor: isOver ? 'rgba(235, 87, 87, 0.15)' : insight.level === 'near' ? 'rgba(189, 113, 25, 0.15)' : theme.accentMuted }]}>
           <ThemedText type="caption" style={{ color, fontWeight: '700' }}>

@@ -3,6 +3,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Card, CardDivider } from '@/components/card';
+import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategoryColor } from '@/constants/categories';
@@ -33,7 +34,7 @@ function DetailRow({ label, value, wrap = false }: RowProps) {
 
 export default function ExpenseDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getExpense, deleteExpense, formatAmount } = useExpenses();
+  const { getExpense, deleteExpense, formatAmount, categoryIcons } = useExpenses();
   const theme = useTheme();
 
   const expense = getExpense(id);
@@ -80,8 +81,14 @@ export default function ExpenseDetailsScreen() {
           </ThemedText>
 
           <View style={styles.badgeRow}>
-            <View style={[styles.badgeDot, { backgroundColor: accent }]} />
-            <ThemedText type="small" themeColor="textSecondary">
+            <CategoryIcon
+              category={expense.category}
+              customIcons={categoryIcons}
+              color={accent}
+              size={15}
+              containerSize={26}
+            />
+            <ThemedText type="smallBold" themeColor="text">
               {expense.category}
             </ThemedText>
           </View>

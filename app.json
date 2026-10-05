@@ -35,12 +35,12 @@
         }
       ],
       [
-"expo-splash-screen",
-      {
-        "backgroundColor": "#00109D",
-        "image": "./assets/images/splash-icon.png",
-        "imageWidth": 160
-      }
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#00109D",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160
+        }
       ],
       "expo-sqlite",
       "expo-sharing",
@@ -67,6 +67,9 @@
           "Cross-Origin-Embedder-Policy": "credentialless",
           "Cross-Origin-Opener-Policy": "same-origin"
         }
+      },
+      "eas": {
+        "projectId": "a7917023-afab-48ba-8f45-bfbdf31092bb"
       }
     },
     "owner": "shovonscripts"

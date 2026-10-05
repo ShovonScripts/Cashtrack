@@ -1,6 +1,7 @@
 import type { CountryCode } from '@/constants/countries';
 
 export type GenderOption = 'woman' | 'man' | '';
+export type ThemeMode = 'light' | 'dark' | 'system';
 
 export type UserProfile = {
   name: string;
@@ -18,6 +19,7 @@ export type UserPreferences = {
   categoryIcons: Record<string, string>;
   notifiedThresholds: Record<string, string>;
   hasCompletedOnboarding: boolean;
+  themeMode: ThemeMode;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -28,4 +30,5 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   categoryIcons: {},
   notifiedThresholds: {},
   hasCompletedOnboarding: false,
+  themeMode: 'system',
 };

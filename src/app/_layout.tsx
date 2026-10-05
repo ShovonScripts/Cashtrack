@@ -2,17 +2,14 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from 'expo-rout
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { LoadingScreen } from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
-import { SpendlyLogo } from '@/components/spendly-logo';
 import { ExpenseProvider, useExpenses } from '@/context/expense-context';
 import { DebtProvider } from '@/context/debt-context';
 import { IncomeProvider } from '@/context/income-context';
 import { GoalProvider } from '@/context/goal-context';
 import { FinancialRemindersProvider } from '@/context/financial-reminders-context';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
 
@@ -81,21 +78,6 @@ function Navigation() {
     </Pressable>
   );
 
-  const renderProfileButton = () => (
-    <Pressable
-      onPress={() => router.push('/profile')}
-      accessibilityRole="button"
-      accessibilityLabel="Open your profile and settings"
-      hitSlop={8}
-      style={({ pressed }) => [
-        styles.profileButton,
-        { backgroundColor: theme.accentMuted },
-        pressed && styles.profileButtonPressed,
-      ]}>
-      <MaterialCommunityIcons name="cog-outline" size={20} color={theme.accent} />
-    </Pressable>
-  );
-
   return (
     <Stack
       screenOptions={{
@@ -105,7 +87,8 @@ function Navigation() {
         headerShadowVisible: false,
         contentStyle: { backgroundColor: theme.background },
       }}>
-      <Stack.Screen name="index" options={{ headerTitle: () => <SpendlyLogo />, headerRight: renderProfileButton }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="income" options={{ title: 'Money In' }} />
       <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
       <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
@@ -163,23 +146,8 @@ const styles = StyleSheet.create({
     opacity: 0.78,
     transform: [{ scale: 0.97 }],
   },
-  profileButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  profileButtonPressed: {
-    opacity: 0.72,
-  },
 });
 
-/**
- * Temporary SQLite CRUD exercise. Development only — it logs to the console and
- * touches nothing outside the SQLite test row. Delete this effect once SQLite
- * is wired up for real.
- */
 function useSqliteCrudTest() {
   useEffect(() => {
     if (!__DEV__) {
@@ -189,15 +157,23 @@ function useSqliteCrudTest() {
   }, []);
 }
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-
-  useSqliteCrudTest();
+function AppThemeProvider({ children }: { children: React.ReactNode }) {
+  const theme = useTheme();
+  const isDark = theme.text === '#ffffff';
 
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
-      <ExpenseProvider>
+      {children}
+    </ThemeProvider>
+  );
+}
+
+export default function RootLayout() {
+  useSqliteCrudTest();
+
+  return (
+    <ExpenseProvider>
+      <AppThemeProvider>
         <DebtProvider>
           <IncomeProvider>
             <GoalProvider>
@@ -208,7 +184,7 @@ export default function RootLayout() {
             </GoalProvider>
           </IncomeProvider>
         </DebtProvider>
-      </ExpenseProvider>
-    </ThemeProvider>
+      </AppThemeProvider>
+    </ExpenseProvider>
   );
 }

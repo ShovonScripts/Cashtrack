@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { EXPENSE_CATEGORIES } from '@/types/expense';
 import { COUNTRIES } from '@/constants/countries';
-import { DEFAULT_PREFERENCES, type GenderOption, type UserPreferences } from '@/types/preferences';
+import { DEFAULT_PREFERENCES, type GenderOption, type ThemeMode, type UserPreferences } from '@/types/preferences';
 
 export const PREFERENCES_STORAGE_KEY = '@cashtrack/preferences';
 
@@ -53,6 +53,10 @@ function sanitizePreferences(value: unknown): UserPreferences {
     ? candidate.hasCompletedOnboarding
     : false;
 
+  const themeMode: ThemeMode = candidate.themeMode === 'light' || candidate.themeMode === 'dark' || candidate.themeMode === 'system'
+    ? candidate.themeMode
+    : 'system';
+
   return {
     profile: {
       name: typeof rawProfile.name === 'string' ? rawProfile.name.slice(0, 50) : '',
@@ -65,6 +69,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
     categoryIcons,
     notifiedThresholds,
     hasCompletedOnboarding,
+    themeMode,
   };
 }
 

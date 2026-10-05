@@ -88,6 +88,9 @@ function Navigation() {
       }}>
       <Stack.Screen name="index" options={{ headerTitle: () => <SpendlyLogo />, headerRight: renderProfileButton }} />
       <Stack.Screen name="income" options={{ title: 'Money In' }} />
+      <Stack.Screen name="insights" options={{ title: 'Financial Insights' }} />
+      <Stack.Screen name="cash-flow" options={{ title: 'Cash Flow Forecast' }} />
+      <Stack.Screen name="receipts" options={{ title: 'Receipt Archive' }} />
       <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
       <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
       <Stack.Screen name="goals/[id]" options={{ title: 'Goal Details' }} />

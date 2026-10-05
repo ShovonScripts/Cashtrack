@@ -134,6 +134,12 @@ export default function ProfileScreen() {
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink title="Money Plan & Pots" detail="Proactive financial planning and savings targets" onPress={() => router.push('/goals')} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <SettingsLink title="Financial Insights" detail="Savings rate, category trends, and budget health" onPress={() => router.push('/insights')} />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <SettingsLink title="Cash Flow Forecast" detail="Projected month-end balance and upcoming bills" onPress={() => router.push('/cash-flow')} />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+          <SettingsLink title="Receipt Archive" detail="Browse and view attached receipt images" onPress={() => router.push('/receipts')} />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink title="Lend & borrow" detail="Track money lent and borrowed (IOUs)" onPress={() => router.push('/debts')} />
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink title="Manage categories" detail="Create, rename, or remove categories" onPress={() => router.push('/categories')} />

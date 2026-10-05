@@ -27,6 +27,7 @@ export type GoalWithProgress = MoneyGoal & {
   aheadBehindAmount: number;
   isCompleted: boolean;
   contributions: GoalContribution[];
+  frequencyRequired: number;
 };
 
 type GoalContextValue = {
@@ -111,6 +112,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         aheadBehindAmount: calc.aheadBehindAmount,
         isCompleted: calc.isCompleted || goal.status === 'completed',
         contributions: goalContribs,
+        frequencyRequired: calc.frequencyRequired,
       };
     });
   }, [rawGoals, contributions]);
@@ -181,7 +183,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     [goals, contributions, isLoading, addGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
   );
 
-    return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;
+  return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;
 }
 
 export function useGoals(): GoalContextValue {

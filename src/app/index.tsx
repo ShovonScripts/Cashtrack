@@ -14,6 +14,7 @@ import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
 import { useIncome } from '@/context/income-context';
+import { useGoals } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
 import { sortByDateDesc, sumAmounts, totalForDate, totalForMonth } from '@/utils/expense';
 import { calculateMonthlyCashFlow } from '@/utils/income';
@@ -165,6 +166,33 @@ function BudgetOverview({
           );
         })
       )}
+    </Card>
+  );
+}
+
+function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number) => string }) {
+  const { goals } = useGoals();
+  const theme = useTheme();
+  const activeGoals = goals.filter((g) => !g.isCompleted);
+  const totalSaved = goals.reduce((sum, g) => sum + g.contributedAmount, 0);
+
+  return (
+    <Card style={styles.planCard}>
+      <View style={styles.planHeader}>
+        <View style={styles.planCopy}>
+          <ThemedText type="defaultBold">Money Plan & Pots</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">
+            {activeGoals.length} active {activeGoals.length === 1 ? 'pot' : 'pots'} · {formatAmount(totalSaved)} saved
+          </ThemedText>
+        </View>
+        <Pressable
+          onPress={() => router.push('/goals')}
+          accessibilityRole="button"
+          accessibilityLabel="View money plan"
+          style={({ pressed }) => [styles.planBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>Plan  →</ThemedText>
+        </Pressable>
+      </View>
     </Card>
   );
 }
@@ -381,6 +409,8 @@ export default function DashboardScreen() {
           formatAmount={formatAmount}
         />
 
+        <MoneyPlanSummaryCard formatAmount={formatAmount} />
+
         <View style={styles.summaryRow}>
           <Card style={styles.metricCard}>
             <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
@@ -545,6 +575,10 @@ const styles = StyleSheet.create({
     bottom: -90,
     backgroundColor: 'rgba(176,76,252,0.2)',
   },
+  planCard: { gap: 0, padding: Spacing.three },
+  planHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
+  planCopy: { flex: 1, gap: 2 },
+  planBtn: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.one, borderRadius: Radius.pill },
   summaryRow: {
     flexDirection: 'row',
     gap: Spacing.three,

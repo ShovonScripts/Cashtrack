@@ -33,6 +33,27 @@ CREATE TABLE IF NOT EXISTS income_transactions (
 
 CREATE INDEX IF NOT EXISTS idx_income_date
 ON income_transactions (date DESC);
+
+CREATE TABLE IF NOT EXISTS money_goals (
+  id TEXT PRIMARY KEY NOT NULL,
+  title TEXT NOT NULL,
+  target_amount REAL NOT NULL CHECK (target_amount > 0),
+  start_date TEXT NOT NULL,
+  deadline_date TEXT NOT NULL,
+  frequency TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active'
+);
+
+CREATE TABLE IF NOT EXISTS goal_contributions (
+  id TEXT PRIMARY KEY NOT NULL,
+  goal_id TEXT NOT NULL,
+  amount REAL NOT NULL CHECK (amount > 0),
+  date TEXT NOT NULL,
+  note TEXT NOT NULL DEFAULT ''
+);
+
+CREATE INDEX IF NOT EXISTS idx_goal_contributions_goal
+ON goal_contributions (goal_id, date DESC);
 `;
 
 let initPromise: Promise<SQLite.SQLiteDatabase> | null = null;

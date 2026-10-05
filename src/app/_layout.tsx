@@ -10,6 +10,7 @@ import { SpendlyLogo } from '@/components/spendly-logo';
 import { ExpenseProvider, useExpenses } from '@/context/expense-context';
 import { DebtProvider } from '@/context/debt-context';
 import { IncomeProvider } from '@/context/income-context';
+import { GoalProvider } from '@/context/goal-context';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
@@ -87,6 +88,9 @@ function Navigation() {
       }}>
       <Stack.Screen name="index" options={{ headerTitle: () => <SpendlyLogo />, headerRight: renderProfileButton }} />
       <Stack.Screen name="income" options={{ title: 'Money In' }} />
+      <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
+      <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
+      <Stack.Screen name="goals/[id]" options={{ title: 'Goal Details' }} />
       <Stack.Screen name="expenses" options={{ title: 'Expenses', headerRight: renderAddButton }} />
       <Stack.Screen name="debts" options={{ title: 'Lend & Borrow', headerRight: renderAddDebtButton }} />
       <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
@@ -174,8 +178,10 @@ export default function RootLayout() {
       <ExpenseProvider>
         <DebtProvider>
           <IncomeProvider>
-            <AnimatedSplashOverlay />
-            <Navigation />
+            <GoalProvider>
+              <AnimatedSplashOverlay />
+              <Navigation />
+            </GoalProvider>
           </IncomeProvider>
         </DebtProvider>
       </ExpenseProvider>

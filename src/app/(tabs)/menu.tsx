@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
@@ -167,9 +168,11 @@ export default function MenuScreen() {
     </Card>
   );
 
+  const insets = useSafeAreaInsets();
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top, Spacing.three) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.wrapper}>
           {/* Header */}
           <View style={styles.headerRow}>

@@ -6,6 +6,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { File, Paths } from 'expo-file-system';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
@@ -365,8 +366,10 @@ export default function ReportsScreen() {
     }
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, Spacing.three) }]} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         {/* Header Intro */}
         <View style={styles.intro}>

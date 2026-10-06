@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, CardDivider } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
@@ -590,11 +591,12 @@ export default function DashboardScreen() {
   }).length;
   const todayLabel = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'short' }).format(now);
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
+  const insets = useSafeAreaInsets();
 
   return (
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={styles.contentContainer}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top, Spacing.three) }]}
       showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         {/* Tier 1: Daily Summary Header & KPI */}

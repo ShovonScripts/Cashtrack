@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SectionList, Pressable, StyleSheet, TextInput, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, CardDivider } from '@/components/card';
 import { CategoryChips, type CategoryFilter } from '@/components/category-chips';
@@ -82,12 +83,14 @@ export default function ExpensesScreen() {
     setCategory('All');
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <View style={styles.screen}>
       <SectionList
         sections={groupedSections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top, Spacing.three) }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         stickySectionHeadersEnabled={false}

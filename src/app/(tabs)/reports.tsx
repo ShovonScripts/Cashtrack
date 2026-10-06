@@ -369,7 +369,7 @@ export default function ReportsScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, Spacing.three) }]} showsVerticalScrollIndicator={false}>
+    <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         {/* Header Intro */}
         <View style={styles.intro}>
@@ -446,15 +446,19 @@ export default function ReportsScreen() {
         {/* 3. Executive Metrics Row */}
         <View style={styles.metricsRow}>
           <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
-              <MaterialCommunityIcons name="calendar-today" size={16} color={theme.accent} />
+            <View style={styles.metricHeaderRow}>
+              <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
+                <MaterialCommunityIcons name="calendar-today" size={16} color={theme.accent} />
+              </View>
             </View>
-            <ThemedText type="caption" themeColor="textSecondary">
-              DAILY AVG
-            </ThemedText>
-            <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(dailyAvg)}
-            </ThemedText>
+            <View style={styles.metricContent}>
+              <ThemedText type="caption" themeColor="textSecondary">
+                DAILY AVG
+              </ThemedText>
+              <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
+                {formatAmount(dailyAvg)}
+              </ThemedText>
+            </View>
           </Card>
 
           <Card style={styles.metricCard}>
@@ -476,24 +480,43 @@ export default function ReportsScreen() {
                 </View>
               )}
             </View>
-            <ThemedText type="caption" themeColor="textSecondary">
-              VS PREV MONTH
-            </ThemedText>
-            <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
-              {prevTotal > 0 ? (diffAmount <= 0 ? `-${formatAmount(Math.abs(diffAmount))}` : `+${formatAmount(diffAmount)}`) : 'N/A'}
-            </ThemedText>
+            <View style={styles.metricContent}>
+              <ThemedText type="caption" themeColor="textSecondary">
+                VS PREV MONTH
+              </ThemedText>
+              <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
+                {prevTotal > 0 ? (diffAmount <= 0 ? `-${formatAmount(Math.abs(diffAmount))}` : `+${formatAmount(diffAmount)}`) : 'N/A'}
+              </ThemedText>
+            </View>
           </Card>
 
           <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
-              <MaterialCommunityIcons name="shield-check-outline" size={16} color={theme.accent} />
+            <View style={styles.metricHeaderRow}>
+              <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
+                <MaterialCommunityIcons name="shield-check-outline" size={16} color={theme.accent} />
+              </View>
+              {limitPercent !== null && (
+                <View
+                  style={[
+                    styles.trendBadge,
+                    { backgroundColor: limitPercent <= 100 ? 'rgba(39, 174, 96, 0.15)' : 'rgba(235, 87, 87, 0.15)' },
+                  ]}>
+                  <ThemedText
+                    type="caption"
+                    style={{ color: limitPercent <= 100 ? '#27AE60' : theme.danger, fontWeight: '700', fontSize: 10 }}>
+                    {limitPercent <= 100 ? 'On track' : 'Over limit'}
+                  </ThemedText>
+                </View>
+              )}
             </View>
-            <ThemedText type="caption" themeColor="textSecondary">
-              BUDGET USED
-            </ThemedText>
-            <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
-              {limitPercent !== null ? `${limitPercent}%` : 'No limits'}
-            </ThemedText>
+            <View style={styles.metricContent}>
+              <ThemedText type="caption" themeColor="textSecondary">
+                BUDGET USED
+              </ThemedText>
+              <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
+                {limitPercent !== null ? `${limitPercent}%` : 'No limits'}
+              </ThemedText>
+            </View>
           </Card>
         </View>
 
@@ -654,6 +677,7 @@ export default function ReportsScreen() {
               <View key={expense.id}>
                 {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
                 <View style={styles.transactionRow}>
+                  <CategoryIcon category={expense.category} customIcons={categoryIcons} color={getCategoryColor(expense.category)} size={16} containerSize={36} />
                   <View style={styles.transactionCopy}>
                     <ThemedText type="smallBold" numberOfLines={1}>
                       {expense.note || expense.category}
@@ -662,7 +686,7 @@ export default function ReportsScreen() {
                       {formatDate(expense.date)} · {expense.category}
                     </ThemedText>
                   </View>
-                  <ThemedText type="smallBold">{formatAmount(expense.amount)}</ThemedText>
+                  <ThemedText type="smallBold" style={{ fontVariant: ['tabular-nums'] }}>{formatAmount(expense.amount)}</ThemedText>
                 </View>
               </View>
             ))}
@@ -729,8 +753,12 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    gap: Spacing.one,
-    padding: Spacing.two,
+    justifyContent: 'space-between',
+    padding: Spacing.three,
+    minHeight: 115,
+  },
+  metricContent: {
+    gap: 2,
   },
   metricHeaderRow: {
     flexDirection: 'row',
@@ -750,8 +778,8 @@ const styles = StyleSheet.create({
     borderRadius: Radius.small,
   },
   metricValue: {
-    fontSize: 16,
-    lineHeight: 22,
+    fontSize: 15,
+    lineHeight: 20,
     fontVariant: ['tabular-nums'],
   },
   chartCard: { gap: Spacing.two, padding: Spacing.three },

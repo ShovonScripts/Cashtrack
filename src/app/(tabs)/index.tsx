@@ -1,19 +1,17 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, CardDivider } from '@/components/card';
-import { CategoryIcon } from '@/components/category-icon';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
 import { MoneySummaryCard } from '@/components/money-summary-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
@@ -141,94 +139,74 @@ function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]
   );
 }
 
-function BudgetOverview({
-  expenses,
-  limits,
-  formatAmount,
-}: {
-  expenses: Expense[];
-  limits: Record<string, number>;
-  formatAmount: (amount: number) => string;
-}) {
-  const theme = useTheme();
-  const { categoryIcons } = useExpenses();
-  const entries = Object.entries(limits).sort(([first], [second]) => first.localeCompare(second));
-
-  return (
-    <Card style={styles.budgetCard}>
-      <View style={styles.sectionTitleRow}>
-        <View style={styles.sectionTitleCopy}>
-          <ThemedText type="defaultBold">Category limits</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">Monthly guardrails</ThemedText>
-        </View>
-        <Pressable onPress={() => router.push('/budgets')} accessibilityRole="button" hitSlop={8}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>Manage →</ThemedText>
-        </Pressable>
-      </View>
-      {entries.length === 0 ? (
-        <Pressable
-          onPress={() => router.push('/budgets')}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.budgetEmpty, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>＋ Set your first category limit</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">A little structure can make spending clearer.</ThemedText>
-        </Pressable>
-      ) : (
-        entries.slice(0, 3).map(([category, limit]) => {
-          const now = new Date();
-          const spent = sumAmounts(expenses.filter((expense) => {
-            const date = new Date(expense.date);
-            return expense.category === category && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-          }));
-          const fraction = Math.min(spent / limit, 1);
-          const over = spent > limit;
-          const accent = over ? theme.danger : getCategoryColor(category);
-          return (
-            <View key={category} style={styles.budgetRow}>
-              <View style={styles.budgetLabelRow}>
-                <CategoryIcon category={category} customIcons={categoryIcons} color={accent} size={14} containerSize={24} />
-                <ThemedText type="smallBold" style={styles.budgetCategory}>{category}</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">
-                  {formatAmount(spent)} / {formatAmount(limit)}
-                </ThemedText>
-              </View>
-              <View style={[styles.budgetTrack, { backgroundColor: theme.backgroundElement }]}>
-                <View style={[styles.budgetFill, { width: `${fraction * 100}%`, backgroundColor: accent }]} />
-              </View>
-              <ThemedText type="caption" themeColor={over ? 'danger' : 'textSecondary'}>
-                {over ? `${formatAmount(spent - limit)} over limit` : `${formatAmount(limit - spent)} left`}
-              </ThemedText>
-            </View>
-          );
-        })
-      )}
-    </Card>
-  );
-}
-
 function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { goals } = useGoals();
   const theme = useTheme();
   const activeGoals = goals.filter((g) => !g.isCompleted);
   const totalSaved = goals.reduce((sum, g) => sum + g.contributedAmount, 0);
+  const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
+  const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
 
   return (
-    <Card style={styles.planCard}>
-      <View style={styles.planHeader}>
-        <View style={styles.planCopy}>
+    <Card
+      style={[
+        styles.stylishCard,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+          borderWidth: StyleSheet.hairlineWidth,
+        },
+      ]}>
+      <View style={styles.topAccentBar}>
+        <View style={[styles.accentPill, { backgroundColor: Brand.bright }]} />
+      </View>
+      <View style={styles.overviewHeaderRow}>
+        <View style={styles.titleCopy}>
           <ThemedText type="defaultBold">Money Plan & Pots</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            {activeGoals.length} active {activeGoals.length === 1 ? 'pot' : 'pots'} · {formatAmount(totalSaved)} saved
-          </ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">Savings goals & targets</ThemedText>
         </View>
         <Pressable
-          onPress={() => router.push('/goals')}
+          onPress={() => {
+            triggerHaptic();
+            router.push('/goals/add');
+          }}
           accessibilityRole="button"
-          accessibilityLabel="View money plan"
-          style={({ pressed }) => [styles.planBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>Plan →</ThemedText>
+          accessibilityLabel="Create pot"
+          style={({ pressed }) => [styles.overviewBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
+          <MaterialCommunityIcons name="plus" size={14} color={theme.accent} />
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>Add pot</ThemedText>
         </Pressable>
       </View>
+
+      <View style={styles.metricsRow}>
+        <View style={styles.metric}>
+          <ThemedText type="caption" themeColor="textSecondary">ACTIVE POTS</ThemedText>
+          <ThemedText type="defaultBold" style={{ color: theme.accent, fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+            {activeGoals.length}
+          </ThemedText>
+        </View>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <View style={styles.metric}>
+          <ThemedText type="caption" themeColor="textSecondary">TOTAL SAVED</ThemedText>
+          <ThemedText type="defaultBold" style={{ color: '#27AE60', fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+            {formatAmount(totalSaved)}
+          </ThemedText>
+        </View>
+      </View>
+
+      <Pressable
+        onPress={() => {
+          triggerHaptic();
+          router.push('/goals');
+        }}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.netRow, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
+        <ThemedText type="small" themeColor="textSecondary">Overall Progress: {overallProgress}%</ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>View plan →</ThemedText>
+          <MaterialCommunityIcons name="chevron-right" size={16} color={theme.textSecondary} />
+        </View>
+      </Pressable>
     </Card>
   );
 }
@@ -411,61 +389,81 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
 
 function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { debts } = useDebts();
+  const theme = useTheme();
   const activeDebts = debts.filter((d) => d.status === 'active');
   const youAreOwed = activeDebts.filter((d) => d.type === 'lent').reduce((sum, d) => sum + d.amount, 0);
   const youOwe = activeDebts.filter((d) => d.type === 'borrowed').reduce((sum, d) => sum + d.amount, 0);
   const net = youAreOwed - youOwe;
 
   return (
-    <View style={styles.heroCard}>
-      <View style={styles.heroContent}>
-        <View style={styles.heroTopline}>
-          <ThemedText type="caption" style={styles.heroLabel}>MONEY OVERVIEW</ThemedText>
-          <Pressable
-            onPress={() => router.push('/debts/add')}
-            accessibilityRole="button"
-            accessibilityLabel="Add debt"
-            style={({ pressed }) => [styles.heroAddButton, pressed && styles.pressed]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-              <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
-              <ThemedText type="defaultBold" style={styles.heroAddButtonText}>Add debt</ThemedText>
-            </View>
-          </Pressable>
+    <Card
+      style={[
+        styles.stylishCard,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+          borderWidth: StyleSheet.hairlineWidth,
+        },
+      ]}>
+      <View style={styles.topAccentBar}>
+        <View style={[styles.accentPill, { backgroundColor: '#27AE60' }]} />
+      </View>
+      <View style={styles.overviewHeaderRow}>
+        <View style={styles.titleCopy}>
+          <ThemedText type="defaultBold">Lend & Borrow</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">Active debts & loans</ThemedText>
         </View>
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/debts/add');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Add debt"
+          style={({ pressed }) => [styles.overviewBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
+          <MaterialCommunityIcons name="plus" size={14} color={theme.accent} />
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>Add debt</ThemedText>
+        </Pressable>
+      </View>
 
-        <View style={styles.heroSummaryRow}>
-          <View style={styles.heroStat}>
-            <ThemedText type="caption" style={styles.heroStatLabel}>YOU ARE OWED</ThemedText>
-            <ThemedText type="subtitle" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(youAreOwed)}
-            </ThemedText>
+      <View style={styles.metricsRow}>
+        <View style={styles.metric}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={[styles.statusDot, { backgroundColor: '#27AE60' }]} />
+            <ThemedText type="caption" themeColor="textSecondary">THEY OWE YOU</ThemedText>
           </View>
-          <View style={styles.heroDivider} />
-          <View style={styles.heroStat}>
-            <ThemedText type="caption" style={styles.heroStatLabel}>YOU OWE</ThemedText>
-            <ThemedText type="subtitle" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(youOwe)}
-            </ThemedText>
-          </View>
+          <ThemedText type="defaultBold" style={{ color: '#27AE60', fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+            {formatAmount(youAreOwed)}
+          </ThemedText>
         </View>
-
-        <View style={styles.heroNetRow}>
-          <ThemedText type="small" style={styles.heroNetText}>
-            Net Position: <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>{net >= 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}</ThemedText>
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
+        <View style={styles.metric}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={[styles.statusDot, { backgroundColor: theme.danger }]} />
+            <ThemedText type="caption" themeColor="textSecondary">YOU OWE OTHERS</ThemedText>
+          </View>
+          <ThemedText type="defaultBold" style={{ color: theme.danger, fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+            {formatAmount(youOwe)}
           </ThemedText>
         </View>
       </View>
 
       <Pressable
-        onPress={() => router.push('/debts')}
+        onPress={() => {
+          triggerHaptic();
+          router.push('/debts');
+        }}
         accessibilityRole="button"
-        accessibilityLabel="View debts"
-        style={({ pressed }) => [styles.heroBottomAction, pressed && styles.pressed]}>
-        <ThemedText type="smallBold" style={styles.heroBottomActionText}>View debts →</ThemedText>
+        style={({ pressed }) => [styles.netRow, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
+        <ThemedText type="small" themeColor="textSecondary">Net Balance:</ThemedText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <ThemedText type="defaultBold" style={{ color: net >= 0 ? '#27AE60' : theme.danger }}>
+            {net === 0 ? 'All settled up' : net > 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}
+          </ThemedText>
+          <MaterialCommunityIcons name="chevron-right" size={16} color={theme.textSecondary} />
+        </View>
       </Pressable>
-      <View pointerEvents="none" style={styles.heroOrbLarge} />
-      <View pointerEvents="none" style={styles.heroOrbSmall} />
-    </View>
+    </Card>
   );
 }
 
@@ -592,11 +590,16 @@ export default function DashboardScreen() {
   const todayLabel = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'short' }).format(now);
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
   const insets = useSafeAreaInsets();
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [cashFlowCardIndex, setCashFlowCardIndex] = useState(0);
+  const screenWidth = useWindowDimensions().width;
+  const containerPadding = Spacing.four * 2;
+  const cardWidth = Math.min(screenWidth - containerPadding, MaxContentWidth - containerPadding);
 
   return (
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top, Spacing.three) }]}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]}
       showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         {/* Tier 1: Daily Summary Header & KPI */}
@@ -629,52 +632,213 @@ export default function DashboardScreen() {
           </Pressable>
         </View>
 
-        {/* Daily Spending Hero Card */}
-        <ThemedView type="card" style={styles.hero}>
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>DAILY SPENDING</ThemedText>
-              <View style={styles.monthPill}>
-                <ThemedText type="caption" style={styles.monthPillText}>{todayLabel}</ThemedText>
-              </View>
-            </View>
-            <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(todaySpend)}
-            </ThemedText>
-            <ThemedText type="small" style={styles.heroSubtext}>
-              {todayExpenseCount === 0
-                ? 'No expenses recorded today. Add your first.'
-                : `${todayExpenseCount} ${todayExpenseCount === 1 ? 'expense' : 'expenses'} recorded today`}
-            </ThemedText>
-            <Pressable
-              onPress={() => {
+        {/* Swipeable Summary Cards Carousel */}
+        <View style={styles.carouselWrapper}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={cardWidth + Spacing.three}
+            decelerationRate="fast"
+            onScroll={(e) => {
+              const offsetX = e.nativeEvent.contentOffset.x;
+              const newIndex = Math.round(offsetX / (cardWidth + Spacing.three));
+              if (newIndex !== activeCardIndex && newIndex >= 0 && newIndex <= 2) {
+                setActiveCardIndex(newIndex);
                 triggerHaptic();
-                router.push('/add-expense');
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Add an expense"
-              style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-                <ThemedText type="defaultBold" style={styles.addButtonText}>Add expense</ThemedText>
-              </View>
-            </Pressable>
+              }
+            }}
+            scrollEventThrottle={16}
+            contentContainerStyle={styles.carouselContent}>
+
+            {/* Card 1: Daily Cost */}
+            <View style={[styles.carouselCard, { width: cardWidth }]}>
+              <ThemedView type="card" style={styles.hero}>
+                <View style={styles.heroContent}>
+                  <View style={styles.heroTopline}>
+                    <ThemedText type="caption" style={styles.heroLabel}>DAILY COST</ThemedText>
+                    <View style={styles.monthPill}>
+                      <ThemedText type="caption" style={styles.monthPillText}>{todayLabel}</ThemedText>
+                    </View>
+                  </View>
+                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+                    {formatAmount(todaySpend)}
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.heroSubtext}>
+                    {todayExpenseCount === 0
+                      ? 'No expenses recorded today. Add your first.'
+                      : `${todayExpenseCount} ${todayExpenseCount === 1 ? 'expense' : 'expenses'} recorded today`}
+                  </ThemedText>
+                  <Pressable
+                    onPress={() => {
+                      triggerHaptic();
+                      router.push('/add-expense');
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add an expense"
+                    style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+                      <ThemedText type="defaultBold" style={styles.addButtonText}>Add expense</ThemedText>
+                    </View>
+                  </Pressable>
+                </View>
+                <View pointerEvents="none" style={styles.heroOrbLarge} />
+                <View pointerEvents="none" style={styles.heroOrbSmall} />
+              </ThemedView>
+            </View>
+
+            {/* Card 2: Monthly Cost */}
+            <View style={[styles.carouselCard, { width: cardWidth }]}>
+              <ThemedView type="card" style={styles.monthlyHero}>
+                <View style={styles.heroContent}>
+                  <View style={styles.heroTopline}>
+                    <ThemedText type="caption" style={styles.heroLabel}>
+                      {new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now).toUpperCase()} SPENDING
+                    </ThemedText>
+                    {lastMonthSpend > 0 && (
+                      <View style={styles.monthlyTrendPill}>
+                        <ThemedText type="caption" style={styles.monthlyTrendText}>
+                          {diffAmount <= 0 ? `↓ ${diffPercent}%` : `↑ ${diffPercent}%`}
+                        </ThemedText>
+                      </View>
+                    )}
+                  </View>
+                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+                    {formatAmount(monthSpend)}
+                  </ThemedText>
+                  <View style={styles.cardFooterRow}>
+                    <ThemedText type="small" style={styles.heroSubtext}>
+                      {new Intl.DateTimeFormat('en', { month: 'long' }).format(lastMonth)}: {formatAmount(lastMonthSpend)}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => {
+                        triggerHaptic();
+                        router.push('/(tabs)/reports');
+                      }}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+                      <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>View report →</ThemedText>
+                    </Pressable>
+                  </View>
+                </View>
+                <View pointerEvents="none" style={styles.heroOrbLarge} />
+              </ThemedView>
+            </View>
+
+            {/* Card 3: All-Time Cost */}
+            <View style={[styles.carouselCard, { width: cardWidth }]}>
+              <ThemedView type="card" style={styles.allTimeHero}>
+                <View style={styles.heroContent}>
+                  <View style={styles.heroTopline}>
+                    <ThemedText type="caption" style={styles.heroLabel}>ALL-TIME COST</ThemedText>
+                    <View style={styles.cyanBadge}>
+                      <MaterialCommunityIcons name="wallet-outline" size={14} color={Brand.bright} />
+                      <ThemedText type="caption" style={styles.cyanBadgeText}>CUMULATIVE</ThemedText>
+                    </View>
+                  </View>
+                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+                    {formatAmount(sumAmounts(expenses))}
+                  </ThemedText>
+                  <View style={styles.cardFooterRow}>
+                    <ThemedText type="small" style={styles.heroSubtext}>
+                      {expenses.length} {expenses.length === 1 ? 'transaction' : 'transactions'} tracked
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => {
+                        triggerHaptic();
+                        router.push('/(tabs)/expenses');
+                      }}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+                      <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>View all →</ThemedText>
+                    </Pressable>
+                  </View>
+                </View>
+                <View pointerEvents="none" style={styles.heroOrbCyan} />
+              </ThemedView>
+            </View>
+
+          </ScrollView>
+
+          {/* Pagination Indicator Dots */}
+          <View style={styles.paginationDots}>
+            {[0, 1, 2].map((i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: activeCardIndex === i ? theme.accent : theme.border,
+                    width: activeCardIndex === i ? 22 : 6,
+                  },
+                ]}
+              />
+            ))}
           </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
-        </ThemedView>
+        </View>
 
-        {/* Money Summary Card (Net Cash Flow) */}
-        <MoneySummaryCard
-          moneyIn={cashFlow.moneyIn}
-          moneyOut={cashFlow.moneyOut}
-          net={cashFlow.net}
-          formatAmount={formatAmount}
-        />
-
-        {/* Tier 2: Actionable Alerts & Weekly Trends */}
+        {/* Tier 2: Actionable Alerts & Secondary Swipeable Carousel (Cash Flow ⇄ Money Overview) */}
         <UpcomingBillsWidget formatAmount={formatAmount} />
         <SpendingAdvisor expenses={expenses} limits={categoryLimits} formatAmount={formatAmount} />
+
+        <View style={styles.carouselWrapper}>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            snapToInterval={cardWidth + Spacing.three}
+            decelerationRate="fast"
+            onScroll={(e) => {
+              const offsetX = e.nativeEvent.contentOffset.x;
+              const newIndex = Math.round(offsetX / (cardWidth + Spacing.three));
+              if (newIndex !== cashFlowCardIndex && newIndex >= 0 && newIndex <= 2) {
+                setCashFlowCardIndex(newIndex);
+                triggerHaptic();
+              }
+            }}
+            scrollEventThrottle={16}
+            contentContainerStyle={styles.carouselContent}>
+
+            {/* Card A: Monthly Cash Flow */}
+            <View style={[styles.carouselCard, { width: cardWidth }]}>
+              <MoneySummaryCard
+                moneyIn={cashFlow.moneyIn}
+                moneyOut={cashFlow.moneyOut}
+                net={cashFlow.net}
+                formatAmount={formatAmount}
+              />
+            </View>
+
+            {/* Card B: Money Overview (Debts) */}
+            <View style={[styles.carouselCard, { width: cardWidth }]}>
+              <MoneyOverview formatAmount={formatAmount} />
+            </View>
+
+            {/* Card C: Money Plan & Pots */}
+            <View style={[styles.carouselCard, { width: cardWidth }]}>
+              <MoneyPlanSummaryCard formatAmount={formatAmount} />
+            </View>
+
+          </ScrollView>
+
+          {/* Pagination Dots (3 dots) */}
+          <View style={styles.paginationDots}>
+            {[0, 1, 2].map((i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor: cashFlowCardIndex === i ? theme.accent : theme.border,
+                    width: cashFlowCardIndex === i ? 22 : 6,
+                  },
+                ]}
+              />
+            ))}
+          </View>
+        </View>
+
         <WeeklySpending expenses={expenses} today={now} formatAmount={formatAmount} />
 
         {/* Tier 3: High-Frequency Recent Activity Log (Promoted Up for 1-Swipe Access!) */}
@@ -740,41 +904,6 @@ export default function DashboardScreen() {
             ))
           )}
         </Card>
-
-        {/* Tier 4: Financial Guardrails & Plan Summaries */}
-        <View style={styles.summaryRow}>
-          <Card style={styles.metricCard}>
-            <View style={styles.metricHeaderRow}>
-              <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
-                <ThemedText type="smallBold" style={{ color: theme.accent }}>↓</ThemedText>
-              </View>
-              {lastMonthSpend > 0 && (
-                <View style={[styles.trendBadge, { backgroundColor: diffAmount <= 0 ? 'rgba(39, 174, 96, 0.15)' : 'rgba(235, 87, 87, 0.15)' }]}>
-                  <ThemedText type="caption" style={{ color: diffAmount <= 0 ? '#27AE60' : theme.danger, fontWeight: '700', fontSize: 10 }}>
-                    {diffAmount <= 0 ? `↓ ${diffPercent}%` : `↑ ${diffPercent}%`}
-                  </ThemedText>
-                </View>
-              )}
-            </View>
-            <ThemedText type="caption" themeColor="textSecondary">MONTHLY SPENDING</ThemedText>
-            <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(monthSpend)}
-            </ThemedText>
-          </Card>
-          <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
-              <ThemedText type="smallBold" style={{ color: theme.accent }}>#</ThemedText>
-            </View>
-            <ThemedText type="caption" themeColor="textSecondary">ALL TIME</ThemedText>
-            <ThemedText type="defaultBold" style={styles.metricValue} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(sumAmounts(expenses))}
-            </ThemedText>
-          </Card>
-        </View>
-
-        <MoneyPlanSummaryCard formatAmount={formatAmount} />
-        <MoneyOverview formatAmount={formatAmount} />
-        <BudgetOverview expenses={expenses} limits={categoryLimits} formatAmount={formatAmount} />
 
         {/* Footer & Support */}
         <Pressable
@@ -844,9 +973,11 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
     overflow: 'hidden',
+    height: 190,
   },
   heroContent: {
-    gap: Spacing.one,
+    flex: 1,
+    justifyContent: 'space-between',
     zIndex: 1,
   },
   heroTopline: {
@@ -954,13 +1085,111 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroCard: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
+  moneyOverviewCard: {
+    height: 215,
+    justifyContent: 'space-between',
     padding: Spacing.four,
+  },
+  stylishCard: {
+    height: 215,
+    justifyContent: 'space-between',
+    padding: Spacing.four,
+    borderRadius: Radius.xlarge,
     overflow: 'hidden',
-    position: 'relative',
-    gap: Spacing.three,
+  },
+  topAccentBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    alignItems: 'center',
+  },
+  accentPill: {
+    width: 40,
+    height: 4,
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
+  },
+  titleCopy: {
+    gap: 2,
+  },
+  moneyOverviewColoredCard: {
+    height: 215,
+    justifyContent: 'space-between',
+    padding: Spacing.four,
+    backgroundColor: '#0B192C',
+    borderRadius: Radius.xlarge,
+    overflow: 'hidden',
+  },
+  moneyPlanColoredCard: {
+    height: 215,
+    justifyContent: 'space-between',
+    padding: Spacing.four,
+    backgroundColor: '#172554',
+    borderRadius: Radius.xlarge,
+    overflow: 'hidden',
+  },
+  overviewHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  overviewBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: Radius.pill,
+  },
+  overviewBtnColored: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: Radius.pill,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  metric: {
+    flex: 1,
+    gap: 4,
+  },
+  divider: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+  },
+  coloredDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 32,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  netRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+  },
+  coloredNetRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   heroSummaryRow: {
     flexDirection: 'row',
@@ -1013,6 +1242,107 @@ const styles = StyleSheet.create({
   },
   heroBottomActionText: {
     color: '#FFFFFF',
+  },
+  monthlyCostCard: {
+    padding: Spacing.four,
+    gap: Spacing.four,
+    justifyContent: 'space-between',
+    minHeight: 180,
+  },
+  monthlyCostValue: {
+    fontSize: 34,
+    lineHeight: 42,
+    fontVariant: ['tabular-nums'],
+    marginTop: 2,
+  },
+  monthlyCostFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(0,0,0,0.06)',
+    paddingTop: Spacing.three,
+  },
+  trendBadgeLarge: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+  },
+  monthlyReportLink: {
+    paddingVertical: 4,
+  },
+  monthlyHero: {
+    backgroundColor: Brand.primary,
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
+    overflow: 'hidden',
+    height: 190,
+  },
+  allTimeHero: {
+    backgroundColor: '#0B192C',
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
+    overflow: 'hidden',
+    height: 190,
+  },
+  monthlyTrendPill: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  monthlyTrendText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  cyanBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(20,231,253,0.15)',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  cyanBadgeText: {
+    color: Brand.bright,
+    fontWeight: '700',
+  },
+  cardFooterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: Spacing.one,
+  },
+  whiteLinkButton: {
+    paddingVertical: 4,
+  },
+  heroOrbCyan: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    right: -70,
+    top: -80,
+    backgroundColor: 'rgba(20,231,253,0.15)',
+  },
+  carouselWrapper: {
+    width: '100%',
+  },
+  carouselContent: {
+    gap: Spacing.three,
+  },
+  carouselCard: {},
+  paginationDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: Spacing.two,
+  },
+  dot: {
+    height: 6,
+    borderRadius: 3,
   },
   sectionHeader: {
     flexDirection: 'row',

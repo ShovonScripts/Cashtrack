@@ -106,7 +106,7 @@ export default function GoalDetailScreen() {
               <ThemedText type="caption" style={styles.heroLabel}>FINANCIAL POT · {goal.frequency.toUpperCase()}</ThemedText>
               <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? 'rgba(39, 174, 96, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
                 <ThemedText type="caption" style={{ color: goal.isCompleted ? '#2ecc71' : '#FFFFFF', fontWeight: '700' }}>
-                  {goal.isCompleted ? 'Completed 🏆' : 'Active'}
+                  {goal.isCompleted ? 'Completed' : 'Active'}
                 </ThemedText>
               </View>
             </View>

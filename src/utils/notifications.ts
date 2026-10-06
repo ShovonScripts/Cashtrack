@@ -138,7 +138,7 @@ export async function checkAndTriggerDebtNotifications({
 
       const isLent = debt.type === 'lent';
       const formattedAmount = formatAmount ? formatAmount(debt.amount) : String(debt.amount);
-      const title = isLent ? (isToday ? 'Lent Debt Due Today 💰' : 'Overdue Debt Notice ⏳') : (isToday ? 'Borrowed Debt Due Today 🔔' : 'Overdue Loan Reminder ⚠️');
+      const title = isLent ? (isToday ? 'Lent Debt Due Today' : 'Overdue Debt Notice') : (isToday ? 'Borrowed Debt Due Today' : 'Overdue Loan Reminder');
       const message = isLent
         ? `${debt.personName}'s lent debt of ${formattedAmount} is ${isToday ? 'due today' : 'past due'}.`
         : `Your borrowed debt of ${formattedAmount} from ${debt.personName} is ${isToday ? 'due today' : 'past due'}.`;
@@ -193,15 +193,15 @@ export async function checkAndTriggerGoalNotifications({
 
     if (calc.isCompleted) {
       stateKey = `completed-${goal.id}`;
-      title = 'Goal Achieved! 🏆';
+      title = 'Goal Achieved!';
       body = `Congratulations! You successfully achieved your goal "${goal.title}" of ${formattedTarget}.`;
     } else if (calc.remainingDays <= 3 && calc.remainingDays >= 0) {
       stateKey = `deadline-${goal.id}-${dateKey}`;
-      title = 'Deadline Approaching ⏳';
+      title = 'Deadline Approaching';
       body = `Your goal "${goal.title}" is due in ${calc.remainingDays} days.`;
     } else if (calc.aheadBehindAmount < -5000) {
       stateKey = `behind-${goal.id}-${dateKey}`;
-      title = 'Money Plan Notice ⚠️';
+      title = 'Money Plan Notice';
       body = `You are behind on your target for "${goal.title}". Check your required contributions.`;
     }
 

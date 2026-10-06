@@ -7,6 +7,7 @@ import { File, Paths } from 'expo-file-system';
 import { generateCsvReport } from '@/utils/csv';
 
 import { Card } from '@/components/card';
+import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
@@ -23,7 +24,7 @@ function sameMonth(first: Date, second: Date) {
 
 export default function ReportsScreen() {
   const theme = useTheme();
-  const { expenses, categoryLimits, profile, country, formatAmount } = useExpenses();
+  const { expenses, categoryLimits, categoryIcons, profile, country, formatAmount } = useExpenses();
   const [month, setMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1, 12);
@@ -297,11 +298,12 @@ export default function ReportsScreen() {
               <View key={expense.id}>
                 {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
                 <View style={styles.transactionRow}>
+                  <CategoryIcon category={expense.category} customIcons={categoryIcons} color={getCategoryColor(expense.category)} size={16} containerSize={36} />
                   <View style={styles.transactionCopy}>
                     <ThemedText type="smallBold" numberOfLines={1}>{expense.note || expense.category}</ThemedText>
                     <ThemedText type="caption" themeColor="textSecondary">{formatDate(expense.date)} · {expense.category}</ThemedText>
                   </View>
-                  <ThemedText type="smallBold">{formatAmount(expense.amount)}</ThemedText>
+                  <ThemedText type="smallBold" style={{ fontVariant: ['tabular-nums'] }}>{formatAmount(expense.amount)}</ThemedText>
                 </View>
               </View>
             ))}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { SpendlyLogo } from '@/components/spendly-logo';
@@ -22,7 +23,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
   const slides = [
     {
       id: 'welcome',
-      icon: '👋',
+      icon: 'hand-wave' as const,
       title: 'Welcome to CashTrack',
       subtitle: 'Your smart, private, and local-first money manager.',
       content: (
@@ -52,9 +53,12 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                 { borderColor: theme.accent },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="smallBold" style={{ color: theme.accent }}>
-                🌐 Change Country or Currency
-              </ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialCommunityIcons name="earth" size={16} color={theme.accent} />
+                <ThemedText type="smallBold" style={{ color: theme.accent }}>
+                  Change Country or Currency
+                </ThemedText>
+              </View>
             </Pressable>
           </Card>
         </View>
@@ -62,23 +66,23 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     },
     {
       id: 'calculator',
-      icon: '🧮',
+      icon: 'calculator' as const,
       title: 'Smart Expression Calculator',
       subtitle: 'Log expenses effortlessly with built-in math.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
-            emoji="➕"
+            icon="plus-box-outline"
             title="Math Expressions"
             description="Type calculations directly on the keypad like 12.50 + 4.99 = 17.49 when logging receipts."
           />
           <FeatureBullet
-            emoji="📅"
+            icon="calendar-outline"
             title="Quick Date Selector"
             description="Use the 'Today' button to reset dates instantly or choose past dates."
           />
           <FeatureBullet
-            emoji="🏷️"
+            icon="tag-outline"
             title="Custom Categories"
             description="Organize expenses by built-in categories or create custom ones with custom icons."
           />
@@ -87,23 +91,23 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     },
     {
       id: 'budgets-debts',
-      icon: '📊',
+      icon: 'chart-box-outline' as const,
       title: 'Budgets, Debts & AI Insights',
       subtitle: 'Stay in full control of your financial health.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
-            emoji="🎯"
+            icon="target"
             title="Monthly Budget Caps"
             description="Set limits for categories and get automatic warnings at 80% and 100% spend."
           />
           <FeatureBullet
-            emoji="🤝"
+            icon="handshake-outline"
             title="Debt Tracker"
             description="Track money you owe or are owed, log partial payments, and mark debts settled."
           />
           <FeatureBullet
-            emoji="🧠"
+            icon="brain"
             title="On-Device Financial Advisor"
             description="Get personalized spending feedback and budget insights generated right on your phone."
           />
@@ -112,23 +116,23 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     },
     {
       id: 'privacy',
-      icon: '🔒',
+      icon: 'shield-lock-outline' as const,
       title: '100% Private & Offline',
       subtitle: 'Your money data stays on your device.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
-            emoji="🛡️"
+            icon="shield-check-outline"
             title="No Account Required"
             description="Your expenses are stored locally in an encrypted SQLite database on your device."
           />
           <FeatureBullet
-            emoji="🚫"
+            icon="cancel"
             title="Zero Ads or Tracking"
             description="No analytics SDKs, no targeted ads, and no cloud uploads."
           />
           <FeatureBullet
-            emoji="📄"
+            icon="file-document-outline"
             title="Instant PDF & CSV Export"
             description="Generate clean monthly PDF reports or CSV spreadsheets whenever you need them."
           />
@@ -177,7 +181,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.titleSection}>
               <View style={[styles.iconBadge, { backgroundColor: theme.accentMuted }]}>
-                <ThemedText style={styles.iconText}>{slide.icon}</ThemedText>
+                <MaterialCommunityIcons name={slide.icon} size={28} color={theme.accent} />
               </View>
               <ThemedText type="subtitle" style={styles.slideTitle}>
                 {slide.title}
@@ -235,7 +239,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                   pressed && styles.pressed,
                 ]}>
                 <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
-                  {isLastSlide ? 'Get Started 🎉' : 'Next →'}
+                  {isLastSlide ? 'Get Started' : 'Next →'}
                 </ThemedText>
               </Pressable>
             </View>
@@ -246,12 +250,12 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
   );
 }
 
-function FeatureBullet({ emoji, title, description }: { emoji: string; title: string; description: string }) {
+function FeatureBullet({ icon, title, description }: { icon: keyof typeof MaterialCommunityIcons.glyphMap; title: string; description: string }) {
   const theme = useTheme();
   return (
     <View style={styles.bulletRow}>
       <View style={[styles.bulletIcon, { backgroundColor: theme.cardMuted }]}>
-        <ThemedText style={styles.bulletEmoji}>{emoji}</ThemedText>
+        <MaterialCommunityIcons name={icon} size={18} color={theme.accent} />
       </View>
       <View style={styles.bulletTextGroup}>
         <ThemedText type="smallBold">{title}</ThemedText>
@@ -305,9 +309,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.one,
-  },
-  iconText: {
-    fontSize: 28,
   },
   slideTitle: {
     fontSize: 22,
@@ -366,9 +367,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bulletEmoji: {
-    fontSize: 18,
   },
   bulletTextGroup: {
     flex: 1,

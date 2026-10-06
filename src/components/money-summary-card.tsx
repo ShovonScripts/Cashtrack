@@ -2,8 +2,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -21,7 +21,21 @@ export function MoneySummaryCard({
   const theme = useTheme();
 
   return (
-    <Card style={styles.card}>
+    <ThemedView
+      type="card"
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.card,
+          borderColor: theme.border,
+          borderWidth: StyleSheet.hairlineWidth,
+        },
+      ]}>
+      {/* Top Stylish Accent Pill */}
+      <View style={styles.topAccentBar}>
+        <View style={[styles.accentPill, { backgroundColor: theme.accent }]} />
+      </View>
+
       <View style={styles.headerRow}>
         <View style={styles.titleCopy}>
           <ThemedText type="defaultBold">Monthly cash flow</ThemedText>
@@ -59,13 +73,15 @@ export function MoneySummaryCard({
           {net >= 0 ? `+${formatAmount(net)}` : formatAmount(net)}
         </ThemedText>
       </View>
-    </Card>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { gap: Spacing.three },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  card: { height: 215, justifyContent: 'space-between', padding: Spacing.four, borderRadius: Radius.xlarge, overflow: 'hidden' },
+  topAccentBar: { position: 'absolute', top: 0, left: 0, right: 0, height: 4, alignItems: 'center' },
+  accentPill: { width: 40, height: 4, borderBottomLeftRadius: 2, borderBottomRightRadius: 2 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   titleCopy: { gap: 2 },
   incomeBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: Spacing.three, paddingVertical: Spacing.one, borderRadius: Radius.pill },
   metricsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },

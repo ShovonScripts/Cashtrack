@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, type ViewStyle } from 'react-native';
+import { StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
@@ -9,7 +9,7 @@ type CardProps = {
   /** `muted` recedes for grouped content; `default` sits on the page. */
   variant?: 'default' | 'muted';
   padded?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 };
 
 export function Card({ children, variant = 'default', padded = true, style }: CardProps) {
@@ -41,4 +41,3 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
-

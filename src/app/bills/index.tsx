@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -24,8 +25,30 @@ function triggerHaptic() {
   }
 }
 
+function getReminderCategoryIcon(category: string): keyof typeof MaterialCommunityIcons.glyphMap {
+  switch (category) {
+    case 'Bills':
+    case 'Utilities':
+      return 'flash';
+    case 'Rent':
+      return 'home';
+    case 'EMI':
+    case 'Loan':
+      return 'bank';
+    case 'Credit Card':
+      return 'credit-card';
+    case 'Subscription':
+      return 'repeat';
+    case 'Insurance':
+      return 'shield-check';
+    default:
+      return 'calendar-clock';
+  }
+}
+
 export default function BillsScreen() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { reminders } = useFinancialReminders();
   const { formatAmount } = useExpenses();
   const [tab, setTab] = useState<FilterTab>('all');
@@ -64,7 +87,9 @@ export default function BillsScreen() {
   const safeFormatAmount = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, Spacing.three) }]}
+      showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         {/* Hero Section */}
         <View style={styles.hero}>
@@ -179,6 +204,8 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
           ? 'Skipped'
           : `Due in ${reminder.daysUntilDue} days`;
 
+  const iconName = getReminderCategoryIcon(reminder.category);
+
   const handleDelete = () => {
     confirmDelete('Delete reminder?', `Are you sure you want to delete "${reminder.title}"?`, () => {
       deleteReminder(reminder.id);
@@ -194,6 +221,9 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
         opacity: isPaid || isSkipped ? 0.75 : 1,
       }}>
       <View style={styles.cardHeader}>
+        <View style={[styles.reminderIconBadge, { backgroundColor: `${statusColor}1E` }]}>
+          <MaterialCommunityIcons name={iconName} size={20} color={statusColor} />
+        </View>
         <View style={styles.titleCopy}>
           <ThemedText type="defaultBold" numberOfLines={1}>{reminder.title}</ThemedText>
           <View style={styles.badges}>
@@ -285,6 +315,7 @@ const styles = StyleSheet.create({
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   billCard: { borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
+  reminderIconBadge: { width: 40, height: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   titleCopy: { flex: 1, gap: Spacing.half },
   badges: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   badge: { paddingHorizontal: Spacing.two, paddingVertical: 2, borderRadius: Radius.small },

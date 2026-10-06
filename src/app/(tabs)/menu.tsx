@@ -172,7 +172,7 @@ export default function MenuScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top, Spacing.three) }]} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]} showsVerticalScrollIndicator={false}>
         <View style={styles.wrapper}>
           {/* Header */}
           <View style={styles.headerRow}>

@@ -29,7 +29,7 @@ export function GoalProgressCard({
           <View style={styles.titleGroup}>
             <ThemedText type="defaultBold" numberOfLines={1}>{goal.title}</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary" style={{ textTransform: 'capitalize' }}>
-              {goal.frequency} target · {goal.isCompleted ? 'Completed 🎉' : isAhead ? '🟢 On track / Ahead' : '🟠 Behind target'}
+              {goal.frequency} target · {goal.isCompleted ? 'Completed' : isAhead ? 'On track / Ahead' : 'Behind target'}
             </ThemedText>
           </View>
           <ThemedText type="subtitle" style={{ color: theme.accent }}>

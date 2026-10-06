@@ -90,7 +90,7 @@ export default function ExpensesScreen() {
       <SectionList
         sections={groupedSections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top, Spacing.three) }]}
+        contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         stickySectionHeadersEnabled={false}

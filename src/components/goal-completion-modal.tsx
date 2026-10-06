@@ -1,4 +1,5 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
@@ -26,7 +27,7 @@ export function GoalCompletionModal({
       <View style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
         <View style={[styles.container, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={[styles.badge, { backgroundColor: 'rgba(39, 174, 96, 0.15)' }]}>
-            <ThemedText style={{ fontSize: 32 }}>🏆</ThemedText>
+            <MaterialCommunityIcons name="trophy" size={36} color="#27AE60" />
           </View>
 
           <View style={styles.textGroup}>
@@ -52,7 +53,7 @@ export function GoalCompletionModal({
             onPress={onClose}
             accessibilityRole="button"
             style={({ pressed }) => [styles.button, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Awesome 🎉</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Awesome</ThemedText>
           </Pressable>
         </View>
       </View>

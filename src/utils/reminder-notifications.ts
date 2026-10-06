@@ -78,7 +78,7 @@ export async function scheduleReminderNotificationsAsync(reminder: FinancialRemi
         await NotificationsModule.scheduleNotificationAsync({
           identifier: `reminder:${reminder.id}:${sched.key}`,
           content: {
-            title: 'Payment Reminder 🔔',
+            title: 'Payment Reminder',
             body: sched.body,
             sound: true,
           },

@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,6 +25,7 @@ type MenuItem = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   color: string;
   route: string;
+  badge?: string;
 };
 
 const FINANCIAL_MANAGEMENT: MenuItem[] = [
@@ -85,6 +87,7 @@ const INTELLIGENCE_REPORTS: MenuItem[] = [
     icon: 'robot-outline',
     color: '#F2C94C',
     route: '/advisor',
+    badge: 'AI',
   },
   {
     id: 'reports',
@@ -134,45 +137,82 @@ const PREFERENCES_SYSTEM: MenuItem[] = [
 export default function MenuScreen() {
   const theme = useTheme();
   const { profile, country } = useExpenses();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleNavigate = (route: string) => {
     triggerHaptic();
     router.push(route as any);
   };
 
-  const renderSectionGroup = (items: MenuItem[]) => (
-    <Card padded={false} style={styles.groupCard}>
-      {items.map((item, index) => (
-        <View key={item.id}>
-          {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
-          <Pressable
-            onPress={() => handleNavigate(item.route)}
-            accessibilityRole="button"
-            accessibilityLabel={item.title}
-            style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-            <View style={[styles.iconBadge, { backgroundColor: `${item.color}1E` }]}>
-              <MaterialCommunityIcons name={item.icon} size={20} color={item.color} />
-            </View>
-            <View style={styles.copy}>
-              <ThemedText type="smallBold" numberOfLines={1}>
-                {item.title}
-              </ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-                {item.subtitle}
-              </ThemedText>
-            </View>
-            <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-          </Pressable>
-        </View>
-      ))}
-    </Card>
-  );
+  const query = searchQuery.trim().toLowerCase();
+
+  const filterItems = (items: MenuItem[]) => {
+    if (!query) return items;
+    return items.filter(
+      (item) =>
+        item.title.toLowerCase().includes(query) ||
+        item.subtitle.toLowerCase().includes(query)
+    );
+  };
+
+  const filteredFinancial = filterItems(FINANCIAL_MANAGEMENT);
+  const filteredIntelligence = filterItems(INTELLIGENCE_REPORTS);
+  const filteredPreferences = filterItems(PREFERENCES_SYSTEM);
+
+  const totalResults =
+    filteredFinancial.length + filteredIntelligence.length + filteredPreferences.length;
+
+  const renderSectionGroup = (items: MenuItem[]) => {
+    if (items.length === 0) return null;
+    return (
+      <Card padded={false} style={styles.groupCard}>
+        {items.map((item, index) => (
+          <View key={item.id}>
+            {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
+            <Pressable
+              onPress={() => handleNavigate(item.route)}
+              accessibilityRole="button"
+              accessibilityLabel={item.title}
+              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
+              <View style={[styles.iconBadge, { backgroundColor: `${item.color}1E` }]}>
+                <MaterialCommunityIcons name={item.icon} size={19} color={item.color} />
+              </View>
+              <View style={styles.copy}>
+                <View style={styles.rowTitleContainer}>
+                  <ThemedText type="smallBold" numberOfLines={1} style={styles.rowTitleText}>
+                    {item.title}
+                  </ThemedText>
+                  {item.badge && (
+                    <View style={[styles.badgeContainer, { backgroundColor: `${item.color}25` }]}>
+                      <ThemedText type="caption" style={[styles.badgeText, { color: item.color }]}>
+                        {item.badge}
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
+                <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+                  {item.subtitle}
+                </ThemedText>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+            </Pressable>
+          </View>
+        ))}
+      </Card>
+    );
+  };
 
   const insets = useSafeAreaInsets();
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: Math.max(insets.top + Spacing.two, Spacing.four) },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
         <View style={styles.wrapper}>
           {/* Header */}
           <View style={styles.headerRow}>
@@ -186,8 +226,8 @@ export default function MenuScreen() {
               onPress={() => handleNavigate('/profile')}
               accessibilityRole="button"
               accessibilityLabel="Open settings"
-              style={[styles.headerIconButton, { backgroundColor: theme.card }]}>
-              <MaterialCommunityIcons name="cog-outline" size={22} color={theme.text} />
+              style={[styles.headerIconButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              <MaterialCommunityIcons name="cog-outline" size={20} color={theme.text} />
             </Pressable>
           </View>
 
@@ -197,7 +237,7 @@ export default function MenuScreen() {
             style={({ pressed }) => [pressed && styles.rowPressed]}>
             <Card style={styles.userBanner}>
               <View style={[styles.userBadge, { backgroundColor: theme.accentMuted }]}>
-                <MaterialCommunityIcons name="account-outline" size={24} color={theme.accent} />
+                <MaterialCommunityIcons name="account-outline" size={22} color={theme.accent} />
               </View>
               <View style={styles.userCopy}>
                 <ThemedText type="defaultBold" numberOfLines={1}>
@@ -207,33 +247,87 @@ export default function MenuScreen() {
                   {country.name} · {country.currencyCode} ({country.symbol.trim()})
                 </ThemedText>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={22} color={theme.textSecondary} />
+              <View style={[styles.currencyPill, { backgroundColor: theme.backgroundElement }]}>
+                <ThemedText type="caption" style={styles.currencyPillText}>
+                  {country.symbol.trim()}
+                </ThemedText>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
             </Card>
           </Pressable>
 
-          {/* Section 1: Financial Management */}
-          <View style={styles.section}>
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-              FINANCIAL MANAGEMENT
-            </ThemedText>
-            {renderSectionGroup(FINANCIAL_MANAGEMENT)}
+          {/* Search Bar */}
+          <View
+            style={[
+              styles.searchContainer,
+              {
+                backgroundColor: theme.card,
+                borderColor: theme.border,
+              },
+            ]}>
+            <MaterialCommunityIcons name="magnify" size={18} color={theme.textSecondary} />
+            <TextInput
+              style={[styles.searchInput, { color: theme.text }]}
+              placeholder="Search features, tools, budgets..."
+              placeholderTextColor={theme.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  setSearchQuery('');
+                }}
+                hitSlop={8}>
+                <MaterialCommunityIcons name="close-circle" size={16} color={theme.textSecondary} />
+              </Pressable>
+            )}
           </View>
 
-          {/* Section 2: Intelligence & Reports */}
-          <View style={styles.section}>
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-              INTELLIGENCE & REPORTS
-            </ThemedText>
-            {renderSectionGroup(INTELLIGENCE_REPORTS)}
-          </View>
+          {totalResults === 0 ? (
+            <Card style={styles.emptyCard}>
+              <MaterialCommunityIcons name="file-search-outline" size={32} color={theme.textSecondary} />
+              <ThemedText type="defaultBold" style={styles.emptyTitle}>
+                No matching tools found
+              </ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary" style={styles.emptySubtitle}>
+                Try searching for &apos;expenses&apos;, &apos;bills&apos;, &apos;budget&apos;, or &apos;AI&apos;
+              </ThemedText>
+            </Card>
+          ) : (
+            <>
+              {/* Section 1: Financial Management */}
+              {filteredFinancial.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
+                    FINANCIAL MANAGEMENT
+                  </ThemedText>
+                  {renderSectionGroup(filteredFinancial)}
+                </View>
+              )}
 
-          {/* Section 3: System & Preferences */}
-          <View style={styles.section}>
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-              PREFERENCES & SYSTEM
-            </ThemedText>
-            {renderSectionGroup(PREFERENCES_SYSTEM)}
-          </View>
+              {/* Section 2: Intelligence & Reports */}
+              {filteredIntelligence.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
+                    INTELLIGENCE & REPORTS
+                  </ThemedText>
+                  {renderSectionGroup(filteredIntelligence)}
+                </View>
+              )}
+
+              {/* Section 3: System & Preferences */}
+              {filteredPreferences.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
+                    PREFERENCES & SYSTEM
+                  </ThemedText>
+                  {renderSectionGroup(filteredPreferences)}
+                </View>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
     </ThemedView>
@@ -245,84 +339,142 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingVertical: Spacing.four,
+    paddingVertical: Spacing.three,
     alignItems: 'center',
+    paddingBottom: 90,
   },
   wrapper: {
     width: '100%',
     maxWidth: MaxContentWidth,
     paddingHorizontal: Spacing.three,
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.half,
+    marginBottom: 2,
   },
   headerCopy: {
-    gap: 2,
+    gap: 1,
   },
   headerIconButton: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: Radius.medium,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   userBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.three,
-    padding: Spacing.three,
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 12,
   },
   userBadge: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
   },
   userCopy: {
     flex: 1,
-    gap: 2,
+    gap: 1,
+  },
+  currencyPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  currencyPillText: {
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 42,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.two,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 13,
+    paddingVertical: 0,
   },
   section: {
     gap: Spacing.one,
+    marginTop: 2,
   },
   sectionHeader: {
-    letterSpacing: 1,
+    letterSpacing: 0.8,
     fontWeight: '700',
-    fontSize: 11,
+    fontSize: 10,
     paddingLeft: Spacing.one,
   },
   groupCard: {
     borderRadius: Radius.large,
   },
   row: {
-    minHeight: 52,
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    paddingVertical: 10,
   },
   iconBadge: {
-    width: 34,
-    height: 34,
+    width: 32,
+    height: 32,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
   },
   copy: {
     flex: 1,
-    gap: 2,
+    gap: 1,
+  },
+  rowTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  rowTitleText: {
+    flexShrink: 1,
+    fontSize: 13,
+  },
+  badgeContainer: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '800',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginLeft: 56,
+    marginLeft: 52,
   },
   rowPressed: {
     opacity: 0.7,
+  },
+  emptyCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.four,
+    gap: Spacing.one,
+  },
+  emptyTitle: {
+    marginTop: Spacing.one,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    textAlign: 'center',
   },
 });

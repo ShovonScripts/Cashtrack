@@ -24,12 +24,12 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     {
       id: 'welcome',
       icon: 'hand-wave' as const,
-      title: 'Welcome to CashTrack',
+      title: 'Welcome to Spendly',
       subtitle: 'Your smart, private, and local-first money manager.',
       content: (
         <View style={styles.slideBody}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.bodyText}>
-            CashTrack helps you track spending, stick to monthly budgets, and stay on top of debts—all without creating an account.
+            Spendly helps you track spending, monitor income streams, stick to monthly budgets, and manage debts—all without creating an account.
           </ThemedText>
 
           <Card style={styles.highlightCard}>
@@ -65,51 +65,76 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
       ),
     },
     {
-      id: 'calculator',
-      icon: 'calculator' as const,
-      title: 'Smart Expression Calculator',
+      id: 'transactions',
+      icon: 'receipt' as const,
+      title: 'Transactions & Income',
       subtitle: 'Log expenses effortlessly with built-in math.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
-            icon="plus-box-outline"
-            title="Math Expressions"
-            description="Type calculations directly on the keypad like 12.50 + 4.99 = 17.49 when logging receipts."
+            icon="calculator"
+            title="Smart Expression Calculator"
+            description="Type calculations directly like 12.50 + 4.99 = 17.49 when recording receipts."
           />
           <FeatureBullet
-            icon="calendar-outline"
-            title="Quick Date Selector"
-            description="Use the 'Today' button to reset dates instantly or choose past dates."
+            icon="wallet-plus-outline"
+            title="Income Streams"
+            description="Track recurring salary, freelance gigs, and diverse cash inflows."
           />
           <FeatureBullet
-            icon="tag-outline"
-            title="Custom Categories"
-            description="Organize expenses by built-in categories or create custom ones with custom icons."
+            icon="tag-multiple-outline"
+            title="Custom Categories & Tags"
+            description="Organize expenses by intuitive categories or create custom tags with custom icons."
           />
         </View>
       ),
     },
     {
-      id: 'budgets-debts',
-      icon: 'chart-box-outline' as const,
-      title: 'Budgets, Debts & AI Insights',
-      subtitle: 'Stay in full control of your financial health.',
+      id: 'liabilities',
+      icon: 'scale-balance' as const,
+      title: 'Budgets, Bills & Debts',
+      subtitle: 'Stay in full control of your financial obligations.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
             icon="target"
             title="Monthly Budget Caps"
-            description="Set limits for categories and get automatic warnings at 80% and 100% spend."
+            description="Set limits for categories and get automatic alerts at 80% and 100% spend."
           />
           <FeatureBullet
-            icon="handshake-outline"
-            title="Debt Tracker"
-            description="Track money you owe or are owed, log partial payments, and mark debts settled."
+            icon="calendar-clock"
+            title="Bills & Reminders"
+            description="Never miss a payment with upcoming payment alerts and EMIs."
           />
           <FeatureBullet
-            icon="brain"
-            title="On-Device Financial Advisor"
-            description="Get personalized spending feedback and budget insights generated right on your phone."
+            icon="account-cash-outline"
+            title="Debts & IOUs Tracker"
+            description="Track money you lent or borrowed, log partial returns, and mark items settled."
+          />
+        </View>
+      ),
+    },
+    {
+      id: 'insights',
+      icon: 'chart-box-outline' as const,
+      title: 'AI Advisor & Reports',
+      subtitle: 'Deep intelligence and exportable data.',
+      content: (
+        <View style={styles.slideBody}>
+          <FeatureBullet
+            icon="robot-outline"
+            title="AI Financial Advisor"
+            description="Get personalized budget check-ins and insights generated right on your phone."
+          />
+          <FeatureBullet
+            icon="chart-donut-variant"
+            title="Savings Goals & Pots"
+            description="Allocate funds toward specific milestone targets and watch your pots grow."
+          />
+          <FeatureBullet
+            icon="file-document-outline"
+            title="PDF & CSV Data Exports"
+            description="Generate clean monthly PDF reports or CSV spreadsheets whenever needed."
           />
         </View>
       ),
@@ -118,23 +143,23 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
       id: 'privacy',
       icon: 'shield-lock-outline' as const,
       title: '100% Private & Offline',
-      subtitle: 'Your money data stays on your device.',
+      subtitle: 'Your money data stays exclusively on your device.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
             icon="shield-check-outline"
             title="No Account Required"
-            description="Your expenses are stored locally in an encrypted SQLite database on your device."
+            description="Your expenses are stored locally in an encrypted SQLite database."
           />
           <FeatureBullet
             icon="cancel"
             title="Zero Ads or Tracking"
-            description="No analytics SDKs, no targeted ads, and no cloud uploads."
+            description="No analytics SDKs, no targeted ads, and no cloud server uploads."
           />
           <FeatureBullet
-            icon="file-document-outline"
-            title="Instant PDF & CSV Export"
-            description="Generate clean monthly PDF reports or CSV spreadsheets whenever you need them."
+            icon="grid"
+            title="Unified Menu Hub"
+            description="Access all features, tools, and preferences instantly from one central hub."
           />
         </View>
       ),

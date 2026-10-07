@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
+import { DatePicker } from '@/components/date-picker';
 import { useIncome } from '@/context/income-context';
 import { useExpenses } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
@@ -21,17 +23,39 @@ const FREQUENCIES: { label: string; value: RecurringFrequency }[] = [
 
 export default function IncomeScreen() {
   const theme = useTheme();
-  const { incomeList, addIncome, deleteIncome } = useIncome();
+  const { incomeList, addIncome, updateIncome, deleteIncome } = useIncome();
   const { formatAmount } = useExpenses();
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [date, setDate] = useState<Date>(() => new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringFrequency, setRecurringFrequency] = useState<RecurringFrequency>('monthly');
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleAdd = async () => {
+  const handleStartEdit = (item: IncomeRecord) => {
+    setEditingId(item.id);
+    setAmount(String(item.amount));
+    setNote(item.note || '');
+    setDate(new Date(item.date));
+    setIsRecurring(Boolean(item.isRecurring));
+    setRecurringFrequency(item.recurringFrequency || 'monthly');
+    setMessage('');
+    Haptics.selectionAsync().catch(() => {});
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setAmount('');
+    setNote('');
+    setDate(new Date());
+    setIsRecurring(false);
+    setMessage('');
+  };
+
+  const handleSave = async () => {
     if (isSubmitting) return;
     const parsed = Number(amount);
     if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -42,17 +66,31 @@ export default function IncomeScreen() {
     setIsSubmitting(true);
     setMessage('');
     try {
-      await addIncome({
-        amount: parsed,
-        note: note.trim(),
-        date: new Date().toISOString(),
-        isRecurring,
-        recurringFrequency: isRecurring ? recurringFrequency : undefined,
-      });
+      if (editingId) {
+        await updateIncome(editingId, {
+          amount: parsed,
+          note: note.trim(),
+          date: date.toISOString(),
+          isRecurring,
+          recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        });
+        setMessage('Income updated successfully.');
+        setEditingId(null);
+      } else {
+        await addIncome({
+          amount: parsed,
+          note: note.trim(),
+          date: date.toISOString(),
+          isRecurring,
+          recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        });
+        setMessage('Income added successfully.');
+      }
       setAmount('');
       setNote('');
+      setDate(new Date());
       setIsRecurring(false);
-      setMessage('Income added successfully.');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch {
       setMessage('Could not save income. Please try again.');
     } finally {
@@ -79,9 +117,17 @@ export default function IncomeScreen() {
           <View pointerEvents="none" style={styles.heroOrb} />
         </View>
 
-        {/* Add Income Form Card */}
+        {/* Add / Edit Income Form Card */}
         <Card style={styles.formCard}>
-          <ThemedText type="defaultBold">Record Money In</ThemedText>
+          <View style={styles.formHeader}>
+            <ThemedText type="defaultBold">{editingId ? 'Edit Money In' : 'Record Money In'}</ThemedText>
+            {editingId && (
+              <Pressable onPress={handleCancelEdit} accessibilityRole="button">
+                <ThemedText type="smallBold" style={{ color: theme.accent }}>Cancel edit</ThemedText>
+              </Pressable>
+            )}
+          </View>
+
           <View style={styles.field}>
             <ThemedText type="smallBold">Amount</ThemedText>
             <TextInput
@@ -105,6 +151,12 @@ export default function IncomeScreen() {
               accessibilityLabel="Income source or note"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
+          </View>
+
+          {/* Date Picker */}
+          <View style={styles.field}>
+            <ThemedText type="smallBold">Date</ThemedText>
+            <DatePicker value={date} onChange={setDate} />
           </View>
 
           <View style={styles.switchRow}>
@@ -153,11 +205,13 @@ export default function IncomeScreen() {
           ) : null}
 
           <Pressable
-            onPress={handleAdd}
+            onPress={handleSave}
             disabled={isSubmitting}
             accessibilityRole="button"
             style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Add Money In</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
+              {editingId ? 'Update Money In' : 'Add Money In'}
+            </ThemedText>
           </Pressable>
         </Card>
 
@@ -178,7 +232,14 @@ export default function IncomeScreen() {
         ) : (
           <View style={styles.list}>
             {incomeList.map((item) => (
-              <IncomeItem key={item.id} item={item} formatAmount={formatAmount} onDelete={() => deleteIncome(item.id)} />
+              <IncomeItem
+                key={item.id}
+                item={item}
+                isEditing={editingId === item.id}
+                formatAmount={formatAmount}
+                onEdit={() => handleStartEdit(item)}
+                onDelete={() => deleteIncome(item.id)}
+              />
             ))}
           </View>
         )}
@@ -187,10 +248,22 @@ export default function IncomeScreen() {
   );
 }
 
-function IncomeItem({ item, formatAmount, onDelete }: { item: IncomeRecord; formatAmount: (amount: number) => string; onDelete: () => void }) {
+function IncomeItem({
+  item,
+  isEditing,
+  formatAmount,
+  onEdit,
+  onDelete,
+}: {
+  item: IncomeRecord;
+  isEditing: boolean;
+  formatAmount: (amount: number) => string;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const theme = useTheme();
   return (
-    <Card style={styles.itemCard}>
+    <Card style={[styles.itemCard, isEditing && { borderColor: theme.accent, borderWidth: 2 }]}>
       <View style={styles.itemRow}>
         <View style={[styles.itemIcon, { backgroundColor: 'rgba(39, 174, 96, 0.15)' }]}>
           <MaterialCommunityIcons name="arrow-down-left" size={20} color="#27AE60" />
@@ -202,7 +275,10 @@ function IncomeItem({ item, formatAmount, onDelete }: { item: IncomeRecord; form
           <ThemedText type="caption" themeColor="textSecondary">{formatDate(item.date)}</ThemedText>
         </View>
         <ThemedText type="defaultBold" style={{ color: '#27AE60' }}>+{formatAmount(item.amount)}</ThemedText>
-        <Pressable onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete income" hitSlop={8} style={styles.deleteBtn}>
+        <Pressable onPress={onEdit} accessibilityRole="button" accessibilityLabel="Edit income" hitSlop={8} style={styles.actionBtn}>
+          <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.accent} />
+        </Pressable>
+        <Pressable onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete income" hitSlop={8} style={styles.actionBtn}>
           <MaterialCommunityIcons name="delete-outline" size={18} color={theme.textSecondary} />
         </Pressable>
       </View>
@@ -220,6 +296,7 @@ const styles = StyleSheet.create({
   heroSub: { color: 'rgba(255,255,255,0.8)' },
   heroOrb: { position: 'absolute', width: 200, height: 200, borderRadius: 100, right: -70, top: -80, backgroundColor: 'rgba(139,123,255,0.2)' },
   formCard: { gap: Spacing.three },
+  formHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   field: { gap: Spacing.one },
   input: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 16 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -234,6 +311,6 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   itemIcon: { width: 40, height: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   itemInfo: { flex: 1, gap: 2 },
-  deleteBtn: { padding: 4 },
+  actionBtn: { padding: 4 },
   pressed: { opacity: 0.75 },
 });

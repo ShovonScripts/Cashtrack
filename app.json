@@ -45,6 +45,12 @@
       "expo-sqlite",
       "expo-sharing",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Spendly to access your photos to set your cover and profile picture."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {

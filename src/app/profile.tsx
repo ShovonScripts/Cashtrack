@@ -1,7 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
@@ -51,15 +53,65 @@ function SettingsLink({
 
 export default function ProfileScreen() {
   const theme = useTheme();
-  const { profile, country, updateProfile } = useExpenses();
+  const { profile, country, updateProfile, themeMode, setThemeMode, temperatureUnit, setTemperatureUnit } = useExpenses();
   const [name, setName] = useState(profile.name);
   const [ageText, setAgeText] = useState(profile.age !== null ? String(profile.age) : '');
   const [gender, setGender] = useState<GenderOption>(profile.gender);
+  const [coverPhotoUri, setCoverPhotoUri] = useState<string | undefined>(profile.coverPhotoUri);
+  const [profilePhotoUri, setProfilePhotoUri] = useState<string | undefined>(profile.profilePhotoUri);
   const [saved, setSaved] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const parsedAge = ageText.trim() === '' ? null : Number(ageText);
   const ageIsValid = parsedAge === null || (Number.isInteger(parsedAge) && parsedAge >= 1 && parsedAge <= 120);
+
+  const pickCoverPhoto = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert('Permission to access photo library is required to set a cover photo.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setCoverPhotoUri(result.assets[0].uri);
+        setSaved(false);
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error picking cover photo:', error);
+    }
+  };
+
+  const pickProfilePhoto = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        alert('Permission to access photo library is required to set a profile picture.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets[0]?.uri) {
+        setProfilePhotoUri(result.assets[0].uri);
+        setSaved(false);
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    } catch (error) {
+      console.error('Error picking profile photo:', error);
+    }
+  };
 
   const save = () => {
     if (!ageIsValid) return;
@@ -67,9 +119,12 @@ export default function ProfileScreen() {
       name: name.trim().slice(0, 50),
       age: parsedAge,
       gender,
+      coverPhotoUri,
+      profilePhotoUri,
     };
     updateProfile(nextProfile);
     setSaved(true);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
 
   return (
@@ -78,9 +133,52 @@ export default function ProfileScreen() {
         <View style={styles.intro}>
           <ThemedText type="subtitle" style={styles.title}>Your profile</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Personalize CashTrack. These details stay private on this device.
+            Personalize Spendly. These details stay private on this device.
           </ThemedText>
         </View>
+
+        {/* Facebook-style Masterclass Cover & Avatar Card */}
+        <Card style={styles.bannerCard} padded={false}>
+          <Pressable onPress={pickCoverPhoto} style={styles.coverContainer}>
+            {coverPhotoUri ? (
+              <Image source={{ uri: coverPhotoUri }} style={styles.coverImage} />
+            ) : (
+              <View style={[styles.coverPlaceholder, { backgroundColor: theme.accent + '20' }]}>
+                <MaterialCommunityIcons name="image-plus" size={24} color={theme.accent} />
+                <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '600' }}>
+                  Tap to add cover photo
+                </ThemedText>
+              </View>
+            )}
+            <View style={styles.coverEditOverlay}>
+              <MaterialCommunityIcons name="camera" size={14} color="#FFFFFF" />
+              <ThemedText type="caption" style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '600' }}>
+                Edit Cover
+              </ThemedText>
+            </View>
+          </Pressable>
+
+          <View style={styles.profileSection}>
+            <Pressable onPress={pickProfilePhoto} style={styles.avatarWrapper}>
+              {profilePhotoUri ? (
+                <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                  <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
+                    {name ? name.charAt(0).toUpperCase() : 'S'}
+                  </ThemedText>
+                </View>
+              )}
+              <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accent }]}>
+                <MaterialCommunityIcons name="camera" size={12} color="#FFFFFF" />
+              </View>
+            </Pressable>
+            <View style={styles.avatarCopy}>
+              <ThemedText type="defaultBold" style={{ fontSize: 18 }}>{name || 'Spendly User'}</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">Tap avatar to change profile photo</ThemedText>
+            </View>
+          </View>
+        </Card>
 
         {/* Card 1: User Identity Details */}
         <Card style={styles.formCard}>
@@ -163,10 +261,10 @@ export default function ProfileScreen() {
           </Pressable>
         </Card>
 
-        {/* Card 2: App Preferences */}
+        {/* Card 2: App Preferences (including Theme Mode, Temperature Unit & Country) */}
         <View style={styles.sectionHeading}>
           <ThemedText type="defaultBold">App Preferences</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">Customize region & onboarding</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">Customize region, theme & units</ThemedText>
         </View>
 
         <Card padded={false}>
@@ -177,6 +275,92 @@ export default function ProfileScreen() {
             iconColor="#2D9CDB"
             onPress={() => router.push('/country')}
           />
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+          {/* Theme Mode Selector Row */}
+          <View style={styles.themeRow}>
+            <View style={[styles.iconBadge, { backgroundColor: '#F59E0B1E' }]}>
+              <MaterialCommunityIcons
+                name={themeMode === 'dark' ? 'weather-night' : themeMode === 'light' ? 'weather-sunny' : 'cellphone'}
+                size={22}
+                color="#F59E0B"
+              />
+            </View>
+            <View style={styles.linkCopy}>
+              <ThemedText type="smallBold">Appearance</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">
+                Current: {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
+              </ThemedText>
+            </View>
+            <View style={styles.themeChoiceContainer}>
+              {(['system', 'light', 'dark'] as const).map((mode) => {
+                const selected = themeMode === mode;
+                return (
+                  <Pressable
+                    key={mode}
+                    onPress={() => {
+                      setThemeMode(mode);
+                      Haptics.selectionAsync().catch(() => {});
+                    }}
+                    style={[
+                      styles.themeChoiceBtn,
+                      {
+                        backgroundColor: selected ? theme.accent : theme.cardMuted,
+                        borderColor: selected ? theme.accent : theme.border,
+                      },
+                    ]}>
+                    <ThemedText
+                      type="caption"
+                      style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '600' }}>
+                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+
+          {/* Temperature Unit Selector Row */}
+          <View style={styles.themeRow}>
+            <View style={[styles.iconBadge, { backgroundColor: '#3B82F61E' }]}>
+              <MaterialCommunityIcons name="thermometer" size={22} color="#3B82F6" />
+            </View>
+            <View style={styles.linkCopy}>
+              <ThemedText type="smallBold">Temperature Unit</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">
+                Current: {temperatureUnit === 'F' ? 'Fahrenheit (°F)' : 'Celsius (°C)'}
+              </ThemedText>
+            </View>
+            <View style={styles.themeChoiceContainer}>
+              {(['F', 'C'] as const).map((unit) => {
+                const selected = temperatureUnit === unit;
+                return (
+                  <Pressable
+                    key={unit}
+                    onPress={() => {
+                      setTemperatureUnit(unit);
+                      Haptics.selectionAsync().catch(() => {});
+                    }}
+                    style={[
+                      styles.themeChoiceBtn,
+                      {
+                        backgroundColor: selected ? theme.accent : theme.cardMuted,
+                        borderColor: selected ? theme.accent : theme.border,
+                      },
+                    ]}>
+                    <ThemedText
+                      type="caption"
+                      style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '600' }}>
+                      {unit === 'F' ? '°F' : '°C'}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <SettingsLink
             title="App tour & guide"
@@ -195,7 +379,7 @@ export default function ProfileScreen() {
 
         <Card padded={false}>
           <SettingsLink
-            title="About CashTrack & support"
+            title="About Spendly & support"
             detail="Privacy promise, version info & developer support"
             icon="information-outline"
             iconColor="#5077C8"
@@ -204,7 +388,7 @@ export default function ProfileScreen() {
         </Card>
 
         <ThemedText type="caption" themeColor="textSecondary" style={styles.privacyNote}>
-          Your profile and expenses are stored locally on this device. CashTrack does not transmit your personal details to external servers.
+          Your profile and expenses are stored locally on this device. Spendly does not transmit your personal details to external servers.
         </ThemedText>
       </View>
       <OnboardingModal visible={showOnboarding} onClose={() => setShowOnboarding(false)} />
@@ -217,6 +401,17 @@ const styles = StyleSheet.create({
   container: { width: '100%', maxWidth: 700, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
   title: { fontSize: 30, lineHeight: 36 },
+  bannerCard: { overflow: 'hidden', paddingBottom: Spacing.three },
+  coverContainer: { height: 130, width: '100%', position: 'relative' },
+  coverImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  coverPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', gap: 4 },
+  coverEditOverlay: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
+  profileSection: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: Spacing.three, marginTop: -36, gap: Spacing.three },
+  avatarWrapper: { position: 'relative', width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: '#FFFFFF', overflow: 'hidden' },
+  avatarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  avatarPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
+  avatarCameraBadge: { position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
+  avatarCopy: { flex: 1, justifyContent: 'flex-end', paddingBottom: 6 },
   formCard: { gap: Spacing.two, padding: Spacing.three },
   field: { gap: 4 },
   rowFields: { flexDirection: 'row', gap: Spacing.two },
@@ -230,6 +425,9 @@ const styles = StyleSheet.create({
   saveText: { color: '#FFFFFF' },
   sectionHeading: { gap: 2, marginTop: Spacing.one },
   linkRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
+  themeRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
+  themeChoiceContainer: { flexDirection: 'row', gap: 4 },
+  themeChoiceBtn: { paddingHorizontal: 8, paddingVertical: 6, borderRadius: Radius.small, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
   iconBadge: {
     width: 38,
     height: 38,

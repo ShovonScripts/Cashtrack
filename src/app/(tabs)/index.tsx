@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -23,6 +22,7 @@ import { sortByDateDesc, sumAmounts, totalForDate, totalForMonth } from '@/utils
 import { calculateMonthlyCashFlow } from '@/utils/income';
 import type { Expense } from '@/types/expense';
 import { getBudgetInsights, type BudgetInsight } from '@/utils/advisor';
+import { FacebookCoverHeader } from '@/components/dashboard/facebook-cover-header';
 
 const RECENT_LIMIT = 5;
 
@@ -53,11 +53,6 @@ function getWeekSpending(expenses: Expense[], today: Date): DaySpend[] {
   });
 }
 
-function getGreeting(hour: number): string {
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
-}
 
 function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]; today: Date; formatAmount: (amount: number) => string }) {
   const theme = useTheme();
@@ -559,7 +554,7 @@ function InsightLine({ insight, formatAmount }: { insight: BudgetInsight; format
 }
 
 export default function DashboardScreen() {
-  const { expenses, profile, categoryLimits, formatAmount, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading, themeMode, toggleThemeMode } = useExpenses();
+  const { expenses, profile, categoryLimits, formatAmount, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
   const { incomeList } = useIncome();
   const theme = useTheme();
   const now = new Date();
@@ -589,7 +584,6 @@ export default function DashboardScreen() {
   }).length;
   const todayLabel = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'short' }).format(now);
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
-  const insets = useSafeAreaInsets();
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [cashFlowCardIndex, setCashFlowCardIndex] = useState(0);
   const screenWidth = useWindowDimensions().width;
@@ -599,38 +593,16 @@ export default function DashboardScreen() {
   return (
     <ScrollView
       style={styles.scrollView}
-      contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]}
+      contentContainerStyle={[styles.contentContainer, { paddingTop: 0 }]}
       showsVerticalScrollIndicator={false}>
+      {/* Facebook Mobile Cover Header taking full top space */}
+      <FacebookCoverHeader
+        profile={profile}
+        totalBalance={incomeList.reduce((acc, i) => acc + i.amount, 0) - sumAmounts(expenses)}
+        monthlySpent={monthSpend}
+      />
+
       <View style={styles.container}>
-        {/* Tier 1: Daily Summary Header & KPI */}
-        <View style={styles.greeting}>
-          <View style={styles.greetingCopy}>
-            <ThemedText type="subtitle" style={styles.greetingTitle}>
-              {getGreeting(now.getHours())}{profile.name.trim() ? `, ${profile.name.trim().split(/\s+/)[0]}` : ''}
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">
-              {new Intl.DateTimeFormat('en', { weekday: 'long', day: 'numeric', month: 'long' }).format(now)}
-            </ThemedText>
-          </View>
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              toggleThemeMode();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Toggle theme"
-            style={({ pressed }) => [
-              styles.themeToggleButton,
-              { backgroundColor: theme.cardMuted, borderColor: theme.border },
-              pressed && styles.pressed,
-            ]}>
-            <MaterialCommunityIcons
-              name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
-              size={20}
-              color={theme.accent}
-            />
-          </Pressable>
-        </View>
 
         {/* Swipeable Summary Cards Carousel */}
         <View style={styles.carouselWrapper}>

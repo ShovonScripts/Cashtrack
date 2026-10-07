@@ -84,6 +84,8 @@ type ExpenseContextValue = {
   themeMode: 'light' | 'dark' | 'system';
   setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
   toggleThemeMode: () => void;
+  temperatureUnit: 'F' | 'C';
+  setTemperatureUnit: (unit: 'F' | 'C') => void;
 };
 
 export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
@@ -283,6 +285,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const setTemperatureUnit = useCallback((unit: 'F' | 'C') => {
+    setPreferences((current) => ({ ...current, temperatureUnit: unit }));
+  }, []);
+
   const value = useMemo(() => ({
     expenses,
     isLoading,
@@ -298,6 +304,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     themeMode: preferences.themeMode ?? 'system',
     setThemeMode,
     toggleThemeMode,
+    temperatureUnit: preferences.temperatureUnit ?? 'F',
+    setTemperatureUnit,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -330,6 +338,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setHasCompletedOnboarding,
     setThemeMode,
     toggleThemeMode,
+    setTemperatureUnit,
   ]);
 
   return <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>;

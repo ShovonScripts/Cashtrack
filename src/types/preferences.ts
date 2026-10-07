@@ -7,6 +7,8 @@ export type UserProfile = {
   name: string;
   age: number | null;
   gender: GenderOption;
+  coverPhotoUri?: string;
+  profilePhotoUri?: string;
 };
 
 export type UserPreferences = {
@@ -20,6 +22,7 @@ export type UserPreferences = {
   notifiedThresholds: Record<string, string>;
   hasCompletedOnboarding: boolean;
   themeMode: ThemeMode;
+  temperatureUnit: 'F' | 'C';
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -31,4 +34,5 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   notifiedThresholds: {},
   hasCompletedOnboarding: false,
   themeMode: 'system',
+  temperatureUnit: 'F',
 };

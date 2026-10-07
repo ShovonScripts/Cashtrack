@@ -57,11 +57,20 @@ function sanitizePreferences(value: unknown): UserPreferences {
     ? candidate.themeMode
     : 'system';
 
+  const temperatureUnit = candidate.temperatureUnit === 'C' || candidate.temperatureUnit === 'F'
+    ? candidate.temperatureUnit
+    : 'F';
+
+  const coverPhotoUri = typeof rawProfile.coverPhotoUri === 'string' ? rawProfile.coverPhotoUri : undefined;
+  const profilePhotoUri = typeof rawProfile.profilePhotoUri === 'string' ? rawProfile.profilePhotoUri : undefined;
+
   return {
     profile: {
       name: typeof rawProfile.name === 'string' ? rawProfile.name.slice(0, 50) : '',
       age,
       gender,
+      coverPhotoUri,
+      profilePhotoUri,
     },
     countryCode,
     customCategories,
@@ -70,6 +79,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
     notifiedThresholds,
     hasCompletedOnboarding,
     themeMode,
+    temperatureUnit,
   };
 }
 

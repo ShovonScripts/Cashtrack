@@ -86,6 +86,15 @@ type ExpenseContextValue = {
   toggleThemeMode: () => void;
   temperatureUnit: 'F' | 'C';
   setTemperatureUnit: (unit: 'F' | 'C') => void;
+  firstDayOfWeek: 'monday' | 'sunday';
+  setFirstDayOfWeek: (day: 'monday' | 'sunday') => void;
+  enableBillReminders: boolean;
+  setEnableBillReminders: (enabled: boolean) => void;
+  enableBudgetAlerts: boolean;
+  setEnableBudgetAlerts: (enabled: boolean) => void;
+  enableDailyReminder: boolean;
+  setEnableDailyReminder: (enabled: boolean) => void;
+  resetAllData: () => Promise<void>;
 };
 
 export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
@@ -289,6 +298,29 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, temperatureUnit: unit }));
   }, []);
 
+  const setFirstDayOfWeek = useCallback((day: 'monday' | 'sunday') => {
+    setPreferences((current) => ({ ...current, firstDayOfWeek: day }));
+  }, []);
+
+  const setEnableBillReminders = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, enableBillReminders: enabled }));
+  }, []);
+
+  const setEnableBudgetAlerts = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, enableBudgetAlerts: enabled }));
+  }, []);
+
+  const setEnableDailyReminder = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, enableDailyReminder: enabled }));
+  }, []);
+
+  const resetAllData = useCallback(async () => {
+    dispatch({ type: 'HYDRATE', expenses: [] });
+    setPreferences(DEFAULT_PREFERENCES);
+    await saveExpenses([]);
+    await savePreferences(DEFAULT_PREFERENCES);
+  }, []);
+
   const value = useMemo(() => ({
     expenses,
     isLoading,
@@ -306,6 +338,15 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     toggleThemeMode,
     temperatureUnit: preferences.temperatureUnit ?? 'F',
     setTemperatureUnit,
+    firstDayOfWeek: preferences.firstDayOfWeek ?? 'monday',
+    setFirstDayOfWeek,
+    enableBillReminders: preferences.enableBillReminders ?? true,
+    setEnableBillReminders,
+    enableBudgetAlerts: preferences.enableBudgetAlerts ?? true,
+    setEnableBudgetAlerts,
+    enableDailyReminder: preferences.enableDailyReminder ?? false,
+    setEnableDailyReminder,
+    resetAllData,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -339,6 +380,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setThemeMode,
     toggleThemeMode,
     setTemperatureUnit,
+    setFirstDayOfWeek,
+    setEnableBillReminders,
+    setEnableBudgetAlerts,
+    setEnableDailyReminder,
+    resetAllData,
   ]);
 
   return <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>;

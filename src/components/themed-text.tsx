@@ -66,19 +66,19 @@ const styles = StyleSheet.create({
     fontWeight: 700,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 28,
   },
   hero: {
-    fontSize: 40,
-    fontWeight: 700,
-    lineHeight: 48,
+    fontSize: 32,
+    fontWeight: '800',
+    lineHeight: 38,
   },
   subtitle: {
-    fontSize: 32,
-    fontWeight: 600,
-    lineHeight: 44,
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
   },
   caption: {
     fontSize: 12,

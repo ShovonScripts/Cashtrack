@@ -1,16 +1,27 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  Image,
+} from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing, Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useExpenses } from '@/context/expense-context';
+import { useGoals } from '@/context/goal-context';
+import { useDebts } from '@/context/debt-context';
+import { useFinancialReminders } from '@/context/financial-reminders-context';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -26,123 +37,164 @@ type MenuItem = {
   color: string;
   route: string;
   badge?: string;
+  badgeColor?: string;
 };
-
-const FINANCIAL_MANAGEMENT: MenuItem[] = [
-  {
-    id: 'expenses',
-    title: 'Transactions & Expenses',
-    subtitle: 'Searchable log & category filters',
-    icon: 'receipt',
-    color: '#0152F5',
-    route: '/(tabs)/expenses',
-  },
-  {
-    id: 'income',
-    title: 'Income Streams',
-    subtitle: 'Recurring salary & cash sources',
-    icon: 'wallet-plus-outline',
-    color: '#7667F2',
-    route: '/income',
-  },
-  {
-    id: 'bills',
-    title: 'Bills & Reminders',
-    subtitle: 'Upcoming payment alerts & EMIs',
-    icon: 'calendar-clock',
-    color: '#EB5757',
-    route: '/bills',
-  },
-  {
-    id: 'debts',
-    title: 'Debts & IOUs',
-    subtitle: 'Track money lent and borrowed',
-    icon: 'account-cash-outline',
-    color: '#2D9CDB',
-    route: '/debts',
-  },
-  {
-    id: 'goals',
-    title: 'Savings Goals & Pots',
-    subtitle: 'Target milestone progress',
-    icon: 'bullseye-arrow',
-    color: '#27AE60',
-    route: '/goals',
-  },
-  {
-    id: 'budgets',
-    title: 'Budget Caps & Limits',
-    subtitle: 'Category monthly spending limits',
-    icon: 'scale-balance',
-    color: '#BB6BD9',
-    route: '/budgets',
-  },
-];
-
-const INTELLIGENCE_REPORTS: MenuItem[] = [
-  {
-    id: 'advisor',
-    title: 'AI Financial Advisor',
-    subtitle: 'Personalized budget check-in',
-    icon: 'robot-outline',
-    color: '#F2C94C',
-    route: '/advisor',
-    badge: 'AI',
-  },
-  {
-    id: 'reports',
-    title: 'Analytics & Reports',
-    subtitle: 'Monthly PDF & CSV data export',
-    icon: 'chart-box-outline',
-    color: '#159A8C',
-    route: '/(tabs)/reports',
-  },
-  {
-    id: 'categories',
-    title: 'Categories Manager',
-    subtitle: 'Create, rename, or recolor tags',
-    icon: 'tag-multiple-outline',
-    color: '#C17A24',
-    route: '/categories',
-  },
-];
-
-const PREFERENCES_SYSTEM: MenuItem[] = [
-  {
-    id: 'profile',
-    title: 'Profile & Preferences',
-    subtitle: 'Personal details, age & gender',
-    icon: 'account-cog-outline',
-    color: '#828282',
-    route: '/profile',
-  },
-  {
-    id: 'country',
-    title: 'Country & Currency',
-    subtitle: 'Region and currency settings',
-    icon: 'earth',
-    color: '#2D9CDB',
-    route: '/country',
-  },
-  {
-    id: 'about',
-    title: 'About CashTrack & Support',
-    subtitle: 'Privacy promise & app version',
-    icon: 'information-outline',
-    color: '#5077C8',
-    route: '/about',
-  },
-];
 
 export default function MenuScreen() {
   const theme = useTheme();
-  const { profile, country } = useExpenses();
+  const insets = useSafeAreaInsets();
+  const {
+    profile,
+    country,
+    expenses,
+    customCategories,
+    toggleThemeMode,
+    themeMode,
+  } = useExpenses();
+  const { goals } = useGoals();
+  const { debts } = useDebts();
+  const { reminders } = useFinancialReminders();
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedFilterCategory] = useState<
+    'all' | 'finances' | 'reports' | 'preferences'
+  >('all');
 
   const handleNavigate = (route: string) => {
     triggerHaptic();
     router.push(route as any);
   };
+
+  // Live Metric Badges
+  const activeGoalsCount = goals.filter((g) => !g.isCompleted).length;
+  const activeDebtsCount = debts.filter((d) => d.status === 'active').length;
+  const activeReminders = reminders.filter(
+    (r) => r.derivedStatus !== 'paid' && r.derivedStatus !== 'skipped'
+  );
+  const overdueRemindersCount = activeReminders.filter(
+    (r) => r.derivedStatus === 'overdue'
+  ).length;
+
+  const FINANCIAL_MANAGEMENT: MenuItem[] = [
+    {
+      id: 'expenses',
+      title: 'Transactions & Expenses',
+      subtitle: 'Searchable log & category filters',
+      icon: 'receipt',
+      color: '#0152F5',
+      route: '/(tabs)/expenses',
+      badge: `${expenses.length} logged`,
+    },
+    {
+      id: 'income',
+      title: 'Income Streams',
+      subtitle: 'Recurring salary & cash sources',
+      icon: 'wallet-plus-outline',
+      color: '#7667F2',
+      route: '/income',
+      badge: 'Recurring',
+    },
+    {
+      id: 'bills',
+      title: 'Bills & Reminders',
+      subtitle: 'Upcoming payment alerts & EMIs',
+      icon: 'calendar-clock',
+      color: overdueRemindersCount > 0 ? '#FF6B6B' : '#EB5757',
+      route: '/bills',
+      badge:
+        overdueRemindersCount > 0
+          ? `${overdueRemindersCount} overdue`
+          : activeReminders.length > 0
+            ? `${activeReminders.length} due`
+            : undefined,
+      badgeColor: overdueRemindersCount > 0 ? '#FF6B6B' : '#EB5757',
+    },
+    {
+      id: 'debts',
+      title: 'Debts & IOUs',
+      subtitle: 'Track money lent and borrowed',
+      icon: 'account-cash-outline',
+      color: '#2D9CDB',
+      route: '/debts',
+      badge: activeDebtsCount > 0 ? `${activeDebtsCount} active` : undefined,
+    },
+    {
+      id: 'goals',
+      title: 'Savings Goals & Pots',
+      subtitle: 'Target milestone progress',
+      icon: 'bullseye-arrow',
+      color: '#27AE60',
+      route: '/goals',
+      badge: activeGoalsCount > 0 ? `${activeGoalsCount} pots` : undefined,
+    },
+    {
+      id: 'budgets',
+      title: 'Budget Caps & Limits',
+      subtitle: 'Category monthly spending limits',
+      icon: 'scale-balance',
+      color: '#BB6BD9',
+      route: '/budgets',
+    },
+  ];
+
+  const INTELLIGENCE_REPORTS: MenuItem[] = [
+    {
+      id: 'advisor',
+      title: 'AI Financial Advisor',
+      subtitle: 'Personalized budget check-in',
+      icon: 'robot-outline',
+      color: '#F2C94C',
+      route: '/advisor',
+      badge: 'AI',
+      badgeColor: '#F2C94C',
+    },
+    {
+      id: 'reports',
+      title: 'Analytics & Reports',
+      subtitle: 'Monthly PDF & CSV data export',
+      icon: 'chart-box-outline',
+      color: '#159A8C',
+      route: '/(tabs)/reports',
+      badge: 'PDF / CSV',
+    },
+    {
+      id: 'categories',
+      title: 'Categories Manager',
+      subtitle: 'Create, rename, or recolor tags',
+      icon: 'tag-multiple-outline',
+      color: '#C17A24',
+      route: '/categories',
+      badge: customCategories.length > 0 ? `${customCategories.length} custom` : undefined,
+    },
+  ];
+
+  const PREFERENCES_SYSTEM: MenuItem[] = [
+    {
+      id: 'profile',
+      title: 'Profile & Preferences',
+      subtitle: 'Personal details, age & gender',
+      icon: 'account-cog-outline',
+      color: '#828282',
+      route: '/profile',
+    },
+    {
+      id: 'country',
+      title: 'Country & Currency',
+      subtitle: 'Region and currency settings',
+      icon: 'earth',
+      color: '#2D9CDB',
+      route: '/country',
+      badge: `${country.currencyCode} (${country.symbol.trim()})`,
+    },
+    {
+      id: 'about',
+      title: 'About Spendly & Support',
+      subtitle: 'Privacy promise & app version',
+      icon: 'information-outline',
+      color: '#5077C8',
+      route: '/about',
+    },
+  ];
 
   const query = searchQuery.trim().toLowerCase();
 
@@ -155,12 +207,23 @@ export default function MenuScreen() {
     );
   };
 
-  const filteredFinancial = filterItems(FINANCIAL_MANAGEMENT);
-  const filteredIntelligence = filterItems(INTELLIGENCE_REPORTS);
-  const filteredPreferences = filterItems(PREFERENCES_SYSTEM);
+  const filteredFinancial =
+    selectedCategory === 'all' || selectedCategory === 'finances'
+      ? filterItems(FINANCIAL_MANAGEMENT)
+      : [];
+  const filteredIntelligence =
+    selectedCategory === 'all' || selectedCategory === 'reports'
+      ? filterItems(INTELLIGENCE_REPORTS)
+      : [];
+  const filteredPreferences =
+    selectedCategory === 'all' || selectedCategory === 'preferences'
+      ? filterItems(PREFERENCES_SYSTEM)
+      : [];
 
   const totalResults =
-    filteredFinancial.length + filteredIntelligence.length + filteredPreferences.length;
+    filteredFinancial.length +
+    filteredIntelligence.length +
+    filteredPreferences.length;
 
   const renderSectionGroup = (items: MenuItem[]) => {
     if (items.length === 0) return null;
@@ -175,7 +238,7 @@ export default function MenuScreen() {
               accessibilityLabel={item.title}
               style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
               <View style={[styles.iconBadge, { backgroundColor: `${item.color}1E` }]}>
-                <MaterialCommunityIcons name={item.icon} size={19} color={item.color} />
+                <MaterialCommunityIcons name={item.icon} size={20} color={item.color} />
               </View>
               <View style={styles.copy}>
                 <View style={styles.rowTitleContainer}>
@@ -183,8 +246,17 @@ export default function MenuScreen() {
                     {item.title}
                   </ThemedText>
                   {item.badge && (
-                    <View style={[styles.badgeContainer, { backgroundColor: `${item.color}25` }]}>
-                      <ThemedText type="caption" style={[styles.badgeText, { color: item.color }]}>
+                    <View
+                      style={[
+                        styles.badgeContainer,
+                        {
+                          backgroundColor: `${item.badgeColor || item.color}20`,
+                          borderColor: `${item.badgeColor || item.color}40`,
+                        },
+                      ]}>
+                      <ThemedText
+                        type="caption"
+                        style={[styles.badgeText, { color: item.badgeColor || item.color }]}>
                         {item.badge}
                       </ThemedText>
                     </View>
@@ -194,15 +266,13 @@ export default function MenuScreen() {
                   {item.subtitle}
                 </ThemedText>
               </View>
-              <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+              <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
             </Pressable>
           </View>
         ))}
       </Card>
     );
   };
-
-  const insets = useSafeAreaInsets();
 
   return (
     <ThemedView style={styles.container}>
@@ -214,45 +284,87 @@ export default function MenuScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <View style={styles.wrapper}>
-          {/* Header */}
+          {/* Header Row */}
           <View style={styles.headerRow}>
             <View style={styles.headerCopy}>
               <ThemedText type="title">Menu Hub</ThemedText>
               <ThemedText type="caption" themeColor="textSecondary">
-                All features & tools in one place
+                Command center & financial tools
               </ThemedText>
             </View>
+
+            {/* Quick Theme Switcher Button */}
             <Pressable
-              onPress={() => handleNavigate('/profile')}
+              onPress={() => {
+                triggerHaptic();
+                toggleThemeMode();
+              }}
               accessibilityRole="button"
-              accessibilityLabel="Open settings"
-              style={[styles.headerIconButton, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <MaterialCommunityIcons name="cog-outline" size={20} color={theme.text} />
+              accessibilityLabel="Toggle theme mode"
+              style={({ pressed }) => [
+                styles.themeIconButton,
+                { backgroundColor: theme.card, borderColor: theme.border },
+                pressed && styles.rowPressed,
+              ]}>
+              <MaterialCommunityIcons
+                name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
+                size={20}
+                color={themeMode === 'dark' ? '#F59E0B' : theme.text}
+              />
             </Pressable>
           </View>
 
-          {/* User Hero Banner */}
+          {/* User Masterclass Profile Hero Banner */}
           <Pressable
             onPress={() => handleNavigate('/profile')}
             style={({ pressed }) => [pressed && styles.rowPressed]}>
-            <Card style={styles.userBanner}>
-              <View style={[styles.userBadge, { backgroundColor: theme.accentMuted }]}>
-                <MaterialCommunityIcons name="account-outline" size={22} color={theme.accent} />
+            <Card style={styles.userBannerCard}>
+              <View style={[styles.bannerAccentLine, { backgroundColor: Brand.primary }]} />
+
+              <View style={styles.userBannerRow}>
+                {/* User Avatar Image or Initial Badge */}
+                <View style={[styles.avatarWrapper, { borderColor: theme.accent }]}>
+                  {profile.profilePhotoUri ? (
+                    <Image source={{ uri: profile.profilePhotoUri }} style={styles.avatarImage} />
+                  ) : (
+                    <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                      <ThemedText type="defaultBold" style={styles.avatarInitial}>
+                        {profile.name ? profile.name.charAt(0).toUpperCase() : 'S'}
+                      </ThemedText>
+                    </View>
+                  )}
+                  <View style={[styles.badgeIconOverlay, { backgroundColor: theme.accent }]}>
+                    <MaterialCommunityIcons name="shield-check" size={10} color="#FFFFFF" />
+                  </View>
+                </View>
+
+                {/* Account Details Copy */}
+                <View style={styles.userCopy}>
+                  <View style={styles.userNameRow}>
+                    <ThemedText type="defaultBold" numberOfLines={1} style={styles.accountNameText}>
+                      {profile.name.trim() ? profile.name.trim() : 'Personal Account'}
+                    </ThemedText>
+                    <View style={[styles.privateTagPill, { backgroundColor: theme.accentMuted }]}>
+                      <ThemedText type="caption" style={[styles.privateTagText, { color: theme.accent }]}>
+                        Private
+                      </ThemedText>
+                    </View>
+                  </View>
+
+                  <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+                    {country.name} · {country.currencyCode} ({country.symbol.trim()})
+                  </ThemedText>
+                </View>
+
+                {/* Country Currency Symbol Pill */}
+                <View style={[styles.currencyPill, { backgroundColor: theme.backgroundElement }]}>
+                  <ThemedText type="caption" style={styles.currencyPillText}>
+                    {country.symbol.trim()}
+                  </ThemedText>
+                </View>
+
+                <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
               </View>
-              <View style={styles.userCopy}>
-                <ThemedText type="defaultBold" numberOfLines={1}>
-                  {profile.name.trim() ? profile.name.trim() : 'Personal Account'}
-                </ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-                  {country.name} · {country.currencyCode} ({country.symbol.trim()})
-                </ThemedText>
-              </View>
-              <View style={[styles.currencyPill, { backgroundColor: theme.backgroundElement }]}>
-                <ThemedText type="caption" style={styles.currencyPillText}>
-                  {country.symbol.trim()}
-                </ThemedText>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
             </Card>
           </Pressable>
 
@@ -284,6 +396,48 @@ export default function MenuScreen() {
               </Pressable>
             )}
           </View>
+
+          {/* Filter Chips Bar */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterScroll}>
+            {(
+              [
+                { key: 'all', label: 'All Tools' },
+                { key: 'finances', label: 'Finances' },
+                { key: 'reports', label: 'AI & Analytics' },
+                { key: 'preferences', label: 'System & Preferences' },
+              ] as const
+            ).map((chip) => {
+              const active = selectedCategory === chip.key;
+              return (
+                <Pressable
+                  key={chip.key}
+                  onPress={() => {
+                    triggerHaptic();
+                    setSelectedFilterCategory(chip.key);
+                  }}
+                  style={({ pressed }) => [
+                    styles.chipBtn,
+                    {
+                      backgroundColor: active ? theme.accent : theme.cardMuted,
+                      borderColor: active ? theme.accent : theme.border,
+                    },
+                    pressed && styles.rowPressed,
+                  ]}>
+                  <ThemedText
+                    type="caption"
+                    style={{
+                      color: active ? '#FFFFFF' : theme.textSecondary,
+                      fontWeight: active ? '700' : '600',
+                    }}>
+                    {chip.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
 
           {totalResults === 0 ? (
             <Card style={styles.emptyCard}>
@@ -341,7 +495,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingVertical: Spacing.three,
     alignItems: 'center',
-    paddingBottom: 90,
+    paddingBottom: 110,
   },
   wrapper: {
     width: '100%',
@@ -353,44 +507,96 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   headerCopy: {
     gap: 1,
   },
-  headerIconButton: {
-    width: 36,
-    height: 36,
+  themeIconButton: {
+    width: 38,
+    height: 38,
     borderRadius: Radius.medium,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
   },
-  userBanner: {
+  userBannerCard: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  bannerAccentLine: {
+    height: 3,
+    width: '100%',
+  },
+  userBannerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingVertical: 12,
   },
-  userBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
+  avatarWrapper: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  avatarPlaceholder: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarInitial: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  badgeIconOverlay: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   userCopy: {
     flex: 1,
-    gap: 1,
+    gap: 2,
+  },
+  userNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  accountNameText: {
+    fontSize: 15,
+  },
+  privateTagPill: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: Radius.pill,
+  },
+  privateTagText: {
+    fontSize: 9,
+    fontWeight: '800',
   },
   currencyPill: {
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 4,
     borderRadius: Radius.pill,
   },
   currencyPillText: {
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 11,
   },
   searchContainer: {
@@ -407,13 +613,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     paddingVertical: 0,
   },
+  filterScroll: {
+    gap: Spacing.one,
+    paddingVertical: 2,
+  },
+  chipBtn: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   section: {
     gap: Spacing.one,
-    marginTop: 2,
+    marginTop: 4,
   },
   sectionHeader: {
     letterSpacing: 0.8,
-    fontWeight: '700',
+    fontWeight: '800',
     fontSize: 10,
     paddingLeft: Spacing.one,
   },
@@ -421,7 +637,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.large,
   },
   row: {
-    minHeight: 48,
+    minHeight: 52,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
@@ -429,8 +645,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   iconBadge: {
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
@@ -446,23 +662,25 @@ const styles = StyleSheet.create({
   },
   rowTitleText: {
     flexShrink: 1,
-    fontSize: 13,
+    fontSize: 13.5,
   },
   badgeContainer: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   badgeText: {
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '800',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginLeft: 52,
+    marginLeft: 56,
   },
   rowPressed: {
-    opacity: 0.7,
+    opacity: 0.75,
+    transform: [{ scale: 0.99 }],
   },
   emptyCard: {
     alignItems: 'center',

@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { useExpenses } from '@/context/expense-context';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
@@ -76,12 +76,12 @@ export default function BillsScreen() {
     return true; // 'all'
   });
 
-  const tabs: { label: string; value: FilterTab; count: number }[] = [
+  const tabs: { label: string; value: FilterTab; count: number; color?: string }[] = [
     { label: 'All', value: 'all', count: reminders.length },
-    { label: 'Due Today', value: 'due_today', count: dueTodayCount },
-    { label: 'Overdue', value: 'overdue', count: overdueCount },
-    { label: 'Upcoming', value: 'upcoming', count: upcomingCount },
-    { label: 'Paid', value: 'paid', count: paidCount },
+    { label: 'Due Today', value: 'due_today', count: dueTodayCount, color: '#F59E0B' },
+    { label: 'Overdue', value: 'overdue', count: overdueCount, color: '#FF6B6B' },
+    { label: 'Upcoming', value: 'upcoming', count: upcomingCount, color: theme.accent },
+    { label: 'Paid', value: 'paid', count: paidCount, color: '#10B981' },
   ];
 
   const safeFormatAmount = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
@@ -91,11 +91,16 @@ export default function BillsScreen() {
       contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, Spacing.three) }]}
       showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-        {/* Hero Section */}
-        <View style={styles.hero}>
+        {/* Spendly Brand Multi-Tone Glass Hero Card */}
+        <View style={styles.heroGlassCard}>
+          <View pointerEvents="none" style={styles.primaryBlueOrb} />
+          <View pointerEvents="none" style={styles.brightCyanOrb} />
+
           <View style={styles.heroContent}>
             <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>BILLS & REMINDERS</ThemedText>
+              <ThemedText type="caption" style={styles.heroLabel}>
+                DUE THIS MONTH
+              </ThemedText>
               <Pressable
                 onPress={() => {
                   triggerHaptic();
@@ -103,35 +108,64 @@ export default function BillsScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel="Add bill or reminder"
-                style={({ pressed }) => [styles.quickAddButton, pressed && styles.pressed]}>
-                <ThemedText type="defaultBold" style={styles.quickAddText}>＋ Add Bill</ThemedText>
+                style={({ pressed }) => [styles.glassAddBtn, pressed && styles.pressed]}>
+                <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+                <ThemedText type="smallBold" style={styles.quickAddText}>
+                  Add Bill
+                </ThemedText>
               </Pressable>
             </View>
 
             <View style={styles.heroSummaryRow}>
               <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>DUE THIS MONTH</ThemedText>
+                <ThemedText type="caption" style={styles.heroStatLabel}>
+                  TOTAL DUE
+                </ThemedText>
                 <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
                   {formatAmount(monthDueTotal)}
                 </ThemedText>
               </View>
+
               <View style={styles.heroDivider} />
+
               <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>ACTION NEEDED</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {dueTodayCount + overdueCount} items
+                <ThemedText type="caption" style={styles.heroStatLabel}>
+                  ACTION NEEDED
                 </ThemedText>
+                <View style={styles.actionPillRow}>
+                  {overdueCount > 0 ? (
+                    <View style={styles.overdueGlassPill}>
+                      <MaterialCommunityIcons name="alert-circle" size={12} color="#F87171" />
+                      <ThemedText type="caption" style={{ color: '#F87171', fontWeight: '800' }}>
+                        {overdueCount} Overdue
+                      </ThemedText>
+                    </View>
+                  ) : dueTodayCount > 0 ? (
+                    <View style={styles.dueTodayGlassPill}>
+                      <MaterialCommunityIcons name="clock-alert" size={12} color="#FBBF24" />
+                      <ThemedText type="caption" style={{ color: '#FBBF24', fontWeight: '800' }}>
+                        {dueTodayCount} Due Today
+                      </ThemedText>
+                    </View>
+                  ) : (
+                    <View style={styles.allClearGlassPill}>
+                      <MaterialCommunityIcons name="check-circle" size={12} color="#34D399" />
+                      <ThemedText type="caption" style={{ color: '#34D399', fontWeight: '800' }}>
+                        All Clear
+                      </ThemedText>
+                    </View>
+                  )}
+                </View>
               </View>
             </View>
           </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
         </View>
 
         {/* Filter Tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           {tabs.map((t) => {
             const selected = tab === t.value;
+            const chipColor = t.color || theme.accent;
             return (
               <Pressable
                 key={t.value}
@@ -141,14 +175,15 @@ export default function BillsScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                style={[
+                style={({ pressed }) => [
                   styles.filterChip,
                   {
-                    backgroundColor: selected ? theme.accent : theme.cardMuted,
-                    borderColor: selected ? theme.accent : theme.border,
+                    backgroundColor: selected ? chipColor : theme.cardMuted,
+                    borderColor: selected ? chipColor : theme.border,
                   },
+                  pressed && styles.pressed,
                 ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary }}>
+                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontSize: 12 }}>
                   {t.label} ({t.count})
                 </ThemedText>
               </Pressable>
@@ -191,11 +226,11 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
     : isDueToday
       ? '#BD7119'
       : isPaid
-        ? '#27AE60'
+        ? '#10B981'
         : theme.accent;
 
   const statusLabel = isOverdue
-    ? `${Math.abs(reminder.daysUntilDue)} days overdue`
+    ? `${Math.abs(reminder.daysUntilDue)}d overdue`
     : isDueToday
       ? 'Due today'
       : isPaid
@@ -214,42 +249,49 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
 
   return (
     <Card
-      style={{
-        ...styles.billCard,
-        borderLeftWidth: 4,
-        borderLeftColor: statusColor,
-        opacity: isPaid || isSkipped ? 0.75 : 1,
-      }}>
+      style={[
+        styles.billCard,
+        {
+          borderLeftWidth: 4,
+          borderLeftColor: statusColor,
+          opacity: isPaid || isSkipped ? 0.75 : 1,
+        },
+      ]}>
       <View style={styles.cardHeader}>
         <View style={[styles.reminderIconBadge, { backgroundColor: `${statusColor}1E` }]}>
           <MaterialCommunityIcons name={iconName} size={20} color={statusColor} />
         </View>
+
         <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold" numberOfLines={1}>{reminder.title}</ThemedText>
+          <ThemedText type="defaultBold" numberOfLines={1} style={{ fontSize: 15 }}>
+            {reminder.title}
+          </ThemedText>
           <View style={styles.badges}>
-            <View style={[styles.badge, { backgroundColor: theme.cardMuted }]}>
-              <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700' }}>
+            <View style={[styles.badgePill, { backgroundColor: theme.cardMuted }]}>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
                 {reminder.category}
               </ThemedText>
             </View>
-            <View style={[styles.badge, { backgroundColor: isOverdue || isDueToday ? 'rgba(235, 87, 87, 0.15)' : 'rgba(39, 174, 96, 0.15)' }]}>
-              <ThemedText type="caption" style={{ color: statusColor, fontWeight: '700' }}>
+
+            <View style={[styles.badgePill, { backgroundColor: `${statusColor}18` }]}>
+              <ThemedText type="caption" style={{ color: statusColor, fontWeight: '800', fontSize: 10 }}>
                 {statusLabel}
               </ThemedText>
             </View>
           </View>
         </View>
+
         <ThemedText type="subtitle" style={[styles.amount, { color: isPaid ? theme.textSecondary : theme.text }]}>
           {formatAmount(reminder.amount)}
         </ThemedText>
       </View>
 
-      <View style={styles.cardFooter}>
+      <View style={[styles.cardFooter, { borderTopColor: theme.border }]}>
         <View style={styles.footerInfo}>
-          <MaterialCommunityIcons name="calendar-outline" size={13} color={theme.textSecondary} />
+          <MaterialCommunityIcons name="calendar-outline" size={14} color={theme.textSecondary} />
           <ThemedText type="caption" themeColor="textSecondary">
             Due: {formatDate(reminder.dueDate)}
-            {reminder.repeatType !== 'one-time' ? ` · Repeats ${reminder.repeatType}` : ''}
+            {reminder.repeatType !== 'one-time' ? ` · ${reminder.repeatType}` : ''}
           </ThemedText>
         </View>
 
@@ -261,9 +303,11 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
                 router.push({ pathname: '/bills/pay/[id]', params: { id: reminder.id } });
               }}
               style={({ pressed }) => [styles.payActionBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-              <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '700' }}>Mark Paid</ThemedText>
+              <MaterialCommunityIcons name="check" size={13} color="#FFFFFF" />
+              <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '800' }}>Mark Paid</ThemedText>
             </Pressable>
           )}
+
           {reminder.repeatType !== 'one-time' && !isPaid && !isSkipped && (
             <Pressable
               onPress={() => {
@@ -274,11 +318,12 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
               <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700' }}>Skip</ThemedText>
             </Pressable>
           )}
+
           <Pressable
             onPress={handleDelete}
             hitSlop={8}
             style={({ pressed }) => [styles.deleteActionBtn, pressed && styles.pressed]}>
-            <MaterialCommunityIcons name="delete-outline" size={17} color={theme.danger} />
+            <MaterialCommunityIcons name="delete-outline" size={18} color={theme.danger} />
           </Pressable>
         </View>
       </View>
@@ -287,44 +332,121 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  hero: {
-    backgroundColor: Brand.deep,
+  content: { flexGrow: 1, paddingBottom: 110 },
+  container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', paddingHorizontal: Spacing.three, gap: Spacing.three },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  headerCopy: { flex: 1, gap: 1 },
+  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
+  themeIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.medium,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  heroGlassCard: {
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: Brand.deep, // #00109D
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
-    overflow: 'hidden',
-    minHeight: 180,
-    justifyContent: 'center',
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 231, 253, 0.35)',
+    shadowColor: Brand.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  heroContent: { gap: Spacing.two, zIndex: 1 },
+  primaryBlueOrb: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(1, 82, 245, 0.45)',
+  },
+  brightCyanOrb: {
+    position: 'absolute',
+    bottom: -60,
+    left: -40,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(20, 231, 253, 0.3)',
+  },
+  heroContent: { gap: Spacing.two, zIndex: 2 },
   heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  quickAddButton: { backgroundColor: '#FFFFFF', borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  quickAddText: { color: Brand.deep },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.half },
-  heroStat: { flex: 1, gap: Spacing.half },
-  heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
-  heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },
-  filterScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
-  filterChip: { height: 38, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  heroLabel: { color: 'rgba(255,255,255,0.75)', letterSpacing: 1, fontSize: 11, fontWeight: '800' },
+  glassAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+  },
+  quickAddText: { color: '#FFFFFF' },
+  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
+  heroStat: { flex: 1, gap: 2 },
+  heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
+  heroStatVal: { color: '#FFFFFF', fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'] },
+  heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
+  actionPillRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  overdueGlassPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(239, 68, 68, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
+  dueTodayGlassPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(251, 191, 36, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
+  allClearGlassPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(52, 211, 153, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
+  filterScroll: { gap: Spacing.two, paddingVertical: 2 },
+  filterChip: { height: 36, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   billCard: { borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  reminderIconBadge: { width: 40, height: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
-  titleCopy: { flex: 1, gap: Spacing.half },
-  badges: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
-  badge: { paddingHorizontal: Spacing.two, paddingVertical: 2, borderRadius: Radius.small },
-  amount: { fontSize: 18, lineHeight: 24, fontVariant: ['tabular-nums'] },
-  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(0,0,0,0.06)', paddingTop: Spacing.two },
-  footerInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
-  actionRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  payActionBtn: { paddingHorizontal: Spacing.three, paddingVertical: 6, borderRadius: Radius.pill },
-  skipActionBtn: { paddingHorizontal: Spacing.three, paddingVertical: 6, borderRadius: Radius.pill },
+  reminderIconBadge: { width: 42, height: 42, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
+  titleCopy: { flex: 1, gap: 4 },
+  badges: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+  badgePill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.pill },
+  amount: { fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] },
+  cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.two },
+  footerInfo: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  actionRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  payActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.pill },
+  skipActionBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.pill },
   deleteActionBtn: { padding: 4 },
-  pressed: { opacity: 0.75 },
+  pressed: { opacity: 0.75, transform: [{ scale: 0.99 }] },
 });

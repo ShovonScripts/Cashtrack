@@ -69,7 +69,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="expenses"
           options={{
-            title: 'Transactions',
+            title: 'Expenses',
             tabBarIcon: ({ color, focused }) => (
               <MaterialCommunityIcons
                 name={focused ? 'receipt' : 'receipt-outline'}

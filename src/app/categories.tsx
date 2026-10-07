@@ -47,7 +47,6 @@ export default function CategoriesScreen() {
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         <View style={styles.intro}>
-          <ThemedText type="subtitle" style={styles.title}>Your categories</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             Organize spending with custom names and premium icons.
           </ThemedText>

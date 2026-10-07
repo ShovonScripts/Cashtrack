@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses } from '@/context/expense-context';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
 import type { Expense } from '@/types/expense';
@@ -64,7 +64,7 @@ function groupExpensesByDate(expensesList: Expense[]): ExpenseSection[] {
 }
 
 export default function ExpensesScreen() {
-  const { expenses, categories, formatAmount } = useExpenses();
+  const { expenses, categories, formatAmount, toggleThemeMode, themeMode } = useExpenses();
   const theme = useTheme();
 
   const [query, setQuery] = useState('');
@@ -90,15 +90,48 @@ export default function ExpensesScreen() {
       <SectionList
         sections={groupedSections}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.contentContainer, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingTop: Math.max(insets.top + Spacing.two, Spacing.four) },
+        ]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            {/* Search Bar */}
+            {/* Top Screen Title Row */}
+            <View style={styles.titleRow}>
+              <View style={styles.titleCopy}>
+                <ThemedText type="title">Transactions & Expenses</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">
+                  Searchable ledger, filter by tags & date
+                </ThemedText>
+              </View>
+
+              {/* Theme Mode Toggle Action */}
+              <Pressable
+                onPress={() => {
+                  triggerHaptic();
+                  toggleThemeMode();
+                }}
+                accessibilityRole="button"
+                accessibilityLabel="Toggle theme"
+                style={({ pressed }) => [
+                  styles.themeIconButton,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                  pressed && styles.pressed,
+                ]}>
+                <MaterialCommunityIcons
+                  name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
+                  size={20}
+                  color={themeMode === 'dark' ? '#F59E0B' : theme.text}
+                />
+              </Pressable>
+            </View>
+
+            {/* Search Input Bar */}
             <View style={[styles.searchField, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-              <MaterialCommunityIcons name="magnify" size={22} color={theme.textSecondary} style={styles.searchIcon} />
+              <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondary} style={styles.searchIcon} />
               <TextInput
                 value={query}
                 onChangeText={(text) => {
@@ -138,50 +171,49 @@ export default function ExpensesScreen() {
               categories={categories}
             />
 
-            {/* Executive Summary Card */}
+            {/* Spendly Brand Multi-Tone Glass Hero Summary Card */}
             {expenses.length > 0 && (
-              <Card style={styles.summaryCard}>
+              <View style={styles.heroGlassCard}>
+                <View pointerEvents="none" style={styles.primaryBlueOrb} />
+                <View pointerEvents="none" style={styles.brightCyanOrb} />
+
                 <View style={styles.summaryTop}>
-                  <View style={styles.summaryCopy}>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      {isFiltering ? 'FILTERED TOTAL' : 'TOTAL TRANSACTIONS'}
-                    </ThemedText>
-                    <ThemedText type="hero" style={styles.summaryAmount} numberOfLines={1} adjustsFontSizeToFit>
-                      {formatAmount(totalSpentVisible)}
-                    </ThemedText>
-                  </View>
+                  <ThemedText type="caption" style={styles.heroLabel}>
+                    {isFiltering ? 'FILTERED TOTAL' : 'TOTAL TRANSACTIONS'}
+                  </ThemedText>
+
                   {isFiltering && (
                     <Pressable
                       onPress={handleClear}
                       accessibilityRole="button"
-                      style={({ pressed }) => [styles.resetChip, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
-                      <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
+                      style={({ pressed }) => [styles.resetChip, pressed && styles.pressed]}>
+                      <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '700' }}>
                         Reset filters ✕
                       </ThemedText>
                     </Pressable>
                   )}
                 </View>
 
-                <View style={[styles.summaryFooter, { borderTopColor: theme.border }]}>
-                  <View style={styles.statItem}>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      COUNT
-                    </ThemedText>
-                    <ThemedText type="smallBold">
+                <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+                  {formatAmount(totalSpentVisible)}
+                </ThemedText>
+
+                <View style={styles.heroStatRow}>
+                  <View style={styles.glassStatPill}>
+                    <MaterialCommunityIcons name="receipt" size={13} color="#FFFFFF" />
+                    <ThemedText type="caption" style={styles.glassStatText}>
                       {visible.length} {visible.length === 1 ? 'expense' : 'expenses'}
                     </ThemedText>
                   </View>
-                  <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
-                  <View style={styles.statItem}>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      AVERAGE
-                    </ThemedText>
-                    <ThemedText type="smallBold">
-                      {formatAmount(avgExpense)} / item
+
+                  <View style={styles.glassStatPill}>
+                    <MaterialCommunityIcons name="calculator-variant-outline" size={13} color={Brand.bright} />
+                    <ThemedText type="caption" style={[styles.glassStatText, { color: Brand.bright }]}>
+                      {formatAmount(avgExpense)} / item avg
                     </ThemedText>
                   </View>
                 </View>
-              </Card>
+              </View>
             )}
           </View>
         }
@@ -233,15 +265,33 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flexGrow: 1,
-    padding: Spacing.four,
-    paddingTop: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingBottom: 110,
   },
   headerBlock: {
-    gap: Spacing.three,
-    marginBottom: Spacing.three,
+    gap: Spacing.two,
+    marginBottom: Spacing.two,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2,
+  },
+  titleCopy: {
+    flex: 1,
+    gap: 1,
+  },
+  themeIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.medium,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
   searchField: {
-    minHeight: 48,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
@@ -249,58 +299,98 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   searchIcon: {
-    marginRight: Spacing.two,
+    marginRight: 8,
   },
   searchInput: {
     flex: 1,
     minWidth: 0,
-    paddingVertical: Spacing.two,
-    fontSize: 15,
+    paddingVertical: 8,
+    fontSize: 14,
   },
   clearSearch: {
     width: 32,
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: -Spacing.one,
   },
-  summaryCard: {
+  heroGlassCard: {
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: Brand.deep, // #00109D
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
     gap: Spacing.two,
-    padding: Spacing.three,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 231, 253, 0.35)',
+    shadowColor: Brand.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+    marginTop: Spacing.one,
+  },
+  primaryBlueOrb: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(1, 82, 245, 0.45)',
+  },
+  brightCyanOrb: {
+    position: 'absolute',
+    bottom: -60,
+    left: -40,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(20, 231, 253, 0.3)',
   },
   summaryTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    zIndex: 2,
   },
-  summaryCopy: {
-    gap: 2,
+  heroLabel: {
+    color: 'rgba(255,255,255,0.75)',
+    letterSpacing: 1,
+    fontSize: 11,
+    fontWeight: '800',
   },
-  summaryAmount: {
-    fontSize: 32,
-    lineHeight: 40,
+  heroValue: {
+    color: '#FFFFFF',
+    fontSize: 38,
+    lineHeight: 46,
     fontVariant: ['tabular-nums'],
+    zIndex: 2,
   },
   resetChip: {
-    paddingHorizontal: Spacing.two,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  heroStatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 2,
+  },
+  glassStatPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: Radius.pill,
   },
-  summaryFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: Spacing.two,
-    marginTop: Spacing.one,
-  },
-  statItem: {
-    flex: 1,
-    gap: 2,
-  },
-  statDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 24,
-    marginHorizontal: Spacing.two,
+  glassStatText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 12,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
@@ -311,12 +401,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.one,
   },
   sectionTitle: {
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 1,
-    fontSize: 11,
+    fontSize: 10.5,
   },
   sectionTotal: {
-    fontWeight: '600',
+    fontWeight: '700',
     fontSize: 11,
   },
   itemCard: {
@@ -325,6 +415,7 @@ const styles = StyleSheet.create({
   emptyResult: {
     alignItems: 'center',
     gap: Spacing.two,
+    marginTop: Spacing.three,
   },
   resetButton: {
     minHeight: 42,
@@ -334,6 +425,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pressed: {
-    opacity: 0.72,
+    opacity: 0.75,
+    transform: [{ scale: 0.99 }],
   },
 });

@@ -15,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
+import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -85,6 +86,7 @@ export function SlidingHeroBanner({
   onPressProfile,
 }: SlidingHeroBannerProps) {
   const theme = useTheme();
+  const { formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
   const [quoteIndex] = useState(() => Math.floor(Math.random() * FINANCIAL_QUOTES.length));
   const [weatherIndex] = useState(() => Math.floor(Math.random() * WEATHER_TIPS.length));
@@ -107,14 +109,6 @@ export function SlidingHeroBanner({
     if (hour < 12) return 'Good Morning';
     if (hour < 18) return 'Good Afternoon';
     return 'Good Evening';
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(amount);
   };
 
   const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
@@ -180,12 +174,12 @@ export function SlidingHeroBanner({
             <View style={styles.glassFinBar}>
               <View style={styles.finItem}>
                 <Text style={styles.glassFinLabel}>Net Balance</Text>
-                <Text style={styles.glassFinValue}>{formatCurrency(totalBalance)}</Text>
+                <Text style={styles.glassFinValue}>{formatAmount(totalBalance)}</Text>
               </View>
               <View style={styles.glassDivider} />
               <View style={styles.finItem}>
                 <Text style={styles.glassFinLabel}>Spent This Month</Text>
-                <Text style={[styles.glassFinValue, { color: '#f87171' }]}>{formatCurrency(monthlySpent)}</Text>
+                <Text style={[styles.glassFinValue, { color: '#f87171' }]}>{formatAmount(monthlySpent)}</Text>
               </View>
             </View>
           </View>

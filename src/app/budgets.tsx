@@ -59,7 +59,6 @@ export default function BudgetsScreen() {
     <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         <View style={styles.intro}>
-          <ThemedText type="subtitle" style={styles.title}>Category limits</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             Set a monthly spending cap for any category. Limits are saved on this device.
           </ThemedText>

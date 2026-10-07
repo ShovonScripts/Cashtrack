@@ -155,7 +155,6 @@ export default function ReportsScreen() {
       <View style={styles.container}>
         <View style={styles.intro}>
           <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>YOUR SPENDING, MADE CLEAR</ThemedText>
-          <ThemedText type="subtitle" style={styles.title}>Monthly reports</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">Review a month, understand the patterns, and keep a copy.</ThemedText>
         </View>
 

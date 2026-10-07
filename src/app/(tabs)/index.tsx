@@ -136,29 +136,22 @@ function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]
 
 function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { goals } = useGoals();
-  const theme = useTheme();
   const activeGoals = goals.filter((g) => !g.isCompleted);
   const totalSaved = goals.reduce((sum, g) => sum + g.contributedAmount, 0);
   const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
   const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
 
   return (
-    <Card
-      style={[
-        styles.stylishCard,
-        {
-          backgroundColor: theme.card,
-          borderColor: theme.border,
-          borderWidth: StyleSheet.hairlineWidth,
-        },
-      ]}>
-      <View style={styles.topAccentBar}>
-        <View style={[styles.accentPill, { backgroundColor: Brand.bright }]} />
-      </View>
+    <View style={styles.colorfulCardPots}>
+      {/* Background Orbs */}
+      <View pointerEvents="none" style={styles.potsOrbCyan} />
+      <View pointerEvents="none" style={styles.potsOrbEmerald} />
+
+      {/* Header */}
       <View style={styles.overviewHeaderRow}>
         <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold">Money Plan & Pots</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">Savings goals & targets</ThemedText>
+          <ThemedText type="defaultBold" style={{ color: '#FFFFFF', fontSize: 17 }}>Money Plan & Pots</ThemedText>
+          <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.75)' }}>Savings goals & targets</ThemedText>
         </View>
         <Pressable
           onPress={() => {
@@ -167,42 +160,43 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
           }}
           accessibilityRole="button"
           accessibilityLabel="Create pot"
-          style={({ pressed }) => [styles.overviewBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
-          <MaterialCommunityIcons name="plus" size={14} color={theme.accent} />
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>Add pot</ThemedText>
+          style={({ pressed }) => [styles.glassActionButton, pressed && styles.pressed]}>
+          <MaterialCommunityIcons name="plus" size={14} color="#FFFFFF" />
+          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Add pot</ThemedText>
         </Pressable>
       </View>
 
+      {/* Metrics Row */}
       <View style={styles.metricsRow}>
-        <View style={styles.metric}>
-          <ThemedText type="caption" themeColor="textSecondary">ACTIVE POTS</ThemedText>
-          <ThemedText type="defaultBold" style={{ color: theme.accent, fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+        <View style={styles.glassMetricBox}>
+          <ThemedText type="caption" style={{ color: '#38BDF8', fontSize: 10, fontWeight: '800' }}>ACTIVE POTS</ThemedText>
+          <ThemedText type="defaultBold" style={{ color: '#38BDF8', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
             {activeGoals.length}
           </ThemedText>
         </View>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <View style={styles.metric}>
-          <ThemedText type="caption" themeColor="textSecondary">TOTAL SAVED</ThemedText>
-          <ThemedText type="defaultBold" style={{ color: '#27AE60', fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+        <View style={styles.glassMetricBox}>
+          <ThemedText type="caption" style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>TOTAL SAVED</ThemedText>
+          <ThemedText type="defaultBold" style={{ color: '#34D399', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
             {formatAmount(totalSaved)}
           </ThemedText>
         </View>
       </View>
 
+      {/* Progress Net Bar */}
       <Pressable
         onPress={() => {
           triggerHaptic();
           router.push('/goals');
         }}
         accessibilityRole="button"
-        style={({ pressed }) => [styles.netRow, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
-        <ThemedText type="small" themeColor="textSecondary">Overall Progress: {overallProgress}%</ThemedText>
+        style={({ pressed }) => [styles.glassNetBar, pressed && styles.pressed]}>
+        <ThemedText type="small" style={{ color: 'rgba(255,255,255,0.88)' }}>Overall Progress: {overallProgress}%</ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>View plan →</ThemedText>
-          <MaterialCommunityIcons name="chevron-right" size={16} color={theme.textSecondary} />
+          <ThemedText type="smallBold" style={{ color: '#38BDF8' }}>View plan →</ThemedText>
+          <MaterialCommunityIcons name="chevron-right" size={16} color="rgba(255,255,255,0.7)" />
         </View>
       </Pressable>
-    </Card>
+    </View>
   );
 }
 
@@ -384,29 +378,22 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
 
 function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { debts } = useDebts();
-  const theme = useTheme();
   const activeDebts = debts.filter((d) => d.status === 'active');
   const youAreOwed = activeDebts.filter((d) => d.type === 'lent').reduce((sum, d) => sum + d.amount, 0);
   const youOwe = activeDebts.filter((d) => d.type === 'borrowed').reduce((sum, d) => sum + d.amount, 0);
   const net = youAreOwed - youOwe;
 
   return (
-    <Card
-      style={[
-        styles.stylishCard,
-        {
-          backgroundColor: theme.card,
-          borderColor: theme.border,
-          borderWidth: StyleSheet.hairlineWidth,
-        },
-      ]}>
-      <View style={styles.topAccentBar}>
-        <View style={[styles.accentPill, { backgroundColor: '#27AE60' }]} />
-      </View>
+    <View style={styles.colorfulCardDebts}>
+      {/* Background Orbs */}
+      <View pointerEvents="none" style={styles.debtsOrbViolet} />
+      <View pointerEvents="none" style={styles.debtsOrbRose} />
+
+      {/* Header */}
       <View style={styles.overviewHeaderRow}>
         <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold">Lend & Borrow</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">Active debts & loans</ThemedText>
+          <ThemedText type="defaultBold" style={{ color: '#FFFFFF', fontSize: 17 }}>Lend & Borrow</ThemedText>
+          <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.75)' }}>Active debts & loans</ThemedText>
         </View>
         <Pressable
           onPress={() => {
@@ -415,50 +402,52 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
           }}
           accessibilityRole="button"
           accessibilityLabel="Add debt"
-          style={({ pressed }) => [styles.overviewBtn, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
-          <MaterialCommunityIcons name="plus" size={14} color={theme.accent} />
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>Add debt</ThemedText>
+          style={({ pressed }) => [styles.glassActionButton, pressed && styles.pressed]}>
+          <MaterialCommunityIcons name="plus" size={14} color="#FFFFFF" />
+          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Add debt</ThemedText>
         </Pressable>
       </View>
 
+      {/* Metrics Row */}
       <View style={styles.metricsRow}>
-        <View style={styles.metric}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <View style={[styles.statusDot, { backgroundColor: '#27AE60' }]} />
-            <ThemedText type="caption" themeColor="textSecondary">THEY OWE YOU</ThemedText>
+        <View style={styles.glassMetricBoxIn}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <View style={styles.greenDot} />
+            <ThemedText type="caption" style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>THEY OWE YOU</ThemedText>
           </View>
-          <ThemedText type="defaultBold" style={{ color: '#27AE60', fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+          <ThemedText type="defaultBold" style={{ color: '#34D399', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
             {formatAmount(youAreOwed)}
           </ThemedText>
         </View>
-        <View style={[styles.divider, { backgroundColor: theme.border }]} />
-        <View style={styles.metric}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <View style={[styles.statusDot, { backgroundColor: theme.danger }]} />
-            <ThemedText type="caption" themeColor="textSecondary">YOU OWE OTHERS</ThemedText>
+
+        <View style={styles.glassMetricBoxOut}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+            <View style={styles.redDot} />
+            <ThemedText type="caption" style={{ color: '#F87171', fontSize: 10, fontWeight: '800' }}>YOU OWE OTHERS</ThemedText>
           </View>
-          <ThemedText type="defaultBold" style={{ color: theme.danger, fontSize: 18 }} numberOfLines={1} adjustsFontSizeToFit>
+          <ThemedText type="defaultBold" style={{ color: '#F87171', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
             {formatAmount(youOwe)}
           </ThemedText>
         </View>
       </View>
 
+      {/* Net Bar */}
       <Pressable
         onPress={() => {
           triggerHaptic();
           router.push('/debts');
         }}
         accessibilityRole="button"
-        style={({ pressed }) => [styles.netRow, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
-        <ThemedText type="small" themeColor="textSecondary">Net Balance:</ThemedText>
+        style={({ pressed }) => [styles.glassNetBar, pressed && styles.pressed]}>
+        <ThemedText type="small" style={{ color: 'rgba(255,255,255,0.88)' }}>Net Position:</ThemedText>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <ThemedText type="defaultBold" style={{ color: net >= 0 ? '#27AE60' : theme.danger }}>
+          <ThemedText type="defaultBold" style={{ color: net >= 0 ? '#34D399' : '#F87171' }}>
             {net === 0 ? 'All settled up' : net > 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}
           </ThemedText>
-          <MaterialCommunityIcons name="chevron-right" size={16} color={theme.textSecondary} />
+          <MaterialCommunityIcons name="chevron-right" size={16} color="rgba(255,255,255,0.7)" />
         </View>
       </Pressable>
-    </Card>
+    </View>
   );
 }
 
@@ -884,15 +873,15 @@ export default function DashboardScreen() {
             router.push('/about');
           }}
           accessibilityRole="button"
-          accessibilityLabel="About CashTrack and support"
+          accessibilityLabel="About Spendly and support"
           style={({ pressed }) => [
             styles.compactSupportCard,
             { backgroundColor: theme.cardMuted, borderColor: theme.border },
             pressed && styles.pressed,
           ]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'nowrap' }}>
             <MaterialCommunityIcons name="heart" size={16} color="#EB5757" />
-            <ThemedText type="smallBold">About CashTrack & Support</ThemedText>
+            <ThemedText type="smallBold" numberOfLines={1}>About Spendly & Support</ThemedText>
           </View>
         </Pressable>
 
@@ -1086,21 +1075,135 @@ const styles = StyleSheet.create({
   titleCopy: {
     gap: 2,
   },
-  moneyOverviewColoredCard: {
+  colorfulCardPots: {
     height: 215,
     justifyContent: 'space-between',
     padding: Spacing.four,
-    backgroundColor: '#0B192C',
     borderRadius: Radius.xlarge,
     overflow: 'hidden',
+    backgroundColor: '#0F172A', // Deep dark ocean slate
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+    position: 'relative',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
   },
-  moneyPlanColoredCard: {
+  potsOrbCyan: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(56, 189, 248, 0.3)',
+  },
+  potsOrbEmerald: {
+    position: 'absolute',
+    bottom: -50,
+    left: -30,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(16, 185, 129, 0.25)',
+  },
+  colorfulCardDebts: {
     height: 215,
     justifyContent: 'space-between',
     padding: Spacing.four,
-    backgroundColor: '#172554',
     borderRadius: Radius.xlarge,
     overflow: 'hidden',
+    backgroundColor: '#1E1B4B', // Deep indigo violet
+    borderWidth: 1,
+    borderColor: 'rgba(192, 132, 252, 0.25)',
+    position: 'relative',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  debtsOrbViolet: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(192, 132, 252, 0.3)',
+  },
+  debtsOrbRose: {
+    position: 'absolute',
+    bottom: -50,
+    left: -30,
+    width: 190,
+    height: 190,
+    borderRadius: 95,
+    backgroundColor: 'rgba(244, 63, 94, 0.25)',
+  },
+  glassActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 6,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  glassMetricBox: {
+    flex: 1,
+    padding: Spacing.two + 2,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    gap: 4,
+  },
+  glassMetricBoxIn: {
+    flex: 1,
+    padding: Spacing.two + 2,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    gap: 4,
+  },
+  glassMetricBoxOut: {
+    flex: 1,
+    padding: Spacing.two + 2,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(248, 113, 113, 0.35)',
+    gap: 4,
+  },
+  greenDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#34D399',
+  },
+  redDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#F87171',
+  },
+  glassNetBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 10,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    zIndex: 2,
   },
   overviewHeaderRow: {
     flexDirection: 'row',

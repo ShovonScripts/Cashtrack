@@ -71,7 +71,7 @@ export function FacebookCoverHeader({
   onPressProfile,
 }: FacebookCoverHeaderProps) {
   const theme = useTheme();
-  const { temperatureUnit } = useExpenses();
+  const { temperatureUnit, formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
   const [quoteIndex] = useState(() => {
     const dayIndex = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
@@ -168,14 +168,6 @@ export function FacebookCoverHeader({
     return 'Good Evening';
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
 
   return (
@@ -210,7 +202,7 @@ export function FacebookCoverHeader({
             <View style={styles.topRowBadge}>
               <View style={styles.liveBadge}>
                 <Ionicons name="sparkles" size={12} color="#4ade80" />
-                <Text style={styles.badgeText}>Masterclass Dashboard</Text>
+                <Text style={styles.badgeText}>Live Dashboard</Text>
               </View>
             </View>
 
@@ -239,7 +231,7 @@ export function FacebookCoverHeader({
                   {getGreeting()}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
                 </Text>
                 <Text style={styles.netBalanceText}>
-                  Net Balance: <Text style={{ color: '#4ade80', fontWeight: '700' }}>{formatCurrency(totalBalance)}</Text>
+                  Net Balance: <Text style={{ color: '#4ade80', fontWeight: '700' }}>{formatAmount(totalBalance)}</Text>
                 </Text>
               </View>
             </View>

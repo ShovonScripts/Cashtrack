@@ -63,12 +63,19 @@ function sanitizePreferences(value: unknown): UserPreferences {
 
   const coverPhotoUri = typeof rawProfile.coverPhotoUri === 'string' ? rawProfile.coverPhotoUri : undefined;
   const profilePhotoUri = typeof rawProfile.profilePhotoUri === 'string' ? rawProfile.profilePhotoUri : undefined;
+  const bio = typeof rawProfile.bio === 'string' ? rawProfile.bio.slice(0, 150) : '';
+
+  const firstDayOfWeek = candidate.firstDayOfWeek === 'sunday' ? 'sunday' : 'monday';
+  const enableBillReminders = typeof candidate.enableBillReminders === 'boolean' ? candidate.enableBillReminders : true;
+  const enableBudgetAlerts = typeof candidate.enableBudgetAlerts === 'boolean' ? candidate.enableBudgetAlerts : true;
+  const enableDailyReminder = typeof candidate.enableDailyReminder === 'boolean' ? candidate.enableDailyReminder : false;
 
   return {
     profile: {
       name: typeof rawProfile.name === 'string' ? rawProfile.name.slice(0, 50) : '',
       age,
       gender,
+      bio,
       coverPhotoUri,
       profilePhotoUri,
     },
@@ -80,6 +87,10 @@ function sanitizePreferences(value: unknown): UserPreferences {
     hasCompletedOnboarding,
     themeMode,
     temperatureUnit,
+    firstDayOfWeek,
+    enableBillReminders,
+    enableBudgetAlerts,
+    enableDailyReminder,
   };
 }
 

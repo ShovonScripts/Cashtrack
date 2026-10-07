@@ -1,75 +1,104 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View, Image } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+  Image,
+  Switch,
+  Alert,
+  Platform,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
+import * as Sharing from 'expo-sharing';
+import { File, Paths } from 'expo-file-system';
 
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, Brand } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
+import { useGoals } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
-import type { GenderOption, UserProfile } from '@/types/preferences';
+import type { GenderOption, UserProfile, FirstDayOfWeek } from '@/types/preferences';
+import { generateCsvReport } from '@/utils/csv';
+
+type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 
 const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { label: 'Woman', value: 'woman', icon: 'human-female' },
   { label: 'Man', value: 'man', icon: 'human-male' },
-  { label: 'Other', value: '', icon: 'account-outline' },
+  { label: 'Other / Prefer not to say', value: '', icon: 'account-outline' },
 ];
 
-function SettingsLink({
-  title,
-  detail,
-  icon,
-  iconColor,
-  onPress,
-}: {
-  title: string;
-  detail: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
-  iconColor: string;
-  onPress: () => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.linkRow, pressed && styles.linkPressed]}>
-      <View style={[styles.iconBadge, { backgroundColor: `${iconColor}1E` }]}>
-        <MaterialCommunityIcons name={icon} size={22} color={iconColor} />
-      </View>
-      <View style={styles.linkCopy}>
-        <ThemedText type="smallBold">{title}</ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary">{detail}</ThemedText>
-      </View>
-      <MaterialCommunityIcons name="chevron-right" size={22} color={theme.textSecondary} />
-    </Pressable>
-  );
+function triggerHaptic() {
+  if (Platform.OS !== 'web') {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }
 }
 
 export default function ProfileScreen() {
   const theme = useTheme();
-  const { profile, country, updateProfile, themeMode, setThemeMode, temperatureUnit, setTemperatureUnit } = useExpenses();
+  const {
+    expenses,
+    profile,
+    country,
+    customCategories,
+    updateProfile,
+    themeMode,
+    setThemeMode,
+    temperatureUnit,
+    setTemperatureUnit,
+    firstDayOfWeek,
+    setFirstDayOfWeek,
+    enableBillReminders,
+    setEnableBillReminders,
+    enableBudgetAlerts,
+    setEnableBudgetAlerts,
+    enableDailyReminder,
+    setEnableDailyReminder,
+    resetAllData,
+  } = useExpenses();
+
+  const { goals } = useGoals();
+
+  const [activeTab, setActiveTab] = useState<TabKey>('identity');
   const [name, setName] = useState(profile.name);
+  const [bio, setBio] = useState(profile.bio || '');
   const [ageText, setAgeText] = useState(profile.age !== null ? String(profile.age) : '');
   const [gender, setGender] = useState<GenderOption>(profile.gender);
   const [coverPhotoUri, setCoverPhotoUri] = useState<string | undefined>(profile.coverPhotoUri);
   const [profilePhotoUri, setProfilePhotoUri] = useState<string | undefined>(profile.profilePhotoUri);
-  const [saved, setSaved] = useState(true);
+
+  const [isDirty, setIsDirty] = useState(false);
+  const [savedToastVisible, setSavedToastVisible] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const parsedAge = ageText.trim() === '' ? null : Number(ageText);
   const ageIsValid = parsedAge === null || (Number.isInteger(parsedAge) && parsedAge >= 1 && parsedAge <= 120);
+
+  // Profile completion score
+  const completionScore = [
+    Boolean(name.trim()),
+    profilePhotoUri !== undefined,
+    coverPhotoUri !== undefined,
+    Boolean(bio.trim()),
+    parsedAge !== null,
+    Boolean(gender),
+  ].filter(Boolean).length;
+
+  const completionPercent = Math.round((completionScore / 6) * 100);
 
   const pickCoverPhoto = async () => {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        alert('Permission to access photo library is required to set a cover photo.');
+        Alert.alert('Permission Required', 'Photo library permission is needed to set a cover photo.');
         return;
       }
 
@@ -77,12 +106,12 @@ export default function ProfileScreen() {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [16, 9],
-        quality: 0.8,
+        quality: 0.85,
       });
       if (!result.canceled && result.assets[0]?.uri) {
         setCoverPhotoUri(result.assets[0].uri);
-        setSaved(false);
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setIsDirty(true);
+        triggerHaptic();
       }
     } catch (error) {
       console.error('Error picking cover photo:', error);
@@ -93,7 +122,7 @@ export default function ProfileScreen() {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        alert('Permission to access photo library is required to set a profile picture.');
+        Alert.alert('Permission Required', 'Photo library permission is needed to set a profile picture.');
         return;
       }
 
@@ -101,344 +130,1055 @@ export default function ProfileScreen() {
         mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
-        quality: 0.8,
+        quality: 0.85,
       });
       if (!result.canceled && result.assets[0]?.uri) {
         setProfilePhotoUri(result.assets[0].uri);
-        setSaved(false);
-        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setIsDirty(true);
+        triggerHaptic();
       }
     } catch (error) {
       console.error('Error picking profile photo:', error);
     }
   };
 
-  const save = () => {
+  const saveProfileChanges = () => {
     if (!ageIsValid) return;
     const nextProfile: UserProfile = {
       name: name.trim().slice(0, 50),
+      bio: bio.trim().slice(0, 150),
       age: parsedAge,
       gender,
       coverPhotoUri,
       profilePhotoUri,
     };
     updateProfile(nextProfile);
-    setSaved(true);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    setIsDirty(false);
+    setSavedToastVisible(true);
+    if (Platform.OS !== 'web') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    }
+    setTimeout(() => {
+      setSavedToastVisible(false);
+    }, 2800);
+  };
+
+  const resetChanges = () => {
+    triggerHaptic();
+    setName(profile.name);
+    setBio(profile.bio || '');
+    setAgeText(profile.age !== null ? String(profile.age) : '');
+    setGender(profile.gender);
+    setCoverPhotoUri(profile.coverPhotoUri);
+    setProfilePhotoUri(profile.profilePhotoUri);
+    setIsDirty(false);
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      triggerHaptic();
+      setExporting(true);
+      const csvContent = generateCsvReport({
+        expenses,
+        currencyCode: country.currencyCode,
+      });
+
+      if (Platform.OS === 'web') {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Spendly_Transactions_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const filename = `Spendly_Transactions_${Date.now()}.csv`;
+        const file = new File(Paths.cache, filename);
+        file.create({ overwrite: true });
+        file.write(csvContent);
+
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(file.uri, {
+            mimeType: 'text/csv',
+            dialogTitle: 'Export Spendly Transactions (CSV)',
+          });
+        } else {
+          Alert.alert('Export Ready', 'CSV file generated successfully.');
+        }
+      }
+    } catch (error) {
+      console.error('Export failed', error);
+      Alert.alert('Export Error', 'Unable to export transactions right now.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleResetData = () => {
+    triggerHaptic();
+    Alert.alert(
+      'Reset All Local Data?',
+      'This will clear all transactions, goals, debts, and reset settings back to default. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Everything',
+          style: 'destructive',
+          onPress: async () => {
+            await resetAllData();
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+            }
+            Alert.alert('Data Cleared', 'Your account and settings have been reset.');
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.container}>
-        <View style={styles.intro}>
-          <ThemedText type="subtitle" style={styles.title}>Your profile</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            Personalize Spendly. These details stay private on this device.
+    <View style={styles.outerContainer}>
+      {/* Toast Notification Banner */}
+      {savedToastVisible && (
+        <View style={[styles.savedToast, { backgroundColor: '#10B981' }]}>
+          <MaterialCommunityIcons name="check-circle" size={18} color="#FFFFFF" />
+          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+            Profile & Settings updated successfully!
           </ThemedText>
         </View>
+      )}
 
-        {/* Facebook-style Masterclass Cover & Avatar Card */}
-        <Card style={styles.bannerCard} padded={false}>
-          <Pressable onPress={pickCoverPhoto} style={styles.coverContainer}>
-            {coverPhotoUri ? (
-              <Image source={{ uri: coverPhotoUri }} style={styles.coverImage} />
-            ) : (
-              <View style={[styles.coverPlaceholder, { backgroundColor: theme.accent + '20' }]}>
-                <MaterialCommunityIcons name="image-plus" size={24} color={theme.accent} />
-                <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '600' }}>
-                  Tap to add cover photo
-                </ThemedText>
-              </View>
-            )}
-            <View style={styles.coverEditOverlay}>
-              <MaterialCommunityIcons name="camera" size={14} color="#FFFFFF" />
-              <ThemedText type="caption" style={{ color: '#FFFFFF', fontSize: 10, fontWeight: '600' }}>
-                Edit Cover
-              </ThemedText>
-            </View>
-          </Pressable>
-
-          <View style={styles.profileSection}>
-            <Pressable onPress={pickProfilePhoto} style={styles.avatarWrapper}>
-              {profilePhotoUri ? (
-                <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
+          {/* Cover & Avatar Header Card */}
+          <Card style={styles.bannerCard} padded={false}>
+            {/* Cover Photo Area */}
+            <Pressable onPress={pickCoverPhoto} style={styles.coverContainer}>
+              {coverPhotoUri ? (
+                <Image source={{ uri: coverPhotoUri }} style={styles.coverImage} />
               ) : (
-                <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
-                  <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: 'bold' }}>
-                    {name ? name.charAt(0).toUpperCase() : 'S'}
+                <View style={[styles.coverPlaceholder, { backgroundColor: Brand.primary + '18' }]}>
+                  <MaterialCommunityIcons name="image-plus" size={28} color={theme.accent} />
+                  <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
+                    Tap to set cover photo
                   </ThemedText>
                 </View>
               )}
-              <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accent }]}>
-                <MaterialCommunityIcons name="camera" size={12} color="#FFFFFF" />
+
+              {/* Completion Bar Overlay */}
+              <View style={styles.completionBarContainer}>
+                <View style={styles.completionRow}>
+                  <ThemedText type="caption" style={styles.completionText}>
+                    Profile Setup: {completionPercent}%
+                  </ThemedText>
+                </View>
+                <View style={styles.completionTrack}>
+                  <View
+                    style={[
+                      styles.completionFill,
+                      { width: `${completionPercent}%`, backgroundColor: completionPercent === 100 ? '#10B981' : theme.accent },
+                    ]}
+                  />
+                </View>
+              </View>
+
+              {/* Edit Cover Button */}
+              <View style={styles.coverEditOverlay}>
+                <MaterialCommunityIcons name="camera" size={13} color="#FFFFFF" />
+                <ThemedText type="caption" style={styles.coverEditText}>
+                  Edit Cover
+                </ThemedText>
               </View>
             </Pressable>
-            <View style={styles.avatarCopy}>
-              <ThemedText type="defaultBold" style={{ fontSize: 18 }}>{name || 'Spendly User'}</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">Tap avatar to change profile photo</ThemedText>
-            </View>
-          </View>
-        </Card>
 
-        {/* Card 1: User Identity Details */}
-        <Card style={styles.formCard}>
-          <View style={styles.rowFields}>
-            <View style={[styles.field, styles.nameField]}>
-              <ThemedText type="smallBold">Name</ThemedText>
-              <TextInput
-                value={name}
-                onChangeText={(value) => { setName(value.slice(0, 50)); setSaved(false); }}
-                placeholder="What should we call you?"
-                placeholderTextColor={theme.textSecondary}
-                autoCapitalize="words"
-                accessibilityLabel="Your name"
-                style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-              />
+            {/* Avatar Row (Overlaps Cover Photo Bottom) */}
+            <View style={styles.avatarRowContainer}>
+              <Pressable
+                onPress={pickProfilePhoto}
+                style={[styles.avatarWrapper, { borderColor: theme.card, backgroundColor: theme.card }]}>
+                {profilePhotoUri ? (
+                  <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
+                ) : (
+                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                    <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 28 }}>
+                      {name ? name.charAt(0).toUpperCase() : 'S'}
+                    </ThemedText>
+                  </View>
+                )}
+                <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accent, borderColor: theme.card }]}>
+                  <MaterialCommunityIcons name="camera" size={13} color="#FFFFFF" />
+                </View>
+              </Pressable>
             </View>
 
-            <View style={[styles.field, styles.ageField]}>
-              <ThemedText type="smallBold">Age <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
-              <TextInput
-                value={ageText}
-                onChangeText={(value) => { setAgeText(value.replace(/[^0-9]/g, '').slice(0, 3)); setSaved(false); }}
-                placeholder="Age"
-                placeholderTextColor={theme.textSecondary}
-                keyboardType="number-pad"
-                accessibilityLabel="Your age, optional"
-                style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-              />
+            {/* User Profile Info (Safely BELOW Cover Photo, No Overlapping) */}
+            <View style={styles.profileInfoContainer}>
+              <View style={styles.nameRow}>
+                <ThemedText type="defaultBold" style={styles.displayNameText}>
+                  {name.trim() || 'Spendly User'}
+                </ThemedText>
+                <View style={[styles.badgePill, { backgroundColor: theme.accentMuted }]}>
+                  <MaterialCommunityIcons name="shield-check-outline" size={12} color={theme.accent} />
+                  <ThemedText type="caption" style={[styles.badgePillText, { color: theme.accent }]}>
+                    Private
+                  </ThemedText>
+                </View>
+              </View>
+              <ThemedText type="caption" themeColor="textSecondary" style={styles.bioText}>
+                {bio.trim() || 'Managing finances on device · Private & offline'}
+              </ThemedText>
             </View>
-          </View>
 
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Gender <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
-            <View style={styles.choiceGrid}>
-              {GENDER_CHOICES.map((choice) => {
-                const selected = gender === choice.value;
+            {/* Account Quick Stats Grid Strip */}
+            <View style={[styles.statsStrip, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
+              <View style={styles.statBox}>
+                <ThemedText type="defaultBold" style={styles.statNumber}>
+                  {expenses.length}
+                </ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
+                  Logged
+                </ThemedText>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+              <View style={styles.statBox}>
+                <ThemedText type="defaultBold" style={styles.statNumber}>
+                  {country.currencyCode}
+                </ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
+                  {country.symbol.trim()} Currency
+                </ThemedText>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+              <View style={styles.statBox}>
+                <ThemedText type="defaultBold" style={styles.statNumber}>
+                  {goals.length}
+                </ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
+                  Active Goals
+                </ThemedText>
+              </View>
+              <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
+              <View style={styles.statBox}>
+                <ThemedText type="defaultBold" style={styles.statNumber}>
+                  {customCategories.length}
+                </ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
+                  Custom Tags
+                </ThemedText>
+              </View>
+            </View>
+          </Card>
+
+          {/* Segmented Tab Navigation Selector */}
+          <View style={[styles.tabBarContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.tabBarScrollContent}>
+              {(
+                [
+                  { key: 'identity', label: 'Identity', icon: 'account-outline' },
+                  { key: 'preferences', label: 'Preferences', icon: 'tune' },
+                  { key: 'notifications', label: 'Alerts', icon: 'bell-outline' },
+                  { key: 'data', label: 'Data & Privacy', icon: 'database-outline' },
+                ] as const
+              ).map((tab) => {
+                const active = activeTab === tab.key;
                 return (
                   <Pressable
-                    key={choice.value}
-                    onPress={() => { setGender(selected ? '' : choice.value); setSaved(false); }}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    accessibilityLabel={choice.label}
-                    style={[
-                      styles.choice,
-                      {
-                        borderColor: selected ? theme.accent : theme.border,
-                        backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
-                      },
+                    key={tab.key}
+                    onPress={() => {
+                      triggerHaptic();
+                      setActiveTab(tab.key);
+                    }}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    style={({ pressed }) => [
+                      styles.tabButton,
+                      active && [styles.tabButtonActive, { backgroundColor: theme.accentMuted }],
+                      pressed && styles.pressed,
                     ]}>
                     <MaterialCommunityIcons
-                      name={choice.icon}
-                      size={18}
-                      color={selected ? theme.text : theme.textSecondary}
+                      name={tab.icon}
+                      size={16}
+                      color={active ? theme.text : theme.textSecondary}
                     />
-                    <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>{choice.label}</ThemedText>
+                    <ThemedText
+                      type="caption"
+                      style={{
+                        color: active ? theme.text : theme.textSecondary,
+                        fontWeight: active ? '700' : '500',
+                        fontSize: 12,
+                      }}>
+                      {tab.label}
+                    </ThemedText>
                   </Pressable>
                 );
               })}
-            </View>
+            </ScrollView>
           </View>
-          {!ageIsValid && (
-            <ThemedText type="caption" themeColor="danger">Enter an age between 1 and 120, or leave it blank.</ThemedText>
+
+          {/* TAB 1: IDENTITY & PERSONAL DETAILS */}
+          {activeTab === 'identity' && (
+            <Card style={styles.sectionCard}>
+              <View style={styles.cardHeaderRow}>
+                <MaterialCommunityIcons name="account-edit-outline" size={20} color={theme.accent} />
+                <ThemedText type="defaultBold">Personal Information</ThemedText>
+              </View>
+
+              <View style={styles.field}>
+                <ThemedText type="smallBold">Full Name</ThemedText>
+                <TextInput
+                  value={name}
+                  onChangeText={(val) => {
+                    setName(val.slice(0, 50));
+                    setIsDirty(true);
+                  }}
+                  placeholder="e.g. Alex Johnson"
+                  placeholderTextColor={theme.textSecondary}
+                  autoCapitalize="words"
+                  style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+                />
+              </View>
+
+              <View style={styles.field}>
+                <ThemedText type="smallBold">Personal Financial Goal / Bio <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
+                <TextInput
+                  value={bio}
+                  onChangeText={(val) => {
+                    setBio(val.slice(0, 150));
+                    setIsDirty(true);
+                  }}
+                  placeholder="e.g. Saving for house downpayment & emergency fund"
+                  placeholderTextColor={theme.textSecondary}
+                  multiline
+                  numberOfLines={2}
+                  style={[
+                    styles.input,
+                    styles.multilineInput,
+                    { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted },
+                  ]}
+                />
+              </View>
+
+              <View style={styles.rowFields}>
+                <View style={[styles.field, { flex: 1 }]}>
+                  <ThemedText type="smallBold">Age <ThemedText type="caption" themeColor="textSecondary">(1 - 120)</ThemedText></ThemedText>
+                  <TextInput
+                    value={ageText}
+                    onChangeText={(val) => {
+                      setAgeText(val.replace(/[^0-9]/g, '').slice(0, 3));
+                      setIsDirty(true);
+                    }}
+                    placeholder="e.g. 28"
+                    placeholderTextColor={theme.textSecondary}
+                    keyboardType="number-pad"
+                    style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.field}>
+                <ThemedText type="smallBold">Gender <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
+                <View style={styles.choiceGrid}>
+                  {GENDER_CHOICES.map((choice) => {
+                    const selected = gender === choice.value;
+                    return (
+                      <Pressable
+                        key={choice.value}
+                        onPress={() => {
+                          triggerHaptic();
+                          setGender(selected ? '' : choice.value);
+                          setIsDirty(true);
+                        }}
+                        style={[
+                          styles.choiceBtn,
+                          {
+                            borderColor: selected ? theme.accent : theme.border,
+                            backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
+                          },
+                        ]}>
+                        <MaterialCommunityIcons
+                          name={choice.icon}
+                          size={18}
+                          color={selected ? theme.text : theme.textSecondary}
+                        />
+                        <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>
+                          {choice.label}
+                        </ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {!ageIsValid && (
+                <ThemedText type="caption" themeColor="danger">
+                  Please enter a valid age between 1 and 120, or leave blank.
+                </ThemedText>
+              )}
+            </Card>
           )}
 
-          <Pressable
-            onPress={save}
-            disabled={!ageIsValid}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !ageIsValid }}
-            style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.accent }, pressed && styles.pressed, !ageIsValid && styles.disabled]}>
-            {saved ? (
-              <View style={styles.savedRow}>
-                <MaterialCommunityIcons name="check" size={18} color="#FFFFFF" />
-                <ThemedText type="defaultBold" style={styles.saveText}>Saved</ThemedText>
+          {/* TAB 2: APPEARANCE & REGIONAL PREFERENCES */}
+          {activeTab === 'preferences' && (
+            <View style={styles.tabSectionStack}>
+              {/* Theme Mode Card */}
+              <Card style={styles.sectionCard}>
+                <View style={styles.cardHeaderRow}>
+                  <MaterialCommunityIcons name="palette-outline" size={20} color="#F59E0B" />
+                  <ThemedText type="defaultBold">App Theme & Styling</ThemedText>
+                </View>
+
+                <View style={styles.themeGrid}>
+                  {(
+                    [
+                      { mode: 'system', title: 'System Auto', icon: 'cellphone-cog', desc: 'Match OS dark mode settings' },
+                      { mode: 'light', title: 'Light Mode', icon: 'weather-sunny', desc: 'Clean bright layout' },
+                      { mode: 'dark', title: 'Dark Mode', icon: 'weather-night', desc: 'OLED friendly dark theme' },
+                    ] as const
+                  ).map((item) => {
+                    const selected = themeMode === item.mode;
+                    return (
+                      <Pressable
+                        key={item.mode}
+                        onPress={() => {
+                          triggerHaptic();
+                          setThemeMode(item.mode);
+                        }}
+                        style={({ pressed }) => [
+                          styles.themeCard,
+                          {
+                            borderColor: selected ? theme.accent : theme.border,
+                            backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
+                          },
+                          pressed && styles.pressed,
+                        ]}>
+                        <View style={styles.themeCardHeader}>
+                          <MaterialCommunityIcons
+                            name={item.icon}
+                            size={22}
+                            color={selected ? theme.accent : theme.textSecondary}
+                          />
+                          {selected && (
+                            <MaterialCommunityIcons name="check-circle" size={16} color={theme.accent} />
+                          )}
+                        </View>
+                        <ThemedText type="smallBold" style={{ marginTop: 4 }}>
+                          {item.title}
+                        </ThemedText>
+                        <ThemedText type="caption" themeColor="textSecondary">
+                          {item.desc}
+                        </ThemedText>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </Card>
+
+              {/* Regional & Currency Card */}
+              <Card style={styles.sectionCard}>
+                <View style={styles.cardHeaderRow}>
+                  <MaterialCommunityIcons name="earth" size={20} color="#2D9CDB" />
+                  <ThemedText type="defaultBold">Country & Regional Format</ThemedText>
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    router.push('/country');
+                  }}
+                  style={({ pressed }) => [
+                    styles.settingRowItem,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadge, { backgroundColor: '#2D9CDB1E' }]}>
+                    <MaterialCommunityIcons name="flag-outline" size={20} color="#2D9CDB" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Country & Currency</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      {country.name} · {country.currencyCode} ({country.symbol.trim()})
+                    </ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
+
+                {/* Temperature Unit Toggle */}
+                <View style={[styles.settingRowItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                  <View style={[styles.rowIconBadge, { backgroundColor: '#3B82F61E' }]}>
+                    <MaterialCommunityIcons name="thermometer" size={20} color="#3B82F6" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Temperature Unit</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      Used in weather widgets & reports
+                    </ThemedText>
+                  </View>
+                  <View style={styles.segmentedGroup}>
+                    {(['F', 'C'] as const).map((unit) => {
+                      const selected = temperatureUnit === unit;
+                      return (
+                        <Pressable
+                          key={unit}
+                          onPress={() => {
+                            triggerHaptic();
+                            setTemperatureUnit(unit);
+                          }}
+                          style={[
+                            styles.segmentedBtn,
+                            {
+                              backgroundColor: selected ? theme.accent : 'transparent',
+                            },
+                          ]}>
+                          <ThemedText
+                            type="caption"
+                            style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
+                            °{unit}
+                          </ThemedText>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* First Day of Week */}
+                <View style={[styles.settingRowItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                  <View style={[styles.rowIconBadge, { backgroundColor: '#10B9811E' }]}>
+                    <MaterialCommunityIcons name="calendar-start" size={20} color="#10B981" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">First Day of Week</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      For weekly summary reports
+                    </ThemedText>
+                  </View>
+                  <View style={styles.segmentedGroup}>
+                    {(['monday', 'sunday'] as const).map((day) => {
+                      const selected = firstDayOfWeek === day;
+                      return (
+                        <Pressable
+                          key={day}
+                          onPress={() => {
+                            triggerHaptic();
+                            setFirstDayOfWeek(day as FirstDayOfWeek);
+                          }}
+                          style={[
+                            styles.segmentedBtn,
+                            {
+                              backgroundColor: selected ? theme.accent : 'transparent',
+                            },
+                          ]}>
+                          <ThemedText
+                            type="caption"
+                            style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
+                            {day === 'monday' ? 'Mon' : 'Sun'}
+                          </ThemedText>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              </Card>
+            </View>
+          )}
+
+          {/* TAB 3: NOTIFICATIONS & ALERTS */}
+          {activeTab === 'notifications' && (
+            <Card style={styles.sectionCard}>
+              <View style={styles.cardHeaderRow}>
+                <MaterialCommunityIcons name="bell-ring-outline" size={20} color="#EB5757" />
+                <ThemedText type="defaultBold">Smart Notifications & Alerts</ThemedText>
               </View>
-            ) : (
-              <ThemedText type="defaultBold" style={styles.saveText}>Save profile</ThemedText>
-            )}
-          </Pressable>
-        </Card>
 
-        {/* Card 2: App Preferences (including Theme Mode, Temperature Unit & Country) */}
-        <View style={styles.sectionHeading}>
-          <ThemedText type="defaultBold">App Preferences</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">Customize region, theme & units</ThemedText>
-        </View>
+              <View style={[styles.switchRow, { borderBottomColor: theme.border }]}>
+                <View style={[styles.rowIconBadge, { backgroundColor: '#EB57571E' }]}>
+                  <MaterialCommunityIcons name="calendar-clock" size={20} color="#EB5757" />
+                </View>
+                <View style={styles.switchCopy}>
+                  <ThemedText type="smallBold">Bill Payment Reminders</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">
+                    Alert before due dates for upcoming bills & EMIs
+                  </ThemedText>
+                </View>
+                <Switch
+                  value={enableBillReminders}
+                  onValueChange={(val) => {
+                    triggerHaptic();
+                    setEnableBillReminders(val);
+                  }}
+                  trackColor={{ false: theme.border, true: theme.accent }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
 
-        <Card padded={false}>
-          <SettingsLink
-            title="Country & currency"
-            detail={`${country.name} · ${country.currencyCode} ${country.symbol.trim()}`}
-            icon="earth"
-            iconColor="#2D9CDB"
-            onPress={() => router.push('/country')}
-          />
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
+              <View style={[styles.switchRow, { borderBottomColor: theme.border }]}>
+                <View style={[styles.rowIconBadge, { backgroundColor: '#BB6BD91E' }]}>
+                  <MaterialCommunityIcons name="scale-balance" size={20} color="#BB6BD9" />
+                </View>
+                <View style={styles.switchCopy}>
+                  <ThemedText type="smallBold">Budget Cap Threshold Warnings</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">
+                    Notify when monthly spending hits 80% & 100% of category caps
+                  </ThemedText>
+                </View>
+                <Switch
+                  value={enableBudgetAlerts}
+                  onValueChange={(val) => {
+                    triggerHaptic();
+                    setEnableBudgetAlerts(val);
+                  }}
+                  trackColor={{ false: theme.border, true: theme.accent }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
 
-          {/* Theme Mode Selector Row */}
-          <View style={styles.themeRow}>
-            <View style={[styles.iconBadge, { backgroundColor: '#F59E0B1E' }]}>
-              <MaterialCommunityIcons
-                name={themeMode === 'dark' ? 'weather-night' : themeMode === 'light' ? 'weather-sunny' : 'cellphone'}
-                size={22}
-                color="#F59E0B"
-              />
-            </View>
-            <View style={styles.linkCopy}>
-              <ThemedText type="smallBold">Appearance</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">
-                Current: {themeMode.charAt(0).toUpperCase() + themeMode.slice(1)}
-              </ThemedText>
-            </View>
-            <View style={styles.themeChoiceContainer}>
-              {(['system', 'light', 'dark'] as const).map((mode) => {
-                const selected = themeMode === mode;
-                return (
-                  <Pressable
-                    key={mode}
-                    onPress={() => {
-                      setThemeMode(mode);
-                      Haptics.selectionAsync().catch(() => {});
-                    }}
-                    style={[
-                      styles.themeChoiceBtn,
-                      {
-                        backgroundColor: selected ? theme.accent : theme.cardMuted,
-                        borderColor: selected ? theme.accent : theme.border,
-                      },
-                    ]}>
-                    <ThemedText
-                      type="caption"
-                      style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '600' }}>
-                      {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              <View style={styles.switchRow}>
+                <View style={[styles.rowIconBadge, { backgroundColor: '#7667F21E' }]}>
+                  <MaterialCommunityIcons name="notebook-edit-outline" size={20} color="#7667F2" />
+                </View>
+                <View style={styles.switchCopy}>
+                  <ThemedText type="smallBold">Daily Expense Log Check-in</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">
+                    Gentle evening reminder to log today&apos;s cash expenses
+                  </ThemedText>
+                </View>
+                <Switch
+                  value={enableDailyReminder}
+                  onValueChange={(val) => {
+                    triggerHaptic();
+                    setEnableDailyReminder(val);
+                  }}
+                  trackColor={{ false: theme.border, true: theme.accent }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={[styles.infoBanner, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                <MaterialCommunityIcons name="shield-lock-outline" size={18} color={theme.accent} />
+                <ThemedText type="caption" themeColor="textSecondary" style={{ flex: 1 }}>
+                  All notifications run locally on your device. Spendly does not track or store your push token on remote servers.
+                </ThemedText>
+              </View>
+            </Card>
+          )}
+
+          {/* TAB 4: DATA & PRIVACY */}
+          {activeTab === 'data' && (
+            <View style={styles.tabSectionStack}>
+              {/* Data Backup & Export Card */}
+              <Card style={styles.sectionCard}>
+                <View style={styles.cardHeaderRow}>
+                  <MaterialCommunityIcons name="database-sync-outline" size={20} color="#159A8C" />
+                  <ThemedText type="defaultBold">Data Export & Backup</ThemedText>
+                </View>
+
+                <Pressable
+                  onPress={handleExportCsv}
+                  disabled={exporting}
+                  style={({ pressed }) => [
+                    styles.settingRowItem,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadge, { backgroundColor: '#159A8C1E' }]}>
+                    <MaterialCommunityIcons name="file-excel-outline" size={20} color="#159A8C" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Export Transactions to CSV</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      Download full spreadsheet log of all recorded expenses
                     </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
+                  </View>
+                  <MaterialCommunityIcons name="export-variant" size={20} color={theme.textSecondary} />
+                </Pressable>
 
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-
-          {/* Temperature Unit Selector Row */}
-          <View style={styles.themeRow}>
-            <View style={[styles.iconBadge, { backgroundColor: '#3B82F61E' }]}>
-              <MaterialCommunityIcons name="thermometer" size={22} color="#3B82F6" />
-            </View>
-            <View style={styles.linkCopy}>
-              <ThemedText type="smallBold">Temperature Unit</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">
-                Current: {temperatureUnit === 'F' ? 'Fahrenheit (°F)' : 'Celsius (°C)'}
-              </ThemedText>
-            </View>
-            <View style={styles.themeChoiceContainer}>
-              {(['F', 'C'] as const).map((unit) => {
-                const selected = temperatureUnit === unit;
-                return (
-                  <Pressable
-                    key={unit}
-                    onPress={() => {
-                      setTemperatureUnit(unit);
-                      Haptics.selectionAsync().catch(() => {});
-                    }}
-                    style={[
-                      styles.themeChoiceBtn,
-                      {
-                        backgroundColor: selected ? theme.accent : theme.cardMuted,
-                        borderColor: selected ? theme.accent : theme.border,
-                      },
-                    ]}>
-                    <ThemedText
-                      type="caption"
-                      style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '600' }}>
-                      {unit === 'F' ? '°F' : '°C'}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    setShowOnboarding(true);
+                  }}
+                  style={({ pressed }) => [
+                    styles.settingRowItem,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadge, { backgroundColor: '#7667F21E' }]}>
+                    <MaterialCommunityIcons name="compass-outline" size={20} color="#7667F2" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Replay App Tour & Guide</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      Review Spendly features walkthrough and onboarding
                     </ThemedText>
-                  </Pressable>
-                );
-              })}
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    router.push('/about');
+                  }}
+                  style={({ pressed }) => [
+                    styles.settingRowItem,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadge, { backgroundColor: '#5077C81E' }]}>
+                    <MaterialCommunityIcons name="information-outline" size={20} color="#5077C8" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">About Spendly & Support</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      Privacy promise, app version & developer info
+                    </ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
+              </Card>
+
+              {/* Danger Zone */}
+              <Card style={[styles.sectionCard, { borderColor: '#FF6B6B40' }]}>
+                <View style={styles.cardHeaderRow}>
+                  <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF6B6B" />
+                  <ThemedText type="defaultBold" style={{ color: '#FF6B6B' }}>
+                    Danger Zone
+                  </ThemedText>
+                </View>
+
+                <Pressable
+                  onPress={handleResetData}
+                  style={({ pressed }) => [
+                    styles.resetBtn,
+                    { backgroundColor: '#FF6B6B15', borderColor: '#FF6B6B60' },
+                    pressed && styles.pressed,
+                  ]}>
+                  <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF6B6B" />
+                  <ThemedText type="smallBold" style={{ color: '#FF6B6B' }}>
+                    Reset & Wipe All Local Data
+                  </ThemedText>
+                </Pressable>
+              </Card>
             </View>
-          </View>
+          )}
 
-          <View style={[styles.divider, { backgroundColor: theme.border }]} />
-          <SettingsLink
-            title="App tour & guide"
-            detail="Replay welcome walkthrough and features guide"
-            icon="compass-outline"
-            iconColor="#7667F2"
-            onPress={() => setShowOnboarding(true)}
-          />
-        </Card>
-
-        {/* Card 3: About & Support */}
-        <View style={styles.sectionHeading}>
-          <ThemedText type="defaultBold">About & Privacy</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">System info & privacy promise</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary" style={styles.footerNote}>
+            Spendly stores your financial records strictly on device storage. Your data is never uploaded to cloud databases without your explicit consent.
+          </ThemedText>
         </View>
+      </ScrollView>
 
-        <Card padded={false}>
-          <SettingsLink
-            title="About Spendly & support"
-            detail="Privacy promise, version info & developer support"
-            icon="information-outline"
-            iconColor="#5077C8"
-            onPress={() => router.push('/about')}
-          />
-        </Card>
+      {/* Floating Unsaved Changes Action Bar */}
+      {isDirty && (
+        <View style={[styles.floatingActionBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <View style={styles.floatingActionCopy}>
+            <ThemedText type="smallBold">Unsaved Changes</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Save updates to your profile
+            </ThemedText>
+          </View>
+          <View style={styles.floatingActionButtons}>
+            <Pressable
+              onPress={resetChanges}
+              style={({ pressed }) => [styles.cancelBtn, { borderColor: theme.border }, pressed && styles.pressed]}>
+              <ThemedText type="smallBold">Discard</ThemedText>
+            </Pressable>
+            <Pressable
+              onPress={saveProfileChanges}
+              disabled={!ageIsValid}
+              style={({ pressed }) => [
+                styles.saveBtn,
+                { backgroundColor: theme.accent },
+                pressed && styles.pressed,
+                !ageIsValid && styles.disabled,
+              ]}>
+              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+                Save
+              </ThemedText>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
-        <ThemedText type="caption" themeColor="textSecondary" style={styles.privacyNote}>
-          Your profile and expenses are stored locally on this device. Spendly does not transmit your personal details to external servers.
-        </ThemedText>
-      </View>
       <OnboardingModal visible={showOnboarding} onClose={() => setShowOnboarding(false)} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 700, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  intro: { gap: Spacing.one },
-  title: { fontSize: 30, lineHeight: 36 },
+  outerContainer: { flex: 1 },
+  content: { flexGrow: 1, paddingBottom: 110 },
+  container: {
+    width: '100%',
+    maxWidth: 720,
+    alignSelf: 'center',
+    padding: Spacing.three,
+    gap: Spacing.three,
+  },
+  savedToast: {
+    position: 'absolute',
+    top: 12,
+    left: 20,
+    right: 20,
+    zIndex: 999,
+    maxWidth: 720,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: Radius.pill,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
+  },
   bannerCard: { overflow: 'hidden', paddingBottom: Spacing.three },
-  coverContainer: { height: 130, width: '100%', position: 'relative' },
+  coverContainer: { height: 150, width: '100%', position: 'relative' },
   coverImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  coverPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', gap: 4 },
-  coverEditOverlay: { position: 'absolute', top: 10, right: 10, flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, gap: 4 },
-  profileSection: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: Spacing.three, marginTop: -36, gap: Spacing.three },
-  avatarWrapper: { position: 'relative', width: 72, height: 72, borderRadius: 36, borderWidth: 4, borderColor: '#FFFFFF', overflow: 'hidden' },
-  avatarImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  avatarPlaceholder: { width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' },
-  avatarCameraBadge: { position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#FFFFFF' },
-  avatarCopy: { flex: 1, justifyContent: 'flex-end', paddingBottom: 6 },
-  formCard: { gap: Spacing.two, padding: Spacing.three },
+  coverPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  completionBarContainer: {
+    position: 'absolute',
+    top: 10,
+    left: 12,
+    gap: 3,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.medium,
+  },
+  completionRow: { flexDirection: 'row', alignItems: 'center' },
+  completionText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  completionTrack: { width: 80, height: 4, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, overflow: 'hidden' },
+  completionFill: { height: '100%', borderRadius: 2 },
+  coverEditOverlay: {
+    position: 'absolute',
+    top: 10,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
+    gap: 4,
+  },
+  coverEditText: { color: '#FFFFFF', fontSize: 11, fontWeight: '600' },
+  avatarRowContainer: {
+    paddingHorizontal: Spacing.three,
+    marginTop: -42, // Only the avatar circle overlaps the cover photo!
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    borderWidth: 4,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+  },
+  avatarImage: { width: '100%', height: '100%', borderRadius: 40, resizeMode: 'cover' },
+  avatarPlaceholder: { width: '100%', height: '100%', borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
+  avatarCameraBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+  },
+  profileInfoContainer: {
+    paddingHorizontal: Spacing.three,
+    marginTop: Spacing.two,
+    gap: 4,
+  },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
+  displayNameText: { fontSize: 22, fontWeight: '800', lineHeight: 28 },
+  bioText: { fontSize: 13, lineHeight: 18 },
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  badgePillText: { fontSize: 10, fontWeight: '700' },
+  statsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.three,
+    marginTop: Spacing.three,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 12,
+  },
+  statBox: { flex: 1, alignItems: 'center', gap: 2 },
+  statNumber: { fontSize: 15, fontWeight: '800' },
+  statLabel: { fontSize: 10 },
+  statDivider: { width: StyleSheet.hairlineWidth, height: '60%' },
+  tabBarContainer: {
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 4,
+  },
+  tabBarScrollContent: {
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: 2,
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: Radius.small,
+  },
+  tabButtonActive: {
+    borderRadius: Radius.small,
+  },
+  tabSectionStack: { gap: Spacing.three },
+  sectionCard: { gap: Spacing.two, padding: Spacing.three },
+  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   field: { gap: 4 },
   rowFields: { flexDirection: 'row', gap: Spacing.two },
-  nameField: { flex: 1 },
-  ageField: { width: 88 },
-  input: { minHeight: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 15 },
-  choiceGrid: { flexDirection: 'row', gap: Spacing.two },
-  choice: { flex: 1, minHeight: 38, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
-  saveButton: { minHeight: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.half },
-  savedRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  saveText: { color: '#FFFFFF' },
-  sectionHeading: { gap: 2, marginTop: Spacing.one },
-  linkRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
-  themeRow: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
-  themeChoiceContainer: { flexDirection: 'row', gap: 4 },
-  themeChoiceBtn: { paddingHorizontal: 8, paddingVertical: 6, borderRadius: Radius.small, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
-  iconBadge: {
-    width: 38,
-    height: 38,
+  input: {
+    minHeight: 42,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.three,
+    fontSize: 14,
+  },
+  multilineInput: { minHeight: 64, paddingTop: 8, paddingBottom: 8, textAlignVertical: 'top' },
+  choiceGrid: { flexDirection: 'column', gap: 6 },
+  choiceBtn: {
+    minHeight: 40,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.three,
+    gap: 8,
+  },
+  themeGrid: { gap: Spacing.two },
+  themeCard: {
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: Spacing.two,
+    gap: 2,
+  },
+  themeCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  settingRowItem: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 8,
+    gap: Spacing.three,
+  },
+  rowIconBadge: {
+    width: 36,
+    height: 36,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  linkCopy: { flex: 1, gap: Spacing.half },
-  divider: { height: StyleSheet.hairlineWidth, marginHorizontal: Spacing.four },
-  privacyNote: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three, marginTop: Spacing.one },
-  linkPressed: { opacity: 0.7 },
-  pressed: { opacity: 0.75 },
+  rowCopy: { flex: 1, gap: 1 },
+  segmentedGroup: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    padding: 2,
+    borderRadius: Radius.small,
+  },
+  segmentedBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.small - 1,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    gap: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  switchCopy: { flex: 1, gap: 2 },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: Spacing.two,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginTop: 4,
+  },
+  resetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    minHeight: 44,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  footerNote: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three, marginTop: Spacing.one },
+  floatingActionBar: {
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    maxWidth: 720,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 12,
+    borderRadius: Radius.large,
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  floatingActionCopy: { gap: 1 },
+  floatingActionButtons: { flexDirection: 'row', gap: 8 },
+  cancelBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  saveBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    borderRadius: Radius.medium,
+  },
+  pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.5 },
 });

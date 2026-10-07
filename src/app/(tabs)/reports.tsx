@@ -78,7 +78,7 @@ function SixMonthTrendChart({
 
       <View style={styles.barChartContainer}>
         {monthsData.map((m) => {
-          const barHeight = m.spent > 0 ? Math.max(12, (m.spent / maxSpent) * 82) : 6;
+          const barHeight = m.spent > 0 ? Math.max(12, (m.spent / maxSpent) * 82) : 4;
           return (
             <Pressable
               key={m.date.toISOString()}
@@ -96,16 +96,15 @@ function SixMonthTrendChart({
                   { color: m.isSelected ? theme.accent : theme.textSecondary },
                 ]}
                 numberOfLines={1}>
-                {m.spent > 0 ? formatAmount(m.spent).replace(/[^0-9.,]/g, '') : '0'}
+                {m.spent > 0 ? formatAmount(m.spent).replace(/[^0-9.,]/g, '') : '—'}
               </ThemedText>
-              <View style={styles.barTrack}>
+              <View style={[styles.barTrack, { backgroundColor: theme.cardMuted }]}>
                 <View
                   style={[
                     styles.trendBar,
                     {
                       height: barHeight,
-                      backgroundColor: m.isSelected ? theme.accent : theme.accentMuted,
-                      borderColor: m.isSelected ? theme.accent : 'transparent',
+                      backgroundColor: m.isSelected ? theme.accent : theme.border,
                     },
                   ]}
                 />
@@ -114,7 +113,7 @@ function SixMonthTrendChart({
                 type="caption"
                 style={[
                   styles.barLabelText,
-                  { color: m.isSelected ? theme.text : theme.textSecondary, fontWeight: m.isSelected ? '700' : '400' },
+                  { color: m.isSelected ? theme.text : theme.textSecondary, fontWeight: m.isSelected ? '800' : '500' },
                 ]}>
                 {m.label}
               </ThemedText>
@@ -231,7 +230,17 @@ function SpendingDistributionChart({
 
 export default function ReportsScreen() {
   const theme = useTheme();
-  const { expenses, categoryLimits, categoryIcons, profile, country, formatAmount } = useExpenses();
+  const {
+    expenses,
+    categoryLimits,
+    categoryIcons,
+    profile,
+    country,
+    formatAmount,
+    toggleThemeMode,
+    themeMode,
+  } = useExpenses();
+
   const [month, setMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1, 12);
@@ -307,7 +316,7 @@ export default function ReportsScreen() {
           await Sharing.shareAsync(uri, {
             mimeType: 'application/pdf',
             UTI: 'com.adobe.pdf',
-            dialogTitle: `CashTrack ${monthLabel} report`,
+            dialogTitle: `Spendly ${monthLabel} report`,
           });
           setMessage('Your PDF is ready. Choose where to save or share it.');
         } else {
@@ -338,20 +347,20 @@ export default function ReportsScreen() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `cashtrack-${monthLabel.replace(/\s+/g, '-')}.csv`);
+        link.setAttribute('download', `Spendly-${monthLabel.replace(/\s+/g, '-')}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         setMessage('Your CSV report has been downloaded.');
       } else {
-        const filename = `cashtrack-${monthLabel.replace(/\s+/g, '-')}.csv`;
+        const filename = `Spendly-${monthLabel.replace(/\s+/g, '-')}.csv`;
         const file = new File(Paths.cache, filename);
         file.create({ overwrite: true });
         file.write(csvString);
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(file.uri, {
             mimeType: 'text/csv',
-            dialogTitle: `CashTrack ${monthLabel} CSV report`,
+            dialogTitle: `Spendly ${monthLabel} CSV report`,
           });
           setMessage('Your CSV file is ready to share or save.');
         } else {
@@ -359,7 +368,7 @@ export default function ReportsScreen() {
         }
       }
     } catch (error) {
-      console.error('[cashtrack] CSV export failed.', error);
+      console.error('[spendly] CSV export failed.', error);
       setMessage('Could not create the CSV export. Please try again.');
     } finally {
       setIsGenerating(false);
@@ -369,19 +378,41 @@ export default function ReportsScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top + Spacing.three, Spacing.five) }]} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top + Spacing.two, Spacing.four) }]}
+      showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-        {/* Header Intro */}
-        <View style={styles.intro}>
-          <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
-            FINANCIAL INTELLIGENCE
-          </ThemedText>
-          <ThemedText type="subtitle" style={styles.title}>
-            Analytics & Reports
-          </ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            Comprehensive monthly insights, spending patterns, and export tools.
-          </ThemedText>
+        {/* Header Intro Row */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerCopy}>
+            <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
+              FINANCIAL INTELLIGENCE
+            </ThemedText>
+            <ThemedText type="title">Analytics & Reports</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Comprehensive monthly insights, spending patterns, and export tools.
+            </ThemedText>
+          </View>
+
+          {/* Quick Theme Switcher Action */}
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              toggleThemeMode();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Toggle theme"
+            style={({ pressed }) => [
+              styles.themeIconButton,
+              { backgroundColor: theme.card, borderColor: theme.border },
+              pressed && styles.pressed,
+            ]}>
+            <MaterialCommunityIcons
+              name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
+              size={20}
+              color={themeMode === 'dark' ? '#F59E0B' : theme.text}
+            />
+          </Pressable>
         </View>
 
         {/* 1. Month Selector Card */}
@@ -391,16 +422,20 @@ export default function ReportsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Previous month"
             style={[styles.monthArrow, { backgroundColor: theme.cardMuted }]}>
-            <MaterialCommunityIcons name="chevron-left" size={24} color={theme.text} />
+            <MaterialCommunityIcons name="chevron-left" size={22} color={theme.text} />
           </Pressable>
+
           <View style={styles.monthLabelBlock}>
             <ThemedText type="defaultBold" style={styles.monthLabel}>
               {monthLabel}
             </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {isCurrentMonth ? 'Month to Date' : 'Full Month Report'}
-            </ThemedText>
+            <View style={[styles.statusPill, { backgroundColor: theme.accentMuted }]}>
+              <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
+                {isCurrentMonth ? 'Month to Date' : 'Full Month Report'}
+              </ThemedText>
+            </View>
           </View>
+
           <Pressable
             onPress={() => changeMonth(1)}
             disabled={isCurrentMonth}
@@ -410,38 +445,58 @@ export default function ReportsScreen() {
             style={[styles.monthArrow, { backgroundColor: theme.cardMuted }, isCurrentMonth && styles.disabled]}>
             <MaterialCommunityIcons
               name="chevron-right"
-              size={24}
+              size={22}
               color={isCurrentMonth ? theme.textSecondary : theme.text}
             />
           </Pressable>
         </Card>
 
-        {/* 2. Hero Card Summary */}
-        <Card style={styles.hero}>
-          <ThemedText type="caption" style={styles.heroLabel}>
-            TOTAL MONTHLY SPENDING
-          </ThemedText>
+        {/* 2. Spendly Brand Multi-Tone Glass Hero Card */}
+        <View style={styles.heroGlassCard}>
+          <View pointerEvents="none" style={styles.primaryBlueOrb} />
+          <View pointerEvents="none" style={styles.brightCyanOrb} />
+
+          <View style={styles.heroHeaderRow}>
+            <ThemedText type="caption" style={styles.heroLabel}>
+              TOTAL MONTHLY SPENDING
+            </ThemedText>
+            <View style={styles.reportBadgePill}>
+              <MaterialCommunityIcons name="chart-box-outline" size={12} color={Brand.bright} />
+              <ThemedText type="caption" style={{ color: Brand.bright, fontWeight: '700' }}>
+                {monthLabel}
+              </ThemedText>
+            </View>
+          </View>
+
           <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
             {formatAmount(total)}
           </ThemedText>
+
           <View style={styles.heroFooter}>
-            <ThemedText type="small" style={styles.heroDetail}>
-              {monthExpenses.length} {monthExpenses.length === 1 ? 'expense' : 'expenses'}
-            </ThemedText>
-            <View style={styles.heroDot} />
-            <ThemedText type="small" style={styles.heroDetail}>
-              {categoriesUsed.length} {categoriesUsed.length === 1 ? 'category' : 'categories'}
-            </ThemedText>
+            <View style={styles.heroStatPill}>
+              <MaterialCommunityIcons name="receipt" size={13} color="#FFFFFF" />
+              <ThemedText type="caption" style={styles.heroDetailText}>
+                {monthExpenses.length} {monthExpenses.length === 1 ? 'expense' : 'expenses'}
+              </ThemedText>
+            </View>
+
+            <View style={styles.heroStatPill}>
+              <MaterialCommunityIcons name="tag-multiple" size={13} color="#FFFFFF" />
+              <ThemedText type="caption" style={styles.heroDetailText}>
+                {categoriesUsed.length} {categoriesUsed.length === 1 ? 'category' : 'categories'}
+              </ThemedText>
+            </View>
+
             {overBudgetCount > 0 && (
-              <>
-                <View style={styles.heroDot} />
-                <ThemedText type="small" style={styles.heroOver}>
+              <View style={[styles.heroStatPill, { backgroundColor: 'rgba(239, 68, 68, 0.3)' }]}>
+                <MaterialCommunityIcons name="alert-circle" size={13} color="#F87171" />
+                <ThemedText type="caption" style={{ color: '#F87171', fontWeight: '700' }}>
                   {overBudgetCount} over limit
                 </ThemedText>
-              </>
+              </View>
             )}
           </View>
-        </Card>
+        </View>
 
         {/* 3. Executive Metrics Row */}
         <View style={styles.metricsRow}>
@@ -495,7 +550,7 @@ export default function ReportsScreen() {
               <View style={[styles.metricIcon, { backgroundColor: theme.accentMuted }]}>
                 <MaterialCommunityIcons name="shield-check-outline" size={16} color={theme.accent} />
               </View>
-              {limitPercent !== null && (
+              {limitPercent !== null ? (
                 <View
                   style={[
                     styles.trendBadge,
@@ -505,6 +560,12 @@ export default function ReportsScreen() {
                     type="caption"
                     style={{ color: limitPercent <= 100 ? '#27AE60' : theme.danger, fontWeight: '700', fontSize: 10 }}>
                     {limitPercent <= 100 ? 'On track' : 'Over limit'}
+                  </ThemedText>
+                </View>
+              ) : (
+                <View style={[styles.trendBadge, { backgroundColor: theme.accentMuted }]}>
+                  <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700', fontSize: 10 }}>
+                    Safe
                   </ThemedText>
                 </View>
               )}
@@ -605,51 +666,62 @@ export default function ReportsScreen() {
           </View>
         </View>
 
+        {/* PDF Export Action Card */}
         <Pressable
           onPress={createPdf}
           disabled={isGenerating}
           accessibilityRole="button"
           accessibilityLabel="Monthly report as PDF"
           accessibilityState={{ disabled: isGenerating }}
-          style={({ pressed }) => [styles.pdfButton, { backgroundColor: theme.accent }, pressed && styles.pressed, isGenerating && styles.disabled]}>
+          style={({ pressed }) => [
+            styles.exportCardPdf,
+            pressed && styles.pressed,
+            isGenerating && styles.disabled,
+          ]}>
           {isGenerating ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <View style={styles.iconCircle}>
+            <View style={styles.pdfIconBadge}>
               <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFFFFF" />
             </View>
           )}
-          <View style={styles.pdfCopy}>
-            <ThemedText type="defaultBold" style={styles.pdfTitle}>
+          <View style={styles.exportCopy}>
+            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
               {isGenerating ? 'Preparing PDF Document…' : 'Monthly PDF Report'}
             </ThemedText>
-            <ThemedText type="caption" style={styles.pdfSubtext}>
-              {Platform.OS === 'web' ? 'Print dialog · choose Save as PDF' : 'Formatted PDF with breakdown & transactions'}
+            <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>
+              {Platform.OS === 'web' ? 'Print dialog · choose Save as PDF' : 'Formatted PDF document with breakdown'}
             </ThemedText>
           </View>
           {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />}
         </Pressable>
 
+        {/* CSV Export Action Card */}
         <Pressable
           onPress={createCsv}
           disabled={isGenerating}
           accessibilityRole="button"
           accessibilityLabel="Monthly report as CSV"
           accessibilityState={{ disabled: isGenerating }}
-          style={({ pressed }) => [styles.pdfButton, { backgroundColor: theme.cardMuted, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border }, pressed && styles.pressed, isGenerating && styles.disabled]}>
-          <View style={[styles.iconCircle, { backgroundColor: theme.accentMuted }]}>
-            <MaterialCommunityIcons name="file-excel-box" size={24} color={theme.accent} />
+          style={({ pressed }) => [
+            styles.exportCardCsv,
+            pressed && styles.pressed,
+            isGenerating && styles.disabled,
+          ]}>
+          <View style={styles.csvIconBadge}>
+            <MaterialCommunityIcons name="file-excel-box" size={24} color="#34D399" />
           </View>
-          <View style={styles.pdfCopy}>
-            <ThemedText type="defaultBold" style={{ color: theme.text }}>
+          <View style={styles.exportCopy}>
+            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
               {isGenerating ? 'Preparing CSV Spreadsheet…' : 'Monthly CSV File'}
             </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
+            <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>
               Excel / Google Sheets friendly raw data export
             </ThemedText>
           </View>
-          {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color={theme.accent} />}
+          {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color="#34D399" />}
         </Pressable>
+
         {message ? (
           <ThemedText type="caption" themeColor={message.startsWith('Could not') ? 'danger' : 'textSecondary'} accessibilityLiveRegion="polite">
             {message}
@@ -713,17 +785,30 @@ export default function ReportsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
+  content: { flexGrow: 1, paddingBottom: 110 },
   container: {
     width: '100%',
     maxWidth: MaxContentWidth,
     alignSelf: 'center',
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.three,
     gap: Spacing.three,
   },
-  intro: { gap: Spacing.one },
-  eyebrow: { letterSpacing: 1, fontWeight: '700' },
-  title: { fontSize: 30, lineHeight: 36 },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  headerCopy: { flex: 1, gap: 1 },
+  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
+  themeIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.medium,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -732,21 +817,93 @@ const styles = StyleSheet.create({
     padding: Spacing.two,
   },
   monthArrow: {
-    width: 42,
-    height: 42,
+    width: 38,
+    height: 38,
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  monthLabelBlock: { flex: 1, alignItems: 'center', gap: 2 },
-  monthLabel: { fontSize: 18 },
-  hero: { backgroundColor: Brand.deep, borderWidth: 0, borderRadius: Radius.xlarge, padding: Spacing.four, gap: Spacing.one },
-  heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
-  heroValue: { color: '#FFFFFF', fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'] },
-  heroFooter: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: Spacing.two, marginTop: Spacing.one },
-  heroDetail: { color: 'rgba(255,255,255,0.8)' },
-  heroDot: { width: 4, height: 4, borderRadius: Radius.pill, backgroundColor: 'rgba(255,255,255,0.6)' },
-  heroOver: { color: '#FFC0C0', fontWeight: '700' },
+  monthLabelBlock: { flex: 1, alignItems: 'center', gap: 4 },
+  monthLabel: { fontSize: 16, fontWeight: '800' },
+  statusPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+  },
+  heroGlassCard: {
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: Brand.deep, // #00109D
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
+    gap: Spacing.two,
+    borderWidth: 1,
+    borderColor: 'rgba(20, 231, 253, 0.35)',
+    shadowColor: Brand.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  primaryBlueOrb: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(1, 82, 245, 0.45)',
+  },
+  brightCyanOrb: {
+    position: 'absolute',
+    bottom: -60,
+    left: -40,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(20, 231, 253, 0.3)',
+  },
+  heroHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 2,
+  },
+  heroLabel: { color: 'rgba(255,255,255,0.75)', letterSpacing: 1, fontSize: 11, fontWeight: '800' },
+  reportBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(20, 231, 253, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  heroValue: {
+    color: '#FFFFFF',
+    fontSize: 38,
+    lineHeight: 46,
+    fontVariant: ['tabular-nums'],
+    zIndex: 2,
+  },
+  heroFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 4,
+    zIndex: 2,
+  },
+  heroStatPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
+  heroDetailText: { color: '#FFFFFF', fontWeight: '600', fontSize: 12 },
   metricsRow: {
     flexDirection: 'row',
     gap: Spacing.two,
@@ -755,7 +912,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     padding: Spacing.three,
-    minHeight: 115,
+    minHeight: 110,
   },
   metricContent: {
     gap: 2,
@@ -812,13 +969,14 @@ const styles = StyleSheet.create({
   barTrack: {
     flex: 1,
     justifyContent: 'flex-end',
-    width: 24,
+    width: 18,
     alignItems: 'center',
+    borderRadius: Radius.small,
+    overflow: 'hidden',
   },
   trendBar: {
-    width: 16,
+    width: '100%',
     borderRadius: Radius.small,
-    borderWidth: 1,
   },
   barLabelText: {
     fontSize: 11,
@@ -856,17 +1014,62 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 11,
   },
-  pdfButton: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  iconCircle: { width: 38, height: 38, borderRadius: Radius.pill, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
-  pdfCopy: { flex: 1, gap: 2 },
-  pdfTitle: { color: '#FFFFFF' },
-  pdfSubtext: { color: 'rgba(255,255,255,0.78)' },
+  exportCardPdf: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    borderRadius: Radius.large,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    backgroundColor: Brand.primary, // #0152F5
+    borderWidth: 1,
+    borderColor: 'rgba(20, 231, 253, 0.3)',
+    shadowColor: Brand.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  exportCardCsv: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    borderRadius: Radius.large,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    backgroundColor: '#064E3B', // Deep Emerald Slate
+    borderWidth: 1,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  pdfIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  csvIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(52, 211, 153, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  exportCopy: { flex: 1, gap: 2 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.one },
   sectionCopy: { flex: 1, gap: 2 },
   breakdownCard: { gap: Spacing.three },
   categoryItem: { gap: Spacing.two },
   categoryLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  categoryDot: { width: 9, height: 9, borderRadius: Radius.pill },
   categoryName: { flex: 1 },
   progressTrack: { height: 7, borderRadius: Radius.pill, overflow: 'hidden' },
   progressFill: { height: '100%', borderRadius: Radius.pill },
@@ -879,5 +1082,5 @@ const styles = StyleSheet.create({
   emptyText: { textAlign: 'center', maxWidth: 420 },
   footer: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.two, marginTop: Spacing.one },
   disabled: { opacity: 0.5 },
-  pressed: { opacity: 0.75 },
+  pressed: { opacity: 0.75, transform: [{ scale: 0.99 }] },
 });

@@ -48,7 +48,6 @@ export default function AdvisorScreen() {
       <View style={styles.container}>
         <View style={styles.intro}>
           <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>YOUR MONTHLY CHECK-IN</ThemedText>
-          <ThemedText type="subtitle" style={styles.title}>Spending advisor</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">{monthLabel} · based on the expenses and limits you set</ThemedText>
         </View>
 

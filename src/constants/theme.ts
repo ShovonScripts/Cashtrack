@@ -8,7 +8,7 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 /**
- * Spendly brand palette, re-sampled pixel by pixel from the current app icon
+ * CashTrack brand palette, re-sampled pixel by pixel from the current app icon
  * (assets/images/icon.png), the blue wallet mark.
  *
  * Every accent in the app resolves through here so screens never hardcode a

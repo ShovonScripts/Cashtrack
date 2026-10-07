@@ -873,7 +873,7 @@ export default function DashboardScreen() {
             router.push('/about');
           }}
           accessibilityRole="button"
-          accessibilityLabel="About Spendly and support"
+          accessibilityLabel="About CashTrack and support"
           style={({ pressed }) => [
             styles.compactSupportCard,
             { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -881,7 +881,7 @@ export default function DashboardScreen() {
           ]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'nowrap' }}>
             <MaterialCommunityIcons name="heart" size={16} color="#EB5757" />
-            <ThemedText type="smallBold" numberOfLines={1}>About Spendly & Support</ThemedText>
+            <ThemedText type="smallBold" numberOfLines={1}>About CashTrack & Support</ThemedText>
           </View>
         </Pressable>
 

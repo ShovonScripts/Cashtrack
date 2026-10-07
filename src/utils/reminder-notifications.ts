@@ -2,11 +2,13 @@ import { Platform } from 'react-native';
 import type { FinancialReminder } from '@/types/reminder';
 
 let NotificationsModule: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  NotificationsModule = require('expo-notifications');
-} catch {
-  // Fallback for environments without notifications
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    NotificationsModule = require('expo-notifications');
+  } catch {
+    // Fallback for environments without notifications
+  }
 }
 
 export async function requestNotificationPermissionsAsync(): Promise<boolean> {

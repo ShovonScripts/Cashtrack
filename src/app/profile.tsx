@@ -10,6 +10,7 @@ import {
   Switch,
   Alert,
   Platform,
+  Modal,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +22,7 @@ import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing, Brand } from '@/constants/theme';
+import { COVER_PRESETS, getCoverSource } from '@/constants/cover-presets';
 import { useExpenses } from '@/context/expense-context';
 import { useGoals } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -78,6 +80,7 @@ export default function ProfileScreen() {
   const [savedToastVisible, setSavedToastVisible] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
 
   const parsedAge = ageText.trim() === '' ? null : Number(ageText);
   const ageIsValid = parsedAge === null || (Number.isInteger(parsedAge) && parsedAge >= 1 && parsedAge <= 120);
@@ -188,12 +191,12 @@ export default function ProfileScreen() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `Spendly_Transactions_${Date.now()}.csv`);
+        link.setAttribute('download', `CashTrack_Transactions_${Date.now()}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       } else {
-        const filename = `Spendly_Transactions_${Date.now()}.csv`;
+        const filename = `CashTrack_Transactions_${Date.now()}.csv`;
         const file = new File(Paths.cache, filename);
         file.create({ overwrite: true });
         file.write(csvContent);
@@ -201,7 +204,7 @@ export default function ProfileScreen() {
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(file.uri, {
             mimeType: 'text/csv',
-            dialogTitle: 'Export Spendly Transactions (CSV)',
+            dialogTitle: 'Export CashTrack Transactions (CSV)',
           });
         } else {
           Alert.alert('Export Ready', 'CSV file generated successfully.');
@@ -254,17 +257,8 @@ export default function ProfileScreen() {
           {/* Cover & Avatar Header Card */}
           <Card style={styles.bannerCard} padded={false}>
             {/* Cover Photo Area */}
-            <Pressable onPress={pickCoverPhoto} style={styles.coverContainer}>
-              {coverPhotoUri ? (
-                <Image source={{ uri: coverPhotoUri }} style={styles.coverImage} />
-              ) : (
-                <View style={[styles.coverPlaceholder, { backgroundColor: Brand.primary + '18' }]}>
-                  <MaterialCommunityIcons name="image-plus" size={28} color={theme.accent} />
-                  <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
-                    Tap to set cover photo
-                  </ThemedText>
-                </View>
-              )}
+            <Pressable onPress={() => setIsCoverModalOpen(true)} style={styles.coverContainer}>
+              <Image source={getCoverSource(coverPhotoUri)} style={styles.coverImage} />
 
               {/* Completion Bar Overlay */}
               <View style={styles.completionBarContainer}>
@@ -285,9 +279,9 @@ export default function ProfileScreen() {
 
               {/* Edit Cover Button */}
               <View style={styles.coverEditOverlay}>
-                <MaterialCommunityIcons name="camera" size={13} color="#FFFFFF" />
+                <MaterialCommunityIcons name="image-edit-outline" size={13} color="#FFFFFF" />
                 <ThemedText type="caption" style={styles.coverEditText}>
-                  Edit Cover
+                  Edit Banner
                 </ThemedText>
               </View>
             </Pressable>
@@ -316,7 +310,7 @@ export default function ProfileScreen() {
             <View style={styles.profileInfoContainer}>
               <View style={styles.nameRow}>
                 <ThemedText type="defaultBold" style={styles.displayNameText}>
-                  {name.trim() || 'Spendly User'}
+                  {name.trim() || 'CashTrack User'}
                 </ThemedText>
                 <View style={[styles.badgePill, { backgroundColor: theme.accentMuted }]}>
                   <MaterialCommunityIcons name="shield-check-outline" size={12} color={theme.accent} />
@@ -759,7 +753,7 @@ export default function ProfileScreen() {
               <View style={[styles.infoBanner, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
                 <MaterialCommunityIcons name="shield-lock-outline" size={18} color={theme.accent} />
                 <ThemedText type="caption" themeColor="textSecondary" style={{ flex: 1 }}>
-                  All notifications run locally on your device. Spendly does not track or store your push token on remote servers.
+                  All notifications run locally on your device. CashTrack does not track or store your push token on remote servers.
                 </ThemedText>
               </View>
             </Card>
@@ -811,7 +805,7 @@ export default function ProfileScreen() {
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Replay App Tour & Guide</ThemedText>
                     <ThemedText type="caption" themeColor="textSecondary">
-                      Review Spendly features walkthrough and onboarding
+                      Review CashTrack features walkthrough and onboarding
                     </ThemedText>
                   </View>
                   <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
@@ -831,7 +825,7 @@ export default function ProfileScreen() {
                     <MaterialCommunityIcons name="information-outline" size={20} color="#5077C8" />
                   </View>
                   <View style={styles.rowCopy}>
-                    <ThemedText type="smallBold">About Spendly & Support</ThemedText>
+                    <ThemedText type="smallBold">About CashTrack & Support</ThemedText>
                     <ThemedText type="caption" themeColor="textSecondary">
                       Privacy promise, app version & developer info
                     </ThemedText>
@@ -866,7 +860,7 @@ export default function ProfileScreen() {
           )}
 
           <ThemedText type="caption" themeColor="textSecondary" style={styles.footerNote}>
-            Spendly stores your financial records strictly on device storage. Your data is never uploaded to cloud databases without your explicit consent.
+            CashTrack stores your financial records strictly on device storage. Your data is never uploaded to cloud databases without your explicit consent.
           </ThemedText>
         </View>
       </ScrollView>
@@ -902,6 +896,87 @@ export default function ProfileScreen() {
           </View>
         </View>
       )}
+
+      {/* Cover Banner Preset Picker Modal */}
+      <Modal
+        visible={isCoverModalOpen}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setIsCoverModalOpen(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContentCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <MaterialCommunityIcons name="image-multiple" size={22} color={theme.accent} />
+                <ThemedText type="subtitle" style={{ fontWeight: '700' }}>
+                  Choose Banner Preset
+                </ThemedText>
+              </View>
+              <Pressable onPress={() => setIsCoverModalOpen(false)} style={styles.modalCloseBtn}>
+                <MaterialCommunityIcons name="close" size={20} color={theme.textSecondary} />
+              </Pressable>
+            </View>
+
+            <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: 12 }}>
+              Select a preset banner image or upload your custom photo.
+            </ThemedText>
+
+            <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+              <View style={styles.presetGrid}>
+                {COVER_PRESETS.map((preset) => {
+                  const activeUri = coverPhotoUri || 'default-cover';
+                  const isSelected = activeUri === preset.uri || (!coverPhotoUri && preset.id === 'default-cover');
+                  return (
+                    <Pressable
+                      key={preset.id}
+                      style={[
+                        styles.presetCard,
+                        { borderColor: isSelected ? theme.accent : theme.border, backgroundColor: theme.cardMuted },
+                        isSelected && { borderWidth: 2 },
+                      ]}
+                      onPress={() => {
+                        setCoverPhotoUri(preset.uri);
+                        setIsDirty(true);
+                        triggerHaptic();
+                        setIsCoverModalOpen(false);
+                      }}
+                    >
+                      <Image source={getCoverSource(preset.uri)} style={styles.presetThumbnail} />
+                      <View style={styles.presetMeta}>
+                        <ThemedText type="smallBold">{preset.name}</ThemedText>
+                        <ThemedText type="caption" numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 11 }}>
+                          {preset.description}
+                        </ThemedText>
+                      </View>
+                      {isSelected && (
+                        <View style={[styles.selectedCheckBadge, { backgroundColor: theme.accent }]}>
+                          <MaterialCommunityIcons name="check" size={12} color="#FFFFFF" />
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </ScrollView>
+
+            <View style={{ marginTop: 16 }}>
+              <Pressable
+                onPress={() => {
+                  setIsCoverModalOpen(false);
+                  setTimeout(() => pickCoverPhoto(), 300);
+                }}
+                style={[styles.modalActionBtn, { backgroundColor: Brand.primary }]}
+              >
+                <MaterialCommunityIcons name="image-plus" size={18} color="#FFFFFF" />
+                <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+                  Upload Custom Photo from Gallery
+                </ThemedText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <OnboardingModal visible={showOnboarding} onClose={() => setShowOnboarding(false)} />
     </View>
@@ -1178,6 +1253,70 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: Radius.medium,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  modalContentCard: {
+    width: '100%',
+    maxWidth: 480,
+    borderRadius: Radius.xlarge,
+    borderWidth: 1,
+    padding: 18,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  presetGrid: {
+    gap: 10,
+  },
+  presetCard: {
+    borderRadius: Radius.large,
+    borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  presetThumbnail: {
+    width: 80,
+    height: 52,
+    resizeMode: 'cover',
+  },
+  presetMeta: {
+    flex: 1,
+    paddingHorizontal: 12,
+  },
+  selectedCheckBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  modalActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: Radius.medium,
+    gap: 8,
   },
   pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.5 },

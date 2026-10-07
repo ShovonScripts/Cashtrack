@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
@@ -36,6 +37,7 @@ export default function AdvisorScreen() {
     const date = new Date(expense.date);
     return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
   }));
+
   const unbudgeted = categories
     .filter((category) => categoryLimits[category] === undefined)
     .map((category) => ({ category, spent: getCategoryMonthlySpend(expenses, category, now) }))
@@ -43,63 +45,145 @@ export default function AdvisorScreen() {
     .sort((first, second) => second.spent - first.spent)
     .slice(0, 3);
 
+  // Cash Flow calculation
+  const cashFlowRatio = cashFlow.moneyIn > 0 ? Math.min(1, monthTotal / cashFlow.moneyIn) : 1;
+
   return (
-    <ScrollView contentContainerStyle={styles.content}>
+    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
+        {/* Intro Topline */}
         <View style={styles.intro}>
-          <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>YOUR MONTHLY CHECK-IN</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">{monthLabel} · based on the expenses and limits you set</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
+            AI FINANCIAL INTELLIGENCE
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {monthLabel} · Live spending analysis & budget advisor
+          </ThemedText>
         </View>
 
-        {/* Smart Financial Intelligence Hero Card */}
-        <View style={styles.intelligenceCard}>
+        {/* Multi-Tone Spendly Brand Glass Hero Card */}
+        <View style={styles.intelligenceHeroGlass}>
+          <View pointerEvents="none" style={styles.primaryBlueOrb} />
+          <View pointerEvents="none" style={styles.brightCyanOrb} />
+
           <View style={styles.intelligenceContent}>
             <View style={styles.intelligenceHeader}>
-              <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>💡 Smart Financial Intelligence</ThemedText>
-              <View style={[styles.statusBadge, { backgroundColor: intelligence.financialHealthStatus === 'Excellent' ? 'rgba(39, 174, 96, 0.25)' : intelligence.financialHealthStatus === 'Overspending' ? 'rgba(235, 87, 87, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
-                <ThemedText type="caption" style={{ color: intelligence.financialHealthStatus === 'Excellent' ? '#2ecc71' : intelligence.financialHealthStatus === 'Overspending' ? '#ff6b6b' : '#FFFFFF', fontWeight: '700' }}>
+              <View style={styles.liveAiBadge}>
+                <Ionicons name="sparkles" size={12} color="#4ade80" />
+                <ThemedText type="caption" style={{ color: '#4ade80', fontWeight: '800' }}>
+                  Live AI Advisor
+                </ThemedText>
+              </View>
+
+              <View style={[styles.statusBadge, {
+                backgroundColor: intelligence.financialHealthStatus === 'Excellent'
+                  ? 'rgba(16, 185, 129, 0.25)'
+                  : intelligence.financialHealthStatus === 'Overspending'
+                    ? 'rgba(239, 68, 68, 0.25)'
+                    : 'rgba(255, 255, 255, 0.18)'
+              }]}>
+                <ThemedText type="caption" style={{
+                  color: intelligence.financialHealthStatus === 'Excellent'
+                    ? '#34D399'
+                    : intelligence.financialHealthStatus === 'Overspending'
+                      ? '#F87171'
+                      : '#FFFFFF',
+                  fontWeight: '800'
+                }}>
                   {intelligence.financialHealthStatus}
                 </ThemedText>
               </View>
             </View>
-            <ThemedText type="small" style={styles.intelligenceTip}>
+
+            <ThemedText type="smallBold" style={styles.intelligenceTip}>
               {intelligence.smartTip}
             </ThemedText>
+
             <View style={styles.intelligenceMetrics}>
               <View style={styles.intelMetric}>
-                <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Projected Total</ThemedText>
-                <ThemedText type="smallBold" style={styles.intelMetricValue}>{formatAmount(intelligence.projectedMonthSpend)}</ThemedText>
+                <ThemedText type="caption" style={styles.metricLabel}>Projected Month</ThemedText>
+                <ThemedText type="smallBold" style={styles.intelMetricValue}>
+                  {formatAmount(intelligence.projectedMonthSpend)}
+                </ThemedText>
               </View>
+
               <View style={styles.intelDivider} />
+
               <View style={styles.intelMetric}>
-                <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Daily Burn Rate</ThemedText>
-                <ThemedText type="smallBold" style={styles.intelMetricValue}>{formatAmount(intelligence.dailyBurnRate)}/day</ThemedText>
+                <ThemedText type="caption" style={styles.metricLabel}>Daily Burn Rate</ThemedText>
+                <ThemedText type="smallBold" style={styles.intelMetricValue}>
+                  {formatAmount(intelligence.dailyBurnRate)}/day
+                </ThemedText>
               </View>
+
               <View style={styles.intelDivider} />
+
               <View style={styles.intelMetric}>
-                <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.7)' }}>Savings Rate</ThemedText>
-                <ThemedText type="smallBold" style={{ color: intelligence.savingsRate >= 0 ? '#2ecc71' : '#ff6b6b' }}>{intelligence.savingsRate}%</ThemedText>
+                <ThemedText type="caption" style={styles.metricLabel}>Savings Rate</ThemedText>
+                <ThemedText type="smallBold" style={{
+                  color: intelligence.savingsRate >= 0 ? '#34D399' : '#F87171',
+                  fontWeight: '800'
+                }}>
+                  {intelligence.savingsRate}%
+                </ThemedText>
               </View>
             </View>
           </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
         </View>
 
-        <Card style={{ ...styles.summaryCard, backgroundColor: insights.some((item) => item.level === 'over') ? 'rgba(200,37,44,0.09)' : theme.accentMuted }}>
-          <ThemedText type="caption" themeColor="textSecondary">SPENT THIS MONTH</ThemedText>
-          <ThemedText type="hero" style={styles.summaryValue} numberOfLines={1} adjustsFontSizeToFit>{formatAmount(monthTotal)}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {insights.length === 0
-              ? categoryLimits && Object.keys(categoryLimits).length > 0 ? 'Your active limits are in a healthy range.' : 'Add category limits to get personalized budget heads-ups.'
-              : `${insights.length} ${insights.length === 1 ? 'category needs' : 'categories need'} a check-in.`}
-          </ThemedText>
+        {/* Monthly Cash Flow Visualizer Card */}
+        <Card style={styles.cashFlowCard}>
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.headerTitleRow}>
+              <MaterialCommunityIcons name="swap-horizontal-bold" size={18} color={theme.accent} />
+              <ThemedText type="defaultBold" style={{ fontSize: 15 }}>
+                Monthly Cash Flow
+              </ThemedText>
+            </View>
+            <ThemedText type="caption" themeColor="textSecondary">
+              {monthLabel}
+            </ThemedText>
+          </View>
+
+          <View style={styles.cashFlowNumbers}>
+            <View style={styles.cashFlowCol}>
+              <ThemedText type="caption" themeColor="textSecondary">INCOME (IN)</ThemedText>
+              <ThemedText type="subtitle" style={{ color: '#10B981', fontWeight: '800' }}>
+                +{formatAmount(cashFlow.moneyIn)}
+              </ThemedText>
+            </View>
+            <View style={styles.cashFlowColEnd}>
+              <ThemedText type="caption" themeColor="textSecondary">SPENT (OUT)</ThemedText>
+              <ThemedText type="subtitle" style={{ color: theme.danger, fontWeight: '800' }}>
+                -{formatAmount(monthTotal)}
+              </ThemedText>
+            </View>
+          </View>
+
+          <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+            <View style={[styles.fill, {
+              width: `${Math.round(cashFlowRatio * 100)}%`,
+              backgroundColor: cashFlowRatio > 0.9 ? theme.danger : cashFlowRatio > 0.75 ? '#BD7119' : '#10B981'
+            }]} />
+          </View>
+
+          <View style={styles.cashFlowFooter}>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Net Balance: <ThemedText type="smallBold" style={{ color: cashFlow.net >= 0 ? '#10B981' : theme.danger }}>
+                {cashFlow.net >= 0 ? `+${formatAmount(cashFlow.net)}` : formatAmount(cashFlow.net)}
+              </ThemedText>
+            </ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              {Math.round(cashFlowRatio * 100)}% of income spent
+            </ThemedText>
+          </View>
         </Card>
 
+        {/* Section Header: Budget Notices */}
         <View style={styles.sectionHeader}>
           <View style={styles.sectionCopy}>
-            <ThemedText type="defaultBold">Budget notices</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">Heads-ups at 80%, over-limit alerts, and spending pace.</ThemedText>
+            <ThemedText type="defaultBold">Budget Heads-Up & Warnings</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">Categories approaching or exceeding monthly caps.</ThemedText>
           </View>
           <Pressable
             onPress={() => {
@@ -108,22 +192,27 @@ export default function AdvisorScreen() {
             }}
             accessibilityRole="button"
             hitSlop={8}>
-            <ThemedText type="smallBold" style={{ color: theme.accent }}>Limits</ThemedText>
+            <ThemedText type="smallBold" style={{ color: theme.accent }}>Manage Limits</ThemedText>
           </Pressable>
         </View>
 
         {insights.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <View style={[styles.emptyIcon, { backgroundColor: theme.accentMuted }]}>
-              <ThemedText type="defaultBold" style={{ color: theme.accent }}>✓</ThemedText>
+            <View style={[styles.emptyIcon, { backgroundColor: '#10B9811C' }]}>
+              <MaterialCommunityIcons name="shield-check" size={24} color="#10B981" />
             </View>
-            <ThemedText type="defaultBold">{Object.keys(categoryLimits).length ? 'You’re on track' : 'Start with a limit'}</ThemedText>
+            <ThemedText type="defaultBold">
+              {Object.keys(categoryLimits).length ? 'All Categories Healthy' : 'Set Category Limits'}
+            </ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.emptyMessage}>
               {Object.keys(categoryLimits).length
-                ? 'No category has reached its heads-up point. Keep recording expenses to keep this view useful.'
-                : 'Choose a monthly cap for categories that matter to you. CashTrack will flag them when spending gets close.'}
+                ? 'None of your spending categories have crossed their alert thresholds.'
+                : 'Assign monthly spending caps to get real-time heads-ups when spending gets close to your limits.'}
             </ThemedText>
-            <ActionButton title={Object.keys(categoryLimits).length ? 'Review category limits' : 'Set category limits'} onPress={() => router.push('/budgets')} />
+            <ActionButton
+              title={Object.keys(categoryLimits).length ? 'Review Category Caps' : 'Set Category Caps'}
+              onPress={() => router.push('/budgets')}
+            />
           </Card>
         ) : (
           <View style={styles.noticeList}>
@@ -133,38 +222,81 @@ export default function AdvisorScreen() {
           </View>
         )}
 
+        {/* Section: Uncapped Categories */}
         {unbudgeted.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionCopy}>
-              <ThemedText type="defaultBold">Spending without a limit</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">A limit is optional—these are just your highest uncapped categories.</ThemedText>
+              <ThemedText type="defaultBold">Highest Uncapped Spending</ThemedText>
+              <ThemedText type="caption" themeColor="textSecondary">Top categories without a monthly budget cap.</ThemedText>
             </View>
             <Card style={styles.uncappedCard}>
               {unbudgeted.map((item, index) => (
                 <View key={item.category}>
                   {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
                   <View style={styles.uncappedRow}>
-                    <CategoryIcon category={item.category} customIcons={categoryIcons} color={getCategoryColor(item.category)} size={15} containerSize={26} />
-                    <ThemedText type="smallBold" style={styles.uncappedName}>{item.category}</ThemedText>
-                    <ThemedText type="smallBold">{formatAmount(item.spent)}</ThemedText>
+                    <CategoryIcon category={item.category} customIcons={categoryIcons} color={getCategoryColor(item.category)} size={16} containerSize={32} />
+                    <View style={{ flex: 1, gap: 1 }}>
+                      <ThemedText type="smallBold">{item.category}</ThemedText>
+                      <ThemedText type="caption" themeColor="textSecondary">
+                        Spent {formatAmount(item.spent)}
+                      </ThemedText>
+                    </View>
+                    <Pressable
+                      onPress={() => {
+                        triggerHaptic();
+                        router.push('/budgets');
+                      }}
+                      style={({ pressed }) => [styles.capBtn, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
+                      <MaterialCommunityIcons name="plus" size={13} color={theme.accent} />
+                      <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
+                        Set Cap
+                      </ThemedText>
+                    </Pressable>
                   </View>
                 </View>
               ))}
             </Card>
-            <ActionButton title="Manage category limits" onPress={() => router.push('/budgets')} />
           </View>
         )}
 
+        {/* Quick Shortcuts Bar */}
         <View style={styles.section}>
-          <View style={styles.sectionCopy}>
-            <ThemedText type="defaultBold">Your monthly report</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">Review your spending or save a shareable PDF.</ThemedText>
+          <ThemedText type="defaultBold">Quick Shortcuts</ThemedText>
+          <View style={styles.shortcutGrid}>
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/budgets');
+              }}
+              style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
+              <MaterialCommunityIcons name="chart-box-outline" size={22} color={theme.accent} />
+              <ThemedText type="smallBold">Budget Caps</ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/reports');
+              }}
+              style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
+              <MaterialCommunityIcons name="file-document-outline" size={22} color="#10B981" />
+              <ThemedText type="smallBold">Monthly Reports</ThemedText>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/expenses');
+              }}
+              style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
+              <MaterialCommunityIcons name="format-list-bulleted" size={22} color="#F59E0B" />
+              <ThemedText type="smallBold">All Expenses</ThemedText>
+            </Pressable>
           </View>
-          <ActionButton title="Open monthly reports" onPress={() => router.push('/reports')} />
         </View>
 
         <ThemedText type="caption" themeColor="textSecondary" style={styles.footer}>
-          These are simple reminders based on your own entries and limits—not financial advice.
+          CashTrack Advisor provides automated reminders and insights based on your entries—not professional financial advice.
         </ThemedText>
       </View>
     </ScrollView>
@@ -184,15 +316,18 @@ function NoticeCard({
   const isOver = insight.level === 'over';
   const color = isOver ? theme.danger : insight.level === 'near' ? '#BD7119' : theme.accent;
   const title = insight.level === 'over'
-    ? `${insight.category} is over its limit`
+    ? `${insight.category} is over limit`
     : insight.level === 'near'
-      ? insight.remaining <= 0 ? `${insight.category} limit reached` : `${insight.category} is getting close`
-      : `${insight.category} may go over at this pace`;
+      ? insight.remaining <= 0 ? `${insight.category} limit reached` : `${insight.category} near limit`
+      : `${insight.category} spending pace alert`;
+
   const body = insight.level === 'over'
-    ? `You’re ${formatAmount(Math.abs(insight.remaining))} above this month’s limit. Consider pausing non-essential spending in this category.`
+    ? `You’re ${formatAmount(Math.abs(insight.remaining))} above this month’s cap. Consider pausing non-essential expenses.`
     : insight.level === 'near'
-      ? insight.remaining <= 0 ? 'You’ve used the full limit. Any more spending will put this category over budget.' : `${formatAmount(insight.remaining)} remains. You’ve used ${Math.round(insight.percentUsed * 100)}% of the limit.`
-      : `Based on spending so far, this category could reach ${formatAmount(insight.projectedSpend)} by month-end.`;
+      ? insight.remaining <= 0 ? 'Full cap reached. Any further spending will exceed your budget.' : `${formatAmount(insight.remaining)} left (${Math.round(insight.percentUsed * 100)}% used).`
+      : `At this current pace, month-end spend could reach ${formatAmount(insight.projectedSpend)}.`;
+
+  const progressPercent = Math.min(100, Math.round(insight.percentUsed * 100));
 
   return (
     <Card style={{ ...styles.noticeCard, borderLeftWidth: 4, borderLeftColor: color }}>
@@ -201,20 +336,28 @@ function NoticeCard({
           category={insight.category}
           customIcons={categoryIcons}
           color={color}
-          size={15}
-          containerSize={26}
+          size={16}
+          containerSize={32}
         />
         <ThemedText type="defaultBold" style={styles.noticeTitle}>{title}</ThemedText>
-        <View style={[styles.noticePill, { backgroundColor: isOver ? 'rgba(235, 87, 87, 0.15)' : insight.level === 'near' ? 'rgba(189, 113, 25, 0.15)' : theme.accentMuted }]}>
-          <ThemedText type="caption" style={{ color, fontWeight: '700' }}>
-            {isOver ? 'OVER' : insight.level === 'near' ? `${Math.round(insight.percentUsed * 100)}%` : 'PACE'}
+        <View style={[styles.noticePill, { backgroundColor: isOver ? 'rgba(239, 68, 68, 0.15)' : insight.level === 'near' ? 'rgba(189, 113, 25, 0.15)' : theme.accentMuted }]}>
+          <ThemedText type="caption" style={{ color, fontWeight: '800' }}>
+            {isOver ? 'OVER' : insight.level === 'near' ? `${progressPercent}%` : 'PACE'}
           </ThemedText>
         </View>
       </View>
+
       <ThemedText type="small" themeColor="textSecondary">{body}</ThemedText>
-      <View style={styles.noticeNumbers}>
-        <ThemedText type="caption" themeColor="textSecondary">Spent {formatAmount(insight.spent)}</ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary">Limit {formatAmount(insight.limit)}</ThemedText>
+
+      {/* Progress Track */}
+      <View style={styles.noticeProgressBlock}>
+        <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+          <View style={[styles.fill, { width: `${progressPercent}%`, backgroundColor: color }]} />
+        </View>
+        <View style={styles.noticeNumbers}>
+          <ThemedText type="caption" themeColor="textSecondary">Spent: <ThemedText type="smallBold" style={{ color: theme.text }}>{formatAmount(insight.spent)}</ThemedText></ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">Cap: <ThemedText type="smallBold" style={{ color: theme.text }}>{formatAmount(insight.limit)}</ThemedText></ThemedText>
+        </View>
       </View>
     </Card>
   );
@@ -239,15 +382,38 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
-  eyebrow: { letterSpacing: 1.1, fontWeight: '700' },
-  title: { fontSize: 30, lineHeight: 36 },
-  intelligenceCard: {
+  eyebrow: { letterSpacing: 1.1, fontWeight: '800', fontSize: 10 },
+  intelligenceHeroGlass: {
     backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
-    overflow: 'hidden',
     position: 'relative',
-    gap: Spacing.two,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(20, 231, 253, 0.35)',
+    shadowColor: Brand.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  primaryBlueOrb: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(1, 82, 245, 0.5)',
+  },
+  brightCyanOrb: {
+    position: 'absolute',
+    bottom: -50,
+    left: -20,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(20, 231, 253, 0.3)',
   },
   intelligenceContent: {
     gap: Spacing.two,
@@ -258,20 +424,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  liveAiBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
   statusBadge: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: Radius.pill,
   },
   intelligenceTip: {
-    color: 'rgba(255,255,255,0.85)',
+    color: '#FFFFFF',
     lineHeight: 20,
+    fontSize: 14,
   },
   intelligenceMetrics: {
     flexDirection: 'row',
     alignItems: 'center',
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.2)',
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
     paddingTop: Spacing.two,
     marginTop: Spacing.half,
   },
@@ -279,55 +455,52 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
+  metricLabel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10,
+    fontWeight: '700',
+  },
   intelMetricValue: {
     color: '#FFFFFF',
+    fontSize: 14,
     fontVariant: ['tabular-nums'],
   },
   intelDivider: {
     width: StyleSheet.hairlineWidth,
     height: 28,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginHorizontal: Spacing.two,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    marginHorizontal: Spacing.one,
   },
-  heroOrbLarge: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    right: -80,
-    top: -90,
-    backgroundColor: 'rgba(139,123,255,0.2)',
-  },
-  heroOrbSmall: {
-    position: 'absolute',
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    right: 14,
-    bottom: -90,
-    backgroundColor: 'rgba(176,76,252,0.2)',
-  },
-  summaryCard: { gap: Spacing.one, borderWidth: 0 },
-  summaryValue: { fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'] },
+  cashFlowCard: { gap: Spacing.two },
+  cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  cashFlowNumbers: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cashFlowCol: { gap: 2 },
+  cashFlowColEnd: { gap: 2, alignItems: 'flex-end' },
+  cashFlowFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.one },
   sectionCopy: { gap: Spacing.one },
   noticeList: { gap: Spacing.two },
   noticeCard: { gap: Spacing.two },
   noticeHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  noticePill: { paddingHorizontal: Spacing.two, paddingVertical: 2, borderRadius: Radius.small },
-  noticeTitle: { flex: 1 },
-  noticeNumbers: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two, paddingTop: Spacing.one },
-  emptyCard: { alignItems: 'center', gap: Spacing.two },
-  emptyIcon: { width: 42, height: 42, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  noticePill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.pill },
+  noticeTitle: { flex: 1, fontSize: 14 },
+  noticeProgressBlock: { gap: 6, marginTop: 4 },
+  track: { height: 8, borderRadius: Radius.pill, overflow: 'hidden' },
+  fill: { height: '100%', borderRadius: Radius.pill },
+  noticeNumbers: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  emptyCard: { alignItems: 'center', gap: Spacing.two, padding: Spacing.four },
+  emptyIcon: { width: 44, height: 44, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   emptyMessage: { textAlign: 'center', maxWidth: 440 },
   section: { gap: Spacing.two, marginTop: Spacing.one },
   uncappedCard: { gap: Spacing.one },
   uncappedRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  categoryDot: { width: 8, height: 8, borderRadius: Radius.pill },
-  uncappedName: { flex: 1 },
+  capBtn: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 10, paddingVertical: 5, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth },
   divider: { height: StyleSheet.hairlineWidth },
+  shortcutGrid: { flexDirection: 'row', gap: Spacing.two },
+  shortcutCard: { flex: 1, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', gap: 6 },
   actionButton: { minHeight: 46, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.three },
   actionText: { color: '#FFFFFF' },
-  footer: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three },
-  pressed: { opacity: 0.75 },
+  footer: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three, marginTop: Spacing.one },
+  pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
 });

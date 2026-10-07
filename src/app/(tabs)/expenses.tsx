@@ -171,7 +171,7 @@ export default function ExpensesScreen() {
               categories={categories}
             />
 
-            {/* Spendly Brand Multi-Tone Glass Hero Summary Card */}
+            {/* CashTrack Brand Multi-Tone Glass Hero Summary Card */}
             {expenses.length > 0 && (
               <View style={styles.heroGlassCard}>
                 <View pointerEvents="none" style={styles.primaryBlueOrb} />

@@ -107,7 +107,7 @@ function Navigation() {
       <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
       <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
       <Stack.Screen name="reports" options={{ title: 'Monthly reports' }} />
-      <Stack.Screen name="about" options={{ title: 'About Spendly' }} />
+      <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
       <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
       <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
       <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />

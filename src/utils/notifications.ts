@@ -5,20 +5,22 @@ import { sumAmounts } from '@/utils/expense';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
 
 let NotificationsModule: any = null;
-try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  NotificationsModule = require('expo-notifications');
-  NotificationsModule.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
-  });
-} catch {
-  // Expo Go fallback
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    NotificationsModule = require('expo-notifications');
+    NotificationsModule.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  } catch {
+    // Expo Go fallback
+  }
 }
 
 export async function registerForBudgetNotificationsAsync(): Promise<boolean> {

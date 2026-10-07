@@ -188,7 +188,7 @@ export default function MenuScreen() {
     },
     {
       id: 'about',
-      title: 'About Spendly & Support',
+      title: 'About CashTrack & Support',
       subtitle: 'Privacy promise & app version',
       icon: 'information-outline',
       color: '#5077C8',

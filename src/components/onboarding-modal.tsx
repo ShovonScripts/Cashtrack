@@ -24,12 +24,12 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     {
       id: 'welcome',
       icon: 'hand-wave' as const,
-      title: 'Welcome to Spendly',
+      title: 'Welcome to CashTrack',
       subtitle: 'Your smart, private, and local-first money manager.',
       content: (
         <View style={styles.slideBody}>
           <ThemedText type="small" themeColor="textSecondary" style={styles.bodyText}>
-            Spendly helps you track spending, monitor income streams, stick to monthly budgets, and manage debts—all without creating an account.
+            CashTrack helps you track spending, monitor income streams, stick to monthly budgets, and manage debts—all without creating an account.
           </ThemedText>
 
           <Card style={styles.highlightCard}>

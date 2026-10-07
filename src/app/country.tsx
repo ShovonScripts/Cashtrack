@@ -31,7 +31,7 @@ export default function CountryScreen() {
       <View style={styles.container}>
         <View style={styles.intro}>
           <ThemedText type="small" themeColor="textSecondary">
-            Choose where you track your spending. Spendly will use that country’s currency symbol throughout the app.
+            Choose where you track your spending. CashTrack will use that country’s currency symbol throughout the app.
           </ThemedText>
         </View>
 

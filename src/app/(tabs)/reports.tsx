@@ -316,7 +316,7 @@ export default function ReportsScreen() {
           await Sharing.shareAsync(uri, {
             mimeType: 'application/pdf',
             UTI: 'com.adobe.pdf',
-            dialogTitle: `Spendly ${monthLabel} report`,
+            dialogTitle: `CashTrack ${monthLabel} report`,
           });
           setMessage('Your PDF is ready. Choose where to save or share it.');
         } else {
@@ -347,20 +347,20 @@ export default function ReportsScreen() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `Spendly-${monthLabel.replace(/\s+/g, '-')}.csv`);
+        link.setAttribute('download', `CashTrack-${monthLabel.replace(/\s+/g, '-')}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         setMessage('Your CSV report has been downloaded.');
       } else {
-        const filename = `Spendly-${monthLabel.replace(/\s+/g, '-')}.csv`;
+        const filename = `CashTrack-${monthLabel.replace(/\s+/g, '-')}.csv`;
         const file = new File(Paths.cache, filename);
         file.create({ overwrite: true });
         file.write(csvString);
         if (await Sharing.isAvailableAsync()) {
           await Sharing.shareAsync(file.uri, {
             mimeType: 'text/csv',
-            dialogTitle: `Spendly ${monthLabel} CSV report`,
+            dialogTitle: `CashTrack ${monthLabel} CSV report`,
           });
           setMessage('Your CSV file is ready to share or save.');
         } else {
@@ -368,7 +368,7 @@ export default function ReportsScreen() {
         }
       }
     } catch (error) {
-      console.error('[spendly] CSV export failed.', error);
+      console.error('[cashtrack] CSV export failed.', error);
       setMessage('Could not create the CSV export. Please try again.');
     } finally {
       setIsGenerating(false);
@@ -451,7 +451,7 @@ export default function ReportsScreen() {
           </Pressable>
         </Card>
 
-        {/* 2. Spendly Brand Multi-Tone Glass Hero Card */}
+        {/* 2. CashTrack Brand Multi-Tone Glass Hero Card */}
         <View style={styles.heroGlassCard}>
           <View pointerEvents="none" style={styles.primaryBlueOrb} />
           <View pointerEvents="none" style={styles.brightCyanOrb} />

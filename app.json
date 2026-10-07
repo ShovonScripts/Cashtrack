@@ -45,9 +45,15 @@
       "expo-sqlite",
       "expo-sharing",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow CashTrack to access your location for local weather updates."
+        }
+      ],
+      [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Spendly to access your photos to set your cover and profile picture."
+          "photosPermission": "Allow CashTrack to access your photos to set your cover and profile picture."
         }
       ],
       [

@@ -9,6 +9,7 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -18,6 +19,7 @@ import { router } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
+import { getCoverSource } from '@/constants/cover-presets';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -123,10 +125,33 @@ export function FacebookCoverHeader({
           setWeatherCode(code);
 
           // Reverse geocode city name if possible
-          const reverseGeo = await Location.reverseGeocodeAsync({ latitude, longitude });
-          if (reverseGeo && reverseGeo[0]) {
-            const city = reverseGeo[0].city || reverseGeo[0].subregion || reverseGeo[0].region;
-            if (city) setLocationName(city);
+          let cityFound = false;
+          if (Platform.OS !== 'web') {
+            try {
+              const reverseGeo = await Location.reverseGeocodeAsync({ latitude, longitude });
+              if (reverseGeo && reverseGeo[0]) {
+                const city = reverseGeo[0].city || reverseGeo[0].subregion || reverseGeo[0].region;
+                if (city) {
+                  setLocationName(city);
+                  cityFound = true;
+                }
+              }
+            } catch {
+              // Ignore native reverse geocode failure
+            }
+          }
+
+          if (!cityFound) {
+            try {
+              const geoRes = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+              );
+              const geoData = (await geoRes.json()) as { city?: string; locality?: string; principalSubdivision?: string };
+              const city = geoData.city || geoData.locality || geoData.principalSubdivision;
+              if (city) setLocationName(city);
+            } catch {
+              // Ignore fallback geocode failure
+            }
           }
 
           if (currentTemp > 25) {
@@ -190,11 +215,7 @@ export function FacebookCoverHeader({
           onPress={onPressProfile || (() => router.push('/profile'))}
           style={styles.slideCard}
         >
-          {profile.coverPhotoUri ? (
-            <Image source={{ uri: profile.coverPhotoUri }} style={styles.fullCoverImage} />
-          ) : (
-            <View style={[styles.fullCoverPlaceholder, { backgroundColor: theme.accent + '40' }]} />
-          )}
+          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>
@@ -240,11 +261,7 @@ export function FacebookCoverHeader({
 
         {/* SLIDE 2: LIVE WEATHER UPDATE */}
         <View style={styles.slideCard}>
-          {profile.coverPhotoUri ? (
-            <Image source={{ uri: profile.coverPhotoUri }} style={styles.fullCoverImage} />
-          ) : (
-            <View style={[styles.fullCoverPlaceholder, { backgroundColor: theme.accent + '40' }]} />
-          )}
+          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>
@@ -269,11 +286,7 @@ export function FacebookCoverHeader({
 
         {/* SLIDE 3: DAILY MOTIVATION QUOTES */}
         <View style={styles.slideCard}>
-          {profile.coverPhotoUri ? (
-            <Image source={{ uri: profile.coverPhotoUri }} style={styles.fullCoverImage} />
-          ) : (
-            <View style={[styles.fullCoverPlaceholder, { backgroundColor: theme.accent + '40' }]} />
-          )}
+          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>

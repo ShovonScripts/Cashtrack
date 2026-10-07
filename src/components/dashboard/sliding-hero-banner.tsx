@@ -17,6 +17,7 @@ import { router } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
+import { getCoverSource } from '@/constants/cover-presets';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
@@ -133,11 +134,7 @@ export function SlidingHeroBanner({
           onPress={onPressProfile || (() => router.push('/profile'))}
           style={[styles.card, { borderColor: theme.border }]}
         >
-          {profile.coverPhotoUri ? (
-            <Image source={{ uri: profile.coverPhotoUri }} style={styles.fullCoverImage} />
-          ) : (
-            <View style={[styles.fullCoverPlaceholder, { backgroundColor: theme.accent + '30' }]} />
-          )}
+          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>
@@ -187,11 +184,7 @@ export function SlidingHeroBanner({
 
         {/* SLIDE 2: WEATHER UPDATE */}
         <View style={[styles.card, { borderColor: theme.border }]}>
-          {profile.coverPhotoUri ? (
-            <Image source={{ uri: profile.coverPhotoUri }} style={styles.fullCoverImage} />
-          ) : (
-            <View style={[styles.fullCoverPlaceholder, { backgroundColor: theme.accent + '30' }]} />
-          )}
+          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>
@@ -220,11 +213,7 @@ export function SlidingHeroBanner({
 
         {/* SLIDE 3: DAILY MOTIVATION QUOTES */}
         <View style={[styles.card, { borderColor: theme.border }]}>
-          {profile.coverPhotoUri ? (
-            <Image source={{ uri: profile.coverPhotoUri }} style={styles.fullCoverImage} />
-          ) : (
-            <View style={[styles.fullCoverPlaceholder, { backgroundColor: theme.accent + '30' }]} />
-          )}
+          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>

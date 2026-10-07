@@ -78,13 +78,31 @@ export function calculateGoalProgress({
   const isCompleted = actualProgress >= targetAmount;
 
   const totalPeriods = getFrequencyPeriods(frequency, start, deadline, totalDays);
-  const elapsedPeriods = Math.min(totalPeriods, getFrequencyPeriods(frequency, start, today, elapsedDays));
+  const elapsedPeriods = today <= start ? 0 : Math.min(totalPeriods, getFrequencyPeriods(frequency, start, today, elapsedDays));
   const remainingPeriods = Math.max(1, totalPeriods - elapsedPeriods);
 
-  const frequencyRequired = remainingAmount / remainingPeriods;
-  const dailyRequired = remainingAmount / Math.max(1, remainingDays);
-  const weeklyRequired = dailyRequired * 7;
-  const monthlyRequired = dailyRequired * (365.25 / 12);
+  // Requirements calculations
+  let dailyRequired = 0;
+  let weeklyRequired = 0;
+  let monthlyRequired = 0;
+  let frequencyRequired = 0;
+
+  if (isCompleted || remainingAmount === 0) {
+    dailyRequired = 0;
+    weeklyRequired = 0;
+    monthlyRequired = 0;
+    frequencyRequired = 0;
+  } else if (remainingDays === 0) {
+    dailyRequired = remainingAmount;
+    weeklyRequired = remainingAmount;
+    monthlyRequired = remainingAmount;
+    frequencyRequired = remainingAmount;
+  } else {
+    dailyRequired = remainingAmount / remainingDays;
+    weeklyRequired = Math.min(remainingAmount, dailyRequired * 7);
+    monthlyRequired = Math.min(remainingAmount, dailyRequired * (365.25 / 12));
+    frequencyRequired = Math.min(remainingAmount, remainingAmount / remainingPeriods);
+  }
 
   return {
     targetAmount,

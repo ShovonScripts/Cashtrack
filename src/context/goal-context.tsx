@@ -133,6 +133,10 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       deadlineDate: draft.deadlineDate,
       frequency: draft.frequency,
       status: 'active',
+      potType: draft.potType ?? 'general',
+      allocationType: draft.allocationType ?? 'manual',
+      allocationPercent: draft.allocationPercent ?? null,
+      icon: draft.icon ?? 'piggy-bank',
     };
     await insertGoal(goal);
     setRawGoals((current) => [goal, ...current]);

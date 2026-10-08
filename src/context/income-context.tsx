@@ -15,6 +15,8 @@ import {
   updateIncome as updateIncomeRepo,
   deleteIncome as deleteIncomeRepo,
 } from '@/storage/income-repository';
+import { getAllGoals, insertContribution } from '@/storage/goal-repository';
+import { calculateIncomeAllocations } from '@/utils/savings-allocator';
 import { processRecurringIncome } from '@/utils/recurring-income';
 import { useExpenses } from '@/context/expense-context';
 
@@ -80,6 +82,25 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
       recurringEndDate: draft.recurringEndDate,
     };
     await insertIncome(record);
+
+    // Auto-allocate savings to percentage-based goals/pots
+    try {
+      const goals = await getAllGoals();
+      const allocations = calculateIncomeAllocations(record, goals);
+      for (const alloc of allocations) {
+        const contribution = {
+          id: `contrib-auto-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`,
+          goalId: alloc.goalId,
+          amount: alloc.amount,
+          date: record.date,
+          note: alloc.note,
+        };
+        await insertContribution(contribution);
+      }
+    } catch (err) {
+      console.error('[cashtrack] Failed to auto-allocate savings from income', err);
+    }
+
     setIncomeList((current) => processRecurringIncome([record, ...current]));
     return record;
   }, []);

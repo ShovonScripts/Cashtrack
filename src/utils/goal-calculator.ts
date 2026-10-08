@@ -55,26 +55,27 @@ export function calculateGoalProgress({
 }: {
   targetAmount: number;
   startDate: string;
-  deadlineDate: string;
+  deadlineDate?: string | null;
   currentAmount: number;
   frequency: GoalFrequency;
   today?: Date;
 }): GoalCalculationResult {
   const start = new Date(startDate);
-  const deadline = new Date(deadlineDate);
+  const hasDeadline = Boolean(deadlineDate);
+  const deadline = hasDeadline ? new Date(deadlineDate!) : new Date(start.getTime() + 10 * 365 * 24 * 60 * 60 * 1000);
 
   const totalMs = Math.max(0, deadline.getTime() - start.getTime());
   const elapsedMs = Math.max(0, Math.min(totalMs, today.getTime() - start.getTime()));
 
   const totalDays = Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)) + 1);
   const elapsedDays = Math.max(0, Math.min(totalDays, Math.round(elapsedMs / (1000 * 60 * 60 * 24))));
-  const remainingDays = today.getTime() >= deadline.getTime() ? 0 : Math.max(0, totalDays - elapsedDays);
+  const remainingDays = !hasDeadline ? 999999 : today.getTime() >= deadline.getTime() ? 0 : Math.max(0, totalDays - elapsedDays);
 
-  const timeFraction = Math.min(1, Math.max(0, elapsedDays / totalDays));
+  const timeFraction = !hasDeadline ? 0 : Math.min(1, Math.max(0, elapsedDays / totalDays));
   const expectedProgress = targetAmount * timeFraction;
   const actualProgress = Math.max(0, currentAmount);
   const remainingAmount = Math.max(0, targetAmount - actualProgress);
-  const aheadBehindAmount = actualProgress - expectedProgress;
+  const aheadBehindAmount = !hasDeadline ? actualProgress : (actualProgress - expectedProgress);
   const isCompleted = actualProgress >= targetAmount;
 
   const totalPeriods = getFrequencyPeriods(frequency, start, deadline, totalDays);
@@ -87,7 +88,12 @@ export function calculateGoalProgress({
   let monthlyRequired = 0;
   let frequencyRequired = 0;
 
-  if (isCompleted || remainingAmount === 0) {
+  if (!hasDeadline) {
+    dailyRequired = 0;
+    weeklyRequired = 0;
+    monthlyRequired = 0;
+    frequencyRequired = 0;
+  } else if (isCompleted || remainingAmount === 0) {
     dailyRequired = 0;
     weeklyRequired = 0;
     monthlyRequired = 0;

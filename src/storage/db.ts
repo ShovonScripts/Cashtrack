@@ -45,7 +45,11 @@ CREATE TABLE IF NOT EXISTS money_goals (
   start_date TEXT NOT NULL,
   deadline_date TEXT NOT NULL,
   frequency TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active'
+  status TEXT NOT NULL DEFAULT 'active',
+  pot_type TEXT NOT NULL DEFAULT 'general',
+  allocation_type TEXT NOT NULL DEFAULT 'manual',
+  allocation_percent REAL,
+  icon TEXT NOT NULL DEFAULT 'piggy-bank'
 );
 
 CREATE TABLE IF NOT EXISTS goal_contributions (
@@ -116,6 +120,18 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   } catch {}
   try {
     await db.execAsync('ALTER TABLE financial_reminders ADD COLUMN original_due_date TEXT;');
+  } catch {}
+  try {
+    await db.execAsync("ALTER TABLE money_goals ADD COLUMN pot_type TEXT NOT NULL DEFAULT 'general';");
+  } catch {}
+  try {
+    await db.execAsync("ALTER TABLE money_goals ADD COLUMN allocation_type TEXT NOT NULL DEFAULT 'manual';");
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE money_goals ADD COLUMN allocation_percent REAL;');
+  } catch {}
+  try {
+    await db.execAsync("ALTER TABLE money_goals ADD COLUMN icon TEXT NOT NULL DEFAULT 'piggy-bank';");
   } catch {}
 
   return db;

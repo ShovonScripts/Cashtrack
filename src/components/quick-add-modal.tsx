@@ -1,18 +1,13 @@
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-function triggerHaptic() {
-  if (Platform.OS !== 'web') {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }
-}
+import { triggerHaptic } from '@/utils/motion';
 
 type QuickAction = {
   id: string;
@@ -76,13 +71,18 @@ export function QuickAddModal({
     }, 100);
   };
 
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
       transparent
-      animationType="fade"
+      animationType="none"
       onRequestClose={onClose}>
-      <View style={styles.backdrop}>
+      <Animated.View
+        entering={FadeIn.duration(200)}
+        exiting={FadeOut.duration(200)}
+        style={styles.backdrop}>
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={() => {
@@ -93,7 +93,9 @@ export function QuickAddModal({
           accessibilityLabel="Close quick add menu"
         />
 
-        <View
+        <Animated.View
+          entering={SlideInDown.springify().damping(20).stiffness(180)}
+          exiting={SlideOutDown.duration(200)}
           style={[
             styles.sheet,
             {
@@ -155,8 +157,8 @@ export function QuickAddModal({
               </Pressable>
             ))}
           </View>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }

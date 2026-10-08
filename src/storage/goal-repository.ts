@@ -1,5 +1,5 @@
 import { initDatabase } from '@/storage/db';
-import type { MoneyGoal, GoalContribution, GoalFrequency, GoalStatus } from '@/types/goal';
+import type { MoneyGoal, GoalContribution, GoalFrequency, GoalStatus, PotType, AllocationType } from '@/types/goal';
 
 interface GoalRow {
   id: string;
@@ -9,6 +9,10 @@ interface GoalRow {
   deadline_date: string;
   frequency: string;
   status: string;
+  pot_type: string;
+  allocation_type: string;
+  allocation_percent: number | null;
+  icon: string;
 }
 
 interface ContributionRow {
@@ -28,6 +32,10 @@ function mapGoalRow(row: GoalRow): MoneyGoal {
     deadlineDate: row.deadline_date,
     frequency: row.frequency as GoalFrequency,
     status: row.status as GoalStatus,
+    potType: (row.pot_type as PotType) ?? 'general',
+    allocationType: (row.allocation_type as AllocationType) ?? 'manual',
+    allocationPercent: row.allocation_percent ?? null,
+    icon: row.icon ?? 'piggy-bank',
   };
 }
 
@@ -56,14 +64,18 @@ export async function getGoalById(id: string): Promise<MoneyGoal | undefined> {
 export async function insertGoal(goal: MoneyGoal): Promise<void> {
   const db = await initDatabase();
   await db.runAsync(
-    'INSERT INTO money_goals (id, title, target_amount, start_date, deadline_date, frequency, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO money_goals (id, title, target_amount, start_date, deadline_date, frequency, status, pot_type, allocation_type, allocation_percent, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     goal.id,
     goal.title,
     goal.targetAmount,
     goal.startDate,
-    goal.deadlineDate,
+    goal.deadlineDate ?? null,
     goal.frequency,
-    goal.status
+    goal.status,
+    goal.potType ?? 'general',
+    goal.allocationType ?? 'manual',
+    goal.allocationPercent ?? null,
+    goal.icon ?? 'piggy-bank'
   );
 }
 

@@ -8,7 +8,14 @@ export async function getAllGoals(): Promise<MoneyGoal[]> {
   try {
     const raw = await AsyncStorage.getItem(GOALS_KEY);
     if (!raw) return [];
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return parsed.map((g: any) => ({
+      ...g,
+      potType: g.potType ?? 'general',
+      allocationType: g.allocationType ?? 'manual',
+      allocationPercent: g.allocationPercent ?? null,
+      icon: g.icon ?? 'piggy-bank',
+    }));
   } catch {
     return [];
   }

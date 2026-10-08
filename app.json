@@ -8,7 +8,7 @@
     "scheme": "cashtrack",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/images/ios-icon.png",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.shovon.spendly"
     },
     "android": {

@@ -14,6 +14,7 @@ import type { DebtRecord, DebtDraft } from '@/types/debt';
 import { loadDebts, saveDebts } from '@/storage/debt-storage';
 import { checkAndTriggerDebtNotifications } from '@/utils/notifications';
 import { useExpenses } from '@/context/expense-context';
+import { SaveQueue, shouldSave } from '@/utils/save-queue';
 
 type DebtAction =
   | { type: 'HYDRATE'; debts: DebtRecord[] }
@@ -62,6 +63,7 @@ function createDebtId(): string {
 type DebtContextValue = {
   debts: DebtRecord[];
   isLoading: boolean;
+  debtLoadError: boolean;
   addDebt: (draft: DebtDraft) => DebtRecord;
   updateDebt: (id: string, changes: DebtDraft) => void;
   deleteDebt: (id: string) => void;
@@ -74,19 +76,29 @@ const DebtContext = createContext<DebtContextValue | undefined>(undefined);
 export function DebtProvider({ children }: { children: ReactNode }) {
   const [debts, dispatch] = useReducer(debtReducer, []);
   const [isLoading, setIsLoading] = useState(true);
+  const [debtLoadError, setDebtLoadError] = useState(false);
+  const loadFailedRef = useRef(false);
   const hasLoadedRef = useRef(false);
+  const lastSavedDebtsRef = useRef<string>('');
+  const saveQueueRef = useRef(new SaveQueue());
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrate() {
-      // A read failure must not look like a first launch, so it falls back to an
-      // empty ledger rather than null. Only an absent key may return null.
-      const savedDebts = await loadDebts().catch(() => []);
+      let failed = false;
+      const savedDebts = await loadDebts().catch((err) => {
+        failed = true;
+        console.error('[cashtrack] Failed to load debts', err);
+        return null;
+      });
       if (cancelled) return;
 
-      const initialDebts = savedDebts ?? [];
+      loadFailedRef.current = failed;
+      setDebtLoadError(failed);
+      const initialDebts = failed ? [] : (savedDebts ?? []);
       dispatch({ type: 'HYDRATE', debts: initialDebts });
+      lastSavedDebtsRef.current = JSON.stringify(savedDebts ?? []);
       hasLoadedRef.current = true;
       setIsLoading(false);
     }
@@ -97,25 +109,43 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const [notifiedDebts, setNotifiedDebts] = useState<Record<string, string>>({});
-  const { formatAmount } = useExpenses();
+  const { notifiedDebts, updateNotifiedDebts, formatAmount, isLoading: expenseIsLoading, registerResetHandler } = useExpenses();
 
   useEffect(() => {
-    if (hasLoadedRef.current) void saveDebts(debts);
+    return registerResetHandler(async () => {
+      loadFailedRef.current = false;
+      setDebtLoadError(false);
+      dispatch({ type: 'HYDRATE', debts: [] });
+      lastSavedDebtsRef.current = '[]';
+      const success = await saveQueueRef.current.enqueue(() => saveDebts([]));
+      if (!success) throw new Error('Failed to reset debts storage');
+    });
+  }, [registerResetHandler]);
+
+  useEffect(() => {
+    if (!hasLoadedRef.current) return;
+    const currentJson = JSON.stringify(debts);
+    if (shouldSave({ hasLoaded: hasLoadedRef.current, loadFailed: loadFailedRef.current, currentJson, lastSavedJson: lastSavedDebtsRef.current })) {
+      void saveQueueRef.current.enqueue(() => saveDebts(debts)).then((success) => {
+        if (success) {
+          lastSavedDebtsRef.current = currentJson;
+        }
+      });
+    }
   }, [debts]);
 
   useEffect(() => {
-    if (hasLoadedRef.current) {
+    if (hasLoadedRef.current && !loadFailedRef.current && !isLoading && !expenseIsLoading) {
       void checkAndTriggerDebtNotifications({
         debts,
         notifiedDebts,
         onDebtNotified: (key, dateKey) => {
-          setNotifiedDebts((current) => ({ ...current, [key]: dateKey }));
+          updateNotifiedDebts((current) => ({ ...current, [key]: dateKey }));
         },
         formatAmount,
       });
     }
-  }, [debts, notifiedDebts, formatAmount]);
+  }, [debts, notifiedDebts, updateNotifiedDebts, formatAmount, isLoading, expenseIsLoading]);
 
   const addDebt = useCallback((draft: DebtDraft): DebtRecord => {
     const debt: DebtRecord = {
@@ -152,13 +182,14 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     () => ({
       debts,
       isLoading,
+      debtLoadError,
       addDebt,
       updateDebt,
       deleteDebt,
       settleDebt,
       getDebt,
     }),
-    [debts, isLoading, addDebt, updateDebt, deleteDebt, settleDebt, getDebt]
+    [debts, isLoading, debtLoadError, addDebt, updateDebt, deleteDebt, settleDebt, getDebt]
   );
 
   return <DebtContext.Provider value={value}>{children}</DebtContext.Provider>;

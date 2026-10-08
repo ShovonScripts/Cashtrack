@@ -3,13 +3,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EXPENSE_CATEGORIES } from '@/types/expense';
 import { COUNTRIES } from '@/constants/countries';
 import { DEFAULT_PREFERENCES, type GenderOption, type ThemeMode, type UserPreferences } from '@/types/preferences';
+import { StorageParseError } from '@/storage/storage-errors';
 
 export const PREFERENCES_STORAGE_KEY = '@cashtrack/preferences';
+
+export { StorageParseError };
 
 const GENDER_OPTIONS: GenderOption[] = ['woman', 'man', ''];
 
 function sanitizePreferences(value: unknown): UserPreferences {
-  if (typeof value !== 'object' || value === null) return DEFAULT_PREFERENCES;
+  if (typeof value !== 'object' || value === null) {
+    throw new StorageParseError('Preferences payload is not an object');
+  }
   const candidate = value as Partial<UserPreferences>;
   const rawProfile = candidate.profile && typeof candidate.profile === 'object'
     ? candidate.profile as Partial<UserPreferences['profile']>
@@ -48,6 +53,10 @@ function sanitizePreferences(value: unknown): UserPreferences {
     ? (candidate.notifiedThresholds as Record<string, string>)
     : {};
 
+  const notifiedDebts = candidate.notifiedDebts && typeof candidate.notifiedDebts === 'object'
+    ? (candidate.notifiedDebts as Record<string, string>)
+    : {};
+
   const countryCode = COUNTRIES.find((country) => country.code === candidate.countryCode)?.code ?? 'BD';
   const hasCompletedOnboarding = typeof candidate.hasCompletedOnboarding === 'boolean'
     ? candidate.hasCompletedOnboarding
@@ -84,6 +93,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
     categoryLimits,
     categoryIcons,
     notifiedThresholds,
+    notifiedDebts,
     hasCompletedOnboarding,
     themeMode,
     temperatureUnit,
@@ -99,8 +109,8 @@ export async function loadPreferences(): Promise<UserPreferences> {
   if (!raw) return DEFAULT_PREFERENCES;
   try {
     return sanitizePreferences(JSON.parse(raw) as unknown);
-  } catch {
-    return DEFAULT_PREFERENCES;
+  } catch (error) {
+    throw new StorageParseError(`Failed to parse preferences: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

@@ -1,22 +1,22 @@
 import type { Expense } from '@/types/expense';
+import { StorageParseError } from './storage-errors.ts';
 
-/** First-launch demo rows use a distinct id prefix so they can be stripped later. */
 export const DEMO_EXPENSE_ID_PREFIX = 'demo-expense-';
+export { StorageParseError };
 
 export function isDemoExpense(id: string): boolean {
   return id.startsWith(DEMO_EXPENSE_ID_PREFIX);
 }
 
 export function isExpense(value: unknown): value is Expense {
-  if (typeof value !== 'object' || value === null) {
-    return false;
-  }
+  if (typeof value !== 'object' || value === null) return false;
   const candidate = value as Partial<Expense>;
   return (
     typeof candidate.id === 'string' &&
     candidate.id.length > 0 &&
     typeof candidate.amount === 'number' &&
     Number.isFinite(candidate.amount) &&
+    candidate.amount > 0 &&
     typeof candidate.date === 'string' &&
     !Number.isNaN(new Date(candidate.date).getTime()) &&
     typeof candidate.note === 'string' &&
@@ -25,32 +25,16 @@ export function isExpense(value: unknown): value is Expense {
   );
 }
 
-/**
- * Parses a stored expense ledger.
- *
- * Rows are validated one at a time so a single corrupt row cannot take the whole
- * ledger down with it: usable rows are kept, unusable ones are reported and skipped.
- * Anything that is not a JSON array is reported and treated as an empty ledger — the
- * caller must not fall back to seed data here, because that would overwrite the key
- * with demo rows and destroy whatever was stored.
- *
- * Legacy first-launch demo rows are dropped so they do not linger in a real ledger.
- */
-export function parseExpenseRows(raw: string): Expense[] {
+export function parseExpenseRowsWithDetails(raw: string): { rows: Expense[]; dropped: number } {
   let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch (error) {
-    console.error(
-      '[cashtrack] The saved expenses could not be parsed as JSON. Starting from an empty ledger; the stored value is left untouched until the next save.',
-      error,
-    );
-    return [];
+    throw new StorageParseError(`Unparseable expenses JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   if (!Array.isArray(parsed)) {
-    console.error('[cashtrack] The saved expenses are not a list. Starting from an empty ledger.');
-    return [];
+    throw new StorageParseError('Stored expenses payload is not a list');
   }
 
   const rows: Expense[] = [];
@@ -66,11 +50,9 @@ export function parseExpenseRows(raw: string): Expense[] {
     }
   }
 
-  if (dropped > 0) {
-    console.warn(
-      `[cashtrack] Skipped ${dropped} unreadable expense ${dropped === 1 ? 'row' : 'rows'}; ${rows.length} kept.`,
-    );
-  }
+  return { rows, dropped };
+}
 
-  return rows;
+export function parseExpenseRows(raw: string): Expense[] {
+  return parseExpenseRowsWithDetails(raw).rows;
 }

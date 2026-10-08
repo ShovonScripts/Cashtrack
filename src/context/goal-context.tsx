@@ -19,6 +19,7 @@ import {
   deleteContribution as deleteContributionRepo,
 } from '@/storage/goal-repository';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
+import { useExpenses } from '@/context/expense-context';
 
 export type GoalWithProgress = MoneyGoal & {
   contributedAmount: number;
@@ -59,6 +60,14 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   const [rawGoals, setRawGoals] = useState<MoneyGoal[]>([]);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { registerResetHandler } = useExpenses();
+
+  useEffect(() => {
+    return registerResetHandler(async () => {
+      setRawGoals([]);
+      setContributions([]);
+    });
+  }, [registerResetHandler]);
 
   useEffect(() => {
     let cancelled = false;
@@ -181,7 +190,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     [goals, contributions, isLoading, addGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
   );
 
-    return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;
+  return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;
 }
 
 export function useGoals(): GoalContextValue {

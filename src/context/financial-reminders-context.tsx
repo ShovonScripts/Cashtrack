@@ -15,7 +15,7 @@ import {
   updateReminder as updateReminderRepo,
   deleteReminderRepo,
   getAllPayments,
-  insertPayment,
+  markPaymentAndReminderRepo,
 } from '@/storage/financial-reminders-repository';
 import { scheduleReminderNotificationsAsync, cancelReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { calculateNextDueDate } from '@/utils/reminder-recurrence';
@@ -56,7 +56,14 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [rawReminders, setRawReminders] = useState<FinancialReminder[]>([]);
   const [payments, setPayments] = useState<ReminderPaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addExpense, formatAmount } = useExpenses();
+  const { addExpense, formatAmount, registerResetHandler } = useExpenses();
+
+  useEffect(() => {
+    return registerResetHandler(async () => {
+      setRawReminders([]);
+      setPayments([]);
+    });
+  }, [registerResetHandler]);
 
   const safeFormat = useCallback((amt: number | null) => (amt !== null ? formatAmount(amt) : ''), [formatAmount]);
 
@@ -200,10 +207,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       createdAt: new Date().toISOString(),
     };
 
-    await insertPayment(payment);
-    setPayments((current) => [payment, ...current]);
-    void cancelReminderNotificationsAsync(id);
-
+    let updated: FinancialReminder;
     if (target.repeatType !== 'one-time') {
       const nextDueDate = calculateNextDueDate(target.dueDate, target.repeatType, target.originalDueDate);
       const isEmi = target.category === 'EMI' && target.totalInstallments && target.totalInstallments > 0;
@@ -211,34 +215,35 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       const isEmiFinished = isEmi && nextPaidInstallments >= target.totalInstallments!;
 
       if (isEmiFinished) {
-        const updated: FinancialReminder = {
+        updated = {
           ...target,
           status: 'paid',
           paidInstallments: nextPaidInstallments,
           updatedAt: new Date().toISOString(),
         };
-        await updateReminderRepo(updated);
-        setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
       } else {
-        const updated: FinancialReminder = {
+        updated = {
           ...target,
           dueDate: nextDueDate,
           status: 'upcoming',
           paidInstallments: nextPaidInstallments,
           updatedAt: new Date().toISOString(),
         };
-        await updateReminderRepo(updated);
-        setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
-        void scheduleReminderNotificationsAsync(updated, safeFormat);
       }
     } else {
-      const updated: FinancialReminder = {
+      updated = {
         ...target,
         status: 'paid',
         updatedAt: new Date().toISOString(),
       };
-      await updateReminderRepo(updated);
-      setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
+    }
+
+    await markPaymentAndReminderRepo(payment, updated);
+    setPayments((current) => [payment, ...current]);
+    setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
+    void cancelReminderNotificationsAsync(id);
+    if (updated.status === 'upcoming') {
+      void scheduleReminderNotificationsAsync(updated, safeFormat);
     }
   }, [rawReminders, addExpense, safeFormat]);
 

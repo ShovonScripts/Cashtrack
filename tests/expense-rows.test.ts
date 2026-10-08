@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { isDemoExpense, parseExpenseRows } from '../src/storage/expense-rows.ts';
+import { isDemoExpense, parseExpenseRows, parseExpenseRowsWithDetails, StorageParseError } from '../src/storage/expense-rows.ts';
 
 function row(overrides: Record<string, unknown> = {}) {
   return {
@@ -48,13 +48,29 @@ test('rows with unusable dates, categories and ids are dropped', () => {
   assert.deepEqual(parsed.map((expense) => expense.id), ['d']);
 });
 
-test('unparseable JSON yields an empty ledger instead of throwing', () => {
-  assert.deepEqual(parseExpenseRows('{ this is not json'), []);
+test('unparseable JSON throws StorageParseError', () => {
+  assert.throws(() => parseExpenseRows('{ this is not json'), StorageParseError);
 });
 
-test('a JSON payload that is not a list yields an empty ledger', () => {
-  assert.deepEqual(parseExpenseRows('{"expenses":[]}'), []);
-  assert.deepEqual(parseExpenseRows('null'), []);
+test('a JSON payload that is not a list throws StorageParseError', () => {
+  assert.throws(() => parseExpenseRows('{"expenses":[]}'), StorageParseError);
+  assert.throws(() => parseExpenseRows('null'), StorageParseError);
+});
+
+test('parseExpenseRowsWithDetails reports correct dropped count and ignores demo rows in drop count', () => {
+  const result = parseExpenseRowsWithDetails(JSON.stringify([
+    row({ id: 'demo-expense-1' }),
+    row({ id: 'expense-1' }),
+    row({ id: 'expense-2', amount: 'bad' }),
+    row({ id: 'expense-3' }),
+  ]));
+
+  assert.equal(result.dropped, 1);
+  assert.equal(result.rows.length, 2);
+});
+
+test('parseExpenseRowsWithDetails throws StorageParseError on bad JSON', () => {
+  assert.throws(() => parseExpenseRowsWithDetails('not json'), StorageParseError);
 });
 
 test('first-launch demo rows are stripped using their real id prefix', () => {

@@ -1,26 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import type { Expense } from '@/types/expense';
-import { parseExpenseRows } from '@/storage/expense-rows';
+import { parseExpenseRowsWithDetails } from '@/storage/expense-rows';
 
 export const STORAGE_KEY = '@cashtrack/expenses';
+export const EXPENSES_BACKUP_KEY = '@cashtrack/expenses.backup';
 
-/**
- * Reads the saved expenses.
- *
- * Returns `null` only when the key is genuinely absent, which is the one case where the
- * caller may fall back to the first-launch demo data. A key that exists but cannot be
- * parsed resolves to an empty list instead, so a partial read never turns into a
- * destructive re-seed.
- */
 export async function loadExpenses(): Promise<Expense[] | null> {
   const raw = await AsyncStorage.getItem(STORAGE_KEY);
-
   if (raw === null) {
     return null;
   }
-
-  return parseExpenseRows(raw);
+  const { rows, dropped } = parseExpenseRowsWithDetails(raw);
+  if (dropped > 0) {
+    const backup = await AsyncStorage.getItem(EXPENSES_BACKUP_KEY);
+    if (backup === null) {
+      await AsyncStorage.setItem(EXPENSES_BACKUP_KEY, raw);
+    }
+    console.warn(`[cashtrack] Skipped ${dropped} unreadable expense rows and wrote backup to ${EXPENSES_BACKUP_KEY}`);
+  }
+  return rows;
 }
 
 export async function saveExpenses(expenses: Expense[]): Promise<void> {

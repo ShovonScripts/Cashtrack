@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { Platform } from 'react-native';
 
 import { EXPENSE_CATEGORIES, type Expense, type ExpenseCategory, type ExpenseDraft } from '@/types/expense';
 import { getCountry, type CountryCode, type CountryOption } from '@/constants/countries';
@@ -17,9 +18,21 @@ import { mergeExpenseChanges } from '@/utils/expense-draft';
 import { DEFAULT_PREFERENCES, type UserPreferences, type UserProfile } from '@/types/preferences';
 import { loadExpenses, saveExpenses } from '@/storage/expense-storage';
 import { loadPreferences, savePreferences } from '@/storage/preferences-storage';
+import { clearRelationalData } from '@/storage/reset-repository';
 import { createSeedExpenses } from '@/data/seed-expenses';
 import { processRecurringExpenses } from '@/utils/recurring';
 import { checkAndTriggerBudgetNotifications } from '@/utils/notifications';
+import { deleteLocalReceipt } from '@/utils/receipt';
+import { SaveQueue, shouldSave } from '@/utils/save-queue';
+import { ResetRegistry } from '../utils/reset-registry.ts';
+
+let NotificationsModule: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    NotificationsModule = require('expo-notifications');
+  } catch {}
+}
 
 type ExpenseAction =
   | { type: 'HYDRATE'; expenses: Expense[] }
@@ -61,6 +74,7 @@ export type DeleteCategoryResult = 'deleted' | 'in-use' | 'not-custom';
 type ExpenseContextValue = {
   expenses: Expense[];
   isLoading: boolean;
+  dataLoadError: boolean;
   profile: UserProfile;
   country: CountryOption;
   formatAmount: (amount: number) => string;
@@ -68,6 +82,9 @@ type ExpenseContextValue = {
   customCategories: string[];
   categoryLimits: Record<string, number>;
   categoryIcons: Record<string, string>;
+  notifiedDebts: Record<string, string>;
+  updateNotifiedDebts: (updater: (current: Record<string, string>) => Record<string, string>) => void;
+  registerResetHandler: (handler: () => Promise<void>) => () => void;
   addExpense: (draft: ExpenseDraft) => Expense;
   updateExpense: (id: string, changes: ExpenseDraft) => void;
   deleteExpense: (id: string) => void;
@@ -103,27 +120,75 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, dispatch] = useReducer(expenseReducer, []);
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoadError, setDataLoadError] = useState(false);
+
+  const expenseLoadFailedRef = useRef(false);
+  const preferencesLoadFailedRef = useRef(false);
   const hasLoadedRef = useRef(false);
+  const lastSavedExpensesRef = useRef<string>('');
+  const lastSavedPreferencesRef = useRef<string>('');
+  const expenseSaveQueue = useRef(new SaveQueue());
+  const preferencesSaveQueue = useRef(new SaveQueue());
+  const resetRegistryRef = useRef(new ResetRegistry());
+  const expensesRef = useRef(expenses);
+  useEffect(() => {
+    expensesRef.current = expenses;
+  }, [expenses]);
+
+  const registerResetHandler = useCallback((handler: () => Promise<void>) => {
+    return resetRegistryRef.current.register(handler);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function hydrate() {
+      let expenseFailed = false;
+      let prefFailed = false;
+
       const [savedExpenses, savedPreferences] = await Promise.all([
-        // A read failure must not look like a first launch, so it falls back to an
-        // empty ledger rather than null. Only an absent key may return null.
-        loadExpenses().catch(() => []),
-        loadPreferences().catch(() => DEFAULT_PREFERENCES),
+        loadExpenses().catch((err) => {
+          expenseFailed = true;
+          console.error('[cashtrack] Failed to load expenses', err);
+          return null;
+        }),
+        loadPreferences().catch((err) => {
+          prefFailed = true;
+          console.error('[cashtrack] Failed to load preferences', err);
+          return null;
+        }),
       ]);
 
       if (cancelled) return;
 
-      // Demo rows are only ever seeded when the key was genuinely absent.
-      const rawInitial = savedExpenses ?? (__DEV__ ? createSeedExpenses() : []);
+      expenseLoadFailedRef.current = expenseFailed;
+      preferencesLoadFailedRef.current = prefFailed;
+      setDataLoadError(expenseFailed || prefFailed);
+
+      const rawInitial = expenseFailed ? [] : (savedExpenses ?? (__DEV__ ? createSeedExpenses() : []));
       const initialExpenses = processRecurringExpenses(rawInitial);
+      const basePreferences = prefFailed || !savedPreferences ? DEFAULT_PREFERENCES : savedPreferences;
+
+      // Prune notifiedDebts older than 30 days without mutating DEFAULT_PREFERENCES
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const prunedNotifiedDebts: Record<string, string> = {};
+      const sourceNotifiedDebts = basePreferences.notifiedDebts || {};
+      for (const [key, dateStr] of Object.entries(sourceNotifiedDebts)) {
+        const d = new Date(dateStr).getTime();
+        if (!Number.isNaN(d) && d >= thirtyDaysAgo) {
+          prunedNotifiedDebts[key] = dateStr;
+        }
+      }
+
+      const initialPreferences: UserPreferences = {
+        ...basePreferences,
+        notifiedDebts: prunedNotifiedDebts,
+      };
 
       dispatch({ type: 'HYDRATE', expenses: initialExpenses });
-      setPreferences(savedPreferences);
+      setPreferences(initialPreferences);
+      lastSavedExpensesRef.current = JSON.stringify(savedExpenses ?? []);
+      lastSavedPreferencesRef.current = JSON.stringify(savedPreferences ?? DEFAULT_PREFERENCES);
       hasLoadedRef.current = true;
       setIsLoading(false);
     }
@@ -133,15 +198,31 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (hasLoadedRef.current) void saveExpenses(expenses);
+    if (!hasLoadedRef.current) return;
+    const currentJson = JSON.stringify(expenses);
+    if (shouldSave({ hasLoaded: hasLoadedRef.current, loadFailed: expenseLoadFailedRef.current, currentJson, lastSavedJson: lastSavedExpensesRef.current })) {
+      void expenseSaveQueue.current.enqueue(() => saveExpenses(expenses)).then((success) => {
+        if (success) {
+          lastSavedExpensesRef.current = currentJson;
+        }
+      });
+    }
   }, [expenses]);
 
   useEffect(() => {
-    if (hasLoadedRef.current) void savePreferences(preferences);
+    if (!hasLoadedRef.current) return;
+    const currentJson = JSON.stringify(preferences);
+    if (shouldSave({ hasLoaded: hasLoadedRef.current, loadFailed: preferencesLoadFailedRef.current, currentJson, lastSavedJson: lastSavedPreferencesRef.current })) {
+      void preferencesSaveQueue.current.enqueue(() => savePreferences(preferences)).then((success) => {
+        if (success) {
+          lastSavedPreferencesRef.current = currentJson;
+        }
+      });
+    }
   }, [preferences]);
 
   useEffect(() => {
-    if (hasLoadedRef.current) {
+    if (hasLoadedRef.current && !expenseLoadFailedRef.current) {
       void checkAndTriggerBudgetNotifications({
         expenses,
         limits: preferences.categoryLimits,
@@ -155,6 +236,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       });
     }
   }, [expenses, preferences.categoryLimits, preferences.notifiedThresholds]);
+
+  const updateNotifiedDebts = useCallback((updater: (current: Record<string, string>) => Record<string, string>) => {
+    setPreferences((current) => ({
+      ...current,
+      notifiedDebts: updater(current.notifiedDebts || {}),
+    }));
+  }, []);
 
   const addExpense = useCallback((draft: ExpenseDraft): Expense => {
     const expense: Expense = {
@@ -315,15 +403,50 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetAllData = useCallback(async () => {
+    // a. Snapshot receiptUris
+    const receiptUris = expensesRef.current.filter((e) => e.receiptUri).map((e) => e.receiptUri!);
+
+    // b. Await clearRelationalData and queue writes; throw if any fails
+    const expRes = await expenseSaveQueue.current.enqueue(() => saveExpenses([]));
+    if (!expRes) throw new Error('Failed to save empty expenses during reset');
+    const prefRes = await preferencesSaveQueue.current.enqueue(() => savePreferences(DEFAULT_PREFERENCES));
+    if (!prefRes) throw new Error('Failed to save default preferences during reset');
+
+    await clearRelationalData();
+
+    // c. Await registry.runAll()
+    await resetRegistryRef.current.runAll();
+
+    // d. Reset expense/preference memory, clear loadFailed refs and dataLoadError, set lastSaved refs
+    expenseLoadFailedRef.current = false;
+    preferencesLoadFailedRef.current = false;
+    setDataLoadError(false);
+
     dispatch({ type: 'HYDRATE', expenses: [] });
     setPreferences(DEFAULT_PREFERENCES);
-    await saveExpenses([]);
-    await savePreferences(DEFAULT_PREFERENCES);
+    lastSavedExpensesRef.current = JSON.stringify([]);
+    lastSavedPreferencesRef.current = JSON.stringify(DEFAULT_PREFERENCES);
+
+    // e. Delete snapshotted receipt files and cancel notifications
+    for (const uri of receiptUris) {
+      try {
+        await deleteLocalReceipt(uri);
+      } catch (error) {
+        console.error('[cashtrack] Failed to delete receipt during reset', error);
+      }
+    }
+
+    if (NotificationsModule) {
+      try {
+        await NotificationsModule.cancelAllScheduledNotificationsAsync();
+      } catch {}
+    }
   }, []);
 
   const value = useMemo(() => ({
     expenses,
     isLoading,
+    dataLoadError,
     profile: preferences.profile,
     country,
     formatAmount,
@@ -331,6 +454,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     customCategories: preferences.customCategories,
     categoryLimits: preferences.categoryLimits,
     categoryIcons: preferences.categoryIcons,
+    notifiedDebts: preferences.notifiedDebts || {},
+    updateNotifiedDebts,
+    registerResetHandler,
     hasCompletedOnboarding: preferences.hasCompletedOnboarding ?? false,
     setHasCompletedOnboarding,
     themeMode: preferences.themeMode ?? 'system',
@@ -361,6 +487,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }), [
     expenses,
     isLoading,
+    dataLoadError,
     preferences,
     categories,
     addExpense,
@@ -385,6 +512,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableBudgetAlerts,
     setEnableDailyReminder,
     resetAllData,
+    updateNotifiedDebts,
+    registerResetHandler,
   ]);
 
   return <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>;

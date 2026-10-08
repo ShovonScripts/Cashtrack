@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { parseDebtRows } from '../src/storage/debt-rows.ts';
+import { parseDebtRows, parseDebtRowsWithDetails, StorageParseError } from '../src/storage/debt-rows.ts';
 
 function row(overrides: Record<string, unknown> = {}) {
   return {
@@ -45,10 +45,24 @@ test('rows with an unknown type, status or date are dropped', () => {
   assert.deepEqual(parsed.map((debt) => debt.id), ['e']);
 });
 
-test('unparseable JSON yields an empty ledger instead of throwing', () => {
-  assert.deepEqual(parseDebtRows('not json at all'), []);
+test('parseDebtRowsWithDetails reports correct dropped count', () => {
+  const result = parseDebtRowsWithDetails(JSON.stringify([
+    row({ id: 'debt-1' }),
+    row({ id: 'debt-2', personName: '   ' }),
+  ]));
+
+  assert.equal(result.dropped, 1);
+  assert.equal(result.rows.length, 1);
 });
 
-test('a JSON payload that is not a list yields an empty ledger', () => {
-  assert.deepEqual(parseDebtRows('{"debts":[]}'), []);
+test('parseDebtRowsWithDetails throws StorageParseError on bad JSON', () => {
+  assert.throws(() => parseDebtRowsWithDetails('not json'), StorageParseError);
+});
+
+test('unparseable JSON throws StorageParseError', () => {
+  assert.throws(() => parseDebtRows('not json at all'), StorageParseError);
+});
+
+test('a JSON payload that is not a list throws StorageParseError', () => {
+  assert.throws(() => parseDebtRows('{"debts":[]}'), StorageParseError);
 });

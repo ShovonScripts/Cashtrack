@@ -22,6 +22,7 @@ export type UserPreferences = {
   /** Custom icons for categories, keyed by category name. */
   categoryIcons: Record<string, string>;
   notifiedThresholds: Record<string, string>;
+  notifiedDebts: Record<string, string>;
   hasCompletedOnboarding: boolean;
   themeMode: ThemeMode;
   temperatureUnit: 'F' | 'C';
@@ -38,6 +39,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   categoryLimits: {},
   categoryIcons: {},
   notifiedThresholds: {},
+  notifiedDebts: {},
   hasCompletedOnboarding: false,
   themeMode: 'system',
   temperatureUnit: 'F',

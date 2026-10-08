@@ -19,3 +19,12 @@ export function confirmDelete(title: string, message: string, onConfirm: () => v
     },
   ]);
 }
+
+export function notify(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    return;
+  }
+
+  Alert.alert(title, message);
+}

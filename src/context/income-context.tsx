@@ -16,6 +16,7 @@ import {
   deleteIncome as deleteIncomeRepo,
 } from '@/storage/income-repository';
 import { processRecurringIncome } from '@/utils/recurring-income';
+import { useExpenses } from '@/context/expense-context';
 
 type IncomeContextValue = {
   incomeList: IncomeRecord[];
@@ -37,6 +38,13 @@ function createIncomeId(): string {
 export function IncomeProvider({ children }: { children: ReactNode }) {
   const [incomeList, setIncomeList] = useState<IncomeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { registerResetHandler } = useExpenses();
+
+  useEffect(() => {
+    return registerResetHandler(async () => {
+      setIncomeList([]);
+    });
+  }, [registerResetHandler]);
 
   useEffect(() => {
     let cancelled = false;

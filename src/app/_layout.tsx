@@ -2,27 +2,41 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from 'expo-rout
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { LoadingScreen } from '@/components/loading-screen';
 import { ThemedText } from '@/components/themed-text';
 import { ExpenseProvider, useExpenses } from '@/context/expense-context';
-import { DebtProvider } from '@/context/debt-context';
+import { DebtProvider, useDebts } from '@/context/debt-context';
 import { IncomeProvider } from '@/context/income-context';
 import { GoalProvider } from '@/context/goal-context';
 import { FinancialRemindersProvider } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
+import { confirmDelete, notify } from '@/utils/confirm';
 
 SplashScreen.preventAutoHideAsync();
 
 /** Holds the navigator back until the saved expenses have been read. */
 function Navigation() {
   const theme = useTheme();
-  const { isLoading } = useExpenses();
+  const insets = useSafeAreaInsets();
+  const { isLoading, dataLoadError, resetAllData } = useExpenses();
+  const { debtLoadError } = useDebts();
 
   if (isLoading) {
     return <LoadingScreen />;
   }
+
+  const showLoadErrorBanner = dataLoadError || debtLoadError;
+
+  const handleStartFresh = async () => {
+    try {
+      await resetAllData();
+    } catch {
+      notify('Reset Failed', 'Could not reset all data. Please try again.');
+    }
+  };
 
   const renderAddButton = () => (
     <Pressable
@@ -79,39 +93,53 @@ function Navigation() {
   );
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: theme.background },
-        headerTintColor: theme.text,
-        headerTitleStyle: { fontSize: 18, fontWeight: '700' },
-        headerShadowVisible: false,
-        contentStyle: { backgroundColor: theme.background },
-      }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="income" options={{ title: 'Money In' }} />
-      <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
-      <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
-      <Stack.Screen name="goals/[id]" options={{ title: 'Goal Details' }} />
-      <Stack.Screen name="expenses" options={{ title: 'Expenses', headerRight: renderAddButton }} />
-      <Stack.Screen name="debts" options={{ title: 'Lend & Borrow', headerRight: renderAddDebtButton }} />
-      <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
-      <Stack.Screen name="debts/[id]" options={{ title: 'Debt Details' }} />
-      <Stack.Screen name="debts/[id]/edit" options={{ title: 'Edit Debt' }} />
-      <Stack.Screen name="bills" options={{ title: 'Bills & Reminders', headerRight: renderAddBillButton }} />
-      <Stack.Screen name="bills/add" options={{ title: 'Add Bill / Reminder', presentation: 'modal' }} />
-      <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />
-      <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
-      <Stack.Screen name="country" options={{ title: 'Country & currency' }} />
-      <Stack.Screen name="categories" options={{ title: 'Manage categories' }} />
-      <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
-      <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
-      <Stack.Screen name="reports" options={{ title: 'Monthly reports' }} />
-      <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
-      <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
-      <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
-      <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />
-    </Stack>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      {showLoadErrorBanner && (
+        <View style={{ backgroundColor: '#EF4444', paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
+          <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
+            Saved data could not be read. New changes will NOT be saved.
+          </ThemedText>
+          <Pressable
+            onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
+            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 }}>
+            <ThemedText style={{ color: '#EF4444', fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
+          </Pressable>
+        </View>
+      )}
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: theme.background },
+          headerTintColor: theme.text,
+          headerTitleStyle: { fontSize: 18, fontWeight: '700' },
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: theme.background },
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="income" options={{ title: 'Money In' }} />
+        <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
+        <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
+        <Stack.Screen name="goals/[id]" options={{ title: 'Goal Details' }} />
+        <Stack.Screen name="expenses" options={{ title: 'Expenses', headerRight: renderAddButton }} />
+        <Stack.Screen name="debts" options={{ title: 'Lend & Borrow', headerRight: renderAddDebtButton }} />
+        <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
+        <Stack.Screen name="debts/[id]" options={{ title: 'Debt Details' }} />
+        <Stack.Screen name="debts/[id]/edit" options={{ title: 'Edit Debt' }} />
+        <Stack.Screen name="bills" options={{ title: 'Bills & Reminders', headerRight: renderAddBillButton }} />
+        <Stack.Screen name="bills/add" options={{ title: 'Add Bill / Reminder', presentation: 'modal' }} />
+        <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />
+        <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
+        <Stack.Screen name="country" options={{ title: 'Country & currency' }} />
+        <Stack.Screen name="categories" options={{ title: 'Manage categories' }} />
+        <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
+        <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
+        <Stack.Screen name="reports" options={{ title: 'Monthly reports' }} />
+        <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
+        <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
+        <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
+        <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />
+      </Stack>
+    </View>
   );
 }
 

@@ -122,8 +122,44 @@ export async function updateReminder(reminder: FinancialReminder): Promise<void>
 
 export async function deleteReminderRepo(id: string): Promise<void> {
   const db = await initDatabase();
-  // Preserve payment history! Only delete the reminder itself.
-  await db.runAsync('DELETE FROM financial_reminders WHERE id = ?', id);
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('DELETE FROM reminder_payments WHERE reminder_id = ?', id);
+    await db.runAsync('DELETE FROM financial_reminders WHERE id = ?', id);
+  });
+}
+
+export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord, reminder: FinancialReminder): Promise<void> {
+  const db = await initDatabase();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync(
+      `INSERT INTO reminder_payments (id, reminder_id, amount, paid_date, expense_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      payment.id,
+      payment.reminderId,
+      payment.amount,
+      payment.paidDate,
+      payment.expenseId ?? null,
+      payment.notes ?? '',
+      payment.createdAt
+    );
+    await db.runAsync(
+      `UPDATE financial_reminders SET title = ?, amount = ?, is_variable_amount = ?, category = ?, due_date = ?, original_due_date = ?, repeat_type = ?, status = ?, notes = ?, total_amount = ?, installment_amount = ?, total_installments = ?, paid_installments = ?, updated_at = ? WHERE id = ?`,
+      reminder.title,
+      reminder.amount,
+      reminder.isVariableAmount ? 1 : 0,
+      reminder.category,
+      reminder.dueDate,
+      reminder.originalDueDate ?? reminder.dueDate,
+      reminder.repeatType,
+      reminder.status,
+      reminder.notes,
+      reminder.totalAmount ?? null,
+      reminder.installmentAmount ?? null,
+      reminder.totalInstallments ?? null,
+      reminder.paidInstallments ?? 0,
+      reminder.updatedAt,
+      reminder.id
+    );
+  });
 }
 
 export async function getAllPayments(): Promise<ReminderPaymentRecord[]> {

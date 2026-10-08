@@ -35,7 +35,20 @@ export async function deleteReminderRepo(id: string): Promise<void> {
   const reminders = await getAllReminders();
   const nextReminders = reminders.filter((r) => r.id !== id);
   await AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(nextReminders));
-  // Preserve payment history on web as well
+
+  const payments = await getAllPayments();
+  const nextPayments = payments.filter((p) => p.reminderId !== id);
+  await AsyncStorage.setItem(PAYMENTS_KEY, JSON.stringify(nextPayments));
+}
+
+export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord, reminder: FinancialReminder): Promise<void> {
+  const payments = await getAllPayments();
+  const nextPayments = [payment, ...payments.filter((p) => p.id !== payment.id)];
+  await AsyncStorage.setItem(PAYMENTS_KEY, JSON.stringify(nextPayments));
+
+  const reminders = await getAllReminders();
+  const nextReminders = reminders.map((r) => (r.id === reminder.id ? reminder : r));
+  await AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(nextReminders));
 }
 
 export async function getAllPayments(): Promise<ReminderPaymentRecord[]> {

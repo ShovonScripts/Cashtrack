@@ -142,60 +142,56 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
   const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
 
   return (
-    <View style={styles.colorfulCardPots}>
-      {/* Background Orbs */}
-      <View pointerEvents="none" style={styles.potsOrbCyan} />
-      <View pointerEvents="none" style={styles.potsOrbEmerald} />
+    <View style={styles.heroCardSummary}>
+      {/* Spendly Brand Ambient Background Orbs */}
+      <View pointerEvents="none" style={styles.heroOrbLarge} />
+      <View pointerEvents="none" style={styles.heroOrbSmall} />
 
-      {/* Header */}
-      <View style={styles.overviewHeaderRow}>
-        <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold" style={{ color: '#FFFFFF', fontSize: 17 }}>Money Plan & Pots</ThemedText>
-          <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.75)' }}>Savings goals & targets</ThemedText>
-        </View>
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/goals/add');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Create pot"
-          style={({ pressed }) => [styles.glassActionButton, pressed && styles.pressed]}>
-          <MaterialCommunityIcons name="plus" size={14} color="#FFFFFF" />
-          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Add pot</ThemedText>
-        </Pressable>
-      </View>
-
-      {/* Metrics Row */}
-      <View style={styles.metricsRow}>
-        <View style={styles.glassMetricBox}>
-          <ThemedText type="caption" style={{ color: '#38BDF8', fontSize: 10, fontWeight: '800' }}>ACTIVE POTS</ThemedText>
-          <ThemedText type="defaultBold" style={{ color: '#38BDF8', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
-            {activeGoals.length}
+      <View style={styles.heroContent}>
+        {/* Topline: Label & Solid White Action Button */}
+        <View style={styles.heroTopline}>
+          <ThemedText type="caption" style={styles.heroLabel}>
+            MONEY PLAN & POTS
           </ThemedText>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/goals/add');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Create pot"
+            style={({ pressed }) => [styles.whitePillBtn, pressed && styles.pressed]}>
+            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
+            <ThemedText type="smallBold" style={{ color: Brand.deep }}>
+              Add pot
+            </ThemedText>
+          </Pressable>
         </View>
-        <View style={styles.glassMetricBox}>
-          <ThemedText type="caption" style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>TOTAL SAVED</ThemedText>
-          <ThemedText type="defaultBold" style={{ color: '#34D399', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(totalSaved)}
+
+        {/* Main Hero Value */}
+        <ThemedText type="hero" style={[styles.heroValue, { color: '#38BDF8' }]} numberOfLines={1} adjustsFontSizeToFit>
+          {formatAmount(totalSaved)}
+        </ThemedText>
+
+        {/* Footer Row */}
+        <View style={styles.footerRow}>
+          <ThemedText type="small" style={{ color: 'rgba(255, 255, 255, 0.85)', fontWeight: '600' }}>
+            {activeGoals.length} {activeGoals.length === 1 ? 'active pot' : 'active pots'} ({overallProgress}% saved)
           </ThemedText>
+
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/goals');
+            }}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+              View pots →
+            </ThemedText>
+          </Pressable>
         </View>
       </View>
-
-      {/* Progress Net Bar */}
-      <Pressable
-        onPress={() => {
-          triggerHaptic();
-          router.push('/goals');
-        }}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.glassNetBar, pressed && styles.pressed]}>
-        <ThemedText type="small" style={{ color: 'rgba(255,255,255,0.88)' }}>Overall Progress: {overallProgress}%</ThemedText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <ThemedText type="smallBold" style={{ color: '#38BDF8' }}>View plan →</ThemedText>
-          <MaterialCommunityIcons name="chevron-right" size={16} color="rgba(255,255,255,0.7)" />
-        </View>
-      </Pressable>
     </View>
   );
 }
@@ -384,69 +380,67 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
   const net = youAreOwed - youOwe;
 
   return (
-    <View style={styles.colorfulCardDebts}>
-      {/* Background Orbs */}
-      <View pointerEvents="none" style={styles.debtsOrbViolet} />
-      <View pointerEvents="none" style={styles.debtsOrbRose} />
+    <View style={styles.heroCardSummary}>
+      {/* Spendly Brand Ambient Background Orbs */}
+      <View pointerEvents="none" style={styles.heroOrbLarge} />
+      <View pointerEvents="none" style={styles.heroOrbSmall} />
 
-      {/* Header */}
-      <View style={styles.overviewHeaderRow}>
-        <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold" style={{ color: '#FFFFFF', fontSize: 17 }}>Lend & Borrow</ThemedText>
-          <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.75)' }}>Active debts & loans</ThemedText>
+      <View style={styles.heroContent}>
+        {/* Header Topline */}
+        <View style={styles.heroTopline}>
+          <ThemedText type="caption" style={styles.heroLabel}>
+            LEND & BORROW
+          </ThemedText>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/debts/add');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Add debt"
+            style={({ pressed }) => [styles.whitePillBtn, pressed && styles.pressed]}>
+            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
+            <ThemedText type="smallBold" style={{ color: Brand.deep }}>
+              Add debt
+            </ThemedText>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/debts/add');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Add debt"
-          style={({ pressed }) => [styles.glassActionButton, pressed && styles.pressed]}>
-          <MaterialCommunityIcons name="plus" size={14} color="#FFFFFF" />
-          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Add debt</ThemedText>
-        </Pressable>
-      </View>
 
-      {/* Metrics Row */}
-      <View style={styles.metricsRow}>
-        <View style={styles.glassMetricBoxIn}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <View style={styles.greenDot} />
-            <ThemedText type="caption" style={{ color: '#34D399', fontSize: 10, fontWeight: '800' }}>THEY OWE YOU</ThemedText>
+        {/* Hero Net Value */}
+        <ThemedText type="hero" style={[styles.heroValue, { color: net >= 0 ? '#4ADE80' : '#F87171' }]} numberOfLines={1} adjustsFontSizeToFit>
+          {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
+        </ThemedText>
+
+        {/* Footer Metrics Row */}
+        <View style={styles.footerRow}>
+          <View style={styles.metricsPillsRow}>
+            <View style={styles.moneyInBadge}>
+              <View style={styles.greenDot} />
+              <ThemedText style={styles.moneyInBadgeText}>
+                Owed: {formatAmount(youAreOwed)}
+              </ThemedText>
+            </View>
+            <View style={styles.moneyOutBadge}>
+              <View style={styles.redDot} />
+              <ThemedText style={styles.moneyOutBadgeText}>
+                Owe: {formatAmount(youOwe)}
+              </ThemedText>
+            </View>
           </View>
-          <ThemedText type="defaultBold" style={{ color: '#34D399', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(youAreOwed)}
-          </ThemedText>
-        </View>
 
-        <View style={styles.glassMetricBoxOut}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-            <View style={styles.redDot} />
-            <ThemedText type="caption" style={{ color: '#F87171', fontSize: 10, fontWeight: '800' }}>YOU OWE OTHERS</ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={{ color: '#F87171', fontSize: 19 }} numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(youOwe)}
-          </ThemedText>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/debts');
+            }}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+              View debts →
+            </ThemedText>
+          </Pressable>
         </View>
       </View>
-
-      {/* Net Bar */}
-      <Pressable
-        onPress={() => {
-          triggerHaptic();
-          router.push('/debts');
-        }}
-        accessibilityRole="button"
-        style={({ pressed }) => [styles.glassNetBar, pressed && styles.pressed]}>
-        <ThemedText type="small" style={{ color: 'rgba(255,255,255,0.88)' }}>Net Position:</ThemedText>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <ThemedText type="defaultBold" style={{ color: net >= 0 ? '#34D399' : '#F87171' }}>
-            {net === 0 ? 'All settled up' : net > 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}
-          </ThemedText>
-          <MaterialCommunityIcons name="chevron-right" size={16} color="rgba(255,255,255,0.7)" />
-        </View>
-      </Pressable>
     </View>
   );
 }
@@ -1075,111 +1069,81 @@ const styles = StyleSheet.create({
   titleCopy: {
     gap: 2,
   },
-  colorfulCardPots: {
+  heroCardSummary: {
     height: 215,
-    justifyContent: 'space-between',
-    padding: Spacing.four,
+    backgroundColor: Brand.deep, // Signature Spendly Deep Navy Blue (#00109D)
     borderRadius: Radius.xlarge,
-    overflow: 'hidden',
-    backgroundColor: '#0F172A', // Deep dark ocean slate
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.25)',
-    position: 'relative',
-    shadowColor: '#0284C7',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  potsOrbCyan: {
-    position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(56, 189, 248, 0.3)',
-  },
-  potsOrbEmerald: {
-    position: 'absolute',
-    bottom: -50,
-    left: -30,
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    backgroundColor: 'rgba(16, 185, 129, 0.25)',
-  },
-  colorfulCardDebts: {
-    height: 215,
-    justifyContent: 'space-between',
     padding: Spacing.four,
-    borderRadius: Radius.xlarge,
     overflow: 'hidden',
-    backgroundColor: '#1E1B4B', // Deep indigo violet
-    borderWidth: 1,
-    borderColor: 'rgba(192, 132, 252, 0.25)',
     position: 'relative',
-    shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  debtsOrbViolet: {
-    position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(192, 132, 252, 0.3)',
-  },
-  debtsOrbRose: {
-    position: 'absolute',
-    bottom: -50,
-    left: -30,
-    width: 190,
-    height: 190,
-    borderRadius: 95,
-    backgroundColor: 'rgba(244, 63, 94, 0.25)',
-  },
-  glassActionButton: {
+  whitePillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: Spacing.three,
     paddingVertical: 6,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  glassMetricBox: {
-    flex: 1,
-    padding: Spacing.two + 2,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    gap: 4,
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
   },
-  glassMetricBoxIn: {
+  metricsPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     flex: 1,
-    padding: Spacing.two + 2,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(16, 185, 129, 0.18)',
+  },
+  moneyInBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: Radius.small,
     borderWidth: 1,
     borderColor: 'rgba(52, 211, 153, 0.35)',
-    gap: 4,
   },
-  glassMetricBoxOut: {
-    flex: 1,
-    padding: Spacing.two + 2,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+  moneyOutBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(239, 68, 68, 0.22)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: Radius.small,
     borderWidth: 1,
     borderColor: 'rgba(248, 113, 113, 0.35)',
-    gap: 4,
+  },
+  moneyInBadgeText: {
+    color: '#34D399',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  moneyOutBadgeText: {
+    color: '#F87171',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  solidNetBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 10,
+    borderRadius: Radius.medium,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    zIndex: 2,
   },
   greenDot: {
     width: 6,
@@ -1192,18 +1156,6 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#F87171',
-  },
-  glassNetBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    zIndex: 2,
   },
   overviewHeaderRow: {
     flexDirection: 'row',

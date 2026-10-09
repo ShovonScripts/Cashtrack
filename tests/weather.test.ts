@@ -42,10 +42,14 @@ describe('Weather utility service', () => {
     assert.ok(pleasantTip.toLowerCase().includes('pleasant') || pleasantTip.toLowerCase().includes('walk'));
   });
 
-  it('provides comprehensive default fallback weather data', () => {
+  it('provides comprehensive default fallback weather data with hourly & daily forecasts', () => {
     assert.ok(typeof DEFAULT_WEATHER_DATA.tempC === 'number');
     assert.ok(typeof DEFAULT_WEATHER_DATA.financialTip === 'string');
     assert.ok(DEFAULT_WEATHER_DATA.financialTip.length > 0);
+    assert.ok(Array.isArray(DEFAULT_WEATHER_DATA.hourlyForecast));
+    assert.ok(DEFAULT_WEATHER_DATA.hourlyForecast.length > 0);
+    assert.ok(Array.isArray(DEFAULT_WEATHER_DATA.dailyForecast));
+    assert.ok(DEFAULT_WEATHER_DATA.dailyForecast.length > 0);
   });
 
   it('returns valid high-res background image URLs for each weather condition including clear-night', () => {

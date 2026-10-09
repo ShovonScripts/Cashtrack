@@ -118,46 +118,46 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
   });
 
   const iconSize = size;
+  const containerStyle = { width: iconSize, height: iconSize };
 
   switch (conditionType) {
     case 'sunny':
       return (
-        <View style={styles.container}>
-          <Animated.View style={[styles.glowRing, { width: iconSize * 1.3, height: iconSize * 1.3, borderRadius: iconSize * 0.65 }, sunAnimatedStyle]} />
+        <View style={[styles.container, containerStyle]}>
+          <Animated.View style={[styles.glowRing, { width: iconSize * 1.2, height: iconSize * 1.2, borderRadius: iconSize * 0.6 }, sunAnimatedStyle]} />
           <Ionicons name="sunny" size={iconSize} color="#F59E0B" />
         </View>
       );
 
     case 'clear-night':
       return (
-        <View style={styles.container}>
-          <Animated.View style={[styles.glowRing, { width: iconSize * 1.3, height: iconSize * 1.3, borderRadius: iconSize * 0.65, backgroundColor: 'rgba(224, 231, 255, 0.15)' }, sunAnimatedStyle]} />
+        <View style={[styles.container, containerStyle]}>
           <Ionicons name="moon" size={iconSize} color="#E0E7FF" />
         </View>
       );
 
     case 'partly-sunny':
       return (
-        <View style={styles.container}>
-          <Ionicons name="sunny" size={iconSize * 0.8} color="#F59E0B" style={{ position: 'absolute', top: -2, right: -2 }} />
+        <View style={[styles.container, containerStyle]}>
+          <Ionicons name="sunny" size={iconSize * 0.75} color="#F59E0B" style={{ position: 'absolute', top: -2, right: -2 }} />
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="cloud" size={iconSize * 0.9} color="#94A3B8" />
+            <Ionicons name="cloud" size={iconSize * 0.85} color="#94A3B8" />
           </Animated.View>
         </View>
       );
 
     case 'cloudy':
       return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="cloudy" size={iconSize} color="#64748B" />
+            <Ionicons name="cloudy" size={iconSize} color="#94A3B8" />
           </Animated.View>
         </View>
       );
 
     case 'rainy':
       return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
             <Ionicons name="rainy" size={iconSize} color="#3B82F6" />
           </Animated.View>
@@ -170,7 +170,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
 
     case 'snow':
       return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
             <Ionicons name="snow" size={iconSize} color="#38BDF8" />
           </Animated.View>
@@ -179,10 +179,10 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
 
     case 'thunderstorm':
       return (
-        <View style={styles.container}>
+        <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.flashOverlay, flashStyle]} />
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="thunderstorm" size={iconSize} color="#8B5CF6" />
+            <Ionicons name="thunderstorm" size={iconSize} color="#A855F7" />
           </Animated.View>
         </View>
       );
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   glowRing: {
     position: 'absolute',
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
   },
   rainOverlay: {
     position: 'absolute',
@@ -217,9 +217,9 @@ const styles = StyleSheet.create({
   },
   flashOverlay: {
     position: 'absolute',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.35)',
   },
 });

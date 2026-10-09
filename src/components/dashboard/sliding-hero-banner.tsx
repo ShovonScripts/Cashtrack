@@ -147,7 +147,7 @@ export function SlidingHeroBanner({
         </TouchableOpacity>
 
         {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
-        <View style={[styles.card, { borderColor: theme.border }]}>
+        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/weather')} style={[styles.card, { borderColor: theme.border }]}>
           <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={styles.cardInner}>
@@ -175,7 +175,7 @@ export function SlidingHeroBanner({
               <Text style={styles.tipContentText} numberOfLines={2}>{weather.financialTip}</Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* SLIDE 3: DAILY MOTIVATION QUOTES */}
         <View style={[styles.card, { borderColor: theme.border }]}>

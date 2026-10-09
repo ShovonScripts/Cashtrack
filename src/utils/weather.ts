@@ -13,6 +13,27 @@ export interface WeatherConditionInfo {
   type: WeatherConditionType;
 }
 
+export interface HourlyForecastItem {
+  time: string;
+  hourLabel: string;
+  tempC: number;
+  rainProbability: number;
+  weatherCode: number;
+  conditionType: WeatherConditionType;
+  isNight: boolean;
+}
+
+export interface DailyForecastItem {
+  date: string;
+  dayName: string;
+  tempMaxC: number;
+  tempMinC: number;
+  rainProbability: number;
+  weatherCode: number;
+  condition: string;
+  conditionType: WeatherConditionType;
+}
+
 export interface WeatherData {
   tempC: number;
   tempMaxC: number;
@@ -26,6 +47,8 @@ export interface WeatherData {
   locationName: string;
   financialTip: string;
   isNight: boolean;
+  hourlyForecast: HourlyForecastItem[];
+  dailyForecast: DailyForecastItem[];
 }
 
 export function getWeatherConditionDetails(code: number, isNight: boolean = false): WeatherConditionInfo {
@@ -156,6 +179,23 @@ export const DEFAULT_WEATHER_DATA: WeatherData = {
   locationName: 'Local Weather',
   financialTip: getFinancialWeatherTip(22, 10, 'sunny', false),
   isNight: false,
+  hourlyForecast: [
+    { time: '00:00', hourLabel: 'Now', tempC: 22, rainProbability: 10, weatherCode: 0, conditionType: 'sunny', isNight: false },
+    { time: '01:00', hourLabel: '1 PM', tempC: 23, rainProbability: 10, weatherCode: 0, conditionType: 'sunny', isNight: false },
+    { time: '02:00', hourLabel: '2 PM', tempC: 24, rainProbability: 15, weatherCode: 1, conditionType: 'partly-sunny', isNight: false },
+    { time: '03:00', hourLabel: '3 PM', tempC: 25, rainProbability: 15, weatherCode: 1, conditionType: 'partly-sunny', isNight: false },
+    { time: '04:00', hourLabel: '4 PM', tempC: 24, rainProbability: 20, weatherCode: 2, conditionType: 'partly-sunny', isNight: false },
+    { time: '05:00', hourLabel: '5 PM', tempC: 23, rainProbability: 10, weatherCode: 0, conditionType: 'sunny', isNight: false },
+    { time: '06:00', hourLabel: '6 PM', tempC: 21, rainProbability: 5, weatherCode: 0, conditionType: 'clear-night', isNight: true },
+    { time: '07:00', hourLabel: '7 PM', tempC: 20, rainProbability: 5, weatherCode: 0, conditionType: 'clear-night', isNight: true },
+  ],
+  dailyForecast: [
+    { date: 'Today', dayName: 'Today', tempMaxC: 25, tempMinC: 18, rainProbability: 10, weatherCode: 0, condition: 'Sunny & Clear', conditionType: 'sunny' },
+    { date: 'Tomorrow', dayName: 'Tomorrow', tempMaxC: 26, tempMinC: 19, rainProbability: 15, weatherCode: 1, condition: 'Partly Cloudy', conditionType: 'partly-sunny' },
+    { date: 'Day 3', dayName: 'Day 3', tempMaxC: 24, tempMinC: 17, rainProbability: 40, weatherCode: 2, condition: 'Partly Cloudy', conditionType: 'partly-sunny' },
+    { date: 'Day 4', dayName: 'Day 4', tempMaxC: 23, tempMinC: 16, rainProbability: 60, weatherCode: 61, condition: 'Rain Showers', conditionType: 'rainy' },
+    { date: 'Day 5', dayName: 'Day 5', tempMaxC: 25, tempMinC: 18, rainProbability: 20, weatherCode: 0, condition: 'Sunny & Clear', conditionType: 'sunny' },
+  ],
 };
 
 /**
@@ -173,22 +213,27 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
     const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
     const { latitude, longitude } = location.coords;
 
-    // Fetch from Open-Meteo API with current_weather and hourly precipitation probability & humidity
+    // Fetch from Open-Meteo API with current_weather and hourly/daily forecast
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=relativehumidity_2m,precipitation_probability,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,weathercode,windspeed_10m,is_day&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
     );
 
     const data = (await response.json()) as {
       current_weather?: { temperature: number; weathercode: number; windspeed: number; is_day: number; time: string };
       daily?: {
+        time?: string[];
+        weathercode?: number[];
         temperature_2m_max?: number[];
         temperature_2m_min?: number[];
         precipitation_probability_max?: number[];
       };
       hourly?: {
         time?: string[];
+        temperature_2m?: number[];
         precipitation_probability?: number[];
         relativehumidity_2m?: number[];
+        weathercode?: number[];
+        is_day?: number[];
       };
     };
 
@@ -204,29 +249,91 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
     const tempMaxC = Math.round(data.daily?.temperature_2m_max?.[0] ?? tempC + 3);
     const tempMinC = Math.round(data.daily?.temperature_2m_min?.[0] ?? tempC - 4);
 
+    let startHourIndex = 0;
+    if (data.hourly?.time) {
+      const currentTimeStr = data.current_weather.time;
+      const idx = data.hourly.time.findIndex((t) => t === currentTimeStr || t.startsWith(currentTimeStr.slice(0, 13)));
+      if (idx >= 0) startHourIndex = idx;
+    }
+
     // Calculate current hour rain probability accurately
     let rainProbability = 10;
-    if (data.hourly?.time && data.hourly?.precipitation_probability) {
-      const currentTimeStr = data.current_weather.time; // e.g. "2026-03-31T20:00"
-      const hourIndex = data.hourly.time.findIndex((t) => t === currentTimeStr || t.startsWith(currentTimeStr.slice(0, 13)));
-      if (hourIndex >= 0 && data.hourly.precipitation_probability[hourIndex] !== undefined) {
-        rainProbability = Math.round(data.hourly.precipitation_probability[hourIndex]);
-      } else {
-        rainProbability = Math.round(data.daily?.precipitation_probability_max?.[0] ?? 10);
-      }
+    if (data.hourly?.precipitation_probability && data.hourly.precipitation_probability[startHourIndex] !== undefined) {
+      rainProbability = Math.round(data.hourly.precipitation_probability[startHourIndex]);
     } else {
       rainProbability = Math.round(data.daily?.precipitation_probability_max?.[0] ?? 10);
     }
 
-    // Sanity check: If weather code is clear or partly cloudy (0, 1, 2, 3) and no rain code,
-    // rain chance should not show false high values (e.g. 98%). Cap at 20% for clear/partly cloudy weather.
     if (weatherCode <= 3) {
       rainProbability = Math.min(rainProbability, 20);
     }
 
-    const humidity = Math.round(data.hourly?.relativehumidity_2m?.[0] ?? 50);
-
+    const humidity = Math.round(data.hourly?.relativehumidity_2m?.[startHourIndex] ?? 50);
     const condDetails = getWeatherConditionDetails(weatherCode, isNight);
+
+    // Build 24-Hour Hourly Forecast
+    const hourlyForecast: HourlyForecastItem[] = [];
+    if (data.hourly?.time && data.hourly?.temperature_2m) {
+      const endHourIndex = Math.min(startHourIndex + 24, data.hourly.time.length);
+      for (let i = startHourIndex; i < endHourIndex; i++) {
+        const rawTimeStr = data.hourly.time[i];
+        const dateObj = new Date(rawTimeStr);
+        let hourLabel = 'Now';
+
+        if (i > startHourIndex) {
+          const rawHour = dateObj.getHours();
+          const ampm = rawHour >= 12 ? 'PM' : 'AM';
+          const hour12 = rawHour % 12 === 0 ? 12 : rawHour % 12;
+          hourLabel = `${hour12} ${ampm}`;
+        }
+
+        const hTemp = Math.round(data.hourly.temperature_2m[i]);
+        const hCode = data.hourly.weathercode?.[i] ?? 0;
+        const hNight = data.hourly.is_day?.[i] === 0;
+        const hDetails = getWeatherConditionDetails(hCode, hNight);
+        let hRainProb = Math.round(data.hourly.precipitation_probability?.[i] ?? 0);
+        if (hCode <= 3) {
+          hRainProb = Math.min(hRainProb, 20);
+        }
+
+        hourlyForecast.push({
+          time: rawTimeStr,
+          hourLabel,
+          tempC: hTemp,
+          rainProbability: hRainProb,
+          weatherCode: hCode,
+          conditionType: hDetails.type,
+          isNight: hNight,
+        });
+      }
+    }
+
+    // Build 5-Day forecast
+    const dailyForecast: DailyForecastItem[] = [];
+    if (data.daily?.time && data.daily.time.length > 0) {
+      for (let i = 0; i < Math.min(5, data.daily.time.length); i++) {
+        const rawDate = data.daily.time[i];
+        const dateObj = new Date(rawDate);
+        const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Intl.DateTimeFormat('en', { weekday: 'short' }).format(dateObj);
+        const code = data.daily.weathercode?.[i] ?? 0;
+        const details = getWeatherConditionDetails(code, false);
+        let forecastRainProb = Math.round(data.daily.precipitation_probability_max?.[i] ?? 10);
+        if (code <= 3) {
+          forecastRainProb = Math.min(forecastRainProb, 25);
+        }
+
+        dailyForecast.push({
+          date: rawDate,
+          dayName,
+          tempMaxC: Math.round(data.daily.temperature_2m_max?.[i] ?? tempC + 3),
+          tempMinC: Math.round(data.daily.temperature_2m_min?.[i] ?? tempC - 4),
+          rainProbability: forecastRainProb,
+          weatherCode: code,
+          condition: details.condition,
+          conditionType: details.type,
+        });
+      }
+    }
 
     // Location geocoding
     let locationName = 'Local Weather';
@@ -269,6 +376,8 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
       locationName,
       financialTip,
       isNight,
+      hourlyForecast: hourlyForecast.length > 0 ? hourlyForecast : DEFAULT_WEATHER_DATA.hourlyForecast,
+      dailyForecast: dailyForecast.length > 0 ? dailyForecast : DEFAULT_WEATHER_DATA.dailyForecast,
     };
   } catch {
     return DEFAULT_WEATHER_DATA;

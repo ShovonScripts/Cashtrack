@@ -140,6 +140,7 @@ function Navigation() {
         <Stack.Screen name="categories" options={{ title: 'Manage categories' }} />
         <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
         <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
+        <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
         <Stack.Screen name="reports" options={{ title: 'Monthly reports' }} />
         <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
         <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />

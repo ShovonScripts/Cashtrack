@@ -17,166 +17,170 @@ export function MoneySummaryCard({
   formatAmount: (amount: number) => string;
 }) {
   return (
-    <View style={styles.cardContainer}>
+    <View style={styles.heroCard}>
       {/* Spendly Brand Ambient Background Orbs */}
-      <View pointerEvents="none" style={styles.primaryBlueOrb} />
-      <View pointerEvents="none" style={styles.brightCyanOrb} />
+      <View pointerEvents="none" style={styles.heroOrbLarge} />
+      <View pointerEvents="none" style={styles.heroOrbSmall} />
 
-      {/* Header Row */}
-      <View style={styles.headerRow}>
-        <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold" style={styles.whiteTitle}>
-            Monthly cash flow
+      <View style={styles.heroContent}>
+        {/* Topline: Label & Action Button */}
+        <View style={styles.heroTopline}>
+          <ThemedText type="caption" style={styles.heroLabel}>
+            MONTHLY CASH FLOW
           </ThemedText>
-          <ThemedText type="caption" style={styles.subtext}>
-            Money In vs. Money Out
-          </ThemedText>
-        </View>
-
-        <Pressable
-          onPress={() => router.push('/income')}
-          accessibilityRole="button"
-          accessibilityLabel="Manage money in"
-          style={({ pressed }) => [styles.glassIncomeBtn, pressed && styles.pressed]}>
-          <MaterialCommunityIcons name="plus" size={14} color="#FFFFFF" />
-          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-            Money In
-          </ThemedText>
-        </Pressable>
-      </View>
-
-      {/* Metrics Row: Money In & Money Out Glass Cards */}
-      <View style={styles.metricsRow}>
-        {/* Money In Glass Pill (Spendly Cyan/Blue Accent) */}
-        <View style={styles.moneyInPill}>
-          <View style={styles.pillHeader}>
-            <View style={styles.cyanDot} />
-            <ThemedText type="caption" style={styles.moneyInLabel}>
-              MONEY IN
+          <Pressable
+            onPress={() => router.push('/income')}
+            accessibilityRole="button"
+            accessibilityLabel="Manage money in"
+            style={({ pressed }) => [styles.whitePillBtn, pressed && styles.pressed]}>
+            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
+            <ThemedText type="smallBold" style={styles.whitePillBtnText}>
+              Money In
             </ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={styles.moneyInValue} numberOfLines={1} adjustsFontSizeToFit>
-            +{formatAmount(moneyIn)}
-          </ThemedText>
+          </Pressable>
         </View>
 
-        {/* Money Out Glass Pill (Coral Red Accent) */}
-        <View style={styles.moneyOutPill}>
-          <View style={styles.pillHeader}>
-            <View style={styles.redDot} />
-            <ThemedText type="caption" style={styles.moneyOutLabel}>
-              MONEY OUT
-            </ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={styles.moneyOutValue} numberOfLines={1} adjustsFontSizeToFit>
-            {moneyOut > 0 ? `-${formatAmount(moneyOut)}` : formatAmount(0)}
-          </ThemedText>
-        </View>
-      </View>
-
-      {/* Remaining Net Balance Glass Bar */}
-      <View style={styles.netGlassRow}>
-        <ThemedText type="small" style={styles.netLabel}>
-          Remaining Net Balance:
-        </ThemedText>
-        <ThemedText type="defaultBold" style={[styles.netValue, { color: net >= 0 ? Brand.bright : '#F87171' }]}>
+        {/* Main Hero Net Value */}
+        <ThemedText type="hero" style={[styles.heroValue, { color: net >= 0 ? '#4ADE80' : '#F87171' }]} numberOfLines={1} adjustsFontSizeToFit>
           {net >= 0 ? `+${formatAmount(net)}` : formatAmount(net)}
         </ThemedText>
+
+        {/* Footer Metrics Row */}
+        <View style={styles.footerRow}>
+          <View style={styles.metricsPillsRow}>
+            <View style={styles.moneyInBadge}>
+              <View style={styles.greenDot} />
+              <ThemedText style={styles.moneyInBadgeText}>
+                +{formatAmount(moneyIn)}
+              </ThemedText>
+            </View>
+            <View style={styles.moneyOutBadge}>
+              <View style={styles.redDot} />
+              <ThemedText style={styles.moneyOutBadgeText}>
+                {moneyOut > 0 ? `-${formatAmount(moneyOut)}` : formatAmount(0)}
+              </ThemedText>
+            </View>
+          </View>
+
+          <Pressable
+            onPress={() => router.push('/income')}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+              Manage →
+            </ThemedText>
+          </Pressable>
+        </View>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  heroCard: {
     height: 215,
-    justifyContent: 'space-between',
-    padding: Spacing.four,
-    borderRadius: Radius.xlarge,
-    overflow: 'hidden',
     backgroundColor: Brand.deep, // Signature Spendly Deep Navy Blue (#00109D)
-    borderWidth: 1,
-    borderColor: 'rgba(20, 231, 253, 0.35)', // Brand.bright Cyan border
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
+    overflow: 'hidden',
     position: 'relative',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.22,
-    shadowRadius: 14,
-    elevation: 6,
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  /* Ambient Spendly Multi-Tone Gradient Orbs */
-  primaryBlueOrb: {
+  heroOrbLarge: {
     position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(1, 82, 245, 0.45)', // Brand.primary (#0152F5)
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    right: -90,
+    top: -100,
+    backgroundColor: 'rgba(139, 123, 255, 0.25)',
   },
-  brightCyanOrb: {
+  heroOrbSmall: {
     position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    left: -50,
     bottom: -60,
-    left: -40,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(20, 231, 253, 0.3)', // Brand.bright (#14E7FD)
+    backgroundColor: 'rgba(20, 231, 253, 0.2)',
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  heroContent: {
+    flex: 1,
     justifyContent: 'space-between',
     zIndex: 2,
   },
-  titleCopy: { gap: 2 },
-  whiteTitle: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
-  subtext: { color: 'rgba(255, 255, 255, 0.8)', fontSize: 12 },
-  glassIncomeBtn: {
+  heroTopline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  heroLabel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    letterSpacing: 1,
+    fontWeight: '800',
+    fontSize: 11,
+  },
+  whitePillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: Spacing.three,
     paddingVertical: 6,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.35)',
   },
-  metricsRow: {
+  whitePillBtnText: {
+    color: Brand.deep,
+    fontWeight: '700',
+  },
+  heroValue: {
+    fontSize: 38,
+    lineHeight: 46,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    marginVertical: 4,
+  },
+  footerRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacing.two,
-    zIndex: 2,
   },
-  moneyInPill: {
+  metricsPillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     flex: 1,
-    padding: Spacing.two + 2,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(20, 231, 253, 0.15)', // Brand.bright Cyan Glass Wash
+  },
+  moneyInBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(16, 185, 129, 0.22)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: Radius.small,
     borderWidth: 1,
-    borderColor: 'rgba(20, 231, 253, 0.35)',
-    gap: 4,
+    borderColor: 'rgba(52, 211, 153, 0.35)',
   },
-  moneyOutPill: {
-    flex: 1,
-    padding: Spacing.two + 2,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(239, 68, 68, 0.18)',
+  moneyOutBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(239, 68, 68, 0.22)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: Radius.small,
     borderWidth: 1,
     borderColor: 'rgba(248, 113, 113, 0.35)',
-    gap: 4,
   },
-  pillHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  cyanDot: {
+  greenDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Brand.bright, // #14E7FD
+    backgroundColor: '#34D399',
   },
   redDot: {
     width: 6,
@@ -184,47 +188,18 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: '#F87171',
   },
-  moneyInLabel: {
-    color: Brand.bright,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+  moneyInBadgeText: {
+    color: '#34D399',
+    fontSize: 12,
+    fontWeight: '700',
   },
-  moneyOutLabel: {
+  moneyOutBadgeText: {
     color: '#F87171',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontSize: 12,
+    fontWeight: '700',
   },
-  moneyInValue: {
-    color: Brand.bright,
-    fontSize: 19,
-    fontWeight: '800',
-  },
-  moneyOutValue: {
-    color: '#F87171',
-    fontSize: 19,
-    fontWeight: '800',
-  },
-  netGlassRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    zIndex: 2,
-  },
-  netLabel: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 13,
-  },
-  netValue: {
-    fontSize: 16,
-    fontWeight: '800',
+  whiteLinkButton: {
+    paddingVertical: Spacing.half,
   },
   pressed: {
     opacity: 0.75,

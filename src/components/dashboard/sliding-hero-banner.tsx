@@ -18,36 +18,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
+import { getQuoteOfTheDay } from '@/constants/quotes';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
-
-const FINANCIAL_QUOTES = [
-  {
-    quote: "Do not save what is left after spending, but spend what is left after saving.",
-    author: "Warren Buffett",
-  },
-  {
-    quote: "Price is what you pay. Value is what you get.",
-    author: "Warren Buffett",
-  },
-  {
-    quote: "A budget is telling your money where to go instead of wondering where it went.",
-    author: "Dave Ramsey",
-  },
-  {
-    quote: "Beware of little expenses; a small leak will sink a great ship.",
-    author: "Benjamin Franklin",
-  },
-  {
-    quote: "An investment in knowledge pays the best interest.",
-    author: "Benjamin Franklin",
-  },
-  {
-    quote: "Wealth is not having a lot of money; it's having a lot of options.",
-    author: "Chris Rock",
-  },
-];
 
 const WEATHER_TIPS = [
   {
@@ -89,7 +63,6 @@ export function SlidingHeroBanner({
   const theme = useTheme();
   const { formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [quoteIndex] = useState(() => Math.floor(Math.random() * FINANCIAL_QUOTES.length));
   const [weatherIndex] = useState(() => Math.floor(Math.random() * WEATHER_TIPS.length));
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -102,7 +75,7 @@ export function SlidingHeroBanner({
     }
   };
 
-  const currentQuote = FINANCIAL_QUOTES[quoteIndex] || FINANCIAL_QUOTES[0];
+  const currentQuote = getQuoteOfTheDay();
   const currentWeather = WEATHER_TIPS[weatherIndex] || WEATHER_TIPS[0];
 
   const getGreeting = () => {

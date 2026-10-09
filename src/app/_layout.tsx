@@ -14,6 +14,8 @@ import { FinancialRemindersProvider } from '@/context/financial-reminders-contex
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
 import { confirmDelete, notify } from '@/utils/confirm';
+import { scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
+import { scheduleDailySpendingReminderNotificationsAsync } from '@/utils/spending-reminder-notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +25,11 @@ function Navigation() {
   const insets = useSafeAreaInsets();
   const { isLoading, dataLoadError, resetAllData } = useExpenses();
   const { debtLoadError } = useDebts();
+
+  useEffect(() => {
+    void scheduleDailyQuoteNotificationsAsync();
+    void scheduleDailySpendingReminderNotificationsAsync();
+  }, []);
 
   if (isLoading) {
     return <LoadingScreen />;

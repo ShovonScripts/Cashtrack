@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,33 +19,12 @@ import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
+import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
+import { AnimatedWeather } from '@/components/animated-weather';
+import { WeatherBackground } from '@/components/weather-background';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
-
-const WEATHER_TIPS = [
-  {
-    temp: "72°F",
-    condition: "Sunny & Bright",
-    city: "Your City",
-    icon: "sunny" as const,
-    tip: "Great weather for a walk! Skip the rideshare and save today.",
-  },
-  {
-    temp: "68°F",
-    condition: "Mild Breeze",
-    city: "Your City",
-    icon: "partly-sunny" as const,
-    tip: "Perfect day to meal-prep at home and boost your savings.",
-  },
-  {
-    temp: "65°F",
-    condition: "Cozy Rain",
-    city: "Your City",
-    icon: "rainy" as const,
-    tip: "Rainy day indoors? Ideal time to review your monthly budget goals.",
-  },
-];
 
 interface SlidingHeroBannerProps {
   profile: UserProfile;
@@ -61,10 +40,19 @@ export function SlidingHeroBanner({
   onPressProfile,
 }: SlidingHeroBannerProps) {
   const theme = useTheme();
-  const { formatAmount } = useExpenses();
+  const { temperatureUnit, formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [weatherIndex] = useState(() => Math.floor(Math.random() * WEATHER_TIPS.length));
+  const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
+
   const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    async function loadWeather() {
+      const data = await fetchLiveWeatherData();
+      setWeather(data);
+    }
+    void loadWeather();
+  }, []);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -76,7 +64,15 @@ export function SlidingHeroBanner({
   };
 
   const currentQuote = getQuoteOfTheDay();
-  const currentWeather = WEATHER_TIPS[weatherIndex] || WEATHER_TIPS[0];
+
+  const formatTemp = (tempC: number) => {
+    if (temperatureUnit === 'F') {
+      return `${Math.round((tempC * 9) / 5 + 32)}°F`;
+    }
+    return `${Math.round(tempC)}°C`;
+  };
+
+  const displayTemp = formatTemp(weather.tempC);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -100,7 +96,6 @@ export function SlidingHeroBanner({
         snapToInterval={BANNER_WIDTH + 16}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* FULL-SPACE COVER BACKGROUND RENDERER */}
         {/* SLIDE 1: GREETING, DATE & WEALTH OVERVIEW */}
         <TouchableOpacity
           activeOpacity={0.95}
@@ -111,7 +106,6 @@ export function SlidingHeroBanner({
           <View style={styles.overlayGradient} />
 
           <View style={styles.cardInner}>
-            {/* Header: Avatar, Name & Greeting */}
             <View style={styles.slide1Header}>
               <View
                 style={[
@@ -129,24 +123,21 @@ export function SlidingHeroBanner({
                   </View>
                 )}
               </View>
-              <View style={styles.greetingInfo}>
+
+              <View style={styles.greetingBox}>
                 <Text style={styles.whiteSubtext}>{todayStr}</Text>
                 <Text style={styles.whiteTitle} numberOfLines={1}>
                   {getGreeting()}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
                 </Text>
               </View>
-              <View style={styles.iconCircle}>
-                <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
-              </View>
             </View>
 
-            {/* Financial Summary Box */}
-            <View style={styles.glassFinBar}>
+            <View style={styles.glassFinBox}>
               <View style={styles.finItem}>
                 <Text style={styles.glassFinLabel}>Net Balance</Text>
-                <Text style={styles.glassFinValue}>{formatAmount(totalBalance)}</Text>
+                <Text style={[styles.glassFinValue, { color: '#4ade80' }]}>{formatAmount(totalBalance)}</Text>
               </View>
-              <View style={styles.glassDivider} />
+              <View style={styles.finDivider} />
               <View style={styles.finItem}>
                 <Text style={styles.glassFinLabel}>Spent This Month</Text>
                 <Text style={[styles.glassFinValue, { color: '#f87171' }]}>{formatAmount(monthlySpent)}</Text>
@@ -155,31 +146,33 @@ export function SlidingHeroBanner({
           </View>
         </TouchableOpacity>
 
-        {/* SLIDE 2: WEATHER UPDATE */}
+        {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
         <View style={[styles.card, { borderColor: theme.border }]}>
-          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
-          <View style={styles.overlayGradient} />
+          <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={styles.cardInner}>
             <View style={styles.slideHeader}>
               <View style={styles.locationBadge}>
-                <Ionicons name="location" size={14} color="#FFFFFF" />
-                <Text style={styles.whiteSubtext}>{currentWeather.city}</Text>
+                <Ionicons name="location" size={13} color="#FFFFFF" />
+                <Text style={styles.whiteSubtext}>{weather.locationName}</Text>
               </View>
               <View style={styles.outlookPill}>
-                <Ionicons name={currentWeather.icon} size={14} color="#38bdf8" />
-                <Text style={styles.outlookText}>Live Weather</Text>
+                <Ionicons name="umbrella" size={13} color="#38bdf8" />
+                <Text style={styles.outlookText}>{weather.rainProbability}% Rain</Text>
               </View>
             </View>
 
-            <View style={styles.weatherCenter}>
-              <Text style={styles.giantTemp}>{currentWeather.temp}</Text>
-              <Text style={styles.whiteSubtext}>{currentWeather.condition}</Text>
+            <View style={styles.weatherCenterRow}>
+              <AnimatedWeather conditionType={weather.conditionType} size={36} />
+              <View style={styles.weatherTextColumn}>
+                <Text style={styles.giantTemp}>{displayTemp}</Text>
+                <Text style={styles.whiteSubtext}>{weather.condition}</Text>
+              </View>
             </View>
 
             <View style={styles.glassTipBox}>
-              <Ionicons name="bulb" size={16} color="#facc15" />
-              <Text style={styles.tipContentText}>{currentWeather.tip}</Text>
+              <Ionicons name="bulb" size={15} color="#facc15" />
+              <Text style={styles.tipContentText} numberOfLines={2}>{weather.financialTip}</Text>
             </View>
           </View>
         </View>
@@ -195,7 +188,7 @@ export function SlidingHeroBanner({
                 <Ionicons name="ribbon" size={14} color="#c084fc" />
                 <Text style={styles.wisdomText}>Daily Wisdom</Text>
               </View>
-              <Ionicons name="chatbubble-outline" size={20} color="rgba(255,255,255,0.7)" />
+              <Ionicons name="chatbubble-outline" size={18} color="rgba(255,255,255,0.7)" />
             </View>
 
             <View style={styles.quoteBody}>
@@ -255,14 +248,9 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  fullCoverPlaceholder: {
-    ...StyleSheet.absoluteFill,
-    width: '100%',
-    height: '100%',
-  },
   overlayGradient: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(5, 5, 15, 0.55)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   cardInner: {
     flex: 1,
@@ -291,63 +279,55 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarInitial: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
   },
-  greetingInfo: {
+  greetingBox: {
     flex: 1,
-  },
-  whiteSubtext: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
-    fontWeight: '500',
   },
   whiteTitle: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  iconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  glassFinBar: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 14,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    alignItems: 'center',
-  },
-  finItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  glassFinLabel: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 11,
-    fontWeight: '500',
-    marginBottom: 2,
-  },
-  glassFinValue: {
-    color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '700',
   },
-  glassDivider: {
+  whiteSubtext: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  glassFinBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  finItem: {
+    alignItems: 'center',
+  },
+  finDivider: {
     width: 1,
     height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  glassFinLabel: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  glassFinValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginTop: 2,
   },
   slideHeader: {
     flexDirection: 'row',
@@ -362,80 +342,86 @@ const styles = StyleSheet.create({
   outlookPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.25)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
     gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   outlookText: {
     color: '#38bdf8',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
-  weatherCenter: {
-    marginVertical: 4,
+  weatherCenterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginVertical: 2,
+  },
+  weatherTextColumn: {
+    flex: 1,
   },
   giantTemp: {
     color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
   glassTipBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    padding: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     gap: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   tipContentText: {
-    flex: 1,
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '500',
-    lineHeight: 16,
+    flex: 1,
+    lineHeight: 15,
   },
   wisdomPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(192, 132, 252, 0.25)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
     gap: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   wisdomText: {
     color: '#c084fc',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   quoteBody: {
-    justifyContent: 'center',
-    marginVertical: 4,
+    paddingVertical: 4,
   },
   quoteBodyText: {
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '600',
     fontStyle: 'italic',
     lineHeight: 18,
-    marginBottom: 6,
   },
   quoteAuthorText: {
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'right',
+    color: '#e2e8f0',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 4,
   },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
     gap: 6,
+    marginTop: 8,
   },
   dot: {
     height: 6,

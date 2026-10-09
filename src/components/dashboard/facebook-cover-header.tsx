@@ -9,11 +9,9 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as Location from 'expo-location';
 import { router } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -21,6 +19,9 @@ import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
+import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
+import { AnimatedWeather } from '@/components/animated-weather';
+import { WeatherBackground } from '@/components/weather-background';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,15 +30,6 @@ interface FacebookCoverHeaderProps {
   totalBalance?: number;
   monthlySpent?: number;
   onPressProfile?: () => void;
-}
-
-function getWeatherCondition(code: number): { condition: string; icon: keyof typeof Ionicons.glyphMap } {
-  if (code === 0) return { condition: 'Sunny & Clear', icon: 'sunny' };
-  if (code >= 1 && code <= 3) return { condition: 'Partly Cloudy', icon: 'partly-sunny' };
-  if (code >= 51 && code <= 67) return { condition: 'Rain Showers', icon: 'rainy' };
-  if (code >= 71 && code <= 77) return { condition: 'Snowy', icon: 'snow' };
-  if (code >= 95) return { condition: 'Thunderstorm', icon: 'thunderstorm' };
-  return { condition: 'Pleasant Breeze', icon: 'cloudy' };
 }
 
 export function FacebookCoverHeader({
@@ -51,10 +43,7 @@ export function FacebookCoverHeader({
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Live weather state
-  const [tempC, setTempC] = useState<number>(22);
-  const [weatherCode, setWeatherCode] = useState<number>(0);
-  const [locationName, setLocationName] = useState<string>('Local Weather');
-  const [weatherTip, setWeatherTip] = useState<string>('Great day to stay on budget and track your goals!');
+  const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
 
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -73,71 +62,11 @@ export function FacebookCoverHeader({
   }, [activeIndex]);
 
   useEffect(() => {
-    async function fetchLiveWeather() {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          return;
-        }
-        const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        const { latitude, longitude } = location.coords;
-
-        // Fetch from free Open-Meteo API
-        const response = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-        );
-        const data = (await response.json()) as { current_weather?: { temperature: number; weathercode: number } };
-
-        if (data.current_weather) {
-          const currentTemp = data.current_weather.temperature;
-          const code = data.current_weather.weathercode;
-          setTempC(currentTemp);
-          setWeatherCode(code);
-
-          // Reverse geocode city name if possible
-          let cityFound = false;
-          if (Platform.OS !== 'web') {
-            try {
-              const reverseGeo = await Location.reverseGeocodeAsync({ latitude, longitude });
-              if (reverseGeo && reverseGeo[0]) {
-                const city = reverseGeo[0].city || reverseGeo[0].subregion || reverseGeo[0].region;
-                if (city) {
-                  setLocationName(city);
-                  cityFound = true;
-                }
-              }
-            } catch {
-              // Ignore native reverse geocode failure
-            }
-          }
-
-          if (!cityFound) {
-            try {
-              const geoRes = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-              );
-              const geoData = (await geoRes.json()) as { city?: string; locality?: string; principalSubdivision?: string };
-              const city = geoData.city || geoData.locality || geoData.principalSubdivision;
-              if (city) setLocationName(city);
-            } catch {
-              // Ignore fallback geocode failure
-            }
-          }
-
-          if (currentTemp > 25) {
-            setWeatherTip('Warm weather! Great day for an iced coffee walk instead of driving.');
-          } else if (currentTemp < 10) {
-            setWeatherTip('Chilly weather! Perfect time to brew coffee at home and save.');
-          } else {
-            setWeatherTip('Lovely weather today — stay mindful of your daily budget!');
-          }
-        }
-      } catch {
-        // Fallback gracefully on network error / offline
-      }
+    async function loadWeather() {
+      const data = await fetchLiveWeatherData();
+      setWeather(data);
     }
-
-    void fetchLiveWeather();
+    void loadWeather();
   }, []);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -150,11 +79,18 @@ export function FacebookCoverHeader({
   };
 
   const currentQuote = getQuoteOfTheDay();
-  const weatherInfo = getWeatherCondition(weatherCode);
 
-  // Convert temperature based on user preference (Fahrenheit vs Celsius)
-  const displayTemp = temperatureUnit === 'F' ? Math.round((tempC * 9) / 5 + 32) : Math.round(tempC);
-  const tempSymbol = temperatureUnit === 'F' ? '°F' : '°C';
+  // Convert temperatures based on user preference
+  const formatTemp = (tempC: number) => {
+    if (temperatureUnit === 'F') {
+      return `${Math.round((tempC * 9) / 5 + 32)}°F`;
+    }
+    return `${Math.round(tempC)}°C`;
+  };
+
+  const displayTemp = formatTemp(weather.tempC);
+  const displayHigh = formatTemp(weather.tempMaxC);
+  const displayLow = formatTemp(weather.tempMinC);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -229,27 +165,47 @@ export function FacebookCoverHeader({
           </View>
         </TouchableOpacity>
 
-        {/* SLIDE 2: LIVE WEATHER UPDATE */}
+        {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
         <View style={styles.slideCard}>
-          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
-          <View style={styles.overlayGradient} />
+          <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={styles.cardInner}>
             <View style={styles.topRowBadge}>
               <View style={styles.outlookPill}>
-                <Ionicons name={weatherInfo.icon} size={14} color="#38bdf8" />
-                <Text style={styles.outlookText}>{locationName}</Text>
+                <Ionicons name="location" size={13} color="#38bdf8" />
+                <Text style={styles.outlookText}>{weather.locationName}</Text>
+              </View>
+
+              {/* Extra Forecast Pills */}
+              <View style={styles.metricsRow}>
+                <View style={styles.metricPill}>
+                  <Ionicons name="umbrella" size={12} color="#60a5fa" />
+                  <Text style={styles.metricText}>{weather.rainProbability}%</Text>
+                </View>
+                <View style={styles.metricPill}>
+                  <Ionicons name="water" size={12} color="#38bdf8" />
+                  <Text style={styles.metricText}>{weather.humidity}%</Text>
+                </View>
               </View>
             </View>
 
-            <View style={styles.weatherCenter}>
-              <Text style={styles.giantTemp}>{displayTemp}{tempSymbol}</Text>
-              <Text style={styles.whiteSubtext}>{weatherInfo.condition}</Text>
+            <View style={styles.weatherCenterRow}>
+              <AnimatedWeather conditionType={weather.conditionType} size={42} />
+              <View style={styles.weatherTextColumn}>
+                <View style={styles.tempAndLimitsRow}>
+                  <Text style={styles.giantTemp}>{displayTemp}</Text>
+                  <View style={styles.highLowBox}>
+                    <Text style={styles.highText}>H: {displayHigh}</Text>
+                    <Text style={styles.lowText}>L: {displayLow}</Text>
+                  </View>
+                </View>
+                <Text style={styles.whiteSubtext}>{weather.condition}</Text>
+              </View>
             </View>
 
             <View style={styles.glassTipBox}>
-              <Ionicons name="bulb" size={16} color="#facc15" />
-              <Text style={styles.tipContentText}>{weatherTip}</Text>
+              <Ionicons name="bulb" size={15} color="#facc15" />
+              <Text style={styles.tipContentText} numberOfLines={2}>{weather.financialTip}</Text>
             </View>
           </View>
         </View>
@@ -275,7 +231,7 @@ export function FacebookCoverHeader({
         </View>
       </ScrollView>
 
-      {/* Floating Pagination Dots positioned slightly lower */}
+      {/* Floating Pagination Dots */}
       <View style={styles.paginationContainer}>
         {[0, 1, 2].map((index) => (
           <View
@@ -303,7 +259,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   scrollContent: {
-    // no horizontal padding so it goes edge-to-edge like Facebook mobile cover
+    // Edge to edge cover
   },
   slideCard: {
     width: SCREEN_WIDTH,
@@ -317,59 +273,49 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
-  fullCoverPlaceholder: {
-    ...StyleSheet.absoluteFill,
-    width: '100%',
-    height: '100%',
-  },
   overlayGradient: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(5, 5, 15, 0.55)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   cardInner: {
     flex: 1,
-    padding: 20,
-    paddingTop: 16,
+    paddingHorizontal: 20,
+    paddingTop: 45,
+    paddingBottom: 22,
     justifyContent: 'space-between',
   },
   topRowBadge: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 22,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 14,
-    gap: 6,
+    borderRadius: 999,
   },
   badgeText: {
-    color: '#fff',
-    fontSize: 11,
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '600',
   },
   facebookBottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 4,
   },
   avatarContainer: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    borderWidth: 3,
+    borderWidth: 2.5,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
   },
   avatarImage: {
     width: '100%',
@@ -379,130 +325,158 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: '100%',
     height: '100%',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarInitial: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 26,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   profileTextInfo: {
     flex: 1,
-    gap: 2,
-  },
-  whiteSubtext: {
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 12,
-    fontWeight: '500',
   },
   whiteTitle: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
+    lineHeight: 24,
   },
-  netBalanceText: {
-    color: 'rgba(255, 255, 255, 0.9)',
+  whiteSubtext: {
+    color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 13,
     fontWeight: '500',
+  },
+  netBalanceText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
     marginTop: 2,
-  },
-  editProfileButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  locationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 4,
   },
   outlookPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(56, 189, 248, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
     gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   outlookText: {
     color: '#38bdf8',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  metricPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  metricText: {
+    color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '600',
   },
-  weatherCenter: {
-    marginVertical: 2,
+  weatherCenterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    marginVertical: 6,
+  },
+  weatherTextColumn: {
+    flex: 1,
+  },
+  tempAndLimitsRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 12,
   },
   giantTemp: {
     color: '#FFFFFF',
-    fontSize: 34,
-    fontWeight: 'bold',
+    fontSize: 36,
+    fontWeight: '800',
+    letterSpacing: -1,
+  },
+  highLowBox: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  highText: {
+    color: '#4ade80',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  lowText: {
+    color: '#38bdf8',
+    fontSize: 13,
+    fontWeight: '700',
   },
   glassTipBox: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    padding: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     gap: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   tipContentText: {
-    flex: 1,
     color: '#FFFFFF',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '500',
-    lineHeight: 18,
+    flex: 1,
+    lineHeight: 16,
   },
   wisdomPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(192, 132, 252, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
     gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
   },
   wisdomText: {
     color: '#c084fc',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
   quoteBody: {
-    justifyContent: 'center',
-    marginVertical: 4,
+    paddingVertical: 8,
   },
   quoteBodyText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     fontStyle: 'italic',
-    lineHeight: 20,
-    marginBottom: 6,
+    lineHeight: 22,
   },
   quoteAuthorText: {
-    color: 'rgba(255, 255, 255, 0.9)',
-    fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'right',
+    color: '#e2e8f0',
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 6,
   },
   paginationContainer: {
-    position: 'absolute',
-    bottom: 4, // Positioned even lower closer to the bottom edge
-    right: 20,
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
   },
   dot: {
     height: 6,

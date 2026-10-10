@@ -32,6 +32,12 @@ export async function insertGoal(goal: MoneyGoal): Promise<void> {
   await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(next));
 }
 
+export async function updateGoal(goal: MoneyGoal): Promise<void> {
+  const goals = await getAllGoals();
+  const next = goals.map((g) => (g.id === goal.id ? goal : g));
+  await AsyncStorage.setItem(GOALS_KEY, JSON.stringify(next));
+}
+
 export async function updateGoalStatus(id: string, status: GoalStatus): Promise<void> {
   const goals = await getAllGoals();
   const next = goals.map((g) => (g.id === id ? { ...g, status } : g));

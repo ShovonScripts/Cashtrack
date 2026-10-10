@@ -12,6 +12,7 @@ import type { MoneyGoal, GoalContribution, GoalDraft, ContributionDraft, GoalSta
 import {
   getAllGoals,
   insertGoal,
+  updateGoal as updateGoalRepo,
   updateGoalStatus as updateGoalStatusRepo,
   deleteGoal as deleteGoalRepo,
   getAllContributions,
@@ -35,6 +36,7 @@ type GoalContextValue = {
   allContributions: GoalContribution[];
   isLoading: boolean;
   addGoal: (draft: GoalDraft) => Promise<MoneyGoal>;
+  updateGoal: (goal: MoneyGoal) => Promise<void>;
   updateGoalStatus: (id: string, status: GoalStatus) => Promise<void>;
   deleteGoal: (id: string) => Promise<void>;
   addContribution: (draft: ContributionDraft) => Promise<GoalContribution>;
@@ -143,6 +145,13 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     return goal;
   }, []);
 
+  const updateGoal = useCallback(async (updatedGoal: MoneyGoal) => {
+    await updateGoalRepo(updatedGoal);
+    setRawGoals((current) =>
+      current.map((g) => (g.id === updatedGoal.id ? updatedGoal : g))
+    );
+  }, []);
+
   const updateGoalStatus = useCallback(async (id: string, status: GoalStatus) => {
     await updateGoalStatusRepo(id, status);
     setRawGoals((current) =>
@@ -185,13 +194,14 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       allContributions: contributions,
       isLoading,
       addGoal,
+      updateGoal,
       updateGoalStatus,
       deleteGoal,
       addContribution,
       deleteContribution,
       getGoal,
     }),
-    [goals, contributions, isLoading, addGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
+    [goals, contributions, isLoading, addGoal, updateGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
   );
 
   return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;

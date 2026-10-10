@@ -208,7 +208,7 @@ export default function AddBillScreen() {
                         borderColor: selected ? theme.accent : theme.border,
                       },
                     ]}>
-                    <ThemedText type="smallBold" style={{ color: selected ? theme.accent : theme.textSecondary }}>
+                    <ThemedText type="caption" style={{ fontWeight: '700', color: selected ? theme.accent : theme.textSecondary }} numberOfLines={1}>
                       {rep.label}
                     </ThemedText>
                   </Pressable>

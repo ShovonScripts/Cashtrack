@@ -148,36 +148,31 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
       <View pointerEvents="none" style={styles.heroOrbSmall} />
 
       <View style={styles.heroContent}>
-        {/* Topline: Label & Solid White Action Button */}
+        {/* Topline: Label & Pill */}
         <View style={styles.heroTopline}>
           <ThemedText type="caption" style={styles.heroLabel}>
             MONEY PLAN & POTS
           </ThemedText>
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              router.push('/goals/add');
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Create pot"
-            style={({ pressed }) => [styles.whitePillBtn, pressed && styles.pressed]}>
-            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
-            <ThemedText type="smallBold" style={{ color: Brand.deep }}>
-              Add pot
-            </ThemedText>
-          </Pressable>
+          <View style={styles.monthPill}>
+            <ThemedText type="caption" style={styles.monthPillText}>{overallProgress}% saved</ThemedText>
+          </View>
         </View>
 
-        {/* Main Hero Value */}
-        <ThemedText type="hero" style={[styles.heroValue, { color: '#38BDF8' }]} numberOfLines={1} adjustsFontSizeToFit>
+        {/* Main Hero Value - Pure White like Daily Cost card */}
+        <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
           {formatAmount(totalSaved)}
         </ThemedText>
 
-        {/* Footer Row */}
+        {/* Footer Metrics Row with Clean White Style & View Pots Link */}
         <View style={styles.footerRow}>
-          <ThemedText type="small" style={{ color: 'rgba(255, 255, 255, 0.85)', fontWeight: '600' }}>
-            {activeGoals.length} {activeGoals.length === 1 ? 'active pot' : 'active pots'} ({overallProgress}% saved)
-          </ThemedText>
+          <View style={styles.metricsPillsRow}>
+            <View style={styles.whiteChip}>
+              <View style={styles.cyanDot} />
+              <ThemedText type="small" style={styles.chipText}>
+                {activeGoals.length} {activeGoals.length === 1 ? 'active pot' : 'active pots'}
+              </ThemedText>
+            </View>
+          </View>
 
           <Pressable
             onPress={() => {
@@ -191,6 +186,21 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
             </ThemedText>
           </Pressable>
         </View>
+
+        {/* Solid White Action Button like Daily Cost card */}
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/goals/add');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Create pot"
+          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+            <ThemedText type="defaultBold" style={styles.addButtonText}>Add pot</ThemedText>
+          </View>
+        </Pressable>
       </View>
     </View>
   );
@@ -296,6 +306,25 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
         </View>
       )}
 
+      {/* Subscriptions Hub Quick Link */}
+      <Pressable
+        onPress={() => {
+          triggerHaptic();
+          router.push('/subscriptions');
+        }}
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          styles.subHubLinkRow,
+          { backgroundColor: theme.cardMuted },
+          pressed && styles.pressed,
+        ]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <MaterialCommunityIcons name="repeat" size={16} color={theme.accent} />
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>Subscriptions & Recurring Hub</ThemedText>
+        </View>
+        <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+      </Pressable>
+
       {/* Reminders List or Empty State */}
       {activeReminders.length === 0 ? (
         <Pressable
@@ -391,55 +420,48 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
           <ThemedText type="caption" style={styles.heroLabel}>
             LEND & BORROW
           </ThemedText>
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              router.push('/debts/add');
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Add debt"
-            style={({ pressed }) => [styles.whitePillBtn, pressed && styles.pressed]}>
-            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
-            <ThemedText type="smallBold" style={{ color: Brand.deep }}>
-              Add debt
-            </ThemedText>
-          </Pressable>
+          <View style={styles.monthPill}>
+            <ThemedText type="caption" style={styles.monthPillText}>{activeDebts.length} active</ThemedText>
+          </View>
         </View>
 
-        {/* Hero Net Value */}
-        <ThemedText type="hero" style={[styles.heroValue, { color: net >= 0 ? '#4ADE80' : '#F87171' }]} numberOfLines={1} adjustsFontSizeToFit>
+        {/* Hero Net Value - Pure White like Daily Cost card */}
+        <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
           {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
         </ThemedText>
 
-        {/* Footer Metrics Row */}
+        {/* Footer Metrics Row with Clean White Style */}
         <View style={styles.footerRow}>
           <View style={styles.metricsPillsRow}>
-            <View style={styles.moneyInBadge}>
+            <View style={styles.whiteChip}>
               <View style={styles.greenDot} />
-              <ThemedText style={styles.moneyInBadgeText}>
+              <ThemedText type="small" style={styles.chipText}>
                 Owed: {formatAmount(youAreOwed)}
               </ThemedText>
             </View>
-            <View style={styles.moneyOutBadge}>
+            <View style={styles.whiteChip}>
               <View style={styles.redDot} />
-              <ThemedText style={styles.moneyOutBadgeText}>
+              <ThemedText type="small" style={styles.chipText}>
                 Owe: {formatAmount(youOwe)}
               </ThemedText>
             </View>
           </View>
-
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              router.push('/debts');
-            }}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-              View debts →
-            </ThemedText>
-          </Pressable>
         </View>
+
+        {/* Solid White Action Button like Daily Cost card */}
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/debts/add');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Add debt"
+          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+            <ThemedText type="defaultBold" style={styles.addButtonText}>Add debt</ThemedText>
+          </View>
+        </Pressable>
       </View>
     </View>
   );
@@ -1128,6 +1150,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  subHubLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+    borderRadius: Radius.medium,
+  },
   moneyOutBadgeText: {
     color: '#F87171',
     fontSize: 12,
@@ -1156,6 +1186,26 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#F87171',
+  },
+  cyanDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#38BDF8',
+  },
+  whiteChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 5,
+    borderRadius: Radius.small,
+  },
+  chipText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
   },
   overviewHeaderRow: {
     flexDirection: 'row',

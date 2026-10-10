@@ -104,10 +104,19 @@ export default function GoalDetailScreen() {
           <View style={styles.heroContent}>
             <View style={styles.heroTopline}>
               <ThemedText type="caption" style={styles.heroLabel}>FINANCIAL POT · {goal.frequency.toUpperCase()}</ThemedText>
-              <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? 'rgba(39, 174, 96, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
-                <ThemedText type="caption" style={{ color: goal.isCompleted ? '#2ecc71' : '#FFFFFF', fontWeight: '700' }}>
-                  {goal.isCompleted ? 'Completed' : 'Active'}
-                </ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
+                <Pressable
+                  onPress={() => router.push({ pathname: '/goals/[id]/edit', params: { id: goal.id } })}
+                  style={styles.whitePillBtn}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit pot">
+                  <ThemedText type="smallBold" style={{ color: Brand.deep, fontSize: 11 }}>Edit</ThemedText>
+                </Pressable>
+                <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? 'rgba(39, 174, 96, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
+                  <ThemedText type="caption" style={{ color: goal.isCompleted ? '#2ecc71' : '#FFFFFF', fontWeight: '700' }}>
+                    {goal.isCompleted ? 'Completed' : 'Active'}
+                  </ThemedText>
+                </View>
               </View>
             </View>
             <ThemedText type="subtitle" style={styles.heroTitle}>{goal.title}</ThemedText>
@@ -211,6 +220,11 @@ export default function GoalDetailScreen() {
           </Pressable>
         </Card>
 
+        {/* Savings Velocity & Contribution Chart */}
+        {goal.contributions.length > 0 && (
+          <ContributionChart contributions={goal.contributions} formatAmount={formatAmount} />
+        )}
+
         {/* Contributions History */}
         <View style={styles.sectionHeader}>
           <ThemedText type="defaultBold">Contribution history</ThemedText>
@@ -252,6 +266,42 @@ export default function GoalDetailScreen() {
         formatAmount={formatAmount}
       />
     </ScrollView>
+  );
+}
+
+function ContributionChart({ contributions, formatAmount }: { contributions: GoalContribution[]; formatAmount: (amount: number) => string }) {
+  const theme = useTheme();
+  const sorted = [...contributions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  const maxAmt = Math.max(...sorted.map((c) => c.amount), 1);
+
+  if (sorted.length === 0) return null;
+
+  return (
+    <Card style={styles.card}>
+      <View style={styles.sectionHeader}>
+        <ThemedText type="defaultBold">Savings velocity trend</ThemedText>
+        <ThemedText type="caption" themeColor="textSecondary">Accumulation over time</ThemedText>
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
+        {sorted.map((c) => {
+          const height = Math.max(12, (c.amount / maxAmt) * 64);
+          const dateStr = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(c.date));
+          return (
+            <View key={c.id} style={styles.chartColumn}>
+              <ThemedText type="caption" style={{ fontSize: 9, color: theme.textSecondary }} numberOfLines={1}>
+                {formatAmount(c.amount)}
+              </ThemedText>
+              <View style={[styles.barTrack, { backgroundColor: theme.backgroundElement }]}>
+                <View style={[styles.barFill, { height, backgroundColor: theme.accent }]} />
+              </View>
+              <ThemedText type="caption" style={{ fontSize: 9, color: theme.textSecondary }} numberOfLines={1}>
+                {dateStr}
+              </ThemedText>
+            </View>
+          );
+        })}
+      </ScrollView>
+    </Card>
   );
 }
 
@@ -307,6 +357,12 @@ const styles = StyleSheet.create({
   heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
   statusPill: { paddingHorizontal: Spacing.two, paddingVertical: 3, borderRadius: Radius.pill },
+  whitePillBtn: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
   heroTitle: { color: '#FFFFFF', fontSize: 24, lineHeight: 30 },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.half },
   heroStat: { flex: 1, gap: Spacing.half },
@@ -334,5 +390,9 @@ const styles = StyleSheet.create({
   contribCopy: { flex: 1, gap: 2 },
   deleteBtn: { padding: 4 },
   deleteGoalBtn: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.one },
+  chartScroll: { gap: Spacing.three, paddingVertical: Spacing.one, alignItems: 'flex-end' },
+  chartColumn: { alignItems: 'center', gap: 4, width: 56 },
+  barTrack: { width: 16, height: 70, borderRadius: Radius.pill, justifyContent: 'flex-end', overflow: 'hidden' },
+  barFill: { width: '100%', borderRadius: Radius.pill },
   pressed: { opacity: 0.75 },
 });

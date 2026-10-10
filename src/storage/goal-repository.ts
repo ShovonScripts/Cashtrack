@@ -79,6 +79,24 @@ export async function insertGoal(goal: MoneyGoal): Promise<void> {
   );
 }
 
+export async function updateGoal(goal: MoneyGoal): Promise<void> {
+  const db = await initDatabase();
+  await db.runAsync(
+    'UPDATE money_goals SET title = ?, target_amount = ?, start_date = ?, deadline_date = ?, frequency = ?, status = ?, pot_type = ?, allocation_type = ?, allocation_percent = ?, icon = ? WHERE id = ?',
+    goal.title,
+    goal.targetAmount,
+    goal.startDate,
+    goal.deadlineDate ?? null,
+    goal.frequency,
+    goal.status,
+    goal.potType ?? 'general',
+    goal.allocationType ?? 'manual',
+    goal.allocationPercent ?? null,
+    goal.icon ?? 'piggy-bank',
+    goal.id
+  );
+}
+
 export async function updateGoalStatus(id: string, status: GoalStatus): Promise<void> {
   const db = await initDatabase();
   await db.runAsync('UPDATE money_goals SET status = ? WHERE id = ?', status, id);

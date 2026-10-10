@@ -1,0 +1,4 @@
+- `[ ]` Create Subscriptions & Recurring Bills Hub screen (`src/app/subscriptions.tsx`)
+- `[ ]` Wire up Subscriptions Hub link in app navigation / home screen
+- `[ ]` Add visual contribution timeline chart to goal detail screen (`src/app/goals/[id].tsx`)
+- `[ ]` Run TypeScript typecheck, linter, and unit tests

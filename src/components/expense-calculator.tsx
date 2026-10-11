@@ -205,7 +205,7 @@ export function ExpenseCalculator({
               {budgetNotice && (
                 <ThemedText
                   type="caption"
-                  style={{ color: categoryLimit !== undefined && projectedCategorySpend > categoryLimit ? theme.danger : '#BD7119' }}>
+                  style={{ color: categoryLimit !== undefined && projectedCategorySpend > categoryLimit ? theme.danger : theme.warning }}>
                   {budgetNotice}
                 </ThemedText>
               )}
@@ -339,7 +339,7 @@ export function ExpenseCalculator({
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>
-            <ThemedText type="defaultBold" style={styles.saveButtonText}>
+            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>
               {submitLabel}
             </ThemedText>
           </Pressable>
@@ -479,9 +479,6 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     opacity: 0.4,
-  },
-  saveButtonText: {
-    color: '#ffffff',
   },
   cancelButton: {
     alignItems: 'center',

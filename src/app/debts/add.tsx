@@ -9,6 +9,7 @@ import { useExpenses } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import type { DebtType } from '@/types/debt';
 
 export default function AddDebtScreen() {
@@ -91,11 +92,11 @@ export default function AddDebtScreen() {
                 style={[
                   styles.typeButton,
                   {
-                    backgroundColor: type === 'lent' ? 'rgba(39, 174, 96, 0.15)' : theme.cardMuted,
-                    borderColor: type === 'lent' ? '#27AE60' : theme.border,
+                    backgroundColor: type === 'lent' ? withAlpha(theme.success, 0.15) : theme.cardMuted,
+                    borderColor: type === 'lent' ? theme.success : theme.border,
                   },
                 ]}>
-                <ThemedText type="defaultBold" style={{ color: type === 'lent' ? '#27AE60' : theme.textSecondary }}>
+                <ThemedText type="defaultBold" style={{ color: type === 'lent' ? theme.success : theme.textSecondary }}>
                   I Lent Money
                 </ThemedText>
               </Pressable>
@@ -106,7 +107,7 @@ export default function AddDebtScreen() {
                 style={[
                   styles.typeButton,
                   {
-                    backgroundColor: type === 'borrowed' ? 'rgba(200, 37, 44, 0.12)' : theme.cardMuted,
+                    backgroundColor: type === 'borrowed' ? withAlpha(theme.danger, 0.15) : theme.cardMuted,
                     borderColor: type === 'borrowed' ? theme.danger : theme.border,
                   },
                 ]}>
@@ -218,7 +219,7 @@ export default function AddDebtScreen() {
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>
-            <ThemedText type="defaultBold" style={styles.saveText}>Save Debt</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Save Debt</ThemedText>
           </Pressable>
 
           <Pressable
@@ -249,7 +250,6 @@ const styles = StyleSheet.create({
   toggleBadge: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.half, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
   saveButtonDisabled: { opacity: 0.4 },
-  saveText: { color: '#FFFFFF' },
   cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
   pressed: { opacity: 0.7 },
 });

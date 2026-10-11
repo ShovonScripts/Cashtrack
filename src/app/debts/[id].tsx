@@ -9,6 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useDebts } from '@/context/debt-context';
 import { useExpenses } from '@/context/expense-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { withAlpha } from '@/utils/color';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { shareDebtReminder } from '@/utils/debt-share';
@@ -103,14 +104,14 @@ export default function DebtDetailsScreen() {
           style={[
             styles.hero,
             {
-              backgroundColor: isLent ? 'rgba(39, 174, 96, 0.08)' : 'rgba(200, 37, 44, 0.08)',
-              borderColor: isLent ? '#27AE60' : theme.danger,
+              backgroundColor: isLent ? withAlpha(theme.success, 0.08) : withAlpha(theme.danger, 0.08),
+              borderColor: isLent ? theme.success : theme.danger,
               borderWidth: 1,
             },
           ]}>
           <View style={styles.heroTop}>
-            <View style={[styles.heroIconBadge, { backgroundColor: isLent ? '#27AE60' : theme.danger }]}>
-              <MaterialCommunityIcons name={isLent ? 'arrow-up-right' : 'arrow-down-left'} size={20} color="#FFFFFF" />
+            <View style={[styles.heroIconBadge, { backgroundColor: isLent ? theme.success : theme.danger }]}>
+              <MaterialCommunityIcons name={isLent ? 'arrow-up-right' : 'arrow-down-left'} size={20} color={theme.onBrand} />
             </View>
             <View style={styles.heroTopCopy}>
               <ThemedText type="caption" themeColor="textSecondary">
@@ -120,13 +121,13 @@ export default function DebtDetailsScreen() {
             </View>
           </View>
 
-          <ThemedText type="hero" style={[styles.heroValue, { color: isLent ? '#27AE60' : theme.danger }]} numberOfLines={1} adjustsFontSizeToFit>
+          <ThemedText type="hero" style={[styles.heroValue, { color: isLent ? theme.success : theme.danger }]} numberOfLines={1} adjustsFontSizeToFit>
             {formatAmount(debt.amount)}
           </ThemedText>
 
           <View style={styles.badgeRow}>
-            <View style={[styles.badge, { backgroundColor: isLent ? 'rgba(39, 174, 96, 0.18)' : 'rgba(200, 37, 44, 0.15)' }]}>
-              <ThemedText type="caption" style={{ color: isLent ? '#27AE60' : theme.danger, fontWeight: '700' }}>
+            <View style={[styles.badge, { backgroundColor: isLent ? withAlpha(theme.success, 0.15) : withAlpha(theme.danger, 0.15) }]}>
+              <ThemedText type="caption" style={{ color: isLent ? theme.success : theme.danger, fontWeight: '700' }}>
                 {isLent ? 'Lent Transaction' : 'Borrowed Transaction'}
               </ThemedText>
             </View>
@@ -184,9 +185,9 @@ export default function DebtDetailsScreen() {
               accessibilityRole="button"
               accessibilityLabel="Settle debt"
               accessibilityState={{ disabled: isSubmitting }}
-              style={({ pressed }) => [styles.primaryButton, { backgroundColor: '#27AE60' }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
-              <MaterialCommunityIcons name="check" size={18} color="#FFFFFF" />
-              <ThemedText type="defaultBold" style={styles.onAccent}>{isSubmitting ? 'Settling…' : 'Settle'}</ThemedText>
+              style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.success }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
+              <MaterialCommunityIcons name="check" size={18} color={theme.onBrand} />
+              <ThemedText type="defaultBold" style={[styles.onAccent, { color: theme.onBrand }]}>{isSubmitting ? 'Settling…' : 'Settle'}</ThemedText>
             </Pressable>
           )}
           <Pressable

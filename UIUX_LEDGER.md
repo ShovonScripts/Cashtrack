@@ -157,10 +157,17 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-151 | `src/app/goals/[id]/edit.tsx:389` | `percentChip: { height: 44, ... }` | Percentage chips height under 44dp | Low | Fixed | Updated `percentChip` height to 44dp. |
 | F-152 | `src/app/goals/[id]/edit.tsx:391` | `freqButton: { height: 44, ... }` | Pacing frequency buttons height under 44dp | Low | Fixed | Updated `freqButton` height to 44dp. |
 | F-153 | `src/app/bills/add.tsx:276` | `chip: { height: 44, ... }`, `typeButton: { height: 44, ... }` | Category & repeat type chips height under 44dp | Low | Fixed | Updated `chip` and `typeButton` height to 44dp. |
+| F-154 | `src/app/income.tsx:115` | `color={theme.success}` | Hardcoded hex in income indicators and submit button | Low | Fixed | Replaced hardcoded `#10B981` and `#FFFFFF` with `theme.success` and `theme.onBrand`. |
+| F-155 | `src/app/budgets.tsx:130` | `color={theme.success}` | Hardcoded status pill colors and warning notices | Low | Fixed | Replaced `#10B981`, `#BD7119`, and `#FF6B6B15` with `theme.success`, `theme.warning`, `theme.danger`, and `withAlpha()`. |
+| F-156 | `src/app/bills/index.tsx:82` | `color: theme.warning` | Hardcoded status colors in bills list and filters | Low | Fixed | Replaced `#F59E0B`, `#FF6B6B`, `#10B981`, `#BD7119`, and `#FFFFFF` with `theme.warning`, `theme.danger`, `theme.success`, `theme.onBrand`, and brand tokens. |
+| F-157 | `src/app/bills/pay/[id].tsx:135` | `style={{ color: theme.onBrand }}` | Hardcoded white text on payment confirmation button | Low | Fixed | Replaced `#FFFFFF` with `theme.onBrand`. |
+| F-158 | `src/app/debts/[id].tsx:108` | `borderColor: theme.success` | Hardcoded debt status colors and settle button | Low | Fixed | Replaced `#27AE60` and hardcoded `rgba()` strings with `theme.success`, `theme.danger`, `theme.onBrand`, and `withAlpha()`. |
+| F-159 | `src/app/debts/add.tsx:90` | `backgroundColor: withAlpha(theme.success, 0.15)` | Hardcoded debt transaction type button colors | Low | Fixed | Replaced `#27AE60` and `rgba()` strings with `theme.success`, `theme.danger`, `theme.onBrand`, and `withAlpha()`. |
+| F-160 | `src/components/goal-completion-modal.tsx:25` | `color={theme.success}` | Hardcoded modal backdrop and trophy badge colors | Low | Fixed | Replaced `'rgba(0,0,0,0.7)'`, `#27AE60`, and `#FFFFFF` with `theme.overlay`, `theme.success`, and `theme.onBrand`. |
 
 ### Current Ledger Counts:
 - **Open**: 3
-- **Fixed**: 139
+- **Fixed**: 146
 - **Deferred**: 1
 - **Removed**: 2
 - **Not reproducible**: 8

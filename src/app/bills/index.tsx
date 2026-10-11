@@ -12,6 +12,7 @@ import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context
 import { useExpenses } from '@/context/expense-context';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
 
@@ -78,10 +79,10 @@ export default function BillsScreen() {
 
   const tabs: { label: string; value: FilterTab; count: number; color?: string }[] = [
     { label: 'All', value: 'all', count: reminders.length },
-    { label: 'Due Today', value: 'due_today', count: dueTodayCount, color: '#F59E0B' },
-    { label: 'Overdue', value: 'overdue', count: overdueCount, color: '#FF6B6B' },
+    { label: 'Due Today', value: 'due_today', count: dueTodayCount, color: theme.warning },
+    { label: 'Overdue', value: 'overdue', count: overdueCount, color: theme.danger },
     { label: 'Upcoming', value: 'upcoming', count: upcomingCount, color: theme.accent },
-    { label: 'Paid', value: 'paid', count: paidCount, color: '#10B981' },
+    { label: 'Paid', value: 'paid', count: paidCount, color: theme.success },
   ];
 
   const safeFormatAmount = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
@@ -135,22 +136,22 @@ export default function BillsScreen() {
                 <View style={styles.actionPillRow}>
                   {overdueCount > 0 ? (
                     <View style={styles.overdueGlassPill}>
-                      <MaterialCommunityIcons name="alert-circle" size={12} color="#F87171" />
-                      <ThemedText type="caption" style={{ color: '#F87171', fontWeight: '800' }}>
+                      <MaterialCommunityIcons name="alert-circle" size={12} color={theme.dangerOnBrand} />
+                      <ThemedText type="caption" style={{ color: theme.dangerOnBrand, fontWeight: '800' }}>
                         {overdueCount} Overdue
                       </ThemedText>
                     </View>
                   ) : dueTodayCount > 0 ? (
                     <View style={styles.dueTodayGlassPill}>
-                      <MaterialCommunityIcons name="clock-alert" size={12} color="#FBBF24" />
-                      <ThemedText type="caption" style={{ color: '#FBBF24', fontWeight: '800' }}>
+                      <MaterialCommunityIcons name="clock-alert" size={12} color={theme.warningOnBrand} />
+                      <ThemedText type="caption" style={{ color: theme.warningOnBrand, fontWeight: '800' }}>
                         {dueTodayCount} Due Today
                       </ThemedText>
                     </View>
                   ) : (
                     <View style={styles.allClearGlassPill}>
-                      <MaterialCommunityIcons name="check-circle" size={12} color="#34D399" />
-                      <ThemedText type="caption" style={{ color: '#34D399', fontWeight: '800' }}>
+                      <MaterialCommunityIcons name="check-circle" size={12} color={theme.successOnBrand} />
+                      <ThemedText type="caption" style={{ color: theme.successOnBrand, fontWeight: '800' }}>
                         All Clear
                       </ThemedText>
                     </View>
@@ -224,9 +225,9 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
   const statusColor = isOverdue
     ? theme.danger
     : isDueToday
-      ? '#BD7119'
+      ? theme.warning
       : isPaid
-        ? '#10B981'
+        ? theme.success
         : theme.accent;
 
   const statusLabel = isOverdue
@@ -305,8 +306,8 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
               accessibilityRole="button"
               accessibilityLabel={`Mark Paid, ${reminder.title}`}
               style={({ pressed }) => [styles.payActionBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-              <MaterialCommunityIcons name="check" size={13} color="#FFFFFF" />
-              <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '800' }}>Mark Paid</ThemedText>
+              <MaterialCommunityIcons name="check" size={13} color={theme.onBrand} />
+              <ThemedText type="caption" style={{ color: theme.onBrand, fontWeight: '800' }}>Mark Paid</ThemedText>
             </Pressable>
           )}
 

@@ -10,6 +10,7 @@ import { useDebts } from '@/context/debt-context';
 import { useExpenses } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import { formatDate } from '@/utils/expense';
 import type { DebtRecord } from '@/types/debt';
 
@@ -160,28 +161,28 @@ function DebtCard({ debt, formatAmount }: { debt: DebtRecord; formatAmount: (amo
         styles.debtCard,
         {
           backgroundColor: theme.card,
-          borderColor: isLent ? 'rgba(39, 174, 96, 0.3)' : 'rgba(255, 107, 107, 0.3)',
+          borderColor: isLent ? withAlpha(theme.success, 0.3) : withAlpha(theme.danger, 0.3),
           borderLeftWidth: 4,
-          borderLeftColor: isLent ? '#27AE60' : theme.danger,
+          borderLeftColor: isLent ? theme.success : theme.danger,
         },
         pressed && styles.pressed,
       ]}>
       <View style={styles.cardHeader}>
-        <View style={[styles.avatar, { backgroundColor: isLent ? 'rgba(39, 174, 96, 0.15)' : 'rgba(255, 107, 107, 0.15)' }]}>
-          <ThemedText type="smallBold" style={{ color: isLent ? '#27AE60' : theme.danger }}>
+        <View style={[styles.avatar, { backgroundColor: isLent ? withAlpha(theme.success, 0.15) : withAlpha(theme.danger, 0.15) }]}>
+          <ThemedText type="smallBold" style={{ color: isLent ? theme.success : theme.danger }}>
             {initials || '👤'}
           </ThemedText>
         </View>
         <View style={styles.personInfo}>
           <ThemedText type="defaultBold" numberOfLines={1}>{debt.personName}</ThemedText>
           <View style={styles.badges}>
-            <View style={[styles.badge, { backgroundColor: isLent ? 'rgba(39, 174, 96, 0.15)' : 'rgba(255, 107, 107, 0.15)' }]}>
+            <View style={[styles.badge, { backgroundColor: isLent ? withAlpha(theme.success, 0.15) : withAlpha(theme.danger, 0.15) }]}>
               <MaterialCommunityIcons
                 name={isLent ? 'arrow-up-right' : 'arrow-down-left'}
                 size={12}
-                color={isLent ? '#27AE60' : theme.danger}
+                color={isLent ? theme.success : theme.danger}
               />
-              <ThemedText type="caption" style={{ color: isLent ? '#27AE60' : theme.danger, fontWeight: '700' }}>
+              <ThemedText type="caption" style={{ color: isLent ? theme.success : theme.danger, fontWeight: '700' }}>
                 {isLent ? 'Lent' : 'Borrowed'}
               </ThemedText>
             </View>
@@ -192,7 +193,7 @@ function DebtCard({ debt, formatAmount }: { debt: DebtRecord; formatAmount: (amo
             </View>
           </View>
         </View>
-        <ThemedText type="subtitle" style={[styles.amount, { color: isLent ? '#27AE60' : theme.danger }]}>
+        <ThemedText type="subtitle" style={[styles.amount, { color: isLent ? theme.success : theme.danger }]}>
           {formatAmount(debt.amount)}
         </ThemedText>
       </View>

@@ -10,6 +10,7 @@ import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import { sumAmounts } from '@/utils/expense';
 import { getBudgetInsights } from '@/utils/advisor';
 
@@ -125,8 +126,8 @@ export default function BudgetsScreen() {
                 <CategoryIcon category={category} customIcons={categoryIcons} color={getCategoryColor(category)} size={16} containerSize={36} />
                 <ThemedText type="defaultBold" style={styles.categoryName}>{category}</ThemedText>
 
-                <View style={[styles.statusPill, { backgroundColor: limit !== undefined ? (isOver ? 'rgba(235, 87, 87, 0.15)' : 'rgba(16, 185, 129, 0.15)') : theme.cardMuted }]}>
-                  <ThemedText type="caption" style={{ color: limit !== undefined ? (isOver ? theme.danger : '#10B981') : theme.textSecondary, fontWeight: '800' }}>
+                <View style={[styles.statusPill, { backgroundColor: limit !== undefined ? (isOver ? withAlpha(theme.danger, 0.15) : withAlpha(theme.success, 0.15)) : theme.cardMuted }]}>
+                  <ThemedText type="caption" style={{ color: limit !== undefined ? (isOver ? theme.danger : theme.success) : theme.textSecondary, fontWeight: '800' }}>
                     {limit !== undefined ? (isOver ? 'Over Limit' : 'Active') : 'No Limit'}
                   </ThemedText>
                 </View>
@@ -153,13 +154,13 @@ export default function BudgetsScreen() {
               )}
 
               {notice && (
-                <View style={[styles.noticeBox, { backgroundColor: notice.level === 'over' ? '#FF6B6B15' : notice.level === 'near' ? '#BD711915' : theme.cardMuted }]}>
+                <View style={[styles.noticeBox, { backgroundColor: notice.level === 'over' ? withAlpha(theme.danger, 0.15) : notice.level === 'near' ? withAlpha(theme.warning, 0.15) : theme.cardMuted }]}>
                   <MaterialCommunityIcons
                     name={notice.level === 'over' ? 'alert-circle' : notice.level === 'near' ? 'clock-alert' : 'information'}
                     size={14}
-                    color={notice.level === 'over' ? theme.danger : notice.level === 'near' ? '#BD7119' : theme.accent}
+                    color={notice.level === 'over' ? theme.danger : notice.level === 'near' ? theme.warning : theme.accent}
                   />
-                  <ThemedText type="caption" style={[styles.budgetNotice, { color: notice.level === 'over' ? theme.danger : notice.level === 'near' ? '#BD7119' : theme.accent }]}>
+                  <ThemedText type="caption" style={[styles.budgetNotice, { color: notice.level === 'over' ? theme.danger : notice.level === 'near' ? theme.warning : theme.accent }]}>
                     {notice.level === 'over'
                       ? `Over limit by ${formatAmount(Math.abs(notice.remaining))}.`
                       : notice.level === 'near'
@@ -188,7 +189,7 @@ export default function BudgetsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={`Save ${category} limit`}
                   style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-                  <ThemedText type="smallBold" style={styles.saveText}>Save</ThemedText>
+                  <ThemedText type="smallBold" style={{ color: theme.onBrand }}>Save</ThemedText>
                 </Pressable>
                 {limit !== undefined && (
                   <Pressable
@@ -276,7 +277,6 @@ const styles = StyleSheet.create({
   moneyInput: { flex: 1, minWidth: 0, minHeight: 46, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, flexDirection: 'row', alignItems: 'center', gap: Spacing.one, paddingHorizontal: Spacing.three },
   limitInput: { flex: 1, minWidth: 0, fontSize: 14, paddingVertical: Spacing.two },
   saveButton: { minHeight: 46, borderRadius: Radius.medium, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.four },
-  saveText: { color: '#FFFFFF' },
   removeButton: { width: 40, height: 46, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
 });

@@ -11,6 +11,7 @@ import { useIncome } from '@/context/income-context';
 import { useExpenses } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import { formatDate } from '@/utils/expense';
 import type { IncomeRecord } from '@/types/income';
 import type { RecurringFrequency } from '@/types/expense';
@@ -114,7 +115,7 @@ export default function IncomeScreen() {
                 TOTAL MONEY IN (ALL TIME)
               </ThemedText>
               <View style={styles.recordBadgePill}>
-                <MaterialCommunityIcons name="arrow-down-bold-circle" size={12} color="#10B981" />
+                <MaterialCommunityIcons name="arrow-down-bold-circle" size={12} color={theme.success} />
                 <ThemedText type="caption" style={styles.recordBadgeText}>
                   {incomeList.length} {incomeList.length === 1 ? 'record' : 'records'}
                 </ThemedText>
@@ -131,8 +132,8 @@ export default function IncomeScreen() {
         <Card style={styles.formCard}>
           <View style={styles.formHeader}>
             <View style={styles.headerTitleRow}>
-              <View style={[styles.headerIconBadge, { backgroundColor: '#10B9811A' }]}>
-                <MaterialCommunityIcons name="cash-plus" size={20} color="#10B981" />
+              <View style={[styles.headerIconBadge, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
+                <MaterialCommunityIcons name="cash-plus" size={20} color={theme.success} />
               </View>
 
               <ThemedText type="defaultBold" style={{ fontSize: 16 }}>
@@ -231,8 +232,8 @@ export default function IncomeScreen() {
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
             style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
-            <MaterialCommunityIcons name={editingId ? "content-save-check" : "plus-circle"} size={18} color="#FFFFFF" />
-            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+            <MaterialCommunityIcons name={editingId ? "content-save-check" : "plus-circle"} size={18} color={theme.onBrand} />
+            <ThemedText type="smallBold" style={{ color: theme.onBrand }}>
               {isSubmitting ? 'Saving…' : editingId ? 'Update Money In' : 'Add Money In'}
             </ThemedText>
           </Pressable>
@@ -249,7 +250,7 @@ export default function IncomeScreen() {
             <EmptyState
               title="No income recorded yet"
               message="Record your salary, freelance earnings, or extra income above."
-              tone="#10B981"
+              tone={theme.success}
             />
           </Card>
         ) : (
@@ -288,8 +289,8 @@ function IncomeItem({
   return (
     <Card style={[styles.itemCard, isEditing && { borderColor: theme.accent, borderWidth: 2 }]}>
       <View style={styles.itemRow}>
-        <View style={[styles.itemIcon, { backgroundColor: '#10B9811C' }]}>
-          <MaterialCommunityIcons name="arrow-down-left" size={20} color="#10B981" />
+        <View style={[styles.itemIcon, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
+          <MaterialCommunityIcons name="arrow-down-left" size={20} color={theme.success} />
         </View>
         <View style={styles.itemInfo}>
           <ThemedText type="smallBold" numberOfLines={1}>
@@ -297,7 +298,7 @@ function IncomeItem({
           </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary">{formatDate(item.date)}</ThemedText>
         </View>
-        <ThemedText type="defaultBold" style={{ color: '#10B981' }}>+{formatAmount(item.amount)}</ThemedText>
+        <ThemedText type="defaultBold" style={{ color: theme.success }}>+{formatAmount(item.amount)}</ThemedText>
         <Pressable onPress={onEdit} accessibilityRole="button" accessibilityLabel="Edit income" hitSlop={8} style={styles.actionBtn}>
           <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.accent} />
         </Pressable>

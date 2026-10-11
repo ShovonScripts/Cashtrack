@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import { triggerHaptic } from '@/utils/motion';
 
 type QuickAction = {
@@ -82,7 +83,7 @@ export function QuickAddModal({
       <Animated.View
         entering={FadeIn.duration(200)}
         exiting={FadeOut.duration(200)}
-        style={styles.backdrop}>
+        style={[styles.backdrop, { backgroundColor: theme.overlay }]}>
         <Pressable
           style={StyleSheet.absoluteFill}
           onPress={() => {
@@ -131,31 +132,42 @@ export function QuickAddModal({
 
           {/* Action Grid */}
           <View style={styles.actionGrid}>
-            {QUICK_ACTIONS.map((action) => (
-              <Pressable
-                key={action.id}
-                onPress={() => handleAction(action.route)}
-                accessibilityRole="button"
-                accessibilityLabel={action.title}
-                style={({ pressed }) => [
-                  styles.actionCard,
-                  { backgroundColor: theme.cardMuted, borderColor: theme.border },
-                  pressed && styles.pressed,
-                ]}>
-                <View style={[styles.iconBadge, { backgroundColor: `${action.color}1E` }]}>
-                  <MaterialCommunityIcons name={action.icon} size={24} color={action.color} />
-                </View>
-                <View style={styles.actionText}>
-                  <ThemedText type="smallBold" numberOfLines={1}>
-                    {action.title}
-                  </ThemedText>
-                  <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-                    {action.subtitle}
-                  </ThemedText>
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-              </Pressable>
-            ))}
+            {QUICK_ACTIONS.map((action) => {
+              const actionColor =
+                action.id === 'expense'
+                  ? theme.danger
+                  : action.id === 'income'
+                    ? theme.success
+                    : action.id === 'bill'
+                      ? theme.warning
+                      : theme.info;
+
+              return (
+                <Pressable
+                  key={action.id}
+                  onPress={() => handleAction(action.route)}
+                  accessibilityRole="button"
+                  accessibilityLabel={action.title}
+                  style={({ pressed }) => [
+                    styles.actionCard,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.iconBadge, { backgroundColor: withAlpha(actionColor, 0.15) }]}>
+                    <MaterialCommunityIcons name={action.icon} size={24} color={actionColor} />
+                  </View>
+                  <View style={styles.actionText}>
+                    <ThemedText type="smallBold" numberOfLines={1}>
+                      {action.title}
+                    </ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+                      {action.subtitle}
+                    </ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                </Pressable>
+              );
+            })}
           </View>
         </Animated.View>
       </Animated.View>
@@ -166,7 +178,6 @@ export function QuickAddModal({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
     justifyContent: 'flex-end',
   },
   sheet: {

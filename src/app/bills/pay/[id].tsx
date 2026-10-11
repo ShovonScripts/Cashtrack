@@ -132,7 +132,7 @@ export default function PayBillScreen() {
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>
-            <ThemedText type="defaultBold" style={styles.saveText}>Confirm Payment ✓</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Confirm Payment ✓</ThemedText>
           </Pressable>
 
           <Pressable
@@ -160,7 +160,6 @@ const styles = StyleSheet.create({
   toggleLabelCopy: { flex: 1, gap: 2, paddingRight: Spacing.two },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
   saveButtonDisabled: { opacity: 0.4 },
-  saveText: { color: '#FFFFFF' },
   cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
   pressed: { opacity: 0.7 },
 });

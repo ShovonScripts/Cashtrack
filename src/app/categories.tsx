@@ -240,7 +240,7 @@ export default function CategoriesScreen() {
                           accessibilityRole="button"
                           accessibilityLabel={`Save rename for ${category}`}
                           style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-                          <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '800' }}>Save</ThemedText>
+                          <ThemedText type="caption" style={{ color: theme.onBrand, fontWeight: '800' }}>Save</ThemedText>
                         </Pressable>
                         <Pressable
                           onPress={() => setEditing(null)}

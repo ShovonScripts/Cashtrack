@@ -11,6 +11,7 @@ import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
@@ -116,8 +117,8 @@ export default function GoalDetailScreen() {
                   accessibilityLabel="Edit pot">
                   <ThemedText type="smallBold" style={{ color: Brand.deep, fontSize: 11 }}>Edit</ThemedText>
                 </Pressable>
-                <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? 'rgba(39, 174, 96, 0.25)' : 'rgba(255,255,255,0.15)' }]}>
-                  <ThemedText type="caption" style={{ color: goal.isCompleted ? '#2ecc71' : '#FFFFFF', fontWeight: '700' }}>
+                <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? withAlpha(theme.successOnBrand, 0.25) : 'rgba(255,255,255,0.15)' }]}>
+                  <ThemedText type="caption" style={{ color: goal.isCompleted ? theme.successOnBrand : theme.onBrand, fontWeight: '700' }}>
                     {goal.isCompleted ? 'Completed' : 'Active'}
                   </ThemedText>
                 </View>
@@ -151,7 +152,7 @@ export default function GoalDetailScreen() {
           </View>
 
           <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
-            <View style={[styles.fill, { width: `${Math.min(100, goal.progressPercent)}%`, backgroundColor: goal.isCompleted ? '#27AE60' : theme.accent }]} />
+            <View style={[styles.fill, { width: `${Math.min(100, goal.progressPercent)}%`, backgroundColor: goal.isCompleted ? theme.success : theme.accent }]} />
           </View>
 
           <View style={styles.metricsGrid}>
@@ -161,7 +162,7 @@ export default function GoalDetailScreen() {
             <MetricItem
               label="Status"
               value={goal.isCompleted ? 'Completed' : isAhead ? 'Ahead' : 'Behind'}
-              valueColor={goal.isCompleted ? '#27AE60' : isAhead ? theme.accent : theme.danger}
+              valueColor={goal.isCompleted ? theme.success : isAhead ? theme.accent : theme.danger}
             />
           </View>
         </Card>

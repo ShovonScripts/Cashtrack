@@ -5,6 +5,7 @@ import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { withAlpha } from '@/utils/color';
 import type { GoalWithProgress } from '@/context/goal-context';
 
 export function GoalCompletionModal({
@@ -24,10 +25,10 @@ export function GoalCompletionModal({
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.7)' }]}>
+      <View style={[styles.backdrop, { backgroundColor: theme.overlay }]}>
         <View style={[styles.container, { backgroundColor: theme.card, borderColor: theme.border }]}>
-          <View style={[styles.badge, { backgroundColor: 'rgba(39, 174, 96, 0.15)' }]}>
-            <MaterialCommunityIcons name="trophy" size={36} color="#27AE60" />
+          <View style={[styles.badge, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
+            <MaterialCommunityIcons name="trophy" size={36} color={theme.success} />
           </View>
 
           <View style={styles.textGroup}>
@@ -45,7 +46,7 @@ export function GoalCompletionModal({
             </View>
             <View style={styles.statRow}>
               <ThemedText type="small" themeColor="textSecondary">Total Saved</ThemedText>
-              <ThemedText type="defaultBold" style={{ color: '#27AE60' }}>{formatAmount(goal.contributedAmount)}</ThemedText>
+              <ThemedText type="defaultBold" style={{ color: theme.success }}>{formatAmount(goal.contributedAmount)}</ThemedText>
             </View>
           </Card>
 
@@ -53,7 +54,7 @@ export function GoalCompletionModal({
             onPress={onClose}
             accessibilityRole="button"
             style={({ pressed }) => [styles.button, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Awesome</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Awesome</ThemedText>
           </Pressable>
         </View>
       </View>

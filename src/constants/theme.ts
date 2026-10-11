@@ -48,8 +48,16 @@ export const Colors = {
     cardMuted: '#F7F7F9',
     border: '#E6E6EA',
     danger: '#C8252C',
-    success: '#10B981',
-    warning: '#BD7119',
+    success: '#0B7252',
+    warning: '#96520B',
+    info: '#026AA7',
+    overlay: 'rgba(0, 0, 0, 0.45)',
+    onBrand: '#FFFFFF',
+    successOnBrand: '#34D399',
+    warningOnBrand: '#FBBF24',
+    dangerOnBrand: '#F87171',
+    infoOnBrand: '#38BDF8',
+    accentOnBrand: '#14E7FD',
     accent: Brand.accent,
     accentMuted: Brand.accentMuted,
   },
@@ -65,10 +73,20 @@ export const Colors = {
     danger: '#FF6B6B',
     success: '#34D399',
     warning: '#F59E0B',
+    info: '#38BDF8',
+    overlay: 'rgba(0, 0, 0, 0.65)',
+    onBrand: '#FFFFFF',
+    successOnBrand: '#34D399',
+    warningOnBrand: '#FBBF24',
+    dangerOnBrand: '#F87171',
+    infoOnBrand: '#38BDF8',
+    accentOnBrand: '#14E7FD',
     accent: Brand.accentOnDark,
     accentMuted: Brand.accentMutedDark,
   },
 } as const;
+
+export { withAlpha } from '@/utils/color';
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 

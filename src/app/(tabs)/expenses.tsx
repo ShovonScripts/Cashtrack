@@ -110,24 +110,6 @@ export default function ExpensesScreen() {
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-                <Pressable
-                  onPress={() => {
-                    triggerHaptic();
-                    router.push('/add-expense');
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Add expense"
-                  style={({ pressed }) => [
-                    styles.addHeaderBtn,
-                    { backgroundColor: theme.accent },
-                    pressed && styles.pressed,
-                  ]}>
-                  <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
-                  <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-                    Add
-                  </ThemedText>
-                </Pressable>
-
                 {/* Theme Mode Toggle Action */}
                 <Pressable
                   onPress={() => {
@@ -275,6 +257,22 @@ export default function ExpensesScreen() {
           </Card>
         )}
       />
+
+      {/* Floating Action Button (FAB) for adding expense */}
+      <Pressable
+        onPress={() => {
+          triggerHaptic();
+          router.push('/add-expense');
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Add expense"
+        style={({ pressed }) => [
+          styles.fab,
+          { backgroundColor: theme.accent },
+          pressed && styles.pressed,
+        ]}>
+        <MaterialCommunityIcons name="plus" size={28} color={theme.onBrand} />
+      </Pressable>
     </View>
   );
 }
@@ -313,14 +311,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
   },
-  addHeaderBtn: {
-    height: 44,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Radius.medium,
-    flexDirection: 'row',
+  fab: {
+    position: 'absolute',
+    right: Spacing.four,
+    bottom: Spacing.four,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
-    gap: 4,
     justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    zIndex: 10,
   },
   searchField: {
     minHeight: 44,

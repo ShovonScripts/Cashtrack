@@ -12,7 +12,6 @@ import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context
 import { useExpenses } from '@/context/expense-context';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { withAlpha } from '@/utils/color';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
 

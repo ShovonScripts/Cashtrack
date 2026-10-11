@@ -164,10 +164,11 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-158 | `src/app/debts/[id].tsx:108` | `borderColor: theme.success` | Hardcoded debt status colors and settle button | Low | Fixed | Replaced `#27AE60` and hardcoded `rgba()` strings with `theme.success`, `theme.danger`, `theme.onBrand`, and `withAlpha()`. |
 | F-159 | `src/app/debts/add.tsx:90` | `backgroundColor: withAlpha(theme.success, 0.15)` | Hardcoded debt transaction type button colors | Low | Fixed | Replaced `#27AE60` and `rgba()` strings with `theme.success`, `theme.danger`, `theme.onBrand`, and `withAlpha()`. |
 | F-160 | `src/components/goal-completion-modal.tsx:25` | `color={theme.success}` | Hardcoded modal backdrop and trophy badge colors | Low | Fixed | Replaced `'rgba(0,0,0,0.7)'`, `#27AE60`, and `#FFFFFF` with `theme.overlay`, `theme.success`, and `theme.onBrand`. |
+| F-161 | `src/app/(tabs)/expenses.tsx:265` | `styles.fab` | Add expense button was located in top header row instead of floating on bottom right | Low | Fixed | Moved Add Expense button from header row to floating action button (FAB) on bottom right of Expenses screen. |
 
 ### Current Ledger Counts:
 - **Open**: 3
-- **Fixed**: 146
+- **Fixed**: 147
 - **Deferred**: 1
 - **Removed**: 2
 - **Not reproducible**: 8

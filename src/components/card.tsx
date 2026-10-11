@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
 import { Radius, Spacing } from '@/constants/theme';
 
-type CardProps = {
+type CardProps = ComponentProps<typeof ThemedView> & {
   children: ReactNode;
   /** `muted` recedes for grouped content; `default` sits on the page. */
   variant?: 'default' | 'muted';
@@ -12,11 +12,12 @@ type CardProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-export function Card({ children, variant = 'default', padded = true, style }: CardProps) {
+export function Card({ children, variant = 'default', padded = true, style, ...rest }: CardProps) {
   return (
     <ThemedView
       type={variant === 'muted' ? 'cardMuted' : 'card'}
-      style={[styles.card, padded && styles.padded, style]}>
+      style={[styles.card, padded && styles.padded, style]}
+      {...rest}>
       {children}
     </ThemedView>
   );

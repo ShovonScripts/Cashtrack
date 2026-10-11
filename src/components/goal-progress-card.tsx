@@ -54,7 +54,12 @@ export function GoalProgressCard({
           </View>
         </View>
 
-        <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+        <View
+          style={[styles.track, { backgroundColor: theme.backgroundElement }]}
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: 100, now: Math.round(goal.progressPercent) }}
+          accessibilityLabel={`Goal progress: ${Math.round(goal.progressPercent)} percent completed`}>
           <View
             style={[
               styles.fill,

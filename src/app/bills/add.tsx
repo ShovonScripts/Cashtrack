@@ -138,6 +138,9 @@ export default function AddBillScreen() {
                   <Pressable
                     key={cat}
                     onPress={() => setCategory(cat)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Category ${cat}`}
                     style={[
                       styles.chip,
                       {
@@ -201,6 +204,9 @@ export default function AddBillScreen() {
                   <Pressable
                     key={rep.value}
                     onPress={() => setRepeatType(rep.value)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={`Repeat frequency ${rep.label}`}
                     style={[
                       styles.typeButton,
                       {

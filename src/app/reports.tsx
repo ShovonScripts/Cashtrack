@@ -254,7 +254,10 @@ export default function ReportsScreen() {
             <ThemedText type="small" themeColor="textSecondary" style={styles.emptyText}>Choose another month or add an expense to start building your report.</ThemedText>
           </Card>
         ) : (
-          <Card style={styles.breakdownCard}>
+          <Card
+            style={styles.breakdownCard}
+            accessible
+            accessibilityLabel={`Category breakdown summary for ${monthLabel}, total spent ${formatAmount(total)}`}>
             {categories.map(([category, amount], index) => {
               const limit = reportLimits[category];
               const fraction = limit ? Math.min(amount / limit, 1) : amount / Math.max(total, 1);

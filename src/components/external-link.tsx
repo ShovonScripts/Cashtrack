@@ -8,6 +8,8 @@ export function ExternalLink({ href, ...rest }: Props) {
   return (
     <Link
       target="_blank"
+      accessibilityRole="link"
+      accessibilityHint="Opens in an in-app web browser"
       {...rest}
       href={href}
       onPress={async (event) => {

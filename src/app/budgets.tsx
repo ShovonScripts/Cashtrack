@@ -178,6 +178,7 @@ export default function BudgetsScreen() {
                     placeholder="Set monthly cap"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="decimal-pad"
+                    returnKeyType="done"
                     accessibilityLabel={`${category} monthly spending limit`}
                     style={[styles.limitInput, { color: theme.text }]}
                   />
@@ -185,6 +186,7 @@ export default function BudgetsScreen() {
                 <Pressable
                   onPress={() => saveLimit(category)}
                   accessibilityRole="button"
+                  accessibilityLabel={`Save ${category} limit`}
                   style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" style={styles.saveText}>Save</ThemedText>
                 </Pressable>

@@ -317,6 +317,8 @@ export default function MenuScreen() {
           {/* User Masterclass Profile Hero Banner */}
           <Pressable
             onPress={() => handleNavigate('/profile')}
+            accessibilityRole="button"
+            accessibilityLabel={`Profile settings for ${profile.name || 'Personal Account'}`}
             style={({ pressed }) => [pressed && styles.rowPressed]}>
             <Card style={styles.userBannerCard}>
               <View style={[styles.bannerAccentLine, { backgroundColor: Brand.primary }]} />
@@ -384,6 +386,7 @@ export default function MenuScreen() {
               placeholderTextColor={theme.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
+              accessibilityLabel="Search features, tools, budgets"
             />
             {searchQuery.length > 0 && (
               <Pressable
@@ -391,6 +394,8 @@ export default function MenuScreen() {
                   triggerHaptic();
                   setSearchQuery('');
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Clear search query"
                 hitSlop={8}>
                 <MaterialCommunityIcons name="close-circle" size={16} color={theme.textSecondary} />
               </Pressable>
@@ -418,6 +423,8 @@ export default function MenuScreen() {
                     triggerHaptic();
                     setSelectedFilterCategory(chip.key);
                   }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   style={({ pressed }) => [
                     styles.chipBtn,
                     {
@@ -513,8 +520,8 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   themeIconButton: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: Radius.medium,
     justifyContent: 'center',
     alignItems: 'center',

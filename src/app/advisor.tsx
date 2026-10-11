@@ -69,24 +69,24 @@ export default function AdvisorScreen() {
           <View style={styles.intelligenceContent}>
             <View style={styles.intelligenceHeader}>
               <View style={styles.liveAiBadge}>
-                <Ionicons name="sparkles" size={12} color="#4ade80" />
-                <ThemedText type="caption" style={{ color: '#4ade80', fontWeight: '800' }}>
+                <Ionicons name="sparkles" size={12} color={theme.success} />
+                <ThemedText type="caption" style={{ color: theme.success, fontWeight: '800' }}>
                   Live AI Advisor
                 </ThemedText>
               </View>
 
               <View style={[styles.statusBadge, {
                 backgroundColor: intelligence.financialHealthStatus === 'Excellent'
-                  ? 'rgba(16, 185, 129, 0.25)'
+                  ? `${theme.success}33`
                   : intelligence.financialHealthStatus === 'Overspending'
-                    ? 'rgba(239, 68, 68, 0.25)'
+                    ? `${theme.danger}33`
                     : 'rgba(255, 255, 255, 0.18)'
               }]}>
                 <ThemedText type="caption" style={{
                   color: intelligence.financialHealthStatus === 'Excellent'
-                    ? '#34D399'
+                    ? theme.success
                     : intelligence.financialHealthStatus === 'Overspending'
-                      ? '#F87171'
+                      ? theme.danger
                       : '#FFFFFF',
                   fontWeight: '800'
                 }}>
@@ -121,7 +121,7 @@ export default function AdvisorScreen() {
               <View style={styles.intelMetric}>
                 <ThemedText type="caption" style={styles.metricLabel}>Savings Rate</ThemedText>
                 <ThemedText type="smallBold" style={{
-                  color: intelligence.savingsRate >= 0 ? '#34D399' : '#F87171',
+                  color: intelligence.savingsRate >= 0 ? theme.success : theme.danger,
                   fontWeight: '800'
                 }}>
                   {intelligence.savingsRate}%
@@ -148,7 +148,7 @@ export default function AdvisorScreen() {
           <View style={styles.cashFlowNumbers}>
             <View style={styles.cashFlowCol}>
               <ThemedText type="caption" themeColor="textSecondary">INCOME (IN)</ThemedText>
-              <ThemedText type="subtitle" style={{ color: '#10B981', fontWeight: '800' }}>
+              <ThemedText type="subtitle" style={{ color: theme.success, fontWeight: '800' }}>
                 +{formatAmount(cashFlow.moneyIn)}
               </ThemedText>
             </View>
@@ -163,13 +163,13 @@ export default function AdvisorScreen() {
           <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
             <View style={[styles.fill, {
               width: `${Math.round(cashFlowRatio * 100)}%`,
-              backgroundColor: cashFlowRatio > 0.9 ? theme.danger : cashFlowRatio > 0.75 ? '#BD7119' : '#10B981'
+              backgroundColor: cashFlowRatio > 0.9 ? theme.danger : cashFlowRatio > 0.75 ? theme.warning : theme.success
             }]} />
           </View>
 
           <View style={styles.cashFlowFooter}>
             <ThemedText type="caption" themeColor="textSecondary">
-              Net Balance: <ThemedText type="smallBold" style={{ color: cashFlow.net >= 0 ? '#10B981' : theme.danger }}>
+              Net Balance: <ThemedText type="smallBold" style={{ color: cashFlow.net >= 0 ? theme.success : theme.danger }}>
                 {cashFlow.net >= 0 ? `+${formatAmount(cashFlow.net)}` : formatAmount(cashFlow.net)}
               </ThemedText>
             </ThemedText>
@@ -198,8 +198,8 @@ export default function AdvisorScreen() {
 
         {insights.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <View style={[styles.emptyIcon, { backgroundColor: '#10B9811C' }]}>
-              <MaterialCommunityIcons name="shield-check" size={24} color="#10B981" />
+            <View style={[styles.emptyIcon, { backgroundColor: `${theme.success}1C` }]}>
+              <MaterialCommunityIcons name="shield-check" size={24} color={theme.success} />
             </View>
             <ThemedText type="defaultBold">
               {Object.keys(categoryLimits).length ? 'All Categories Healthy' : 'Set Category Limits'}
@@ -246,6 +246,8 @@ export default function AdvisorScreen() {
                         triggerHaptic();
                         router.push('/budgets');
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Set cap for ${item.category}`}
                       style={({ pressed }) => [styles.capBtn, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
                       <MaterialCommunityIcons name="plus" size={13} color={theme.accent} />
                       <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
@@ -268,6 +270,7 @@ export default function AdvisorScreen() {
                 triggerHaptic();
                 router.push('/budgets');
               }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="chart-box-outline" size={22} color={theme.accent} />
               <ThemedText type="smallBold">Budget Caps</ThemedText>
@@ -276,20 +279,22 @@ export default function AdvisorScreen() {
             <Pressable
               onPress={() => {
                 triggerHaptic();
-                router.push('/reports');
+                router.push('/(tabs)/reports');
               }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
-              <MaterialCommunityIcons name="file-document-outline" size={22} color="#10B981" />
+              <MaterialCommunityIcons name="file-document-outline" size={22} color={theme.success} />
               <ThemedText type="smallBold">Monthly Reports</ThemedText>
             </Pressable>
 
             <Pressable
               onPress={() => {
                 triggerHaptic();
-                router.push('/expenses');
+                router.push('/(tabs)/expenses');
               }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
-              <MaterialCommunityIcons name="format-list-bulleted" size={22} color="#F59E0B" />
+              <MaterialCommunityIcons name="format-list-bulleted" size={22} color={theme.warning} />
               <ThemedText type="smallBold">All Expenses</ThemedText>
             </Pressable>
           </View>
@@ -314,7 +319,7 @@ function NoticeCard({
 }) {
   const theme = useTheme();
   const isOver = insight.level === 'over';
-  const color = isOver ? theme.danger : insight.level === 'near' ? '#BD7119' : theme.accent;
+  const color = isOver ? theme.danger : insight.level === 'near' ? theme.warning : theme.accent;
   const title = insight.level === 'over'
     ? `${insight.category} is over limit`
     : insight.level === 'near'
@@ -340,7 +345,7 @@ function NoticeCard({
           containerSize={32}
         />
         <ThemedText type="defaultBold" style={styles.noticeTitle}>{title}</ThemedText>
-        <View style={[styles.noticePill, { backgroundColor: isOver ? 'rgba(239, 68, 68, 0.15)' : insight.level === 'near' ? 'rgba(189, 113, 25, 0.15)' : theme.accentMuted }]}>
+        <View style={[styles.noticePill, { backgroundColor: `${color}22` }]}>
           <ThemedText type="caption" style={{ color, fontWeight: '800' }}>
             {isOver ? 'OVER' : insight.level === 'near' ? `${progressPercent}%` : 'PACE'}
           </ThemedText>

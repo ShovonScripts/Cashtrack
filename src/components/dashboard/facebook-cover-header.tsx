@@ -119,6 +119,8 @@ export function FacebookCoverHeader({
         <TouchableOpacity
           activeOpacity={0.95}
           onPress={onPressProfile || (() => router.push('/profile'))}
+          accessibilityRole="button"
+          accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
           style={styles.slideCard}
         >
           <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
@@ -166,7 +168,12 @@ export function FacebookCoverHeader({
         </TouchableOpacity>
 
         {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
-        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/weather')} style={styles.slideCard}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => router.push('/weather')}
+          accessibilityRole="button"
+          accessibilityLabel={`Weather forecast for ${weather.locationName}`}
+          style={styles.slideCard}>
           <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={styles.cardInner}>

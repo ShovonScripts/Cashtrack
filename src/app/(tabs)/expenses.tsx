@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { SectionList, Pressable, StyleSheet, TextInput, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -108,25 +109,45 @@ export default function ExpensesScreen() {
                 </ThemedText>
               </View>
 
-              {/* Theme Mode Toggle Action */}
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  toggleThemeMode();
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Toggle theme"
-                style={({ pressed }) => [
-                  styles.themeIconButton,
-                  { backgroundColor: theme.card, borderColor: theme.border },
-                  pressed && styles.pressed,
-                ]}>
-                <MaterialCommunityIcons
-                  name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
-                  size={20}
-                  color={themeMode === 'dark' ? '#F59E0B' : theme.text}
-                />
-              </Pressable>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    router.push('/add-expense');
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add expense"
+                  style={({ pressed }) => [
+                    styles.addHeaderBtn,
+                    { backgroundColor: theme.accent },
+                    pressed && styles.pressed,
+                  ]}>
+                  <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+                  <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+                    Add
+                  </ThemedText>
+                </Pressable>
+
+                {/* Theme Mode Toggle Action */}
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    toggleThemeMode();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Toggle theme"
+                  style={({ pressed }) => [
+                    styles.themeIconButton,
+                    { backgroundColor: theme.card, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <MaterialCommunityIcons
+                    name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
+                    size={20}
+                    color={themeMode === 'dark' ? '#F59E0B' : theme.text}
+                  />
+                </Pressable>
+              </View>
             </View>
 
             {/* Search Input Bar */}
@@ -186,6 +207,7 @@ export default function ExpensesScreen() {
                     <Pressable
                       onPress={handleClear}
                       accessibilityRole="button"
+                      hitSlop={8}
                       style={({ pressed }) => [styles.resetChip, pressed && styles.pressed]}>
                       <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '700' }}>
                         Reset filters ✕
@@ -229,6 +251,7 @@ export default function ExpensesScreen() {
               <Pressable
                 onPress={handleClear}
                 accessibilityRole="button"
+                hitSlop={6}
                 style={({ pressed }) => [styles.resetButton, { backgroundColor: theme.accentMuted }, pressed && styles.pressed]}>
                 <ThemedText type="smallBold" style={{ color: theme.accent }}>Clear filters</ThemedText>
               </Pressable>
@@ -283,12 +306,21 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   themeIconButton: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: Radius.medium,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: StyleSheet.hairlineWidth,
+  },
+  addHeaderBtn: {
+    height: 44,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.medium,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    justifyContent: 'center',
   },
   searchField: {
     minHeight: 44,
@@ -308,8 +340,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   clearSearch: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -418,7 +450,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.three,
   },
   resetButton: {
-    minHeight: 42,
+    minHeight: 44,
     paddingHorizontal: Spacing.four,
     borderRadius: Radius.pill,
     alignItems: 'center',

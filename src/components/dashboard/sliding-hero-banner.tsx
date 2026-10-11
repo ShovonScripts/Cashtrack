@@ -100,6 +100,8 @@ export function SlidingHeroBanner({
         <TouchableOpacity
           activeOpacity={0.95}
           onPress={onPressProfile || (() => router.push('/profile'))}
+          accessibilityRole="button"
+          accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
           style={[styles.card, { borderColor: theme.border }]}
         >
           <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
@@ -147,7 +149,12 @@ export function SlidingHeroBanner({
         </TouchableOpacity>
 
         {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
-        <TouchableOpacity activeOpacity={0.9} onPress={() => router.push('/weather')} style={[styles.card, { borderColor: theme.border }]}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => router.push('/weather')}
+          accessibilityRole="button"
+          accessibilityLabel={`Weather forecast for ${weather.locationName}`}
+          style={[styles.card, { borderColor: theme.border }]}>
           <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={styles.cardInner}>

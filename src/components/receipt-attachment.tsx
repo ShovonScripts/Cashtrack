@@ -72,10 +72,20 @@ export function ReceiptAttachment({ receiptUri, onChange }: ReceiptAttachmentPro
           <View style={styles.previewInfo}>
             <ThemedText type="smallBold">Receipt attached</ThemedText>
             <View style={styles.previewActions}>
-              <Pressable onPress={showSourceOptions} disabled={isProcessing} style={styles.actionButton}>
+              <Pressable
+                onPress={showSourceOptions}
+                disabled={isProcessing}
+                accessibilityRole="button"
+                accessibilityLabel="Change receipt photo"
+                style={styles.actionButton}>
                 <ThemedText type="caption" style={{ color: theme.accent }}>Change</ThemedText>
               </Pressable>
-              <Pressable onPress={() => onChange(undefined)} disabled={isProcessing} style={styles.actionButton}>
+              <Pressable
+                onPress={() => onChange(undefined)}
+                disabled={isProcessing}
+                accessibilityRole="button"
+                accessibilityLabel="Remove receipt photo"
+                style={styles.actionButton}>
                 <ThemedText type="caption" themeColor="danger">Remove</ThemedText>
               </Pressable>
             </View>

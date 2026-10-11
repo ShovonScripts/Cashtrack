@@ -1,4 +1,5 @@
 import { useLocalSearchParams, router } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -37,8 +38,8 @@ export default function DebtDetailsScreen() {
   const { getDebt, settleDebt, deleteDebt } = useDebts();
   const { formatAmount } = useExpenses();
   const theme = useTheme();
-
   const debt = getDebt(id);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!debt) {
     return (
@@ -47,7 +48,11 @@ export default function DebtDetailsScreen() {
         <ThemedText type="small" themeColor="textSecondary" style={styles.notFoundText}>
           This debt record no longer exists.
         </ThemedText>
-        <Pressable onPress={() => router.back()} style={styles.primaryButton}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={styles.primaryButton}>
           <ThemedText type="defaultBold">Go back</ThemedText>
         </Pressable>
       </ThemedView>
@@ -58,12 +63,18 @@ export default function DebtDetailsScreen() {
   const isSettled = debt.status === 'settled';
 
   const handleSettle = () => {
+    if (isSubmitting) return;
     Alert.alert('Mark as settled?', `Confirm that ${debt.personName}'s debt of ${formatAmount(debt.amount)} has been settled.`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Mark as Settled',
-        onPress: () => {
-          settleDebt(debt.id);
+        onPress: async () => {
+          setIsSubmitting(true);
+          try {
+            await settleDebt(debt.id);
+          } finally {
+            setIsSubmitting(false);
+          }
         },
       },
     ]);
@@ -159,6 +170,8 @@ export default function DebtDetailsScreen() {
           {!isSettled && (
             <Pressable
               onPress={() => router.push({ pathname: '/debts/[id]/edit', params: { id: debt.id } })}
+              accessibilityRole="button"
+              accessibilityLabel="Edit debt details"
               style={({ pressed }) => [styles.secondaryButton, { borderColor: theme.border, backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.text} />
               <ThemedText type="defaultBold">Edit</ThemedText>
@@ -167,19 +180,27 @@ export default function DebtDetailsScreen() {
           {!isSettled && (
             <Pressable
               onPress={handleSettle}
-              style={({ pressed }) => [styles.primaryButton, { backgroundColor: '#27AE60' }, pressed && styles.pressed]}>
+              disabled={isSubmitting}
+              accessibilityRole="button"
+              accessibilityLabel="Settle debt"
+              accessibilityState={{ disabled: isSubmitting }}
+              style={({ pressed }) => [styles.primaryButton, { backgroundColor: '#27AE60' }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
               <MaterialCommunityIcons name="check" size={18} color="#FFFFFF" />
-              <ThemedText type="defaultBold" style={styles.onAccent}>Settle</ThemedText>
+              <ThemedText type="defaultBold" style={styles.onAccent}>{isSubmitting ? 'Settling…' : 'Settle'}</ThemedText>
             </Pressable>
           )}
           <Pressable
             onPress={() => void shareDebtReminder(debt, formatAmount)}
+            accessibilityRole="button"
+            accessibilityLabel="Share debt reminder"
             style={({ pressed }) => [styles.secondaryButton, { borderColor: theme.border, backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
             <MaterialCommunityIcons name="share-variant-outline" size={18} color={theme.accent} />
             <ThemedText type="defaultBold" style={{ color: theme.accent }}>Reminder</ThemedText>
           </Pressable>
           <Pressable
             onPress={handleDelete}
+            accessibilityRole="button"
+            accessibilityLabel="Delete debt record"
             style={({ pressed }) => [styles.dangerButton, { borderColor: theme.danger }, pressed && styles.pressed]}>
             <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.danger} />
             <ThemedText type="defaultBold" themeColor="danger">Delete</ThemedText>

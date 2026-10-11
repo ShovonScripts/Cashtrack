@@ -105,6 +105,8 @@ export default function SubscriptionsHubScreen() {
                   triggerHaptic();
                   router.push('/bills/add');
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Add subscription"
                 style={[styles.emptyActionBtn, { backgroundColor: theme.accent }]}>
                 <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Add subscription</ThemedText>
               </Pressable>

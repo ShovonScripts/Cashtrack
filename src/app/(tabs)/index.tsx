@@ -104,6 +104,7 @@ function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]
                 triggerHaptic();
                 setSelectedDayIndex(isSelected ? null : index);
               }}
+              accessibilityRole="button"
               style={styles.chartColumn}
               accessible
               accessibilityLabel={`${new Intl.DateTimeFormat('en', { weekday: 'long' }).format(day.date)}: ${formatAmount(day.amount)}`}>
@@ -849,6 +850,8 @@ export default function DashboardScreen() {
                     triggerHaptic();
                     setSelectedFilterCategory(cat);
                   }}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
                   style={[
                     styles.filterChip,
                     {
@@ -1055,7 +1058,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.half,
   },
   filterChip: {
-    height: 32,
+    height: 44,
     paddingHorizontal: Spacing.three,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,

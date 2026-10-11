@@ -97,7 +97,11 @@ export default function EditGoalScreen() {
     return (
       <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
         <ThemedText type="subtitle">Goal not found</ThemedText>
-        <Pressable onPress={() => router.back()} style={{ marginTop: Spacing.three }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Pots"
+          style={{ marginTop: Spacing.three }}>
           <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back to Pots</ThemedText>
         </Pressable>
       </View>
@@ -178,6 +182,8 @@ export default function EditGoalScreen() {
                     key={pt.value}
                     onPress={() => handleSelectPot(pt)}
                     accessibilityRole="button"
+                    accessibilityState={{ selected }}
+                    accessibilityLabel={pt.label}
                     style={[
                       styles.iconButton,
                       {
@@ -207,6 +213,7 @@ export default function EditGoalScreen() {
               onChangeText={setTitle}
               placeholder="e.g. Summer Vacation, Emergency Fund"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Pot title"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -220,6 +227,7 @@ export default function EditGoalScreen() {
               placeholder="0.00"
               placeholderTextColor={theme.textSecondary}
               keyboardType="decimal-pad"
+              accessibilityLabel="Target amount"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -237,6 +245,8 @@ export default function EditGoalScreen() {
                       triggerHaptic();
                       setAllocationType(rule.type);
                     }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
                     style={[
                       styles.ruleCard,
                       {
@@ -277,6 +287,8 @@ export default function EditGoalScreen() {
                   <Pressable
                     key={p}
                     onPress={() => setAllocationPercent(p)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: allocationPercent === p }}
                     style={[
                       styles.percentChip,
                       {
@@ -296,6 +308,7 @@ export default function EditGoalScreen() {
                 placeholder="10"
                 placeholderTextColor={theme.textSecondary}
                 keyboardType="decimal-pad"
+                accessibilityLabel="Auto-save percentage"
                 style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
               />
             </View>
@@ -314,6 +327,8 @@ export default function EditGoalScreen() {
                       triggerHaptic();
                       setFrequency(freq.value);
                     }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected }}
                     style={[
                       styles.freqButton,
                       {
@@ -343,6 +358,8 @@ export default function EditGoalScreen() {
           <Pressable
             onPress={handleSave}
             disabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isSubmitting }}
             style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Save changes</ThemedText>
           </Pressable>
@@ -366,9 +383,9 @@ const styles = StyleSheet.create({
   ruleCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
   ruleCopy: { flex: 1, gap: 2 },
   percentChipsRow: { flexDirection: 'row', gap: Spacing.two },
-  percentChip: { flex: 1, height: 38, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  percentChip: { flex: 1, height: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   frequencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  freqButton: { width: '31%', height: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  freqButton: { width: '31%', height: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   submitBtn: { height: 50, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.two },
   pressed: { opacity: 0.78 },
 });

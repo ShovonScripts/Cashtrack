@@ -175,7 +175,7 @@ export default function IncomeScreen() {
           {/* Date Picker */}
           <View style={styles.field}>
             <ThemedText type="smallBold">Date</ThemedText>
-            <DatePicker value={date} onChange={setDate} />
+            <DatePicker value={date} onChange={setDate} label="Income date" />
           </View>
 
           <View style={styles.switchRow}>
@@ -186,6 +186,7 @@ export default function IncomeScreen() {
             <Switch
               value={isRecurring}
               onValueChange={setIsRecurring}
+              accessibilityLabel="Recurring income"
               trackColor={{ false: theme.border, true: theme.accent }}
               thumbColor="#FFFFFF"
             />
@@ -202,6 +203,7 @@ export default function IncomeScreen() {
                       key={f.value}
                       onPress={() => setRecurringFrequency(f.value)}
                       accessibilityRole="button"
+                      accessibilityState={{ selected }}
                       style={[
                         styles.freqChip,
                         {
@@ -227,10 +229,11 @@ export default function IncomeScreen() {
             onPress={handleSave}
             disabled={isSubmitting}
             accessibilityRole="button"
-            style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+            accessibilityState={{ disabled: isSubmitting }}
+            style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
             <MaterialCommunityIcons name={editingId ? "content-save-check" : "plus-circle"} size={18} color="#FFFFFF" />
             <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-              {editingId ? 'Update Money In' : 'Add Money In'}
+              {isSubmitting ? 'Saving…' : editingId ? 'Update Money In' : 'Add Money In'}
             </ThemedText>
           </Pressable>
         </Card>
@@ -364,7 +367,7 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   switchCopy: { flex: 1, gap: 2 },
   freqGrid: { flexDirection: 'row', gap: Spacing.two },
-  freqChip: { flex: 1, minHeight: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
+  freqChip: { flex: 1, minHeight: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
   addButton: {
     minHeight: 48,
     borderRadius: Radius.medium,

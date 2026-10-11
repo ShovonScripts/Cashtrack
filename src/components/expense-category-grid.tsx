@@ -29,6 +29,7 @@ export function ExpenseCategoryGrid({ categories, value, onChange }: ExpenseCate
             key={category}
             onPress={() => onChange(category)}
             accessibilityRole="button"
+            accessibilityLabel={`Category ${category}`}
             accessibilityState={{ selected: isSelected }}
             style={({ pressed }) => [
               styles.tile,
@@ -69,7 +70,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    height: 36,
+    minHeight: 44,
   },
   tileText: {
     flex: 1,

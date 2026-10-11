@@ -46,7 +46,11 @@ export default function ExpenseDetailsScreen() {
         <ThemedText type="small" themeColor="textSecondary" style={styles.notFoundText}>
           This expense no longer exists.
         </ThemedText>
-        <Pressable onPress={() => router.back()} style={styles.primaryButton}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={styles.primaryButton}>
           <ThemedText type="defaultBold">Go back</ThemedText>
         </Pressable>
       </ThemedView>
@@ -118,6 +122,8 @@ export default function ExpenseDetailsScreen() {
         <View style={styles.actions}>
           <Pressable
             onPress={() => router.push({ pathname: '/expense/[id]/edit', params: { id: expense.id } })}
+            accessibilityRole="button"
+            accessibilityLabel="Edit expense"
             style={({ pressed }) => [
               styles.primaryButton,
               { backgroundColor: theme.accent },
@@ -129,6 +135,8 @@ export default function ExpenseDetailsScreen() {
           </Pressable>
           <Pressable
             onPress={handleDelete}
+            accessibilityRole="button"
+            accessibilityLabel="Delete expense"
             style={({ pressed }) => [styles.dangerButton, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" themeColor="danger">
               Delete

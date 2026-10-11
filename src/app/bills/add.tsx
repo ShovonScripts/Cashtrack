@@ -99,6 +99,7 @@ export default function AddBillScreen() {
               placeholder="e.g. Internet Bill or Home EMI"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="sentences"
+              accessibilityLabel="Bill name"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -112,6 +113,7 @@ export default function AddBillScreen() {
                 <Switch
                   value={isVariableAmount}
                   onValueChange={(val) => { setIsVariableAmount(val); setError(''); }}
+                  accessibilityLabel="Amount varies"
                   trackColor={{ false: theme.cardMuted, true: theme.accent }}
                 />
               </View>
@@ -123,6 +125,7 @@ export default function AddBillScreen() {
                 placeholder="0.00"
                 placeholderTextColor={theme.textSecondary}
                 keyboardType="decimal-pad"
+                accessibilityLabel="Bill amount"
                 style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
               />
             )}
@@ -140,7 +143,6 @@ export default function AddBillScreen() {
                     onPress={() => setCategory(cat)}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    accessibilityLabel={`Category ${cat}`}
                     style={[
                       styles.chip,
                       {
@@ -170,6 +172,7 @@ export default function AddBillScreen() {
                     placeholder="120000"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="decimal-pad"
+                    accessibilityLabel="Total loan amount"
                     style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
                   />
                 </View>
@@ -181,6 +184,7 @@ export default function AddBillScreen() {
                     placeholder="12"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="number-pad"
+                    accessibilityLabel="Total installments count"
                     style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
                   />
                 </View>
@@ -191,7 +195,7 @@ export default function AddBillScreen() {
           {/* Due Date */}
           <View style={styles.field}>
             <ThemedText type="caption" themeColor="textSecondary">DUE DATE</ThemedText>
-            <DatePicker value={dueDate} onChange={setDueDate} />
+            <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />
           </View>
 
           {/* Repeat / Recurrence */}
@@ -206,7 +210,6 @@ export default function AddBillScreen() {
                     onPress={() => setRepeatType(rep.value)}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    accessibilityLabel={`Repeat frequency ${rep.label}`}
                     style={[
                       styles.typeButton,
                       {
@@ -231,6 +234,7 @@ export default function AddBillScreen() {
               onChangeText={setNotes}
               placeholder="Account number, website, or reference"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Bill notes"
               multiline
               style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
@@ -252,7 +256,10 @@ export default function AddBillScreen() {
             <ThemedText type="defaultBold" style={styles.saveText}>Save Reminder</ThemedText>
           </Pressable>
 
-          <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
           </Pressable>
         </View>
@@ -270,12 +277,12 @@ const styles = StyleSheet.create({
   input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, fontSize: 16 },
   amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
   chipScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
-  chip: { height: 38, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  chip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   emiCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth },
   rowFields: { flexDirection: 'row', gap: Spacing.two },
   flex1: { flex: 1 },
   typeRow: { flexDirection: 'row', gap: Spacing.two },
-  typeButton: { flex: 1, height: 42, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
+  typeButton: { flex: 1, height: 44, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
   dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   noteInput: { minHeight: 70, textAlignVertical: 'top' },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },

@@ -25,7 +25,11 @@ export default function PayBillScreen() {
     return (
       <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
         <ThemedText type="subtitle">Reminder not found</ThemedText>
-        <Pressable onPress={() => router.back()} style={{ marginTop: Spacing.three }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={{ marginTop: Spacing.three }}>
           <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back</ThemedText>
         </Pressable>
       </View>
@@ -70,6 +74,7 @@ export default function PayBillScreen() {
               placeholder="0.00"
               placeholderTextColor={theme.textSecondary}
               keyboardType="decimal-pad"
+              accessibilityLabel="Payment amount"
               style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
             {reminder.isVariableAmount && (
@@ -89,6 +94,7 @@ export default function PayBillScreen() {
               <Switch
                 value={recordAsExpense}
                 onValueChange={setRecordAsExpense}
+                accessibilityLabel="Record as an expense"
                 trackColor={{ false: theme.cardMuted, true: theme.accent }}
               />
             </View>
@@ -97,7 +103,7 @@ export default function PayBillScreen() {
           {/* Paid Date */}
           <View style={styles.field}>
             <ThemedText type="caption" themeColor="textSecondary">PAYMENT DATE</ThemedText>
-            <DatePicker value={paidDate} onChange={setPaidDate} />
+            <DatePicker value={paidDate} onChange={setPaidDate} label="Payment date" />
           </View>
 
           {/* Note */}
@@ -108,6 +114,7 @@ export default function PayBillScreen() {
               onChangeText={setNote}
               placeholder="Transaction ref, receipt note..."
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Payment note"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -128,7 +135,11 @@ export default function PayBillScreen() {
             <ThemedText type="defaultBold" style={styles.saveText}>Confirm Payment ✓</ThemedText>
           </Pressable>
 
-          <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel"
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
           </Pressable>
         </View>

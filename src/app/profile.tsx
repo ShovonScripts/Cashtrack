@@ -221,19 +221,32 @@ export default function ProfileScreen() {
   const handleResetData = () => {
     triggerHaptic();
     Alert.alert(
-      'Reset All Local Data?',
-      'This will clear all transactions, goals, debts, and reset settings back to default. This action cannot be undone.',
+      '⚠️ Reset All Local Data?',
+      'This will permanently delete all your transactions, goals, debts, and reset settings back to default.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Reset Everything',
+          text: 'I understand, proceed',
           style: 'destructive',
-          onPress: async () => {
-            await resetAllData();
-            if (Platform.OS !== 'web') {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-            }
-            Alert.alert('Data Cleared', 'Your account and settings have been reset.');
+          onPress: () => {
+            Alert.alert(
+              'Final Confirmation',
+              'Are you 100% sure? This action cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Wipe Everything',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await resetAllData();
+                    if (Platform.OS !== 'web') {
+                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+                    }
+                    Alert.alert('Data Cleared', 'Your account and settings have been reset.');
+                  },
+                },
+              ]
+            );
           },
         },
       ]

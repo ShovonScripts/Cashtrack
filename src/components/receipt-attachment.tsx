@@ -26,7 +26,13 @@ export function ReceiptAttachment({ receiptUri, onChange }: ReceiptAttachmentPro
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        Alert.alert('Permission required', 'Please grant permission to attach receipt photos.');
+        Alert.alert(
+          'Permission Required',
+          'Camera or photo library permission is required to attach receipt photos. Please enable permissions in your device settings.',
+          [
+            { text: 'OK', style: 'cancel' }
+          ]
+        );
         return;
       }
 

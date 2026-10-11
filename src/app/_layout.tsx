@@ -102,14 +102,16 @@ function Navigation() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.background }}>
       {showLoadErrorBanner && (
-        <View style={{ backgroundColor: '#EF4444', paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
+        <View style={{ backgroundColor: theme.danger, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
           <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
             Saved data could not be read. New changes will NOT be saved.
           </ThemedText>
           <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Start fresh and reset data"
             onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
-            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 }}>
-            <ThemedText style={{ color: '#EF4444', fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
+            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 32, justifyContent: 'center' }}>
+            <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
           </Pressable>
         </View>
       )}

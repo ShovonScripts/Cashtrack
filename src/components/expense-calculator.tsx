@@ -272,6 +272,7 @@ export function ExpenseCalculator({
               onChangeText={setNote}
               placeholder="What was it for?"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Expense note"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -284,7 +285,9 @@ export function ExpenseCalculator({
               </ThemedText>
               <Pressable
                 onPress={() => setIsRecurring(!isRecurring)}
-                accessibilityRole="button"
+                accessibilityRole="switch"
+                accessibilityLabel="Recurring expense"
+                accessibilityState={{ checked: isRecurring }}
                 style={[
                   styles.toggleBadge,
                   { backgroundColor: isRecurring ? theme.accent : theme.cardMuted, borderColor: theme.border },
@@ -303,6 +306,8 @@ export function ExpenseCalculator({
                       key={freq}
                       onPress={() => setRecurringFrequency(freq)}
                       accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                      hitSlop={6}
                       style={[
                         styles.frequencyChip,
                         {
@@ -340,7 +345,10 @@ export function ExpenseCalculator({
           </Pressable>
 
           {onCancel && (
-            <Pressable onPress={onCancel} style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+            <Pressable
+              onPress={onCancel}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
               <ThemedText type="defaultBold" themeColor="textSecondary">
                 Cancel
               </ThemedText>

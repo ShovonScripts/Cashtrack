@@ -99,6 +99,7 @@ export default function AddBillScreen() {
               placeholder="e.g. Internet Bill or Home EMI"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="sentences"
+              accessibilityLabel="Bill name"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -112,6 +113,7 @@ export default function AddBillScreen() {
                 <Switch
                   value={isVariableAmount}
                   onValueChange={(val) => { setIsVariableAmount(val); setError(''); }}
+                  accessibilityLabel="Amount varies"
                   trackColor={{ false: theme.cardMuted, true: theme.accent }}
                 />
               </View>
@@ -123,6 +125,7 @@ export default function AddBillScreen() {
                 placeholder="0.00"
                 placeholderTextColor={theme.textSecondary}
                 keyboardType="decimal-pad"
+                accessibilityLabel="Bill amount"
                 style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
               />
             )}
@@ -140,7 +143,7 @@ export default function AddBillScreen() {
                     onPress={() => setCategory(cat)}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    accessibilityLabel={`Category ${cat}`}
+                    hitSlop={6}
                     style={[
                       styles.chip,
                       {
@@ -170,6 +173,7 @@ export default function AddBillScreen() {
                     placeholder="120000"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="decimal-pad"
+                    accessibilityLabel="Total loan amount"
                     style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
                   />
                 </View>
@@ -181,6 +185,7 @@ export default function AddBillScreen() {
                     placeholder="12"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="number-pad"
+                    accessibilityLabel="Total installments count"
                     style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
                   />
                 </View>
@@ -191,7 +196,7 @@ export default function AddBillScreen() {
           {/* Due Date */}
           <View style={styles.field}>
             <ThemedText type="caption" themeColor="textSecondary">DUE DATE</ThemedText>
-            <DatePicker value={dueDate} onChange={setDueDate} />
+            <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />
           </View>
 
           {/* Repeat / Recurrence */}
@@ -206,7 +211,7 @@ export default function AddBillScreen() {
                     onPress={() => setRepeatType(rep.value)}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    accessibilityLabel={`Repeat frequency ${rep.label}`}
+                    hitSlop={6}
                     style={[
                       styles.typeButton,
                       {
@@ -231,6 +236,7 @@ export default function AddBillScreen() {
               onChangeText={setNotes}
               placeholder="Account number, website, or reference"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Bill notes"
               multiline
               style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
@@ -252,7 +258,11 @@ export default function AddBillScreen() {
             <ThemedText type="defaultBold" style={styles.saveText}>Save Reminder</ThemedText>
           </Pressable>
 
-          <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel"
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
           </Pressable>
         </View>

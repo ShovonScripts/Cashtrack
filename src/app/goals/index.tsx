@@ -78,6 +78,7 @@ export default function GoalsOverviewScreen() {
                 onPress={() => setTab(t)}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                hitSlop={6}
                 style={[
                   styles.tab,
                   {

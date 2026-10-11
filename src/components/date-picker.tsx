@@ -14,7 +14,7 @@ function sameDay(first: Date, second: Date) {
     && first.getDate() === second.getDate();
 }
 
-export function DatePicker({ value, onChange }: { value: Date; onChange: (date: Date) => void }) {
+export function DatePicker({ value, onChange, label = 'Date' }: { value: Date; onChange: (date: Date) => void; label?: string }) {
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const [month, setMonth] = useState(() => new Date(value.getFullYear(), value.getMonth(), 1));
@@ -50,7 +50,7 @@ export function DatePicker({ value, onChange }: { value: Date; onChange: (date: 
           setVisible(true);
         }}
         accessibilityRole="button"
-        accessibilityLabel={`Expense date, ${formatDate(value.toISOString())}. Tap to change.`}
+        accessibilityLabel={`${label}, ${formatDate(value.toISOString())}. Tap to change.`}
         style={({ pressed }) => [styles.dateButton, { borderColor: theme.border, backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
         <View style={styles.calendarIcon}>
           <View style={[styles.calendarTop, { backgroundColor: theme.accent }]} />
@@ -69,7 +69,12 @@ export function DatePicker({ value, onChange }: { value: Date; onChange: (date: 
 
       <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
         <View style={styles.scrim}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setVisible(false)} accessibilityLabel="Close date picker" />
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setVisible(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close date picker"
+          />
           <View style={[styles.dialog, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.dialogHeader}>
               <View style={styles.monthCopy}>
@@ -152,10 +157,10 @@ const styles = StyleSheet.create({
   monthCopy: { gap: Spacing.one },
   monthTitle: { fontSize: 22, lineHeight: 28 },
   monthActions: { flexDirection: 'row', gap: Spacing.two },
-  monthButton: { width: 42, height: 42, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  monthButton: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   monthButtonText: { fontSize: 28, lineHeight: 34 },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  dayCell: { width: `${100 / 7}%`, height: 42, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  dayCell: { width: `${100 / 7}%`, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   selectedDay: { color: '#FFFFFF' },
   todayButton: { minHeight: 44, alignSelf: 'center', paddingHorizontal: Spacing.three, borderRadius: Radius.pill, justifyContent: 'center' },
   pressed: { opacity: 0.72 },

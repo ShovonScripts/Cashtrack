@@ -45,23 +45,7 @@ function Navigation() {
     }
   };
 
-  const renderAddButton = () => (
-    <Pressable
-      onPress={() => router.push('/add-expense')}
-      accessibilityRole="button"
-      accessibilityLabel="Add an expense"
-      hitSlop={8}
-      style={({ pressed }) => [
-        styles.addButton,
-        { backgroundColor: theme.accent },
-        pressed && styles.addButtonPressed,
-      ]}>
-      <View style={styles.addIcon}>
-        <ThemedText type="defaultBold" style={styles.addIconText}>＋</ThemedText>
-      </View>
-      <ThemedText type="smallBold" style={styles.addButtonText}>Add</ThemedText>
-    </Pressable>
-  );
+
 
   const renderAddDebtButton = () => (
     <Pressable
@@ -110,7 +94,7 @@ function Navigation() {
             accessibilityRole="button"
             accessibilityLabel="Start fresh and reset data"
             onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
-            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 32, justifyContent: 'center' }}>
+            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
             <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
           </Pressable>
         </View>
@@ -129,7 +113,6 @@ function Navigation() {
         <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
         <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
         <Stack.Screen name="goals/[id]" options={{ title: 'Goal Details' }} />
-        <Stack.Screen name="expenses" options={{ title: 'Expenses', headerRight: renderAddButton }} />
         <Stack.Screen name="debts" options={{ title: 'Lend & Borrow', headerRight: renderAddDebtButton }} />
         <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
         <Stack.Screen name="debts/[id]" options={{ title: 'Debt Details' }} />
@@ -143,7 +126,6 @@ function Navigation() {
         <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
         <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
         <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
-        <Stack.Screen name="reports" options={{ title: 'Monthly reports' }} />
         <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
         <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />

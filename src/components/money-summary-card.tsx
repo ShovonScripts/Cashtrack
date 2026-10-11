@@ -62,7 +62,6 @@ export function MoneySummaryCard({
             router.push('/income');
           }}
           accessibilityRole="button"
-          accessibilityLabel="Manage money in and cash flow"
           style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
             <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
@@ -179,7 +178,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.pill,
-    minHeight: 40,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,

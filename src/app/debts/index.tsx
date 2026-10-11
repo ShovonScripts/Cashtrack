@@ -102,6 +102,7 @@ export default function DebtsScreen() {
                 onPress={() => setFilter(f)}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                hitSlop={6}
                 style={[
                   styles.filterChip,
                   {

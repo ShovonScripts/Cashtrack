@@ -162,6 +162,7 @@ export default function CategoriesScreen() {
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={item.label}
+                    hitSlop={6}
                     style={({ pressed }) => [
                       styles.iconChoice,
                       {
@@ -234,19 +235,37 @@ export default function CategoriesScreen() {
                   {isCustom && (
                     isEditing ? (
                       <View style={styles.rowActions}>
-                        <Pressable onPress={() => saveRename(category)} style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+                        <Pressable
+                          onPress={() => saveRename(category)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Save rename for ${category}`}
+                          style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
                           <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '800' }}>Save</ThemedText>
                         </Pressable>
-                        <Pressable onPress={() => setEditing(null)} style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
+                        <Pressable
+                          onPress={() => setEditing(null)}
+                          accessibilityRole="button"
+                          accessibilityLabel="Cancel editing"
+                          style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
                           <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700' }}>Cancel</ThemedText>
                         </Pressable>
                       </View>
                     ) : (
                       <View style={styles.rowActions}>
-                        <Pressable onPress={() => { triggerHaptic(); setEditing(category); setEditName(category); }} hitSlop={8} style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
+                        <Pressable
+                          onPress={() => { triggerHaptic(); setEditing(category); setEditName(category); }}
+                          hitSlop={8}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Rename ${category}`}
+                          style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
                           <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.accent} />
                         </Pressable>
-                        <Pressable onPress={() => remove(category)} hitSlop={8} style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
+                        <Pressable
+                          onPress={() => remove(category)}
+                          hitSlop={8}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Delete ${category}`}
+                          style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
                           <MaterialCommunityIcons name="delete-outline" size={18} color={theme.danger} />
                         </Pressable>
                       </View>

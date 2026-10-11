@@ -35,7 +35,11 @@ export default function GoalDetailScreen() {
     return (
       <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
         <ThemedText type="subtitle">Goal not found</ThemedText>
-        <Pressable onPress={() => router.back()} style={{ marginTop: Spacing.three }}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Back to Pots"
+          style={{ marginTop: Spacing.three }}>
           <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back to Pots</ThemedText>
         </Pressable>
       </View>
@@ -185,6 +189,8 @@ export default function GoalDetailScreen() {
               <Pressable
                 key={amt}
                 onPress={() => setContribAmount(String(amt))}
+                accessibilityRole="button"
+                hitSlop={6}
                 style={({ pressed }) => [styles.quickChip, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
                 <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>+{amt}</ThemedText>
               </Pressable>
@@ -198,6 +204,7 @@ export default function GoalDetailScreen() {
               placeholder="0.00"
               placeholderTextColor={theme.textSecondary}
               keyboardType="decimal-pad"
+              accessibilityLabel="Contribution amount"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -208,6 +215,7 @@ export default function GoalDetailScreen() {
               onChangeText={setContribNote}
               placeholder="e.g. Monthly savings transfer"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Contribution note"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -215,6 +223,8 @@ export default function GoalDetailScreen() {
           <Pressable
             onPress={handleAddContribution}
             disabled={isSubmitting}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isSubmitting }}
             style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Contribute</ThemedText>
           </Pressable>
@@ -254,6 +264,8 @@ export default function GoalDetailScreen() {
 
         <Pressable
           onPress={handleDeleteGoal}
+          accessibilityRole="button"
+          accessibilityLabel="Delete Pot or Goal"
           style={({ pressed }) => [styles.deleteGoalBtn, pressed && styles.pressed]}>
           <ThemedText type="smallBold" style={{ color: theme.danger }}>Delete Pot / Goal</ThemedText>
         </Pressable>

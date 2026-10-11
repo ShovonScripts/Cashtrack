@@ -300,6 +300,9 @@ export default function AddGoalScreen() {
                       triggerHaptic();
                       setAllocationPercent(p);
                     }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: allocationPercent === p }}
+                    hitSlop={6}
                     style={[styles.presetChip, { borderColor: allocationPercent === p ? theme.accent : theme.border, backgroundColor: allocationPercent === p ? theme.accentMuted : theme.cardMuted }]}>
                     <ThemedText type="smallBold" themeColor={allocationPercent === p ? 'accent' : 'text'}>{p}%</ThemedText>
                   </Pressable>

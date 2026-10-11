@@ -144,6 +144,7 @@ export function ExpenseForm({
               onChangeText={setNote}
               placeholder="What was it for?"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Expense note"
               multiline
               style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text }]}
             />
@@ -166,7 +167,10 @@ export function ExpenseForm({
           </Pressable>
 
           {onCancel && (
-            <Pressable onPress={onCancel} style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+            <Pressable
+              onPress={onCancel}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
               <ThemedText type="defaultBold" themeColor="textSecondary">
                 Cancel
               </ThemedText>

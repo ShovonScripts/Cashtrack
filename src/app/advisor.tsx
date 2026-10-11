@@ -246,6 +246,8 @@ export default function AdvisorScreen() {
                         triggerHaptic();
                         router.push('/budgets');
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Set cap for ${item.category}`}
                       style={({ pressed }) => [styles.capBtn, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
                       <MaterialCommunityIcons name="plus" size={13} color={theme.accent} />
                       <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>
@@ -268,6 +270,7 @@ export default function AdvisorScreen() {
                 triggerHaptic();
                 router.push('/budgets');
               }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="chart-box-outline" size={22} color={theme.accent} />
               <ThemedText type="smallBold">Budget Caps</ThemedText>
@@ -276,8 +279,9 @@ export default function AdvisorScreen() {
             <Pressable
               onPress={() => {
                 triggerHaptic();
-                router.push('/reports');
+                router.push('/(tabs)/reports');
               }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="file-document-outline" size={22} color="#10B981" />
               <ThemedText type="smallBold">Monthly Reports</ThemedText>
@@ -286,8 +290,9 @@ export default function AdvisorScreen() {
             <Pressable
               onPress={() => {
                 triggerHaptic();
-                router.push('/expenses');
+                router.push('/(tabs)/expenses');
               }}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.shortcutCard, { backgroundColor: theme.card, borderColor: theme.border }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="format-list-bulleted" size={22} color="#F59E0B" />
               <ThemedText type="smallBold">All Expenses</ThemedText>

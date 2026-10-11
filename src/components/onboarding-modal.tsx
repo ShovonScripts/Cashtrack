@@ -48,6 +48,8 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                 onClose();
                 router.push('/country');
               }}
+              accessibilityRole="button"
+              hitSlop={6}
               style={({ pressed }) => [
                 styles.changeCountryBtn,
                 { borderColor: theme.accent },
@@ -194,6 +196,8 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
             <SpendlyLogo />
             <Pressable
               onPress={onClose}
+              accessibilityRole="button"
+              accessibilityLabel="Skip onboarding"
               hitSlop={12}
               style={({ pressed }) => [styles.skipButton, pressed && styles.pressed]}>
               <ThemedText type="smallBold" themeColor="textSecondary">
@@ -227,6 +231,10 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                 <Pressable
                   key={`dot-${index}`}
                   onPress={() => setCurrentSlide(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Go to slide ${index + 1}`}
+                  accessibilityState={{ selected: index === currentSlide }}
+                  hitSlop={8}
                   style={[
                     styles.dot,
                     {
@@ -243,6 +251,8 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
               {currentSlide > 0 ? (
                 <Pressable
                   onPress={handlePrev}
+                  accessibilityRole="button"
+                  accessibilityLabel="Previous slide"
                   style={({ pressed }) => [
                     styles.prevButton,
                     { borderColor: theme.border },
@@ -258,6 +268,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
 
               <Pressable
                 onPress={handleNext}
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.nextButton,
                   { backgroundColor: theme.accent },

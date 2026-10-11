@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     gap: 6,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.pill,
-    minHeight: 32,
+    minHeight: 44,
     paddingHorizontal: Spacing.two,
     paddingVertical: 4,
   },

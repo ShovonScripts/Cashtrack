@@ -38,7 +38,7 @@ export default function TabLayout() {
             paddingBottom: bottomPadding,
             paddingTop: 8,
             elevation: 10,
-            shadowColor: '#000',
+            shadowColor: theme.text,
             shadowOffset: { width: 0, height: -2 },
             shadowOpacity: 0.08,
             shadowRadius: 8,

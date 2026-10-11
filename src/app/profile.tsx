@@ -270,7 +270,11 @@ export default function ProfileScreen() {
           {/* Cover & Avatar Header Card */}
           <Card style={styles.bannerCard} padded={false}>
             {/* Cover Photo Area */}
-            <Pressable onPress={() => setIsCoverModalOpen(true)} style={styles.coverContainer}>
+            <Pressable
+              onPress={() => setIsCoverModalOpen(true)}
+              accessibilityRole="button"
+              accessibilityLabel="Edit cover banner"
+              style={styles.coverContainer}>
               <Image source={getCoverSource(coverPhotoUri)} style={styles.coverImage} />
 
               {/* Completion Bar Overlay */}
@@ -303,6 +307,8 @@ export default function ProfileScreen() {
             <View style={styles.avatarRowContainer}>
               <Pressable
                 onPress={pickProfilePhoto}
+                accessibilityRole="button"
+                accessibilityLabel="Upload profile photo"
                 style={[styles.avatarWrapper, { borderColor: theme.card, backgroundColor: theme.card }]}>
                 {profilePhotoUri ? (
                   <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
@@ -445,6 +451,7 @@ export default function ProfileScreen() {
                   placeholder="e.g. Alex Johnson"
                   placeholderTextColor={theme.textSecondary}
                   autoCapitalize="words"
+                  accessibilityLabel="Full name"
                   style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
                 />
               </View>
@@ -459,6 +466,7 @@ export default function ProfileScreen() {
                   }}
                   placeholder="e.g. Saving for house downpayment & emergency fund"
                   placeholderTextColor={theme.textSecondary}
+                  accessibilityLabel="Personal financial goal or bio"
                   multiline
                   numberOfLines={2}
                   style={[
@@ -481,6 +489,7 @@ export default function ProfileScreen() {
                     placeholder="e.g. 28"
                     placeholderTextColor={theme.textSecondary}
                     keyboardType="number-pad"
+                    accessibilityLabel="Age"
                     style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
                   />
                 </View>
@@ -499,6 +508,9 @@ export default function ProfileScreen() {
                           setGender(selected ? '' : choice.value);
                           setIsDirty(true);
                         }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
+                        hitSlop={6}
                         style={[
                           styles.choiceBtn,
                           {
@@ -554,6 +566,8 @@ export default function ProfileScreen() {
                           triggerHaptic();
                           setThemeMode(item.mode);
                         }}
+                        accessibilityRole="button"
+                        accessibilityState={{ selected }}
                         style={({ pressed }) => [
                           styles.themeCard,
                           {
@@ -596,6 +610,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     router.push('/country');
                   }}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.settingRowItem,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -634,6 +649,8 @@ export default function ProfileScreen() {
                             triggerHaptic();
                             setTemperatureUnit(unit);
                           }}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
                           style={[
                             styles.segmentedBtn,
                             {
@@ -672,6 +689,8 @@ export default function ProfileScreen() {
                             triggerHaptic();
                             setFirstDayOfWeek(day as FirstDayOfWeek);
                           }}
+                          accessibilityRole="button"
+                          accessibilityState={{ selected }}
                           style={[
                             styles.segmentedBtn,
                             {
@@ -716,6 +735,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     setEnableBillReminders(val);
                   }}
+                  accessibilityLabel="Bill payment reminders"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor="#FFFFFF"
                 />
@@ -737,6 +757,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     setEnableBudgetAlerts(val);
                   }}
+                  accessibilityLabel="Budget cap threshold warnings"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor="#FFFFFF"
                 />
@@ -758,6 +779,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     setEnableDailyReminder(val);
                   }}
+                  accessibilityLabel="Daily expense log check-in"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor="#FFFFFF"
                 />
@@ -785,6 +807,8 @@ export default function ProfileScreen() {
                 <Pressable
                   onPress={handleExportCsv}
                   disabled={exporting}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: exporting }}
                   style={({ pressed }) => [
                     styles.settingRowItem,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -807,6 +831,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     setShowOnboarding(true);
                   }}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.settingRowItem,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -829,6 +854,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     router.push('/about');
                   }}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.settingRowItem,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -858,6 +884,7 @@ export default function ProfileScreen() {
 
                 <Pressable
                   onPress={handleResetData}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.resetBtn,
                     { backgroundColor: '#FF6B6B15', borderColor: '#FF6B6B60' },
@@ -890,12 +917,15 @@ export default function ProfileScreen() {
           <View style={styles.floatingActionButtons}>
             <Pressable
               onPress={resetChanges}
+              accessibilityRole="button"
               style={({ pressed }) => [styles.cancelBtn, { borderColor: theme.border }, pressed && styles.pressed]}>
               <ThemedText type="smallBold">Discard</ThemedText>
             </Pressable>
             <Pressable
               onPress={saveProfileChanges}
               disabled={!ageIsValid}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: !ageIsValid }}
               style={({ pressed }) => [
                 styles.saveBtn,
                 { backgroundColor: theme.accent },
@@ -926,7 +956,11 @@ export default function ProfileScreen() {
                   Choose Banner Preset
                 </ThemedText>
               </View>
-              <Pressable onPress={() => setIsCoverModalOpen(false)} style={styles.modalCloseBtn}>
+              <Pressable
+                onPress={() => setIsCoverModalOpen(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Close modal"
+                style={styles.modalCloseBtn}>
                 <MaterialCommunityIcons name="close" size={20} color={theme.textSecondary} />
               </Pressable>
             </View>
@@ -943,6 +977,8 @@ export default function ProfileScreen() {
                   return (
                     <Pressable
                       key={preset.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: isSelected }}
                       style={[
                         styles.presetCard,
                         { borderColor: isSelected ? theme.accent : theme.border, backgroundColor: theme.cardMuted },
@@ -979,6 +1015,8 @@ export default function ProfileScreen() {
                   setIsCoverModalOpen(false);
                   setTimeout(() => pickCoverPhoto(), 300);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel="Upload Custom Banner Photo"
                 style={[styles.modalActionBtn, { backgroundColor: Brand.primary }]}
               >
                 <MaterialCommunityIcons name="image-plus" size={18} color="#FFFFFF" />

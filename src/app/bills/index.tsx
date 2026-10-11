@@ -175,6 +175,7 @@ export default function BillsScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
+                hitSlop={6}
                 style={({ pressed }) => [
                   styles.filterChip,
                   {
@@ -302,6 +303,8 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
                 triggerHaptic();
                 router.push({ pathname: '/bills/pay/[id]', params: { id: reminder.id } });
               }}
+              accessibilityRole="button"
+              accessibilityLabel={`Mark Paid, ${reminder.title}`}
               style={({ pressed }) => [styles.payActionBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="check" size={13} color="#FFFFFF" />
               <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '800' }}>Mark Paid</ThemedText>
@@ -314,6 +317,8 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
                 triggerHaptic();
                 skipReminder(reminder.id);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={`Skip ${reminder.title}`}
               style={({ pressed }) => [styles.skipActionBtn, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
               <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700' }}>Skip</ThemedText>
             </Pressable>
@@ -322,6 +327,8 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
           <Pressable
             onPress={handleDelete}
             hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={`Delete ${reminder.title}`}
             style={({ pressed }) => [styles.deleteActionBtn, pressed && styles.pressed]}>
             <MaterialCommunityIcons name="delete-outline" size={18} color={theme.danger} />
           </Pressable>

@@ -33,7 +33,11 @@ export default function EditDebtScreen() {
         <ThemedText type="small" themeColor="textSecondary" style={styles.notFoundText}>
           This debt record no longer exists.
         </ThemedText>
-        <Pressable onPress={() => router.back()} style={styles.primaryButton}>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={styles.primaryButton}>
           <ThemedText type="defaultBold">Go back</ThemedText>
         </Pressable>
       </ThemedView>
@@ -121,6 +125,7 @@ export default function EditDebtScreen() {
               placeholder="e.g. Rahim"
               placeholderTextColor={theme.textSecondary}
               autoCapitalize="words"
+              accessibilityLabel="Person name"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -134,6 +139,7 @@ export default function EditDebtScreen() {
               placeholder="0.00"
               placeholderTextColor={theme.textSecondary}
               keyboardType="decimal-pad"
+              accessibilityLabel="Amount"
               style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
           </View>
@@ -141,7 +147,7 @@ export default function EditDebtScreen() {
           {/* Date */}
           <View style={styles.field}>
             <ThemedText type="caption" themeColor="textSecondary">TRANSACTION DATE</ThemedText>
-            <DatePicker value={date} onChange={setDate} />
+            <DatePicker value={date} onChange={setDate} label="Transaction date" />
           </View>
 
           {/* Due Date Option */}
@@ -150,13 +156,16 @@ export default function EditDebtScreen() {
               <ThemedText type="caption" themeColor="textSecondary">DUE DATE (OPTIONAL)</ThemedText>
               <Pressable
                 onPress={() => setHasDueDate(!hasDueDate)}
+                accessibilityRole="switch"
+                accessibilityState={{ checked: hasDueDate }}
+                accessibilityLabel="Enable due date"
                 style={[styles.toggleBadge, { backgroundColor: hasDueDate ? theme.accent : theme.cardMuted, borderColor: theme.border }]}>
                 <ThemedText type="smallBold" style={{ color: hasDueDate ? '#FFFFFF' : theme.textSecondary }}>
                   {hasDueDate ? 'ENABLED' : 'NONE'}
                 </ThemedText>
               </Pressable>
             </View>
-            {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} />}
+            {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />}
           </View>
 
           {/* Note */}
@@ -167,6 +176,7 @@ export default function EditDebtScreen() {
               onChangeText={setNote}
               placeholder="What was this for?"
               placeholderTextColor={theme.textSecondary}
+              accessibilityLabel="Debt note"
               multiline
               style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
@@ -188,7 +198,11 @@ export default function EditDebtScreen() {
             <ThemedText type="defaultBold" style={styles.saveText}>Save Changes</ThemedText>
           </Pressable>
 
-          <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel"
+            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
           </Pressable>
         </View>

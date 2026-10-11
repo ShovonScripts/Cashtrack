@@ -185,6 +185,8 @@ function SpendingDistributionChart({
                 triggerHaptic();
                 setSelectedCategory(isSelected ? null : cat.category);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={`${cat.category} ${cat.percent.toFixed(0)} percent share`}
               style={[
                 styles.stackedSegment,
                 {
@@ -209,6 +211,8 @@ function SpendingDistributionChart({
                 triggerHaptic();
                 setSelectedCategory(isSelected ? null : cat.category);
               }}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
               style={[
                 styles.legendChip,
                 {
@@ -598,7 +602,7 @@ export default function ReportsScreen() {
         {/* 5. Category Breakdown with Limits Progress */}
         <View style={styles.sectionHeader}>
           <View style={styles.sectionCopy}>
-            <ThemedText type="defaultBold">Category Breakdown</ThemedText>
+            <ThemedText type="defaultBold" accessibilityRole="header">Category Breakdown</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">
               Monthly spending vs category guardrails
             </ThemedText>
@@ -624,8 +628,16 @@ export default function ReportsScreen() {
               const fraction = limit ? Math.min(amount / limit, 1) : amount / Math.max(total, 1);
               const over = limit !== undefined && amount > limit;
               const color = over ? theme.danger : getCategoryColor(category);
+              const formattedAmt = formatAmount(amount);
+              let limitText = '';
+              if (limit !== undefined) {
+                limitText = over
+                  ? `, ${formatAmount(amount - limit)} over limit`
+                  : `, ${formatAmount(limit - amount)} left of ${formatAmount(limit)} limit`;
+              }
+              const rowLabel = `${category}, ${formattedAmt}${limitText}`;
               return (
-                <View key={category} style={styles.categoryItem}>
+                <View key={category} style={styles.categoryItem} accessible={true} accessibilityLabel={rowLabel}>
                   {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
                   <View style={styles.categoryLine}>
                     <CategoryIcon
@@ -802,8 +814,8 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, gap: 1 },
   eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
   themeIconButton: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: Radius.medium,
     justifyContent: 'center',
     alignItems: 'center',
@@ -817,8 +829,8 @@ const styles = StyleSheet.create({
     padding: Spacing.two,
   },
   monthArrow: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

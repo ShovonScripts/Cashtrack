@@ -194,8 +194,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   closeButton: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

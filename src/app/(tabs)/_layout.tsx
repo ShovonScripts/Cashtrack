@@ -102,13 +102,6 @@ export default function TabLayout() {
               </Pressable>
             ),
           }}
-          listeners={{
-            tabPress: (e) => {
-              e.preventDefault();
-              triggerHaptic();
-              setShowQuickAdd(true);
-            },
-          }}
         />
 
         <Tabs.Screen

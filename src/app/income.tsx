@@ -204,7 +204,6 @@ export default function IncomeScreen() {
                       onPress={() => setRecurringFrequency(f.value)}
                       accessibilityRole="button"
                       accessibilityState={{ selected }}
-                      hitSlop={6}
                       style={[
                         styles.freqChip,
                         {
@@ -368,7 +367,7 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   switchCopy: { flex: 1, gap: 2 },
   freqGrid: { flexDirection: 'row', gap: Spacing.two },
-  freqChip: { flex: 1, minHeight: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
+  freqChip: { flex: 1, minHeight: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
   addButton: {
     minHeight: 48,
     borderRadius: Radius.medium,

@@ -143,7 +143,6 @@ export default function AddBillScreen() {
                     onPress={() => setCategory(cat)}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    hitSlop={6}
                     style={[
                       styles.chip,
                       {
@@ -211,7 +210,6 @@ export default function AddBillScreen() {
                     onPress={() => setRepeatType(rep.value)}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    hitSlop={6}
                     style={[
                       styles.typeButton,
                       {
@@ -261,7 +259,6 @@ export default function AddBillScreen() {
           <Pressable
             onPress={() => router.back()}
             accessibilityRole="button"
-            accessibilityLabel="Cancel"
             style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
           </Pressable>
@@ -280,12 +277,12 @@ const styles = StyleSheet.create({
   input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, fontSize: 16 },
   amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
   chipScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
-  chip: { height: 38, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  chip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   emiCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth },
   rowFields: { flexDirection: 'row', gap: Spacing.two },
   flex1: { flex: 1 },
   typeRow: { flexDirection: 'row', gap: Spacing.two },
-  typeButton: { flex: 1, height: 42, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
+  typeButton: { flex: 1, height: 44, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
   dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   noteInput: { minHeight: 70, textAlignVertical: 'top' },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },

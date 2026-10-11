@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   notice: { gap: Spacing.one, borderRadius: Radius.medium },
   searchField: { minHeight: 50, flexDirection: 'row', alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, paddingHorizontal: Spacing.three },
   searchInput: { flex: 1, minWidth: 0, fontSize: 16, paddingVertical: Spacing.two },
-  clearButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  clearButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   countryRow: { minHeight: 68, flexDirection: 'row', alignItems: 'center', gap: Spacing.three, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
   countryCopy: { flex: 1, gap: Spacing.one },
   currencyPreview: { minWidth: 74, alignItems: 'flex-end', gap: Spacing.one },

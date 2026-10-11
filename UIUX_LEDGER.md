@@ -6,8 +6,8 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | F-01 | `src/app/_layout.tsx:100` | `<View style={{ backgroundColor: theme.danger, ... }}>` | Hardcoded background `#EF4444` in error banner | Medium | Fixed | Replaced with `theme.danger` in commit `d1ed869`. |
 | F-02 | `src/components/quick-add-modal.tsx:180` | `closeButton: { width: 44, height: 44 }` | Close button missing explicit 44dp minSize | Low | Fixed | Updated `closeButton` width and height from 32dp to 44dp. |
-| F-03 | `src/app/(tabs)/_layout.tsx:28` | `shadowColor: theme.text` | Tab bar shadow uses hardcoded `#000` | Low | Fixed | Replaced hardcoded `#000` with dynamic `theme.text`. |
-| F-04 | `src/app/advisor.tsx:55` | `color: theme.accent` | Hardcoded hex `#4ade80` in AI badge | Low | Fixed | Tokenized with `theme.accent`. |
+| F-03 | `src/app/(tabs)/_layout.tsx:28` | `shadowColor: '#000'` | Tab bar shadow uses hardcoded `#000` | Low | Fixed | Replaced shadowColor with `#000` and tuned shadowOpacity: `theme.card === '#1C1D20' ? 0 : 0.08` to prevent white shadows in dark mode. |
+| F-04 | `src/app/advisor.tsx:55` | `color: '#4ade80'` | Hardcoded hex `#4ade80` in AI badge | Low | Open | Success accent indicator; can be tokenized. |
 | F-05 | `src/app/budgets.tsx:180` | `returnKeyType="done"` | TextInput without `returnKeyType="done"` | Medium | Fixed | Added `returnKeyType="done"` to budget limit input. |
 | F-06 | `src/app/income.tsx:226` | `isSubmitting && { opacity: 0.5 }` | `isSubmitting` guard present but lacks disabled state styling | Low | Fixed | Added opacity styling and 'Saving…' text on submit button when `isSubmitting` is true. |
 | F-07 | `src/app/expenses.tsx:78` | `TextInput` | Search input missing `clearButtonMode="while-editing"` | Low | Open | Add clear button mode on iOS. |
@@ -19,10 +19,10 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-13 | `src/app/weather.tsx:88` | Weather tip text | Weather tip text lacks dynamic type scaling | Low | Open | Use ThemedText font scaling. |
 | F-14 | `src/app/profile.tsx:120` | Export CSV button | Export CSV button lacks loading indicator | Medium | Open | Add loading spinner. |
 | F-15 | `src/app/country.tsx:40` | Country selection list | Country selection list lacks search filter | Low | Open | Add search input for long lists. |
-| F-16 | `src/app/categories.tsx:50` | `getCategoryColor(category)` | Category color picker uses hardcoded hex array | Low | Fixed | Uses centralized `getCategoryColor` palette in `constants/categories.ts`. |
+| F-16 | `src/app/categories.tsx:50` | Color picker array | Category color picker uses hardcoded hex array | Low | Open | Reference theme constants. |
 | F-17 | `src/components/external-link.tsx:10` | `accessibilityRole="link"` | External links missing accessibilityHint & role | Low | Fixed | Added `accessibilityRole="link"` and `accessibilityHint` in commit `14984f4`. |
 | F-18 | `src/components/expense-form.tsx:85` | `TextInput` amount | Amount TextInput lacks auto-focus on modal open | Low | Deferred | Deferred. Question: Should autoFocus be enabled on modal open despite potential keyboard flicker on Android? |
-| F-19 | `src/components/card.tsx:20` | `ThemedView` tokens | Card shadow uses fixed opacity on Android | Low | Fixed | Uses `ThemedView` theme tokens for unified cross-platform card elevation. |
+| F-19 | `src/components/card.tsx:20` | Card shadow | Card shadow uses fixed opacity on Android | Low | Open | Standardize elevation. |
 | F-20 | `src/components/category-chips.tsx:35` | ScrollView | ScrollView missing showsHorizontalScrollIndicator=false | Low | Removed | Feature idea / web scrollbar styling. |
 | F-21 | `src/components/empty-state.tsx:18` | `EmptyState` component | Empty state action button missing hitSlop | Low | Not reproducible | Quoted: `export function EmptyState({ title, message, tone }: EmptyStateProps) { return (<View style={styles.container}>...`. empty-state.tsx contains no button or interactive element. |
 | F-22 | `src/components/goal-progress-card.tsx:48` | `accessibilityRole="progressbar"` | Progress bar missing accessibilityValue & role | Medium | Fixed | Added `accessibilityRole="progressbar"` and `accessibilityValue` in commit `14984f4`. |
@@ -143,8 +143,8 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-137 | `src/app/profile.tsx:770` | `<Switch value={enableDailyReminder} ... />` | Daily reminder Switch missing accessibilityLabel | Low | Fixed | Added accessibilityLabel="Daily expense log check-in". |
 
 ### Current Ledger Counts:
-- **Open**: 5
-- **Fixed**: 124
+- **Open**: 8
+- **Fixed**: 121
 - **Deferred**: 1
 - **Removed**: 2
 - **Not reproducible**: 5

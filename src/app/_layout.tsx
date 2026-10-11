@@ -137,7 +137,7 @@ function Navigation() {
 
 const styles = StyleSheet.create({
   addButton: {
-    minHeight: 40,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,

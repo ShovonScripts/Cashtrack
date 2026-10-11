@@ -289,7 +289,6 @@ export default function EditGoalScreen() {
                     onPress={() => setAllocationPercent(p)}
                     accessibilityRole="button"
                     accessibilityState={{ selected: allocationPercent === p }}
-                    hitSlop={6}
                     style={[
                       styles.percentChip,
                       {
@@ -330,8 +329,6 @@ export default function EditGoalScreen() {
                     }}
                     accessibilityRole="button"
                     accessibilityState={{ selected }}
-                    hitSlop={6}
-                    accessibilityLabel={`Frequency ${freq.label}`}
                     style={[
                       styles.freqButton,
                       {
@@ -386,9 +383,9 @@ const styles = StyleSheet.create({
   ruleCard: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
   ruleCopy: { flex: 1, gap: 2 },
   percentChipsRow: { flexDirection: 'row', gap: Spacing.two },
-  percentChip: { flex: 1, height: 38, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  percentChip: { flex: 1, height: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   frequencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  freqButton: { width: '31%', height: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  freqButton: { width: '31%', height: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   submitBtn: { height: 50, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.two },
   pressed: { opacity: 0.78 },
 });

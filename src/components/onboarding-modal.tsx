@@ -234,15 +234,17 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                   accessibilityRole="button"
                   accessibilityLabel={`Go to slide ${index + 1}`}
                   accessibilityState={{ selected: index === currentSlide }}
-                  hitSlop={8}
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: index === currentSlide ? theme.accent : theme.border,
-                      width: index === currentSlide ? 20 : 8,
-                    },
-                  ]}
-                />
+                  style={styles.dotWrapper}>
+                  <View
+                    style={[
+                      styles.dot,
+                      {
+                        backgroundColor: index === currentSlide ? theme.accent : theme.border,
+                        width: index === currentSlide ? 20 : 8,
+                      },
+                    ]}
+                  />
+                </Pressable>
               ))}
             </View>
 
@@ -385,7 +387,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   changeCountryBtn: {
-    height: 40,
+    height: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
@@ -416,7 +418,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
+  },
+  dotWrapper: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dot: {
     height: 8,

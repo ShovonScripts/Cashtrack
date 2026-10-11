@@ -510,7 +510,6 @@ export default function ProfileScreen() {
                         }}
                         accessibilityRole="button"
                         accessibilityState={{ selected }}
-                        hitSlop={6}
                         style={[
                           styles.choiceBtn,
                           {
@@ -1200,7 +1199,7 @@ const styles = StyleSheet.create({
   multilineInput: { minHeight: 64, paddingTop: 8, paddingBottom: 8, textAlignVertical: 'top' },
   choiceGrid: { flexDirection: 'column', gap: 6 },
   choiceBtn: {
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
@@ -1241,8 +1240,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.small,
   },
   segmentedBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    minHeight: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: Radius.small - 1,
   },
   switchRow: {

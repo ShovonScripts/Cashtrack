@@ -88,7 +88,6 @@ files.forEach((filePath) => {
       }
       if (child.kind === ts.SyntaxKind.JsxExpression && child.expression) {
         const expr = child.expression;
-        // If expression resolves to a ThemedText or Text component call/map
         if (expr.kind === ts.SyntaxKind.JsxElement || expr.kind === ts.SyntaxKind.JsxSelfClosingElement) {
           const tag = expr.openingElement ? expr.openingElement.tagName.getText() : expr.tagName.getText();
           if (tag === 'ThemedText' || tag === 'Text') return true;
@@ -98,8 +97,9 @@ files.forEach((filePath) => {
     return false;
   }
 
-  function isSmallStyle(styleAttr, hitSlopAttr) {
-    if (hitSlopAttr) return false;
+  function isSmallStyle(styleAttr, hitSlopAttr, hasText) {
+    // hitSlop only bypasses target size check if control is icon-only (hasText === false)
+    if (hitSlopAttr && !hasText) return false;
     if (!styleAttr) return false;
     const styleText = styleAttr.getText();
 
@@ -183,9 +183,9 @@ files.forEach((filePath) => {
           reasons.push('icon-only control without accessibilityLabel');
         }
 
-        // Check (c): touch target < 44dp without hitSlop
-        if (isSmallStyle(styleAttr, hitSlopAttr)) {
-          reasons.push('touch target < 44dp without hitSlop');
+        // Check (c): touch target < 44dp
+        if (isSmallStyle(styleAttr, hitSlopAttr, hasText)) {
+          reasons.push('visible control < 44dp height/width');
         }
 
         if (reasons.length > 0) {
@@ -210,7 +210,7 @@ console.log(`Scan completed. Total hits: ${hits.length}\n`);
 if (hits.length > 0) {
   console.table(
     hits.map((h, index) => ({
-      ID: `F-${110 + index}`,
+      ID: `F-${138 + index}`,
       Location: `${h.file}:${h.line}`,
       Element: h.element,
       Issues: h.reasons,

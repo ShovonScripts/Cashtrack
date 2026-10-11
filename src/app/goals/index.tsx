@@ -78,7 +78,6 @@ export default function GoalsOverviewScreen() {
                 onPress={() => setTab(t)}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                hitSlop={6}
                 style={[
                   styles.tab,
                   {
@@ -144,7 +143,7 @@ const styles = StyleSheet.create({
   heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
   heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },
   tabsRow: { flexDirection: 'row', gap: Spacing.two },
-  tab: { flex: 1, height: 40, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  tab: { flex: 1, height: 44, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   pressed: { opacity: 0.75 },

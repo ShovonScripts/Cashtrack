@@ -175,7 +175,6 @@ export default function BillsScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                hitSlop={6}
                 style={({ pressed }) => [
                   styles.filterChip,
                   {
@@ -350,8 +349,8 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, gap: 1 },
   eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
   themeIconButton: {
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     borderRadius: Radius.medium,
     justifyContent: 'center',
     alignItems: 'center',
@@ -439,7 +438,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   filterScroll: { gap: Spacing.two, paddingVertical: 2 },
-  filterChip: { height: 36, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  filterChip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   billCard: { borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two },

@@ -38,9 +38,9 @@ export default function TabLayout() {
             paddingBottom: bottomPadding,
             paddingTop: 8,
             elevation: 10,
-            shadowColor: theme.text,
+            shadowColor: '#000',
             shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.08,
+            shadowOpacity: theme.card === '#1C1D20' ? 0 : 0.08,
             shadowRadius: 8,
           },
           tabBarLabelStyle: {
@@ -101,6 +101,13 @@ export default function TabLayout() {
                 </View>
               </Pressable>
             ),
+          }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              triggerHaptic();
+              setShowQuickAdd(true);
+            },
           }}
         />
 

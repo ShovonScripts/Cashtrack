@@ -190,7 +190,6 @@ export default function GoalDetailScreen() {
                 key={amt}
                 onPress={() => setContribAmount(String(amt))}
                 accessibilityRole="button"
-                hitSlop={6}
                 style={({ pressed }) => [styles.quickChip, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
                 <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>+{amt}</ThemedText>
               </Pressable>
@@ -392,7 +391,7 @@ const styles = StyleSheet.create({
   requiredRow: { gap: Spacing.two },
   requiredBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: Radius.medium },
   quickChipsRow: { flexDirection: 'row', gap: Spacing.two },
-  quickChip: { flex: 1, height: 32, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  quickChip: { flex: 1, height: 44, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   field: { gap: Spacing.one },
   input: { minHeight: 46, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 16 },
   submitBtn: { minHeight: 46, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },

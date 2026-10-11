@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.three,
   },
   resetButton: {
-    minHeight: 42,
+    minHeight: 44,
     paddingHorizontal: Spacing.four,
     borderRadius: Radius.pill,
     alignItems: 'center',

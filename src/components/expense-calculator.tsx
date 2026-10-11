@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   frequencyChip: {
     flex: 1,
-    height: 40,
+    height: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',

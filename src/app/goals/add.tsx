@@ -302,7 +302,6 @@ export default function AddGoalScreen() {
                     }}
                     accessibilityRole="button"
                     accessibilityState={{ selected: allocationPercent === p }}
-                    hitSlop={6}
                     style={[styles.presetChip, { borderColor: allocationPercent === p ? theme.accent : theme.border, backgroundColor: allocationPercent === p ? theme.accentMuted : theme.cardMuted }]}>
                     <ThemedText type="smallBold" themeColor={allocationPercent === p ? 'accent' : 'text'}>{p}%</ThemedText>
                   </Pressable>
@@ -388,7 +387,7 @@ const styles = StyleSheet.create({
   ruleIconBadge: { width: 42, height: 42, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   ruleTextGroup: { flex: 1, gap: 2 },
   presetRow: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.one },
-  presetChip: { flex: 1, height: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  presetChip: { flex: 1, height: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   freqGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   freqChip: { width: '31%', minHeight: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.two },
   submitBtn: { minHeight: 48, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.one },

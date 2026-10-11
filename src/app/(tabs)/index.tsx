@@ -852,7 +852,6 @@ export default function DashboardScreen() {
                   }}
                   accessibilityRole="button"
                   accessibilityState={{ selected }}
-                  hitSlop={6}
                   style={[
                     styles.filterChip,
                     {
@@ -1059,7 +1058,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.half,
   },
   filterChip: {
-    height: 32,
+    height: 44,
     paddingHorizontal: Spacing.three,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,

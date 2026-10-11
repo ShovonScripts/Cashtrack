@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -814,7 +815,11 @@ export default function ProfileScreen() {
                     pressed && styles.pressed,
                   ]}>
                   <View style={[styles.rowIconBadge, { backgroundColor: '#159A8C1E' }]}>
-                    <MaterialCommunityIcons name="file-excel-outline" size={20} color="#159A8C" />
+                    {exporting ? (
+                      <ActivityIndicator size="small" color="#159A8C" />
+                    ) : (
+                      <MaterialCommunityIcons name="file-excel-outline" size={20} color="#159A8C" />
+                    )}
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Export Transactions to CSV</ThemedText>

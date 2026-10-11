@@ -77,16 +77,16 @@ export default function AdvisorScreen() {
 
               <View style={[styles.statusBadge, {
                 backgroundColor: intelligence.financialHealthStatus === 'Excellent'
-                  ? 'rgba(16, 185, 129, 0.25)'
+                  ? `${theme.success}33`
                   : intelligence.financialHealthStatus === 'Overspending'
-                    ? 'rgba(239, 68, 68, 0.25)'
+                    ? `${theme.danger}33`
                     : 'rgba(255, 255, 255, 0.18)'
               }]}>
                 <ThemedText type="caption" style={{
                   color: intelligence.financialHealthStatus === 'Excellent'
-                    ? '#34D399'
+                    ? theme.success
                     : intelligence.financialHealthStatus === 'Overspending'
-                      ? '#F87171'
+                      ? theme.danger
                       : '#FFFFFF',
                   fontWeight: '800'
                 }}>
@@ -121,7 +121,7 @@ export default function AdvisorScreen() {
               <View style={styles.intelMetric}>
                 <ThemedText type="caption" style={styles.metricLabel}>Savings Rate</ThemedText>
                 <ThemedText type="smallBold" style={{
-                  color: intelligence.savingsRate >= 0 ? '#34D399' : '#F87171',
+                  color: intelligence.savingsRate >= 0 ? theme.success : theme.danger,
                   fontWeight: '800'
                 }}>
                   {intelligence.savingsRate}%
@@ -345,7 +345,7 @@ function NoticeCard({
           containerSize={32}
         />
         <ThemedText type="defaultBold" style={styles.noticeTitle}>{title}</ThemedText>
-        <View style={[styles.noticePill, { backgroundColor: isOver ? 'rgba(239, 68, 68, 0.15)' : insight.level === 'near' ? 'rgba(189, 113, 25, 0.15)' : theme.accentMuted }]}>
+        <View style={[styles.noticePill, { backgroundColor: `${color}22` }]}>
           <ThemedText type="caption" style={{ color, fontWeight: '800' }}>
             {isOver ? 'OVER' : insight.level === 'near' ? `${progressPercent}%` : 'PACE'}
           </ThemedText>

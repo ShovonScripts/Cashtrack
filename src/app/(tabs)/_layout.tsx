@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { QuickAddModal } from '@/components/quick-add-modal';
 import { useTheme } from '@/hooks/use-theme';
-import { Radius } from '@/constants/theme';
+import { Colors, Radius } from '@/constants/theme';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -40,7 +40,7 @@ export default function TabLayout() {
             elevation: 10,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: theme.card === '#1C1D20' ? 0 : 0.08,
+            shadowOpacity: theme.background === Colors.dark.background ? 0 : 0.08,
             shadowRadius: 8,
           },
           tabBarLabelStyle: {

@@ -17,12 +17,12 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-11 | `src/app/bills/add.tsx:136` | `DatePicker` / Cancel | Reminder date picker and Cancel button lack accessibility label | Medium | Fixed | Added label prop to DatePicker in date-picker.tsx and bills/add.tsx, and accessibilityRole="button" to Cancel button. |
 | F-12 | `src/app/subscriptions.tsx:42` | Subscription list item | Subscription list item missing swipe-to-delete | Low | Removed | Feature idea, not a defect. |
 | F-13 | `src/app/weather.tsx:88` | Weather tip text | Weather tip text lacks dynamic type scaling | Low | Open | Use ThemedText font scaling. |
-| F-14 | `src/app/profile.tsx:120` | Export CSV button | Export CSV button lacks loading indicator | Medium | Open | Add loading spinner. |
-| F-15 | `src/app/country.tsx:40` | Country selection list | Country selection list lacks search filter | Low | Open | Add search input for long lists. |
+| F-14 | `src/app/profile.tsx:810` | `ActivityIndicator` in export | Export CSV button lacks loading indicator | Medium | Fixed | Added ActivityIndicator spinner inside rowIconBadge during handleExportCsv exporting state. |
+| F-15 | `src/app/country.tsx:50` | `<TextInput placeholder="Search country or currency" ... />` | Country selection list lacks search filter | Low | Not reproducible | Quoted: `<TextInput value={query} onChangeText={setQuery} placeholder="Search country or currency" ... />`. Search field already present. |
 | F-16 | `src/app/categories.tsx:50` | `const color = getCategoryColor(category);` | Category color picker uses hardcoded hex array | Low | Not reproducible | Quoted: `const color = getCategoryColor(category);`. Categories screen resolves colors dynamically via centralized palette. |
 | F-17 | `src/components/external-link.tsx:10` | `accessibilityRole="link"` | External links missing accessibilityHint & role | Low | Fixed | Added `accessibilityRole="link"` and `accessibilityHint` in commit `14984f4`. |
 | F-18 | `src/components/expense-form.tsx:85` | `TextInput` amount | Amount TextInput lacks auto-focus on modal open | Low | Deferred | Deferred. Question: Should autoFocus be enabled on modal open despite potential keyboard flicker on Android? |
-| F-19 | `src/components/card.tsx:20` | `ThemedView` tokens | Card shadow uses fixed opacity on Android | Low | Fixed | Uses `ThemedView` card tokens for unified cross-platform card elevation. |
+| F-19 | `src/components/card.tsx:20` | `borderColor: 'rgba(128, 128, 128, 0.22)'` | Card shadow uses fixed opacity on Android | Low | Not reproducible | Quoted: `card: { borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(128, 128, 128, 0.22)' }`. Card component does not specify fixed shadow or elevation. |
 | F-20 | `src/components/category-chips.tsx:35` | ScrollView | ScrollView missing showsHorizontalScrollIndicator=false | Low | Removed | Feature idea / web scrollbar styling. |
 | F-21 | `src/components/empty-state.tsx:18` | `EmptyState` component | Empty state action button missing hitSlop | Low | Not reproducible | Quoted: `export function EmptyState({ title, message, tone }: EmptyStateProps) { return (<View style={styles.container}>...`. empty-state.tsx contains no button or interactive element. |
 | F-22 | `src/components/goal-progress-card.tsx:48` | `accessibilityRole="progressbar"` | Progress bar missing accessibilityValue & role | Medium | Fixed | Added `accessibilityRole="progressbar"` and `accessibilityValue` in commit `14984f4`. |
@@ -159,8 +159,8 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-153 | `src/app/bills/add.tsx:276` | `chip: { height: 44, ... }`, `typeButton: { height: 44, ... }` | Category & repeat type chips height under 44dp | Low | Fixed | Updated `chip` and `typeButton` height to 44dp. |
 
 ### Current Ledger Counts:
-- **Open**: 5
+- **Open**: 3
 - **Fixed**: 139
 - **Deferred**: 1
 - **Removed**: 2
-- **Not reproducible**: 6
+- **Not reproducible**: 8

@@ -57,7 +57,7 @@ export default function MenuScreen() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedFilterCategory] = useState<
-    'all' | 'finances' | 'reports' | 'preferences'
+    'all' | 'finances' | 'reports' | 'preferences' | 'tools'
   >('all');
 
   const handleNavigate = (route: string) => {
@@ -74,6 +74,45 @@ export default function MenuScreen() {
   const overdueRemindersCount = activeReminders.filter(
     (r) => r.derivedStatus === 'overdue'
   ).length;
+
+  const UTILITY_TOOLS: MenuItem[] = [
+    {
+      id: 'calculator',
+      title: 'Quick Calculator',
+      subtitle: 'Compute math, tips & bill splits',
+      icon: 'calculator-variant-outline',
+      color: '#3B82F6',
+      route: '/calculator',
+      badge: 'Tool',
+    },
+    {
+      id: 'currency',
+      title: 'Currency Converter',
+      subtitle: 'Google-style foreign exchange rates',
+      icon: 'currency-usd',
+      color: '#059669',
+      route: '/currency',
+      badge: 'Tool',
+    },
+    {
+      id: 'notes',
+      title: 'Keep Notes',
+      subtitle: 'Fast local scratchpad for notes',
+      icon: 'note-text-outline',
+      color: '#10B981',
+      route: '/notes',
+      badge: 'Tool',
+    },
+    {
+      id: 'stopwatch',
+      title: 'Stopwatch & Timer',
+      subtitle: 'Track elapsed time and durations',
+      icon: 'timer-outline',
+      color: '#F59E0B',
+      route: '/stopwatch',
+      badge: 'Tool',
+    },
+  ];
 
   const FINANCIAL_MANAGEMENT: MenuItem[] = [
     {
@@ -207,6 +246,10 @@ export default function MenuScreen() {
     );
   };
 
+  const filteredTools =
+    selectedCategory === 'all' || selectedCategory === 'tools'
+      ? filterItems(UTILITY_TOOLS)
+      : [];
   const filteredFinancial =
     selectedCategory === 'all' || selectedCategory === 'finances'
       ? filterItems(FINANCIAL_MANAGEMENT)
@@ -221,6 +264,7 @@ export default function MenuScreen() {
       : [];
 
   const totalResults =
+    filteredTools.length +
     filteredFinancial.length +
     filteredIntelligence.length +
     filteredPreferences.length;
@@ -409,10 +453,11 @@ export default function MenuScreen() {
             contentContainerStyle={styles.filterScroll}>
             {(
               [
-                { key: 'all', label: 'All Tools' },
+                { key: 'all', label: 'All' },
                 { key: 'finances', label: 'Finances' },
+                { key: 'tools', label: 'Utility Tools' },
                 { key: 'reports', label: 'AI & Analytics' },
-                { key: 'preferences', label: 'System & Preferences' },
+                { key: 'preferences', label: 'Preferences' },
               ] as const
             ).map((chip) => {
               const active = selectedCategory === chip.key;
@@ -453,11 +498,21 @@ export default function MenuScreen() {
                 No matching tools found
               </ThemedText>
               <ThemedText type="caption" themeColor="textSecondary" style={styles.emptySubtitle}>
-                Try searching for &apos;expenses&apos;, &apos;bills&apos;, &apos;budget&apos;, or &apos;AI&apos;
+                Try searching for &apos;calculator&apos;, &apos;notes&apos;, &apos;stopwatch&apos;, or &apos;bills&apos;
               </ThemedText>
             </Card>
           ) : (
             <>
+              {/* Section: Utility Tools */}
+              {filteredTools.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
+                    UTILITY TOOLS
+                  </ThemedText>
+                  {renderSectionGroup(filteredTools)}
+                </View>
+              )}
+
               {/* Section 1: Financial Management */}
               {filteredFinancial.length > 0 && (
                 <View style={styles.section}>

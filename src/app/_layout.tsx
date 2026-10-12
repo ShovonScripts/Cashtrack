@@ -16,6 +16,9 @@ import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
 import { confirmDelete, notify } from '@/utils/confirm';
 import { scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
 import { scheduleDailySpendingReminderNotificationsAsync } from '@/utils/spending-reminder-notifications';
+import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsButton';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StopwatchProvider } from '@/context/stopwatch-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -84,7 +87,8 @@ function Navigation() {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: theme.background }}>
       {showLoadErrorBanner && (
         <View style={{ backgroundColor: theme.danger, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
           <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
@@ -126,12 +130,19 @@ function Navigation() {
         <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
         <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
         <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
+        <Stack.Screen name="calculator" options={{ title: 'Quick Calculator' }} />
+        <Stack.Screen name="stopwatch" options={{ title: 'Stopwatch & Timer' }} />
+        <Stack.Screen name="currency" options={{ title: 'Currency Converter' }} />
+        <Stack.Screen name="notes-add" options={{ title: 'New Note', presentation: 'modal' }} />
+        <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
         <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
         <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
         <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />
       </Stack>
+      <FloatingToolsButton />
     </View>
+    </GestureHandlerRootView>
   );
 }
 
@@ -198,8 +209,10 @@ export default function RootLayout() {
           <IncomeProvider>
             <GoalProvider>
               <FinancialRemindersProvider>
-                <AnimatedSplashOverlay />
-                <Navigation />
+                <StopwatchProvider>
+                  <AnimatedSplashOverlay />
+                  <Navigation />
+                </StopwatchProvider>
               </FinancialRemindersProvider>
             </GoalProvider>
           </IncomeProvider>

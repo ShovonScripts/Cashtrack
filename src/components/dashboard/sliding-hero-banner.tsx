@@ -22,6 +22,7 @@ import { getQuoteOfTheDay } from '@/constants/quotes';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
+import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
@@ -96,23 +97,20 @@ export function SlidingHeroBanner({
         snapToInterval={BANNER_WIDTH + 16}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* SLIDE 1: GREETING, DATE & WEALTH OVERVIEW */}
-        <TouchableOpacity
-          activeOpacity={0.95}
-          onPress={onPressProfile || (() => router.push('/profile'))}
-          accessibilityRole="button"
-          accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
-          style={[styles.card, { borderColor: theme.border }]}
+        {/* SLIDE 1: DUAL COUNTRY CLOCKS & GREETING */}
+        <View
+          style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
         >
-          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
-          <View style={styles.overlayGradient} />
-
           <View style={styles.cardInner}>
             <View style={styles.slide1Header}>
-              <View
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={onPressProfile || (() => router.push('/profile'))}
+                accessibilityRole="button"
+                accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
                 style={[
                   styles.avatarContainer,
-                  { borderColor: '#FFFFFF', backgroundColor: theme.background },
+                  { borderColor: theme.accent, backgroundColor: theme.background },
                 ]}
               >
                 {profile.profilePhotoUri ? (
@@ -124,29 +122,22 @@ export function SlidingHeroBanner({
                     </Text>
                   </View>
                 )}
-              </View>
+              </TouchableOpacity>
 
               <View style={styles.greetingBox}>
-                <Text style={styles.whiteSubtext}>{todayStr}</Text>
-                <Text style={styles.whiteTitle} numberOfLines={1}>
-                  {getGreeting()}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
+                <Text style={[styles.subtext, { color: theme.textSecondary }]} numberOfLines={1}>
+                  {getGreeting()}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'} 👋
+                </Text>
+                <Text style={[styles.titleText, { color: theme.text }]} numberOfLines={1}>
+                  {todayStr}
                 </Text>
               </View>
             </View>
 
-            <View style={styles.glassFinBox}>
-              <View style={styles.finItem}>
-                <Text style={styles.glassFinLabel}>Net Balance</Text>
-                <Text style={[styles.glassFinValue, { color: '#4ade80' }]}>{formatAmount(totalBalance)}</Text>
-              </View>
-              <View style={styles.finDivider} />
-              <View style={styles.finItem}>
-                <Text style={styles.glassFinLabel}>Spent This Month</Text>
-                <Text style={[styles.glassFinValue, { color: '#f87171' }]}>{formatAmount(monthlySpent)}</Text>
-              </View>
-            </View>
+            {/* Masterclass Dual Country Clock Widget on 1st Slide */}
+            <DualClockWidget />
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
         <TouchableOpacity
@@ -238,7 +229,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: BANNER_WIDTH,
-    height: 180,
+    minHeight: 180,
     borderRadius: 20,
     borderWidth: 1,
     overflow: 'hidden',
@@ -263,6 +254,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     justifyContent: 'space-between',
+    gap: 12,
   },
   slide1Header: {
     flexDirection: 'row',
@@ -270,9 +262,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 2,
     overflow: 'hidden',
     justifyContent: 'center',
@@ -291,50 +283,24 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
   },
   greetingBox: {
     flex: 1,
   },
-  whiteTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
+  titleText: {
+    fontSize: 16,
     fontWeight: '700',
+  },
+  subtext: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   whiteSubtext: {
     color: 'rgba(255, 255, 255, 0.85)',
     fontSize: 12,
     fontWeight: '500',
-  },
-  glassFinBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    borderRadius: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  finItem: {
-    alignItems: 'center',
-  },
-  finDivider: {
-    width: 1,
-    height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  glassFinLabel: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  glassFinValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginTop: 2,
   },
   slideHeader: {
     flexDirection: 'row',

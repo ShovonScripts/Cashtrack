@@ -77,6 +77,15 @@ export default function MenuScreen() {
 
   const UTILITY_TOOLS: MenuItem[] = [
     {
+      id: 'world-clock',
+      title: 'World Clocks',
+      subtitle: 'Live world times & timezones',
+      icon: 'earth',
+      color: '#0284C7',
+      route: '/world-clock',
+      badge: 'New',
+    },
+    {
       id: 'calculator',
       title: 'Quick Calculator',
       subtitle: 'Compute math, tips & bill splits',

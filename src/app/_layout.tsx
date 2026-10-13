@@ -130,9 +130,11 @@ function Navigation() {
         <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
         <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
         <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
-        <Stack.Screen name="calculator" options={{ title: 'Quick Calculator' }} />
-        <Stack.Screen name="stopwatch" options={{ title: 'Stopwatch & Timer' }} />
-        <Stack.Screen name="currency" options={{ title: 'Currency Converter' }} />
+        <Stack.Screen name="world-clock" options={{ headerShown: false }} />
+        <Stack.Screen name="calculator" options={{ headerShown: false }} />
+        <Stack.Screen name="stopwatch" options={{ headerShown: false }} />
+        <Stack.Screen name="currency" options={{ headerShown: false }} />
+        <Stack.Screen name="notes" options={{ headerShown: false }} />
         <Stack.Screen name="notes-add" options={{ title: 'New Note', presentation: 'modal' }} />
         <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
         <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />

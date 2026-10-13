@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 
-import type { DebtRecord, DebtDraft } from '@/types/debt';
+import type { DebtRecord, DebtDraft, DebtPayment } from '@/types/debt';
 import { loadDebts, saveDebts } from '@/storage/debt-storage';
 import { checkAndTriggerDebtNotifications } from '@/utils/notifications';
 import { useExpenses } from '@/context/expense-context';
@@ -21,7 +21,9 @@ type DebtAction =
   | { type: 'ADD_DEBT'; debt: DebtRecord }
   | { type: 'UPDATE_DEBT'; id: string; changes: DebtDraft }
   | { type: 'DELETE_DEBT'; id: string }
-  | { type: 'SETTLE_DEBT'; id: string; settledDate: string };
+  | { type: 'SETTLE_DEBT'; id: string; settledDate: string }
+  | { type: 'ADD_PAYMENT'; debtId: string; payment: DebtPayment }
+  | { type: 'DELETE_PAYMENT'; debtId: string; paymentId: string };
 
 function debtReducer(state: DebtRecord[], action: DebtAction): DebtRecord[] {
   switch (action.type) {
@@ -48,6 +50,34 @@ function debtReducer(state: DebtRecord[], action: DebtAction): DebtRecord[] {
           ? { ...debt, status: 'settled', settledDate: action.settledDate }
           : debt
       );
+    case 'ADD_PAYMENT': {
+      return state.map((debt) => {
+        if (debt.id !== action.debtId) return debt;
+        const existingPayments = debt.payments ?? [];
+        const newPayments = [action.payment, ...existingPayments];
+        const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
+        const isNowSettled = totalPaid >= debt.amount;
+        return {
+          ...debt,
+          payments: newPayments,
+          status: isNowSettled ? ('settled' as const) : debt.status,
+          settledDate: isNowSettled && !debt.settledDate ? new Date().toISOString() : debt.settledDate,
+        };
+      });
+    }
+    case 'DELETE_PAYMENT': {
+      return state.map((debt) => {
+        if (debt.id !== action.debtId) return debt;
+        const newPayments = (debt.payments ?? []).filter((p) => p.id !== action.paymentId);
+        const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
+        return {
+          ...debt,
+          payments: newPayments,
+          status: totalPaid >= debt.amount ? 'settled' : 'active',
+          settledDate: totalPaid >= debt.amount ? debt.settledDate : null,
+        };
+      });
+    }
     default:
       return state;
   }
@@ -68,6 +98,8 @@ type DebtContextValue = {
   updateDebt: (id: string, changes: DebtDraft) => void;
   deleteDebt: (id: string) => void;
   settleDebt: (id: string) => void;
+  addDebtPayment: (debtId: string, amount: number, note?: string) => void;
+  deleteDebtPayment: (debtId: string, paymentId: string) => void;
   getDebt: (id: string) => DebtRecord | undefined;
 };
 
@@ -155,6 +187,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       dueDate: draft.dueDate ?? null,
       status: 'active',
       settledDate: null,
+      payments: [],
     };
     dispatch({ type: 'ADD_DEBT', debt });
     return debt;
@@ -173,6 +206,21 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SETTLE_DEBT', id, settledDate });
   }, []);
 
+  const addDebtPayment = useCallback((debtId: string, amount: number, note = '') => {
+    const payment: DebtPayment = {
+      id: `pay-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
+      debtId,
+      amount,
+      date: new Date().toISOString(),
+      note,
+    };
+    dispatch({ type: 'ADD_PAYMENT', debtId, payment });
+  }, []);
+
+  const deleteDebtPayment = useCallback((debtId: string, paymentId: string) => {
+    dispatch({ type: 'DELETE_PAYMENT', debtId, paymentId });
+  }, []);
+
   const getDebt = useCallback(
     (id: string) => debts.find((debt) => debt.id === id),
     [debts]
@@ -187,9 +235,11 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       updateDebt,
       deleteDebt,
       settleDebt,
+      addDebtPayment,
+      deleteDebtPayment,
       getDebt,
     }),
-    [debts, isLoading, debtLoadError, addDebt, updateDebt, deleteDebt, settleDebt, getDebt]
+    [debts, isLoading, debtLoadError, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt]
   );
 
   return <DebtContext.Provider value={value}>{children}</DebtContext.Provider>;

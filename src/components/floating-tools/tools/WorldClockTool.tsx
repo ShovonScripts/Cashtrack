@@ -64,7 +64,6 @@ export function WorldClockTool() {
     await saveSelectedIds(updated);
   };
 
-  // Glass card styling helper for next-level glassmorphism
   const glassCardStyle = {
     backgroundColor: isDark ? 'rgba(35, 36, 48, 0.65)' : 'rgba(255, 255, 255, 0.8)',
     borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.9)',
@@ -73,28 +72,32 @@ export function WorldClockTool() {
     shadowColor: isDark ? '#000' : '#8898aa',
   };
 
-  const getOffsetHours = (timeZone: string) => {
-    try {
-      const now = new Date();
-      const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-      const tzDate = new Date(now.toLocaleString('en-US', { timeZone }));
-      return Math.round((tzDate.getTime() - utcDate.getTime()) / (1000 * 60 * 60));
-    } catch {
-      return 0;
-    }
-  };
-
   const getTimeDifferenceLabel = (timeZone: string) => {
     if (!timeZone) return '';
     try {
+      const now = new Date();
       const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const localOffset = getOffsetHours(localTz);
-      const targetOffset = getOffsetHours(timeZone);
-      const diff = targetOffset - localOffset;
+      const localFormatter = new Intl.DateTimeFormat('en-US', { timeZone: localTz, hour: 'numeric', minute: 'numeric', hour12: false });
+      const targetFormatter = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: 'numeric', hour12: false });
 
-      if (diff === 0) return 'Same time';
-      if (diff > 0) return `+${diff} hrs ahead`;
-      return `${Math.abs(diff)} hrs behind`;
+      const localParts = localFormatter.formatToParts(now);
+      const targetParts = targetFormatter.formatToParts(now);
+
+      const getVal = (parts: Intl.DateTimeFormatPart[], type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+
+      const localHour = getVal(localParts, 'hour');
+      const targetHour = getVal(targetParts, 'hour');
+      const localMin = getVal(localParts, 'minute');
+      const targetMin = getVal(targetParts, 'minute');
+
+      let diff = (targetHour + targetMin / 60) - (localHour + localMin / 60);
+      if (diff > 12) diff -= 24;
+      if (diff < -12) diff += 24;
+
+      const roundedDiff = Math.round(diff);
+      if (roundedDiff === 0) return 'Same time';
+      if (roundedDiff > 0) return `+${roundedDiff} hrs ahead`;
+      return `${Math.abs(roundedDiff)} hrs behind`;
     } catch {
       return '';
     }

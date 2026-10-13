@@ -4,9 +4,12 @@ import { Platform } from 'react-native';
 type StopwatchContextType = {
   seconds: number;
   isRunning: boolean;
+  laps: string[];
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
+  addLap: () => void;
+  clearLaps: () => void;
 };
 
 const StopwatchContext = createContext<StopwatchContextType | undefined>(undefined);
@@ -52,6 +55,7 @@ async function updateNotification(secs: number, running: boolean) {
 export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const [seconds, setSeconds] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [laps, setLaps] = useState<string[]>([]);
 
   useEffect(() => {
     let interval: any = null;
@@ -73,6 +77,14 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     return () => clearInterval(interval);
   }, [isRunning]);
 
+  const formatTime = (totalSecs: number) => {
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
+    const hrs = Math.floor(mins / 60);
+    const remMins = mins % 60;
+    return `${String(hrs).padStart(2, '0')}:${String(remMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
   const startTimer = () => {
     setIsRunning(true);
   };
@@ -84,13 +96,23 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const resetTimer = () => {
     setIsRunning(false);
     setSeconds(0);
+    setLaps([]);
     if (NotificationsModule) {
       void NotificationsModule.dismissNotificationAsync(NOTIFICATION_ID);
     }
   };
 
+  const addLap = () => {
+    const timeStr = formatTime(seconds);
+    setLaps((curr) => [timeStr, ...curr]);
+  };
+
+  const clearLaps = () => {
+    setLaps([]);
+  };
+
   return (
-    <StopwatchContext.Provider value={{ seconds, isRunning, startTimer, pauseTimer, resetTimer }}>
+    <StopwatchContext.Provider value={{ seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps }}>
       {children}
     </StopwatchContext.Provider>
   );

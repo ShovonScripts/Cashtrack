@@ -1,7 +1,9 @@
 import { Brand } from '@/constants/theme';
 import type { Expense } from '@/types/expense';
-import { getMonthExpenses } from '@/utils/advisor';
-import { formatDate, sumAmounts } from '@/utils/expense';
+import type { IncomeRecord } from '@/types/income';
+import { getMonthExpenses, getSmartFinancialIntelligence } from '@/utils/advisor';
+import { getMonthIncome, calculateMonthlyCashFlow } from '@/utils/income';
+import { formatDate } from '@/utils/expense';
 
 function escapeHtml(value: string): string {
   return value
@@ -15,6 +17,7 @@ function escapeHtml(value: string): string {
 export function buildMonthlyReportHtml({
   month,
   expenses,
+  incomes = [],
   limits,
   name,
   countryName,
@@ -23,6 +26,7 @@ export function buildMonthlyReportHtml({
 }: {
   month: Date;
   expenses: Expense[];
+  incomes?: IncomeRecord[];
   limits: Record<string, number>;
   name: string;
   countryName: string;
@@ -30,7 +34,11 @@ export function buildMonthlyReportHtml({
   formatAmount: (amount: number) => string;
 }): string {
   const monthExpenses = getMonthExpenses(expenses, month);
-  const total = sumAmounts(monthExpenses);
+  const monthIncome = getMonthIncome(incomes, month);
+  const cashFlow = calculateMonthlyCashFlow({ incomeList: incomes, expenses, month });
+  const total = cashFlow.moneyOut;
+  const moneyIn = cashFlow.moneyIn;
+  const netCashFlow = cashFlow.net;
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(month);
 
   const categoryTotals = new Map<string, number>();
@@ -43,9 +51,12 @@ export function buildMonthlyReportHtml({
     .sort((first, second) => second[1] - first[1]);
 
   const largestExpense = monthExpenses.length ? Math.max(...monthExpenses.map((e) => e.amount)) : 0;
+  const smallestExpense = monthExpenses.length ? Math.min(...monthExpenses.map((e) => e.amount)) : 0;
   const highestCategory = categories.length && categories[0][1] > 0 ? categories[0] : null;
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const overBudgetCount = categories.filter(([category, spent]) => limits[category] !== undefined && spent > limits[category]).length;
+
+  const intelligence = getSmartFinancialIntelligence({ expenses, totalIncome: moneyIn, month });
 
   const categoryRows = categories.length
     ? categories.map(([category, spent]) => {
@@ -60,6 +71,10 @@ export function buildMonthlyReportHtml({
       }).join('')
     : '<tr><td colspan="5" class="empty">No expenses were recorded for this month.</td></tr>';
 
+  const incomeRows = monthIncome.length
+    ? monthIncome.map((inc) => `<tr><td>${escapeHtml(formatDate(inc.date))}</td><td>${escapeHtml(inc.note || 'Income')}</td><td class="numeric" style="color: #1e7e34; font-weight: 700;">+${escapeHtml(formatAmount(inc.amount))}</td></tr>`).join('')
+    : '<tr><td colspan="3" class="empty">No income records for this month.</td></tr>';
+
   const transactionRows = monthExpenses.length
     ? monthExpenses.map((expense) => `<tr><td>${escapeHtml(formatDate(expense.date))}</td><td><strong>${escapeHtml(expense.category)}</strong></td><td>${escapeHtml(expense.note || '—')}</td><td class="numeric">${escapeHtml(formatAmount(expense.amount))}</td></tr>`).join('')
     : '<tr><td colspan="4" class="empty">No transactions to show.</td></tr>';
@@ -67,12 +82,14 @@ export function buildMonthlyReportHtml({
   const displayName = name.trim() ? `<p class="byline">Prepared for <strong>${escapeHtml(name.trim())}</strong></p>` : '';
   const generatedAt = new Intl.DateTimeFormat('en', { dateStyle: 'full', timeStyle: 'short' }).format(new Date());
 
+  const healthBadgeClass = intelligence.financialHealthStatus === 'Excellent' || intelligence.financialHealthStatus === 'Good' ? 'badge-normal' : 'badge-danger';
+
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CashTrack Monthly Report — ${escapeHtml(monthLabel)}</title>
+  <title>CashTrack Executive Monthly Report — ${escapeHtml(monthLabel)}</title>
   <style>
     @page { size: A4; margin: 16mm 14mm; }
     * { box-sizing: border-box; }
@@ -96,6 +113,10 @@ export function buildMonthlyReportHtml({
     .stat-label { color: #707080; font-size: 8px; text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
     .stat-value { margin-top: 4px; font-size: 14px; font-weight: 700; color: #111118; }
 
+    .intelligence-box { border: 1px solid #cbd5e1; border-left: 4px solid ${Brand.primary}; border-radius: 8px; padding: 12px 16px; background: #f8fafc; margin-bottom: 18px; }
+    .intelligence-title { font-size: 11px; font-weight: 700; color: #1e1b4b; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .intelligence-text { font-size: 10.5px; color: #334155; margin: 0; line-height: 1.4; }
+
     h2 { margin: 20px 0 8px; font-size: 13px; color: #1e1b4b; border-left: 3px solid ${Brand.primary}; padding-left: 8px; text-transform: uppercase; letter-spacing: .5px; }
 
     table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 4px; }
@@ -118,7 +139,7 @@ export function buildMonthlyReportHtml({
   <div class="header-container">
     <div>
       <div class="wordmark">CashTrack</div>
-      <div class="tagline">Personal Finance Report</div>
+      <div class="tagline">Executive Financial Intelligence Report</div>
     </div>
     <div class="report-title-area">
       <h1>${escapeHtml(monthLabel)}</h1>
@@ -143,16 +164,16 @@ export function buildMonthlyReportHtml({
 
   <div class="stats-grid">
     <div class="stat">
-      <div class="stat-label">Daily Average</div>
+      <div class="stat-label">Total Income</div>
+      <div class="stat-value" style="color: #1e7e34;">${escapeHtml(formatAmount(moneyIn))}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Net Cash Flow</div>
+      <div class="stat-value" style="color: ${netCashFlow >= 0 ? '#1e7e34' : '#c53030'};">${escapeHtml(formatAmount(netCashFlow))}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Daily Average Burn</div>
       <div class="stat-value">${escapeHtml(formatAmount(monthExpenses.length ? total / daysInMonth : 0))}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Largest Expense</div>
-      <div class="stat-value">${escapeHtml(formatAmount(largestExpense))}</div>
-    </div>
-    <div class="stat">
-      <div class="stat-label">Top Category</div>
-      <div class="stat-value">${highestCategory ? escapeHtml(highestCategory[0]) : 'None'}</div>
     </div>
     <div class="stat">
       <div class="stat-label">Budgets Exceeded</div>
@@ -160,7 +181,34 @@ export function buildMonthlyReportHtml({
     </div>
   </div>
 
-  <h2>Category Breakdown & Budgets</h2>
+  <div class="stats-grid" style="margin-top: -10px;">
+    <div class="stat">
+      <div class="stat-label">Largest Expense</div>
+      <div class="stat-value">${escapeHtml(formatAmount(largestExpense))}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Smallest Expense</div>
+      <div class="stat-value">${escapeHtml(formatAmount(smallestExpense))}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Top Category</div>
+      <div class="stat-value">${highestCategory ? escapeHtml(highestCategory[0]) : 'None'}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Savings Rate</div>
+      <div class="stat-value">${intelligence.savingsRate}%</div>
+    </div>
+  </div>
+
+  <div class="intelligence-box">
+    <div class="intelligence-title">
+      <span>Financial Advisor Intelligence Summary</span>
+      <span class="badge ${healthBadgeClass}">Status: ${escapeHtml(intelligence.financialHealthStatus)}</span>
+    </div>
+    <p class="intelligence-text">${escapeHtml(intelligence.smartTip)}</p>
+  </div>
+
+  <h2>Category Breakdown & Budget Guardrails</h2>
   <table>
     <thead>
       <tr>
@@ -176,13 +224,27 @@ export function buildMonthlyReportHtml({
     </tbody>
   </table>
 
-  <h2>Transaction Ledger</h2>
+  <h2>Income Ledger (${monthIncome.length})</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Source / Note</th>
+        <th class="numeric">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${incomeRows}
+    </tbody>
+  </table>
+
+  <h2>Transaction Ledger (${monthExpenses.length})</h2>
   <table>
     <thead>
       <tr>
         <th>Date</th>
         <th>Category</th>
-        <th>Note</th>
+        <th>Note / Description</th>
         <th class="numeric">Amount</th>
       </tr>
     </thead>
@@ -192,7 +254,7 @@ export function buildMonthlyReportHtml({
   </table>
 
   <div class="footer">
-    <span>CashTrack · Local-First Expense Ledger</span>
+    <span>CashTrack · Local-First Expense Ledger & Intelligence Engine</span>
     <span>Page 1 of 1</span>
   </div>
 </body>

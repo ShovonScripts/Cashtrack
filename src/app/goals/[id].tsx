@@ -182,6 +182,38 @@ export default function GoalDetailScreen() {
           </Card>
         )}
 
+        {/* Milestone Projections Card */}
+        <Card style={styles.card}>
+          <ThemedText type="defaultBold">Milestone Projections</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">
+            Target thresholds and progress breakdown.
+          </ThemedText>
+          <View style={{ gap: Spacing.two, marginTop: Spacing.one }}>
+            {[
+              { pct: 25, label: 'Quarter Goal (25%)' },
+              { pct: 50, label: 'Halfway Mark (50%)' },
+              { pct: 75, label: 'Three-Quarters (75%)' },
+              { pct: 100, label: 'Full Target (100%)' },
+            ].map((m) => {
+              const target = goal.targetAmount * (m.pct / 100);
+              const reached = goal.contributedAmount >= target;
+              return (
+                <View key={m.pct} style={[styles.milestoneRow, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                  <View style={styles.milestoneInfo}>
+                    <ThemedText type="smallBold">{m.label}</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">{formatAmount(target)}</ThemedText>
+                  </View>
+                  <View style={[styles.milestoneBadge, { backgroundColor: reached ? withAlpha(theme.success, 0.15) : theme.backgroundElement }]}>
+                    <ThemedText type="caption" style={{ color: reached ? theme.success : theme.textSecondary, fontWeight: '700' }}>
+                      {reached ? '✓ Reached' : `${Math.min(100, Math.round((goal.contributedAmount / target) * 100))}%`}
+                    </ThemedText>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </Card>
+
         {/* Add Contribution Form */}
         <Card style={styles.card}>
           <ThemedText type="defaultBold">Add contribution</ThemedText>
@@ -406,5 +438,8 @@ const styles = StyleSheet.create({
   chartColumn: { alignItems: 'center', gap: 4, width: 56 },
   barTrack: { width: 16, height: 70, borderRadius: Radius.pill, justifyContent: 'flex-end', overflow: 'hidden' },
   barFill: { width: '100%', borderRadius: Radius.pill },
+  milestoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.two, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
+  milestoneInfo: { gap: 2 },
+  milestoneBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.small },
   pressed: { opacity: 0.75 },
 });

@@ -442,17 +442,17 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.field}>
-                <ThemedText type="smallBold">Full Name</ThemedText>
+                <ThemedText type="smallBold">Nickname</ThemedText>
                 <TextInput
                   value={name}
                   onChangeText={(val) => {
                     setName(val.slice(0, 50));
                     setIsDirty(true);
                   }}
-                  placeholder="e.g. Alex Johnson"
+                  placeholder="e.g. Alex"
                   placeholderTextColor={theme.textSecondary}
                   autoCapitalize="words"
-                  accessibilityLabel="Full name"
+                  accessibilityLabel="Nickname"
                   style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
                 />
               </View>

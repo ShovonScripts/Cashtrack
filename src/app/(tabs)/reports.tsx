@@ -14,6 +14,7 @@ import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
+import { useIncome } from '@/context/income-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getBudgetInsights, getMonthExpenses } from '@/utils/advisor';
 import { formatDate, sumAmounts, totalForMonth } from '@/utils/expense';
@@ -244,6 +245,7 @@ export default function ReportsScreen() {
     toggleThemeMode,
     themeMode,
   } = useExpenses();
+  const { incomeList } = useIncome();
 
   const [month, setMonth] = useState(() => {
     const today = new Date();
@@ -298,6 +300,7 @@ export default function ReportsScreen() {
       const html = buildMonthlyReportHtml({
         month,
         expenses,
+        incomes: incomeList,
         limits: categoryLimits,
         name: profile.name,
         countryName: country.name,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -150,14 +150,18 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                   </View>
                 </Pressable>
               </View>
-            ) : activeTool === 'calculator' ? (
-              <CalculatorTool />
-            ) : activeTool === 'notes' ? (
-              <NotesTool />
-            ) : activeTool === 'stopwatch' ? (
-              <StopwatchTool />
             ) : (
-              <CurrencyTool />
+              <ScrollView contentContainerStyle={styles.toolScrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                {activeTool === 'calculator' ? (
+                  <CalculatorTool />
+                ) : activeTool === 'notes' ? (
+                  <NotesTool />
+                ) : activeTool === 'stopwatch' ? (
+                  <StopwatchTool />
+                ) : (
+                  <CurrencyTool />
+                )}
+              </ScrollView>
             )}
           </View>
         </View>
@@ -182,8 +186,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
     paddingBottom: 72,
-    maxHeight: '92%',
-    minHeight: 460,
+    maxHeight: '95%',
+    minHeight: 560,
     gap: Spacing.three,
   },
   dragHandleBar: {
@@ -249,5 +253,8 @@ const styles = StyleSheet.create({
   pressedCard: {
     opacity: 0.75,
     transform: [{ scale: 0.97 }],
+  },
+  toolScrollContent: {
+    paddingBottom: Spacing.four,
   },
 });

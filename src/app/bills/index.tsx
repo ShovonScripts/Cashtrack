@@ -161,6 +161,31 @@ export default function BillsScreen() {
           </View>
         </View>
 
+        {/* Calendar View Banner Button */}
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/bills/calendar');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Open calendar view"
+          style={({ pressed }) => [
+            styles.calendarBannerCard,
+            { backgroundColor: theme.card, borderColor: theme.border },
+            pressed && styles.pressed,
+          ]}>
+          <View style={[styles.calendarBannerIcon, { backgroundColor: theme.accentMuted }]}>
+            <MaterialCommunityIcons name="calendar-month" size={22} color={theme.accent} />
+          </View>
+          <View style={styles.calendarBannerCopy}>
+            <ThemedText type="smallBold">Monthly Renewal Calendar</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Tap to view interactive calendar grid of upcoming bills & renewals
+            </ThemedText>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+        </Pressable>
+
         {/* Filter Tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           {tabs.map((t) => {
@@ -438,6 +463,22 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   filterScroll: { gap: Spacing.two, paddingVertical: 2 },
+  calendarBannerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.three,
+    borderRadius: Radius.large,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.three,
+  },
+  calendarBannerIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  calendarBannerCopy: { flex: 1, gap: 2 },
   filterChip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },

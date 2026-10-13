@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card, CardDivider } from '@/components/card';
@@ -36,11 +36,13 @@ function DetailRow({ icon, label, value, wrap = false }: RowProps) {
 
 export default function DebtDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getDebt, settleDebt, deleteDebt } = useDebts();
+  const { getDebt, settleDebt, deleteDebt, addDebtPayment, deleteDebtPayment } = useDebts();
   const { formatAmount } = useExpenses();
   const theme = useTheme();
   const debt = getDebt(id);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentNote, setPaymentNote] = useState('');
 
   if (!debt) {
     return (
@@ -62,6 +64,9 @@ export default function DebtDetailsScreen() {
 
   const isLent = debt.type === 'lent';
   const isSettled = debt.status === 'settled';
+  const payments = debt.payments ?? [];
+  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+  const remainingBalance = Math.max(0, debt.amount - totalPaid);
 
   const handleSettle = () => {
     if (isSubmitting) return;
@@ -79,6 +84,17 @@ export default function DebtDetailsScreen() {
         },
       },
     ]);
+  };
+
+  const handleAddPayment = () => {
+    const parsed = Number(paymentAmount);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      Alert.alert('Invalid Amount', 'Please enter a valid payment amount.');
+      return;
+    }
+    addDebtPayment(debt.id, parsed, paymentNote);
+    setPaymentAmount('');
+    setPaymentNote('');
   };
 
   const handleDelete = () => {
@@ -122,7 +138,10 @@ export default function DebtDetailsScreen() {
           </View>
 
           <ThemedText type="hero" style={[styles.heroValue, { color: isLent ? theme.success : theme.danger }]} numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(debt.amount)}
+            {formatAmount(remainingBalance)}
+          </ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">
+            Original Total: {formatAmount(debt.amount)} {totalPaid > 0 ? `· Paid: ${formatAmount(totalPaid)}` : ''}
           </ThemedText>
 
           <View style={styles.badgeRow}>
@@ -133,7 +152,7 @@ export default function DebtDetailsScreen() {
             </View>
             <View style={[styles.badge, { backgroundColor: isSettled ? theme.cardMuted : theme.accentMuted }]}>
               <ThemedText type="caption" style={{ color: isSettled ? theme.textSecondary : theme.accent, fontWeight: '700' }}>
-                {isSettled ? '✓ Settled' : '● Active'}
+                {isSettled ? '✓ Settled' : remainingBalance === 0 ? '✓ Paid Off' : '● Active'}
               </ThemedText>
             </View>
           </View>
@@ -166,6 +185,73 @@ export default function DebtDetailsScreen() {
           </View>
         </Card>
 
+        {/* Payment Tracking & Settlement History */}
+        <Card style={styles.detailsCard}>
+          <View style={styles.sectionHeader}>
+            <ThemedText type="defaultBold">Settlement History & Payments</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">{payments.length} payments</ThemedText>
+          </View>
+
+          {payments.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary" style={{ fontStyle: 'italic' }}>
+              No partial payments recorded yet. Record a payment below or mark the full debt as settled.
+            </ThemedText>
+          ) : (
+            <View style={{ gap: Spacing.two }}>
+              {payments.map((p, index) => (
+                <View key={p.id}>
+                  {index > 0 && <CardDivider />}
+                  <View style={styles.paymentRow}>
+                    <View style={styles.paymentInfo}>
+                      <ThemedText type="smallBold">{formatAmount(p.amount)}</ThemedText>
+                      <ThemedText type="caption" themeColor="textSecondary">
+                        {formatDate(p.date)} {p.note ? `· ${p.note}` : ''}
+                      </ThemedText>
+                    </View>
+                    <Pressable
+                      onPress={() => deleteDebtPayment(debt.id, p.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Delete payment"
+                      hitSlop={8}>
+                      <MaterialCommunityIcons name="close-circle-outline" size={18} color={theme.danger} />
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {!isSettled && (
+            <View style={styles.addPaymentSection}>
+              <ThemedText type="smallBold">Record Partial Payment</ThemedText>
+              <View style={styles.paymentInputRow}>
+                <TextInput
+                  value={paymentAmount}
+                  onChangeText={setPaymentAmount}
+                  placeholder="Amount"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="decimal-pad"
+                  style={[styles.input, { flex: 1, borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+                />
+                <TextInput
+                  value={paymentNote}
+                  onChangeText={setPaymentNote}
+                  placeholder="Note (opt.)"
+                  placeholderTextColor={theme.textSecondary}
+                  style={[styles.input, { flex: 2, borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+                />
+                <Pressable
+                  onPress={handleAddPayment}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add payment"
+                  style={[styles.addPayBtn, { backgroundColor: theme.accent }]}>
+                  <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </Card>
+
         {/* Action Buttons */}
         <View style={styles.actions}>
           {!isSettled && (
@@ -187,7 +273,7 @@ export default function DebtDetailsScreen() {
               accessibilityState={{ disabled: isSubmitting }}
               style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.success }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
               <MaterialCommunityIcons name="check" size={18} color={theme.onBrand} />
-              <ThemedText type="defaultBold" style={[styles.onAccent, { color: theme.onBrand }]}>{isSubmitting ? 'Settling…' : 'Settle'}</ThemedText>
+              <ThemedText type="defaultBold" style={[styles.onAccent, { color: theme.onBrand }]}>{isSubmitting ? 'Settling…' : 'Settle Full'}</ThemedText>
             </Pressable>
           )}
           <Pressable
@@ -224,11 +310,18 @@ const styles = StyleSheet.create({
   badge: { paddingHorizontal: Spacing.three, paddingVertical: 4, borderRadius: Radius.small },
   detailsCard: { borderRadius: Radius.large },
   padded: { padding: Spacing.three },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.two },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },
   rowWrapped: { flexDirection: 'column', alignItems: 'flex-start', gap: Spacing.one },
   labelGroup: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   rowValue: { flexShrink: 1, textAlign: 'right' },
   valueWrapped: { alignSelf: 'stretch' },
+  paymentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6 },
+  paymentInfo: { gap: 2, flex: 1 },
+  addPaymentSection: { marginTop: Spacing.three, gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e4e4ed', paddingTop: Spacing.three },
+  paymentInputRow: { flexDirection: 'row', gap: Spacing.two },
+  input: { minHeight: 42, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 13 },
+  addPayBtn: { width: 42, height: 42, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   primaryButton: { flex: 1, minWidth: 130, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one, borderRadius: Radius.medium },
   secondaryButton: { flex: 1, minWidth: 130, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },

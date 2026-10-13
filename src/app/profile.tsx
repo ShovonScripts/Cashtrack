@@ -35,7 +35,7 @@ type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { label: 'Woman', value: 'woman', icon: 'human-female' },
   { label: 'Man', value: 'man', icon: 'human-male' },
-  { label: 'Other / Prefer not to say', value: '', icon: 'account-outline' },
+  { label: 'Other', value: '', icon: 'account-outline' },
 ];
 
 function triggerHaptic() {
@@ -266,7 +266,7 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           {/* Cover & Avatar Header Card */}
           <Card style={styles.bannerCard} padded={false}>
@@ -282,7 +282,7 @@ export default function ProfileScreen() {
               <View style={styles.completionBarContainer}>
                 <View style={styles.completionRow}>
                   <ThemedText type="caption" style={styles.completionText}>
-                    Profile Setup: {completionPercent}%
+                    Setup: {completionPercent}%
                   </ThemedText>
                 </View>
                 <View style={styles.completionTrack}>
@@ -297,14 +297,14 @@ export default function ProfileScreen() {
 
               {/* Edit Cover Button */}
               <View style={styles.coverEditOverlay}>
-                <MaterialCommunityIcons name="image-edit-outline" size={13} color="#FFFFFF" />
+                <MaterialCommunityIcons name="image-edit-outline" size={12} color="#FFFFFF" />
                 <ThemedText type="caption" style={styles.coverEditText}>
-                  Edit Banner
+                  Banner
                 </ThemedText>
               </View>
             </Pressable>
 
-            {/* Avatar Row (Overlaps Cover Photo Bottom) */}
+            {/* Avatar Row */}
             <View style={styles.avatarRowContainer}>
               <Pressable
                 onPress={pickProfilePhoto}
@@ -315,31 +315,31 @@ export default function ProfileScreen() {
                   <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
                 ) : (
                   <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
-                    <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 28 }}>
+                    <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 24 }}>
                       {name ? name.charAt(0).toUpperCase() : 'S'}
                     </ThemedText>
                   </View>
                 )}
                 <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accent, borderColor: theme.card }]}>
-                  <MaterialCommunityIcons name="camera" size={13} color="#FFFFFF" />
+                  <MaterialCommunityIcons name="camera" size={12} color="#FFFFFF" />
                 </View>
               </Pressable>
             </View>
 
-            {/* User Profile Info (Safely BELOW Cover Photo, No Overlapping) */}
+            {/* User Profile Info */}
             <View style={styles.profileInfoContainer}>
               <View style={styles.nameRow}>
                 <ThemedText type="defaultBold" style={styles.displayNameText}>
                   {name.trim() || 'CashTrack User'}
                 </ThemedText>
                 <View style={[styles.badgePill, { backgroundColor: theme.accentMuted }]}>
-                  <MaterialCommunityIcons name="shield-check-outline" size={12} color={theme.accent} />
+                  <MaterialCommunityIcons name="shield-check-outline" size={11} color={theme.accent} />
                   <ThemedText type="caption" style={[styles.badgePillText, { color: theme.accent }]}>
                     Private
                   </ThemedText>
                 </View>
               </View>
-              <ThemedText type="caption" themeColor="textSecondary" style={styles.bioText}>
+              <ThemedText type="caption" themeColor="textSecondary" style={styles.bioText} numberOfLines={2}>
                 {bio.trim() || 'Managing finances on device · Private & offline'}
               </ThemedText>
             </View>
@@ -347,49 +347,30 @@ export default function ProfileScreen() {
             {/* Account Quick Stats Grid Strip */}
             <View style={[styles.statsStrip, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
               <View style={styles.statBox}>
-                <ThemedText type="defaultBold" style={styles.statNumber}>
-                  {expenses.length}
-                </ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
-                  Logged
-                </ThemedText>
+                <ThemedText type="defaultBold" style={styles.statNumber}>{expenses.length}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>Logged</ThemedText>
               </View>
               <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
               <View style={styles.statBox}>
-                <ThemedText type="defaultBold" style={styles.statNumber}>
-                  {country.currencyCode}
-                </ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
-                  {country.symbol.trim()} Currency
-                </ThemedText>
+                <ThemedText type="defaultBold" style={styles.statNumber}>{country.currencyCode}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>Currency</ThemedText>
               </View>
               <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
               <View style={styles.statBox}>
-                <ThemedText type="defaultBold" style={styles.statNumber}>
-                  {goals.length}
-                </ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
-                  Active Goals
-                </ThemedText>
+                <ThemedText type="defaultBold" style={styles.statNumber}>{goals.length}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>Pots</ThemedText>
               </View>
               <View style={[styles.statDivider, { backgroundColor: theme.border }]} />
               <View style={styles.statBox}>
-                <ThemedText type="defaultBold" style={styles.statNumber}>
-                  {customCategories.length}
-                </ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>
-                  Custom Tags
-                </ThemedText>
+                <ThemedText type="defaultBold" style={styles.statNumber}>{customCategories.length}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary" style={styles.statLabel}>Tags</ThemedText>
               </View>
             </View>
           </Card>
 
           {/* Segmented Tab Navigation Selector */}
           <View style={[styles.tabBarContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.tabBarScrollContent}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabBarScrollContent}>
               {(
                 [
                   { key: 'identity', label: 'Identity', icon: 'account-outline' },
@@ -415,15 +396,15 @@ export default function ProfileScreen() {
                     ]}>
                     <MaterialCommunityIcons
                       name={tab.icon}
-                      size={16}
-                      color={active ? theme.text : theme.textSecondary}
+                      size={15}
+                      color={active ? theme.accent : theme.textSecondary}
                     />
                     <ThemedText
                       type="caption"
                       style={{
                         color: active ? theme.text : theme.textSecondary,
                         fontWeight: active ? '700' : '500',
-                        fontSize: 12,
+                        fontSize: 11.5,
                       }}>
                       {tab.label}
                     </ThemedText>
@@ -437,7 +418,7 @@ export default function ProfileScreen() {
           {activeTab === 'identity' && (
             <Card style={styles.sectionCard}>
               <View style={styles.cardHeaderRow}>
-                <MaterialCommunityIcons name="account-edit-outline" size={20} color={theme.accent} />
+                <MaterialCommunityIcons name="account-edit-outline" size={18} color={theme.accent} />
                 <ThemedText type="defaultBold">Personal Information</ThemedText>
               </View>
 
@@ -458,16 +439,16 @@ export default function ProfileScreen() {
               </View>
 
               <View style={styles.field}>
-                <ThemedText type="smallBold">Personal Financial Goal / Bio <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
+                <ThemedText type="smallBold">Financial Goal / Bio <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
                 <TextInput
                   value={bio}
                   onChangeText={(val) => {
                     setBio(val.slice(0, 150));
                     setIsDirty(true);
                   }}
-                  placeholder="e.g. Saving for house downpayment & emergency fund"
+                  placeholder="e.g. Saving for house & emergency fund"
                   placeholderTextColor={theme.textSecondary}
-                  accessibilityLabel="Personal financial goal or bio"
+                  accessibilityLabel="Financial goal or bio"
                   multiline
                   numberOfLines={2}
                   style={[
@@ -480,7 +461,7 @@ export default function ProfileScreen() {
 
               <View style={styles.rowFields}>
                 <View style={[styles.field, { flex: 1 }]}>
-                  <ThemedText type="smallBold">Age <ThemedText type="caption" themeColor="textSecondary">(1 - 120)</ThemedText></ThemedText>
+                  <ThemedText type="smallBold">Age <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
                   <TextInput
                     value={ageText}
                     onChangeText={(val) => {
@@ -498,7 +479,7 @@ export default function ProfileScreen() {
 
               <View style={styles.field}>
                 <ThemedText type="smallBold">Gender <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
-                <View style={styles.choiceGrid}>
+                <View style={styles.choiceGridHorizontal}>
                   {GENDER_CHOICES.map((choice) => {
                     const selected = gender === choice.value;
                     return (
@@ -512,7 +493,7 @@ export default function ProfileScreen() {
                         accessibilityRole="button"
                         accessibilityState={{ selected }}
                         style={[
-                          styles.choiceBtn,
+                          styles.choiceBtnCompact,
                           {
                             borderColor: selected ? theme.accent : theme.border,
                             backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
@@ -520,10 +501,10 @@ export default function ProfileScreen() {
                         ]}>
                         <MaterialCommunityIcons
                           name={choice.icon}
-                          size={18}
-                          color={selected ? theme.text : theme.textSecondary}
+                          size={16}
+                          color={selected ? theme.accent : theme.textSecondary}
                         />
-                        <ThemedText type="small" themeColor={selected ? 'text' : 'textSecondary'}>
+                        <ThemedText type="caption" style={{ color: selected ? theme.text : theme.textSecondary, fontWeight: selected ? '700' : '500' }}>
                           {choice.label}
                         </ThemedText>
                       </Pressable>
@@ -546,16 +527,16 @@ export default function ProfileScreen() {
               {/* Theme Mode Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="palette-outline" size={20} color="#F59E0B" />
+                  <MaterialCommunityIcons name="palette-outline" size={18} color="#F59E0B" />
                   <ThemedText type="defaultBold">App Theme & Styling</ThemedText>
                 </View>
 
-                <View style={styles.themeGrid}>
+                <View style={styles.themeGridHorizontal}>
                   {(
                     [
-                      { mode: 'system', title: 'System Auto', icon: 'cellphone-cog', desc: 'Match OS dark mode settings' },
-                      { mode: 'light', title: 'Light Mode', icon: 'weather-sunny', desc: 'Clean bright layout' },
-                      { mode: 'dark', title: 'Dark Mode', icon: 'weather-night', desc: 'OLED friendly dark theme' },
+                      { mode: 'system', title: 'Auto', icon: 'cellphone-cog' },
+                      { mode: 'light', title: 'Light', icon: 'weather-sunny' },
+                      { mode: 'dark', title: 'Dark', icon: 'weather-night' },
                     ] as const
                   ).map((item) => {
                     const selected = themeMode === item.mode;
@@ -569,28 +550,20 @@ export default function ProfileScreen() {
                         accessibilityRole="button"
                         accessibilityState={{ selected }}
                         style={({ pressed }) => [
-                          styles.themeCard,
+                          styles.themeCardCompact,
                           {
                             borderColor: selected ? theme.accent : theme.border,
                             backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
                           },
                           pressed && styles.pressed,
                         ]}>
-                        <View style={styles.themeCardHeader}>
-                          <MaterialCommunityIcons
-                            name={item.icon}
-                            size={22}
-                            color={selected ? theme.accent : theme.textSecondary}
-                          />
-                          {selected && (
-                            <MaterialCommunityIcons name="check-circle" size={16} color={theme.accent} />
-                          )}
-                        </View>
-                        <ThemedText type="smallBold" style={{ marginTop: 4 }}>
+                        <MaterialCommunityIcons
+                          name={item.icon}
+                          size={18}
+                          color={selected ? theme.accent : theme.textSecondary}
+                        />
+                        <ThemedText type="caption" style={{ fontWeight: selected ? '700' : '600', color: selected ? theme.text : theme.textSecondary }}>
                           {item.title}
-                        </ThemedText>
-                        <ThemedText type="caption" themeColor="textSecondary">
-                          {item.desc}
                         </ThemedText>
                       </Pressable>
                     );
@@ -601,7 +574,7 @@ export default function ProfileScreen() {
               {/* Regional & Currency Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="earth" size={20} color="#2D9CDB" />
+                  <MaterialCommunityIcons name="earth" size={18} color="#2D9CDB" />
                   <ThemedText type="defaultBold">Country & Regional Format</ThemedText>
                 </View>
 
@@ -612,12 +585,12 @@ export default function ProfileScreen() {
                   }}
                   accessibilityRole="button"
                   style={({ pressed }) => [
-                    styles.settingRowItem,
+                    styles.settingRowItemCompact,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressed,
                   ]}>
-                  <View style={[styles.rowIconBadge, { backgroundColor: '#2D9CDB1E' }]}>
-                    <MaterialCommunityIcons name="flag-outline" size={20} color="#2D9CDB" />
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#2D9CDB1E' }]}>
+                    <MaterialCommunityIcons name="flag-outline" size={17} color="#2D9CDB" />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Country & Currency</ThemedText>
@@ -625,19 +598,17 @@ export default function ProfileScreen() {
                       {country.name} · {country.currencyCode} ({country.symbol.trim()})
                     </ThemedText>
                   </View>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </Pressable>
 
                 {/* Temperature Unit Toggle */}
-                <View style={[styles.settingRowItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-                  <View style={[styles.rowIconBadge, { backgroundColor: '#3B82F61E' }]}>
-                    <MaterialCommunityIcons name="thermometer" size={20} color="#3B82F6" />
+                <View style={[styles.settingRowItemCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#3B82F61E' }]}>
+                    <MaterialCommunityIcons name="thermometer" size={17} color="#3B82F6" />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Temperature Unit</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      Used in weather widgets & reports
-                    </ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Widgets & reports</ThemedText>
                   </View>
                   <View style={styles.segmentedGroup}>
                     {(['F', 'C'] as const).map((unit) => {
@@ -652,14 +623,10 @@ export default function ProfileScreen() {
                           accessibilityRole="button"
                           accessibilityState={{ selected }}
                           style={[
-                            styles.segmentedBtn,
-                            {
-                              backgroundColor: selected ? theme.accent : 'transparent',
-                            },
+                            styles.segmentedBtnCompact,
+                            { backgroundColor: selected ? theme.accent : 'transparent' },
                           ]}>
-                          <ThemedText
-                            type="caption"
-                            style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
+                          <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
                             °{unit}
                           </ThemedText>
                         </Pressable>
@@ -669,15 +636,13 @@ export default function ProfileScreen() {
                 </View>
 
                 {/* First Day of Week */}
-                <View style={[styles.settingRowItem, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-                  <View style={[styles.rowIconBadge, { backgroundColor: '#10B9811E' }]}>
-                    <MaterialCommunityIcons name="calendar-start" size={20} color="#10B981" />
+                <View style={[styles.settingRowItemCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#10B9811E' }]}>
+                    <MaterialCommunityIcons name="calendar-start" size={17} color="#10B981" />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">First Day of Week</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      For weekly summary reports
-                    </ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Weekly summary reports</ThemedText>
                   </View>
                   <View style={styles.segmentedGroup}>
                     {(['monday', 'sunday'] as const).map((day) => {
@@ -692,14 +657,10 @@ export default function ProfileScreen() {
                           accessibilityRole="button"
                           accessibilityState={{ selected }}
                           style={[
-                            styles.segmentedBtn,
-                            {
-                              backgroundColor: selected ? theme.accent : 'transparent',
-                            },
+                            styles.segmentedBtnCompact,
+                            { backgroundColor: selected ? theme.accent : 'transparent' },
                           ]}>
-                          <ThemedText
-                            type="caption"
-                            style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
+                          <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
                             {day === 'monday' ? 'Mon' : 'Sun'}
                           </ThemedText>
                         </Pressable>
@@ -715,19 +676,17 @@ export default function ProfileScreen() {
           {activeTab === 'notifications' && (
             <Card style={styles.sectionCard}>
               <View style={styles.cardHeaderRow}>
-                <MaterialCommunityIcons name="bell-ring-outline" size={20} color="#EB5757" />
+                <MaterialCommunityIcons name="bell-ring-outline" size={18} color="#EB5757" />
                 <ThemedText type="defaultBold">Smart Notifications & Alerts</ThemedText>
               </View>
 
-              <View style={[styles.switchRow, { borderBottomColor: theme.border }]}>
-                <View style={[styles.rowIconBadge, { backgroundColor: '#EB57571E' }]}>
-                  <MaterialCommunityIcons name="calendar-clock" size={20} color="#EB5757" />
+              <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
+                <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#EB57571E' }]}>
+                  <MaterialCommunityIcons name="calendar-clock" size={17} color="#EB5757" />
                 </View>
                 <View style={styles.switchCopy}>
-                  <ThemedText type="smallBold">Bill Payment Reminders</ThemedText>
-                  <ThemedText type="caption" themeColor="textSecondary">
-                    Alert before due dates for upcoming bills & EMIs
-                  </ThemedText>
+                  <ThemedText type="smallBold">Bill Reminders</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">Upcoming bills & EMIs</ThemedText>
                 </View>
                 <Switch
                   value={enableBillReminders}
@@ -741,15 +700,13 @@ export default function ProfileScreen() {
                 />
               </View>
 
-              <View style={[styles.switchRow, { borderBottomColor: theme.border }]}>
-                <View style={[styles.rowIconBadge, { backgroundColor: '#BB6BD91E' }]}>
-                  <MaterialCommunityIcons name="scale-balance" size={20} color="#BB6BD9" />
+              <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
+                <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#BB6BD91E' }]}>
+                  <MaterialCommunityIcons name="scale-balance" size={17} color="#BB6BD9" />
                 </View>
                 <View style={styles.switchCopy}>
-                  <ThemedText type="smallBold">Budget Cap Threshold Warnings</ThemedText>
-                  <ThemedText type="caption" themeColor="textSecondary">
-                    Notify when monthly spending hits 80% & 100% of category caps
-                  </ThemedText>
+                  <ThemedText type="smallBold">Budget Caps</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">80% & 100% cap warnings</ThemedText>
                 </View>
                 <Switch
                   value={enableBudgetAlerts}
@@ -763,15 +720,13 @@ export default function ProfileScreen() {
                 />
               </View>
 
-              <View style={styles.switchRow}>
-                <View style={[styles.rowIconBadge, { backgroundColor: '#7667F21E' }]}>
-                  <MaterialCommunityIcons name="notebook-edit-outline" size={20} color="#7667F2" />
+              <View style={styles.switchRowCompact}>
+                <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#7667F21E' }]}>
+                  <MaterialCommunityIcons name="notebook-edit-outline" size={17} color="#7667F2" />
                 </View>
                 <View style={styles.switchCopy}>
-                  <ThemedText type="smallBold">Daily Expense Log Check-in</ThemedText>
-                  <ThemedText type="caption" themeColor="textSecondary">
-                    Gentle evening reminder to log today&apos;s cash expenses
-                  </ThemedText>
+                  <ThemedText type="smallBold">Daily Check-in</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">Evening logging reminder</ThemedText>
                 </View>
                 <Switch
                   value={enableDailyReminder}
@@ -785,10 +740,10 @@ export default function ProfileScreen() {
                 />
               </View>
 
-              <View style={[styles.infoBanner, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-                <MaterialCommunityIcons name="shield-lock-outline" size={18} color={theme.accent} />
-                <ThemedText type="caption" themeColor="textSecondary" style={{ flex: 1 }}>
-                  All notifications run locally on your device. CashTrack does not track or store your push token on remote servers.
+              <View style={[styles.infoBannerCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                <MaterialCommunityIcons name="shield-lock-outline" size={15} color={theme.accent} />
+                <ThemedText type="caption" themeColor="textSecondary" style={{ flex: 1, fontSize: 11 }}>
+                  Local execution only · No push tokens uploaded to cloud servers.
                 </ThemedText>
               </View>
             </Card>
@@ -800,7 +755,7 @@ export default function ProfileScreen() {
               {/* Data Backup & Export Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="database-sync-outline" size={20} color="#159A8C" />
+                  <MaterialCommunityIcons name="database-sync-outline" size={18} color="#159A8C" />
                   <ThemedText type="defaultBold">Data Export & Backup</ThemedText>
                 </View>
 
@@ -810,24 +765,22 @@ export default function ProfileScreen() {
                   accessibilityRole="button"
                   accessibilityState={{ disabled: exporting }}
                   style={({ pressed }) => [
-                    styles.settingRowItem,
+                    styles.settingRowItemCompact,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressed,
                   ]}>
-                  <View style={[styles.rowIconBadge, { backgroundColor: '#159A8C1E' }]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#159A8C1E' }]}>
                     {exporting ? (
                       <ActivityIndicator size="small" color="#159A8C" />
                     ) : (
-                      <MaterialCommunityIcons name="file-excel-outline" size={20} color="#159A8C" />
+                      <MaterialCommunityIcons name="file-excel-outline" size={17} color="#159A8C" />
                     )}
                   </View>
                   <View style={styles.rowCopy}>
-                    <ThemedText type="smallBold">Export Transactions to CSV</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      Download full spreadsheet log of all recorded expenses
-                    </ThemedText>
+                    <ThemedText type="smallBold">Export CSV Spreadsheet</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Full recorded expense ledger</ThemedText>
                   </View>
-                  <MaterialCommunityIcons name="export-variant" size={20} color={theme.textSecondary} />
+                  <MaterialCommunityIcons name="export-variant" size={18} color={theme.textSecondary} />
                 </Pressable>
 
                 <Pressable
@@ -837,20 +790,18 @@ export default function ProfileScreen() {
                   }}
                   accessibilityRole="button"
                   style={({ pressed }) => [
-                    styles.settingRowItem,
+                    styles.settingRowItemCompact,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressed,
                   ]}>
-                  <View style={[styles.rowIconBadge, { backgroundColor: '#7667F21E' }]}>
-                    <MaterialCommunityIcons name="compass-outline" size={20} color="#7667F2" />
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#7667F21E' }]}>
+                    <MaterialCommunityIcons name="compass-outline" size={17} color="#7667F2" />
                   </View>
                   <View style={styles.rowCopy}>
-                    <ThemedText type="smallBold">Replay App Tour & Guide</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      Review CashTrack features walkthrough and onboarding
-                    </ThemedText>
+                    <ThemedText type="smallBold">Replay App Walkthrough</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Onboarding tour & tips</ThemedText>
                   </View>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </Pressable>
 
                 <Pressable
@@ -860,43 +811,39 @@ export default function ProfileScreen() {
                   }}
                   accessibilityRole="button"
                   style={({ pressed }) => [
-                    styles.settingRowItem,
+                    styles.settingRowItemCompact,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressed,
                   ]}>
-                  <View style={[styles.rowIconBadge, { backgroundColor: '#5077C81E' }]}>
-                    <MaterialCommunityIcons name="information-outline" size={20} color="#5077C8" />
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#5077C81E' }]}>
+                    <MaterialCommunityIcons name="information-outline" size={17} color="#5077C8" />
                   </View>
                   <View style={styles.rowCopy}>
-                    <ThemedText type="smallBold">About CashTrack & Support</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">
-                      Privacy promise, app version & developer info
-                    </ThemedText>
+                    <ThemedText type="smallBold">About CashTrack</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Privacy promise & version</ThemedText>
                   </View>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </Pressable>
               </Card>
 
               {/* Danger Zone */}
               <Card style={[styles.sectionCard, { borderColor: '#FF6B6B40' }]}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="alert-circle-outline" size={20} color="#FF6B6B" />
-                  <ThemedText type="defaultBold" style={{ color: '#FF6B6B' }}>
-                    Danger Zone
-                  </ThemedText>
+                  <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#FF6B6B" />
+                  <ThemedText type="defaultBold" style={{ color: '#FF6B6B' }}>Danger Zone</ThemedText>
                 </View>
 
                 <Pressable
                   onPress={handleResetData}
                   accessibilityRole="button"
                   style={({ pressed }) => [
-                    styles.resetBtn,
+                    styles.resetBtnCompact,
                     { backgroundColor: '#FF6B6B15', borderColor: '#FF6B6B60' },
                     pressed && styles.pressed,
                   ]}>
-                  <MaterialCommunityIcons name="trash-can-outline" size={18} color="#FF6B6B" />
+                  <MaterialCommunityIcons name="trash-can-outline" size={16} color="#FF6B6B" />
                   <ThemedText type="smallBold" style={{ color: '#FF6B6B' }}>
-                    Reset & Wipe All Local Data
+                    Wipe All Local Data
                   </ThemedText>
                 </Pressable>
               </Card>
@@ -904,7 +851,7 @@ export default function ProfileScreen() {
           )}
 
           <ThemedText type="caption" themeColor="textSecondary" style={styles.footerNote}>
-            CashTrack stores your financial records strictly on device storage. Your data is never uploaded to cloud databases without your explicit consent.
+            CashTrack is 100% local-first. Your financial records never leave your device.
           </ThemedText>
         </View>
       </ScrollView>
@@ -914,9 +861,7 @@ export default function ProfileScreen() {
         <View style={[styles.floatingActionBar, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.floatingActionCopy}>
             <ThemedText type="smallBold">Unsaved Changes</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Save updates to your profile
-            </ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">Save updates</ThemedText>
           </View>
           <View style={styles.floatingActionButtons}>
             <Pressable
@@ -936,9 +881,7 @@ export default function ProfileScreen() {
                 pressed && styles.pressed,
                 !ageIsValid && styles.disabled,
               ]}>
-              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-                Save
-              </ThemedText>
+              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Save</ThemedText>
             </Pressable>
           </View>
         </View>
@@ -955,8 +898,8 @@ export default function ProfileScreen() {
           <View style={[styles.modalContentCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <MaterialCommunityIcons name="image-multiple" size={22} color={theme.accent} />
-                <ThemedText type="subtitle" style={{ fontWeight: '700' }}>
+                <MaterialCommunityIcons name="image-multiple" size={20} color={theme.accent} />
+                <ThemedText type="subtitle" style={{ fontWeight: '700', fontSize: 18 }}>
                   Choose Banner Preset
                 </ThemedText>
               </View>
@@ -965,15 +908,15 @@ export default function ProfileScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Close modal"
                 style={styles.modalCloseBtn}>
-                <MaterialCommunityIcons name="close" size={20} color={theme.textSecondary} />
+                <MaterialCommunityIcons name="close" size={18} color={theme.textSecondary} />
               </Pressable>
             </View>
 
-            <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: 12 }}>
-              Select a preset banner image or upload your custom photo.
+            <ThemedText type="caption" style={{ color: theme.textSecondary, marginBottom: 10 }}>
+              Select a preset banner or upload custom image.
             </ThemedText>
 
-            <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
               <View style={styles.presetGrid}>
                 {COVER_PRESETS.map((preset) => {
                   const activeUri = coverPhotoUri || 'default-cover';
@@ -997,8 +940,8 @@ export default function ProfileScreen() {
                     >
                       <Image source={getCoverSource(preset.uri)} style={styles.presetThumbnail} />
                       <View style={styles.presetMeta}>
-                        <ThemedText type="smallBold">{preset.name}</ThemedText>
-                        <ThemedText type="caption" numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 11 }}>
+                        <ThemedText type="smallBold" style={{ fontSize: 13 }}>{preset.name}</ThemedText>
+                        <ThemedText type="caption" numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 10.5 }}>
                           {preset.description}
                         </ThemedText>
                       </View>
@@ -1013,7 +956,7 @@ export default function ProfileScreen() {
               </View>
             </ScrollView>
 
-            <View style={{ marginTop: 16 }}>
+            <View style={{ marginTop: 12 }}>
               <Pressable
                 onPress={() => {
                   setIsCoverModalOpen(false);
@@ -1023,9 +966,9 @@ export default function ProfileScreen() {
                 accessibilityLabel="Upload Custom Banner Photo"
                 style={[styles.modalActionBtn, { backgroundColor: Brand.primary }]}
               >
-                <MaterialCommunityIcons name="image-plus" size={18} color="#FFFFFF" />
-                <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-                  Upload Custom Photo from Gallery
+                <MaterialCommunityIcons name="image-plus" size={16} color="#FFFFFF" />
+                <ThemedText type="smallBold" style={{ color: '#FFFFFF', fontSize: 13 }}>
+                  Upload Custom Photo
                 </ThemedText>
               </Pressable>
             </View>
@@ -1040,200 +983,198 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   outerContainer: { flex: 1 },
-  content: { flexGrow: 1, paddingBottom: 110 },
+  content: { flexGrow: 1, paddingBottom: 100 },
   container: {
     width: '100%',
-    maxWidth: 720,
+    maxWidth: 680,
     alignSelf: 'center',
-    padding: Spacing.three,
-    gap: Spacing.three,
+    padding: Spacing.two,
+    gap: Spacing.two,
   },
   savedToast: {
     position: 'absolute',
-    top: 12,
-    left: 20,
-    right: 20,
+    top: 10,
+    left: 16,
+    right: 16,
     zIndex: 999,
-    maxWidth: 720,
+    maxWidth: 680,
     alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: Radius.pill,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  bannerCard: { overflow: 'hidden', paddingBottom: Spacing.three },
-  coverContainer: { height: 150, width: '100%', position: 'relative' },
-  coverImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  coverPlaceholder: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 4,
-  },
-  completionBarContainer: {
-    position: 'absolute',
-    top: 10,
-    left: 12,
-    gap: 3,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.medium,
-  },
-  completionRow: { flexDirection: 'row', alignItems: 'center' },
-  completionText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
-  completionTrack: { width: 80, height: 4, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, overflow: 'hidden' },
-  completionFill: { height: '100%', borderRadius: 2 },
-  coverEditOverlay: {
-    position: 'absolute',
-    top: 10,
-    right: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: Radius.pill,
-    gap: 4,
-  },
-  coverEditText: { color: '#FFFFFF', fontSize: 11, fontWeight: '600' },
-  avatarRowContainer: {
-    paddingHorizontal: Spacing.three,
-    marginTop: -42, // Only the avatar circle overlaps the cover photo!
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-  },
-  avatarWrapper: {
-    position: 'relative',
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    borderWidth: 4,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  avatarImage: { width: '100%', height: '100%', borderRadius: 40, resizeMode: 'cover' },
-  avatarPlaceholder: { width: '100%', height: '100%', borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
-  avatarCameraBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-  },
-  profileInfoContainer: {
-    paddingHorizontal: Spacing.three,
-    marginTop: Spacing.two,
-    gap: 4,
-  },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  displayNameText: { fontSize: 22, fontWeight: '800', lineHeight: 28 },
-  bioText: { fontSize: 13, lineHeight: 18 },
-  badgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-  },
-  badgePillText: { fontSize: 10, fontWeight: '700' },
-  statsStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: Spacing.three,
-    marginTop: Spacing.three,
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 12,
-  },
-  statBox: { flex: 1, alignItems: 'center', gap: 2 },
-  statNumber: { fontSize: 15, fontWeight: '800' },
-  statLabel: { fontSize: 10 },
-  statDivider: { width: StyleSheet.hairlineWidth, height: '60%' },
-  tabBarContainer: {
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: 4,
-  },
-  tabBarScrollContent: {
-    flexDirection: 'row',
-    gap: 6,
-    paddingHorizontal: 2,
-  },
-  tabButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 8,
     paddingHorizontal: 14,
+    borderRadius: Radius.pill,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+  bannerCard: { overflow: 'hidden', paddingBottom: Spacing.two },
+  coverContainer: { height: 120, width: '100%', position: 'relative' },
+  coverImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  completionBarContainer: {
+    position: 'absolute',
+    top: 8,
+    left: 10,
+    gap: 2,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.small,
+  },
+  completionRow: { flexDirection: 'row', alignItems: 'center' },
+  completionText: { color: '#FFFFFF', fontSize: 9.5, fontWeight: '700' },
+  completionTrack: { width: 70, height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, overflow: 'hidden' },
+  completionFill: { height: '100%', borderRadius: 2 },
+  coverEditOverlay: {
+    position: 'absolute',
+    top: 8,
+    right: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    gap: 3,
+  },
+  coverEditText: { color: '#FFFFFF', fontSize: 10.5, fontWeight: '600' },
+  avatarRowContainer: {
+    paddingHorizontal: Spacing.two,
+    marginTop: -34,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 3,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  avatarImage: { width: '100%', height: '100%', borderRadius: 32, resizeMode: 'cover' },
+  avatarPlaceholder: { width: '100%', height: '100%', borderRadius: 32, justifyContent: 'center', alignItems: 'center' },
+  avatarCameraBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+  },
+  profileInfoContainer: {
+    paddingHorizontal: Spacing.two,
+    marginTop: 6,
+    gap: 2,
+  },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
+  displayNameText: { fontSize: 18, fontWeight: '800', lineHeight: 24 },
+  bioText: { fontSize: 12, lineHeight: 16 },
+  badgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.pill,
+  },
+  badgePillText: { fontSize: 9.5, fontWeight: '700' },
+  statsStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.two,
+    marginTop: Spacing.two,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 8,
+  },
+  statBox: { flex: 1, alignItems: 'center', gap: 1 },
+  statNumber: { fontSize: 14, fontWeight: '800' },
+  statLabel: { fontSize: 9.5 },
+  statDivider: { width: StyleSheet.hairlineWidth, height: '55%' },
+  tabBarContainer: {
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 3,
+  },
+  tabBarScrollContent: {
+    flexDirection: 'row',
+    gap: 4,
+    paddingHorizontal: 2,
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
     borderRadius: Radius.small,
   },
   tabButtonActive: {
     borderRadius: Radius.small,
   },
-  tabSectionStack: { gap: Spacing.three },
-  sectionCard: { gap: Spacing.two, padding: Spacing.three },
-  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  field: { gap: 4 },
+  tabSectionStack: { gap: Spacing.two },
+  sectionCard: { gap: Spacing.two, padding: Spacing.two },
+  cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  field: { gap: 3 },
   rowFields: { flexDirection: 'row', gap: Spacing.two },
   input: {
-    minHeight: 42,
+    minHeight: 38,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Spacing.three,
-    fontSize: 14,
+    paddingHorizontal: Spacing.two,
+    fontSize: 13,
   },
-  multilineInput: { minHeight: 64, paddingTop: 8, paddingBottom: 8, textAlignVertical: 'top' },
-  choiceGrid: { flexDirection: 'column', gap: 6 },
-  choiceBtn: {
-    minHeight: 44,
+  multilineInput: { minHeight: 52, paddingTop: 6, paddingBottom: 6, textAlignVertical: 'top' },
+  choiceGridHorizontal: { flexDirection: 'row', gap: 6 },
+  choiceBtnCompact: {
+    flex: 1,
+    minHeight: 38,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.three,
-    gap: 8,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+    gap: 5,
   },
-  themeGrid: { gap: Spacing.two },
-  themeCard: {
+  themeGridHorizontal: { flexDirection: 'row', gap: 6 },
+  themeCardCompact: {
+    flex: 1,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    padding: Spacing.two,
-    gap: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
   },
-  themeCardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  settingRowItem: {
-    minHeight: 52,
+  settingRowItemCompact: {
+    minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 8,
-    gap: Spacing.three,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 6,
+    gap: Spacing.two,
   },
-  rowIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.medium,
+  rowIconBadgeCompact: {
+    width: 30,
+    height: 30,
+    borderRadius: Radius.small,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1244,71 +1185,71 @@ const styles = StyleSheet.create({
     padding: 2,
     borderRadius: Radius.small,
   },
-  segmentedBtn: {
-    paddingHorizontal: 12,
-    minHeight: 44,
+  segmentedBtnCompact: {
+    paddingHorizontal: 10,
+    minHeight: 32,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radius.small - 1,
   },
-  switchRow: {
+  switchRowCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
     gap: Spacing.two,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  switchCopy: { flex: 1, gap: 2 },
-  infoBanner: {
+  switchCopy: { flex: 1, gap: 1 },
+  infoBannerCompact: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     padding: Spacing.two,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
-    marginTop: 4,
+    marginTop: 2,
   },
-  resetBtn: {
+  resetBtnCompact: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    minHeight: 44,
+    gap: 6,
+    minHeight: 40,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  footerNote: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three, marginTop: Spacing.one },
+  footerNote: { textAlign: 'center', lineHeight: 16, paddingHorizontal: Spacing.two, marginTop: Spacing.one, fontSize: 10.5 },
   floatingActionBar: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 16,
     left: 16,
     right: 16,
-    maxWidth: 720,
+    maxWidth: 680,
     alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.three,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: Radius.large,
     borderWidth: StyleSheet.hairlineWidth,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   floatingActionCopy: { gap: 1 },
-  floatingActionButtons: { flexDirection: 'row', gap: 8 },
+  floatingActionButtons: { flexDirection: 'row', gap: 6 },
   cancelBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
   },
   saveBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: Radius.medium,
   },
   modalOverlay: {
@@ -1320,30 +1261,30 @@ const styles = StyleSheet.create({
   },
   modalContentCard: {
     width: '100%',
-    maxWidth: 480,
+    maxWidth: 420,
     borderRadius: Radius.xlarge,
     borderWidth: 1,
-    padding: 18,
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.2,
-    shadowRadius: 12,
+    shadowRadius: 10,
     elevation: 8,
   },
   modalHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   modalCloseBtn: {
     padding: 4,
   },
   presetGrid: {
-    gap: 10,
+    gap: 8,
   },
   presetCard: {
-    borderRadius: Radius.large,
+    borderRadius: Radius.medium,
     borderWidth: 1,
     overflow: 'hidden',
     position: 'relative',
@@ -1351,29 +1292,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   presetThumbnail: {
-    width: 80,
-    height: 52,
+    width: 72,
+    height: 46,
     resizeMode: 'cover',
   },
   presetMeta: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
   },
   selectedCheckBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   modalActionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: Radius.medium,
-    gap: 8,
+    gap: 6,
   },
   pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.5 },

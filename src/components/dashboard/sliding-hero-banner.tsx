@@ -41,7 +41,7 @@ export function SlidingHeroBanner({
   onPressProfile,
 }: SlidingHeroBannerProps) {
   const theme = useTheme();
-  const { temperatureUnit, formatAmount } = useExpenses();
+  const { temperatureUnit } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
 

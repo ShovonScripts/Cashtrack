@@ -410,71 +410,73 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
   const net = youAreOwed - youOwe;
 
   return (
-    <Pressable
-      onPress={() => {
-        triggerHaptic();
-        router.push('/debts');
-      }}
-      accessibilityRole="button"
-      accessibilityLabel="View debts and loans"
-      style={({ pressed }) => [{ flex: 1, borderRadius: Radius.xlarge }, pressed && styles.pressed]}>
-      <View style={[styles.heroCardSummary, { height: '100%' }]}>
-        {/* Spendly Brand Ambient Background Orbs */}
-        <View pointerEvents="none" style={styles.heroOrbLarge} />
-        <View pointerEvents="none" style={styles.heroOrbSmall} />
+    <View style={styles.heroCardSummary}>
+      {/* Spendly Brand Ambient Background Orbs */}
+      <View pointerEvents="none" style={styles.heroOrbLarge} />
+      <View pointerEvents="none" style={styles.heroOrbSmall} />
 
-        <View style={styles.heroContent}>
-          {/* Header Topline */}
-          <View style={styles.heroTopline}>
-            <ThemedText type="caption" style={styles.heroLabel}>
-              LEND & BORROW
-            </ThemedText>
-            <View style={styles.monthPill}>
-              <ThemedText type="caption" style={styles.monthPillText}>{activeDebts.length} active</ThemedText>
-            </View>
-          </View>
-
-          {/* Hero Net Value - Pure White like Daily Cost card */}
-          <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-            {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
+      <View style={styles.heroContent}>
+        {/* Header Topline */}
+        <View style={styles.heroTopline}>
+          <ThemedText type="caption" style={styles.heroLabel}>
+            LEND & BORROW
           </ThemedText>
+          <View style={styles.monthPill}>
+            <ThemedText type="caption" style={styles.monthPillText}>{activeDebts.length} active</ThemedText>
+          </View>
+        </View>
 
-          {/* Footer Metrics Row with Clean White Style */}
-          <View style={styles.footerRow}>
-            <View style={styles.metricsPillsRow}>
-              <View style={styles.whiteChip}>
-                <View style={styles.greenDot} />
-                <ThemedText type="small" style={styles.chipText}>
-                  Owed: {formatAmount(youAreOwed)}
-                </ThemedText>
-              </View>
-              <View style={styles.whiteChip}>
-                <View style={styles.redDot} />
-                <ThemedText type="small" style={styles.chipText}>
-                  Owe: {formatAmount(youOwe)}
-                </ThemedText>
-              </View>
+        {/* Hero Net Value - Pure White like Daily Cost card */}
+        <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+          {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
+        </ThemedText>
+
+        {/* Footer Metrics Row with Clean White Style */}
+        <View style={styles.footerRow}>
+          <View style={styles.metricsPillsRow}>
+            <View style={styles.whiteChip}>
+              <View style={styles.greenDot} />
+              <ThemedText type="small" style={styles.chipText}>
+                Owed: {formatAmount(youAreOwed)}
+              </ThemedText>
+            </View>
+            <View style={styles.whiteChip}>
+              <View style={styles.redDot} />
+              <ThemedText type="small" style={styles.chipText}>
+                Owe: {formatAmount(youOwe)}
+              </ThemedText>
             </View>
           </View>
 
-          {/* Solid White Action Button like Daily Cost card */}
           <Pressable
-            onPress={(e) => {
-              e.stopPropagation?.();
+            onPress={() => {
               triggerHaptic();
-              router.push('/debts/add');
+              router.push('/debts');
             }}
             accessibilityRole="button"
-            accessibilityLabel="Add debt"
-            style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-              <ThemedText type="defaultBold" style={styles.addButtonText}>Add debt</ThemedText>
-            </View>
+            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+              View debts →
+            </ThemedText>
           </Pressable>
         </View>
+
+        {/* Solid White Action Button like Daily Cost card */}
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/debts/add');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Add debt"
+          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+            <ThemedText type="defaultBold" style={styles.addButtonText}>Add debt</ThemedText>
+          </View>
+        </Pressable>
       </View>
-    </Pressable>
+    </View>
   );
 }
 
@@ -641,49 +643,50 @@ export default function DashboardScreen() {
 
             {/* Card 1: Daily Cost */}
             <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  router.push('/daily-report');
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="View daily expense report"
-                style={({ pressed }) => [{ flex: 1, borderRadius: Radius.xlarge }, pressed && styles.pressed]}>
-                <ThemedView type="card" style={[styles.hero, { height: '100%' }]}>
-                  <View style={styles.heroContent}>
-                    <View style={styles.heroTopline}>
-                      <ThemedText type="caption" style={styles.heroLabel}>DAILY COST</ThemedText>
-                      <View style={styles.monthPill}>
-                        <ThemedText type="caption" style={styles.monthPillText}>{todayLabel}</ThemedText>
-                      </View>
+              <ThemedView type="card" style={styles.hero}>
+                <View style={styles.heroContent}>
+                  <View style={styles.heroTopline}>
+                    <ThemedText type="caption" style={styles.heroLabel}>DAILY COST</ThemedText>
+                    <View style={styles.monthPill}>
+                      <ThemedText type="caption" style={styles.monthPillText}>{todayLabel}</ThemedText>
                     </View>
-                    <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-                      {formatAmount(todaySpend)}
-                    </ThemedText>
-                    <ThemedText type="small" style={styles.heroSubtext}>
-                      {todayExpenseCount === 0
-                        ? 'No expenses recorded today. Tap to view report.'
-                        : `${todayExpenseCount} ${todayExpenseCount === 1 ? 'expense' : 'expenses'} recorded today. Tap for report.`}
-                    </ThemedText>
+                  </View>
+                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+                    {formatAmount(todaySpend)}
+                  </ThemedText>
+                  <ThemedText type="small" style={styles.heroSubtext}>
+                    {todayExpenseCount === 0
+                      ? 'No expenses recorded today.'
+                      : `${todayExpenseCount} ${todayExpenseCount === 1 ? 'expense' : 'expenses'} recorded today.`}
+                  </ThemedText>
+                  <View style={styles.cardFooterRow}>
                     <Pressable
-                      onPress={(e) => {
-                        e.stopPropagation?.();
+                      onPress={() => {
+                        triggerHaptic();
+                        router.push('/daily-report');
+                      }}
+                      accessibilityRole="button"
+                      style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
+                      <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>View report →</ThemedText>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
                         triggerHaptic();
                         router.push('/add-expense');
                       }}
                       accessibilityRole="button"
                       accessibilityLabel="Add an expense"
-                      style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                        <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-                        <ThemedText type="defaultBold" style={styles.addButtonText}>Add expense</ThemedText>
+                      style={({ pressed }) => [styles.heroAddButton, pressed && styles.pressed]}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
+                        <ThemedText type="smallBold" style={styles.heroAddButtonText}>Add expense</ThemedText>
                       </View>
                     </Pressable>
                   </View>
-                  <View pointerEvents="none" style={styles.heroOrbLarge} />
-                  <View pointerEvents="none" style={styles.heroOrbSmall} />
-                </ThemedView>
-              </Pressable>
+                </View>
+                <View pointerEvents="none" style={styles.heroOrbLarge} />
+                <View pointerEvents="none" style={styles.heroOrbSmall} />
+              </ThemedView>
             </View>
 
             {/* Card 2: Monthly Cost */}

@@ -78,6 +78,11 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         if (!cancelled) {
           setRawReminders(loadedReminders);
           setPayments(loadedPayments);
+          for (const rem of loadedReminders) {
+            if (rem.status !== 'paid' && rem.status !== 'skipped') {
+              void scheduleReminderNotificationsAsync(rem, safeFormat);
+            }
+          }
         }
       } catch (error) {
         console.error('[cashtrack] Failed to load reminders', error);
@@ -91,7 +96,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [safeFormat]);
 
   const reminders = useMemo<ReminderWithDerivedStatus[]>(() => {
     const today = new Date();

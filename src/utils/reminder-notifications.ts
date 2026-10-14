@@ -65,8 +65,10 @@ export async function scheduleReminderNotificationsAsync(reminder: FinancialRemi
         name: 'High Priority Bill Alarms',
         importance: NotificationsModule.AndroidImportance.MAX,
         sound: 'default',
-        vibrationPattern: [0, 500, 500, 500],
+        vibrationPattern: [0, 1000, 500, 1000],
+        enableVibration: true,
         lightColor: '#0152F5',
+        lockscreenVisibility: NotificationsModule.AndroidNotificationVisibility.PUBLIC,
       });
     } catch {}
   }

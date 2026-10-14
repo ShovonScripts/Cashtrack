@@ -49,21 +49,14 @@ export default function SubscriptionsHubScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
-        {/* Hero Banner */}
+        {/* Hero Banner with Bottom Add Button */}
         <View style={[styles.hero, { backgroundColor: Brand.deep }]}>
+          <View pointerEvents="none" style={styles.heroOrbLarge} />
+          <View pointerEvents="none" style={styles.heroOrbSmall} />
+
           <View style={styles.heroContent}>
             <View style={styles.heroTopline}>
               <ThemedText type="caption" style={styles.heroLabel}>RECURRING & SUBSCRIPTIONS</ThemedText>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  router.push('/bills/add');
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Add subscription or recurring bill"
-                style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-                <ThemedText type="defaultBold" style={styles.addButtonText}>＋ Add recurring</ThemedText>
-              </Pressable>
             </View>
 
             <View style={styles.heroSummaryRow}>
@@ -81,9 +74,22 @@ export default function SubscriptionsHubScreen() {
                 </ThemedText>
               </View>
             </View>
+
+            {/* Solid White Action Button at Bottom */}
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/bills/add');
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Add subscription or recurring bill"
+              style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+                <ThemedText type="defaultBold" style={styles.addButtonText}>Add recurring bill</ThemedText>
+              </View>
+            </Pressable>
           </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
         </View>
 
         {/* Subscriptions & Recurring List */}
@@ -170,21 +176,28 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
     overflow: 'hidden',
-    minHeight: 180,
-    justifyContent: 'center',
+    position: 'relative',
+    justifyContent: 'space-between',
   },
-  heroContent: { gap: Spacing.two, zIndex: 1 },
+  heroContent: { gap: Spacing.two, zIndex: 2 },
   heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  addButton: { backgroundColor: '#FFFFFF', borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  addButtonText: { color: Brand.deep },
+  addButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.medium,
+    paddingVertical: Spacing.three,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.two,
+  },
+  addButtonText: { color: Brand.deep, fontWeight: '700' },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.half },
   heroStat: { flex: 1, gap: Spacing.half },
   heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
   heroStatVal: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
-  heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },
+  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.25)', zIndex: 1 },
+  heroOrbSmall: { position: 'absolute', width: 150, height: 150, borderRadius: 75, left: -50, bottom: -60, backgroundColor: 'rgba(20,231,253,0.2)', zIndex: 1 },
   listSection: { gap: Spacing.two },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   emptyCard: { padding: Spacing.four, alignItems: 'center', gap: Spacing.three },

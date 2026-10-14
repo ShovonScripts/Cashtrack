@@ -1,4 +1,6 @@
-- `[ ]` Create Subscriptions & Recurring Bills Hub screen (`src/app/subscriptions.tsx`)
-- `[ ]` Wire up Subscriptions Hub link in app navigation / home screen
-- `[ ]` Add visual contribution timeline chart to goal detail screen (`src/app/goals/[id].tsx`)
-- `[ ]` Run TypeScript typecheck, linter, and unit tests
+- `[ ]` Step 1: Update reminder data types in `types/reminder.ts`
+- `[ ]` Step 2: Update financial reminders SQLite repository for `is_alarm` and `alarm_time`
+- `[ ]` Step 3: Configure high-importance notification channels & alarm scheduling in `utils/reminder-notifications.ts`
+- `[ ]` Step 4: Add alarm toggle & time selector in `app/bills/add.tsx`
+- `[ ]` Step 5: Display alarm badge in `app/bills/index.tsx`
+- `[ ]` Step 6: Run typecheck and lint verification

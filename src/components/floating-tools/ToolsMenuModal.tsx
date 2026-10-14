@@ -10,8 +10,9 @@ import { CalculatorTool } from './tools/CalculatorTool';
 import { NotesTool } from './tools/NotesTool';
 import { StopwatchTool } from './tools/StopwatchTool';
 import { CurrencyTool } from './tools/CurrencyTool';
+import { CalendarTool } from './tools/CalendarTool';
 
-type ToolType = 'calculator' | 'notes' | 'stopwatch' | 'currency' | null;
+type ToolType = 'calculator' | 'notes' | 'stopwatch' | 'currency' | 'calendar' | null;
 
 type ToolsMenuModalProps = {
   visible: boolean;
@@ -52,7 +53,9 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                         ? 'Stopwatch'
                         : activeTool === 'currency'
                           ? 'Currency Converter'
-                          : 'Quick Tools'}
+                          : activeTool === 'calendar'
+                            ? 'Quick Calendar'
+                            : 'Quick Tools'}
                 </ThemedText>
                 <ThemedText type="caption" themeColor="textSecondary">
                   {activeTool ? 'Active utility tool' : 'Select a tool to get started'}
@@ -132,6 +135,22 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                 </Pressable>
 
                 <Pressable
+                  onPress={() => setActiveTool('calendar')}
+                  style={({ pressed }) => [
+                    styles.toolCard,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressedCard,
+                  ]}>
+                  <View style={[styles.iconBox, { backgroundColor: '#4F46E515' }]}>
+                    <Ionicons name="calendar-outline" size={24} color="#4F46E5" />
+                  </View>
+                  <View style={styles.cardTextContainer}>
+                    <ThemedText type="defaultBold">Calendar</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Bill & renewal grid</ThemedText>
+                  </View>
+                </Pressable>
+
+                <Pressable
                   onPress={() => {
                     handleClose();
                     router.push('/add-expense');
@@ -158,8 +177,10 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                   <NotesTool />
                 ) : activeTool === 'stopwatch' ? (
                   <StopwatchTool />
-                ) : (
+                ) : activeTool === 'currency' ? (
                   <CurrencyTool />
+                ) : (
+                  <CalendarTool />
                 )}
               </ScrollView>
             )}

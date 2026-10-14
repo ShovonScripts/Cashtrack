@@ -409,7 +409,7 @@ export default function DailyReportScreen() {
           style={({ pressed }) => [styles.exportButton, pressed && styles.pressed, isGenerating && styles.disabled]}>
           <MaterialCommunityIcons name="file-pdf-box" size={22} color="#FFFFFF" />
           <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
-            {isGenerating ? 'Generating PDF...' : 'Download / Print Daily Report (PDF)'}
+            {isGenerating ? 'Generating PDF...' : 'Download PDF'}
           </ThemedText>
         </Pressable>
 

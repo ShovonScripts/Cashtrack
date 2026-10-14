@@ -9,12 +9,16 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Share,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
+import { Brand } from '@/constants/theme';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
@@ -44,6 +48,126 @@ export function FacebookCoverHeader({
 
   // Live weather state
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
+
+  const handleShareCard = async (quote: { quote: string; author: string }) => {
+    try {
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body {
+                background: #00109D;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                padding: 20px;
+              }
+              .card-wrapper {
+                position: relative;
+                width: 100%;
+                max-width: 480px;
+                margin: auto;
+              }
+              .floating-badge {
+                position: absolute;
+                top: -22px;
+                left: 20px;
+                width: 52px;
+                height: 52px;
+                background: #0152F5;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 10px 25px rgba(1, 82, 245, 0.4);
+                z-index: 10;
+                font-size: 32px;
+                color: #FFFFFF;
+                font-weight: bold;
+              }
+              .white-card {
+                background: #FFFFFF;
+                border-radius: 24px;
+                padding: 44px 28px 24px 28px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+              }
+              .quote-text {
+                font-size: 22px;
+                line-height: 1.45;
+                color: #111827;
+                font-weight: 700;
+                margin-bottom: 24px;
+                font-style: italic;
+              }
+              .author-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid #E5E7EB;
+                padding-top: 14px;
+              }
+              .author-info h4 {
+                margin: 0;
+                font-size: 13px;
+                color: #111827;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+              }
+              .author-info p {
+                margin: 3px 0 0 0;
+                font-size: 11px;
+                color: #6B7280;
+                font-weight: 600;
+              }
+              .footer-branding {
+                margin-top: 16px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                color: #9CA3AF;
+                font-size: 11px;
+                font-weight: 800;
+                letter-spacing: 1.5px;
+                padding: 0 4px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="card-wrapper">
+              <div class="floating-badge">“</div>
+              <div class="white-card">
+                <div class="quote-text">“${quote.quote}”</div>
+                <div class="author-row">
+                  <div class="author-info">
+                    <h4>${quote.author.toUpperCase()}</h4>
+                    <p>Daily Financial Wisdom</p>
+                  </div>
+                </div>
+              </div>
+              <div class="footer-branding">
+                <span>CASHTRACK</span>
+                <span>NASDIGITAL.UK</span>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      const { uri } = await Print.printToFileAsync({ html });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share Wisdom Card' });
+        return;
+      }
+    } catch {
+      await Share.share({
+        message: `“${quote.quote}”\n— ${quote.author}\n\n💡 Daily Financial Wisdom via CashTrack\nhttps://nasdigital.uk`,
+        title: 'CashTrack Wisdom Card',
+      });
+    }
+  };
 
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -217,22 +341,45 @@ export function FacebookCoverHeader({
           </View>
         </TouchableOpacity>
 
-        {/* SLIDE 3: DAILY MOTIVATION QUOTES */}
-        <View style={styles.slideCard}>
-          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
-          <View style={styles.overlayGradient} />
+        {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
+        <View style={[styles.slideCard, styles.quoteCardContainer]}>
+          <View pointerEvents="none" style={styles.quoteBgGlow1} />
+          <View pointerEvents="none" style={styles.quoteBgGlow2} />
 
-          <View style={styles.cardInner}>
-            <View style={styles.topRowBadge}>
-              <View style={styles.wisdomPill}>
-                <Ionicons name="ribbon" size={14} color="#c084fc" />
-                <Text style={styles.wisdomText}>Daily Wisdom</Text>
+          {/* Floating Lime-Green Quote Badge overlapping top-left */}
+          <View style={styles.floatingQuoteBadge}>
+            <Text style={styles.floatingQuoteSymbol}>“</Text>
+          </View>
+
+          <View style={styles.quoteCardWrapper}>
+            <View style={styles.quoteCardContent}>
+              <Text style={styles.referenceQuoteText} numberOfLines={3} adjustsFontSizeToFit>
+                &ldquo;{currentQuote.quote}&rdquo;
+              </Text>
+
+              <View style={styles.referenceAuthorRow}>
+                <View style={styles.referenceAuthorInfo}>
+                  <Text style={styles.referenceAuthorName}>{currentQuote.author.toUpperCase()}</Text>
+                  <Text style={styles.referenceAuthorTitle}>Daily Financial Wisdom</Text>
+                </View>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    void handleShareCard(currentQuote);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share quote card"
+                  style={styles.shareCardButton}>
+                  <MaterialCommunityIcons name="share-variant" size={15} color="#111827" />
+                  <Text style={styles.shareCardButtonText}>Share</Text>
+                </TouchableOpacity>
               </View>
             </View>
 
-            <View style={styles.quoteBody}>
-              <Text style={styles.quoteBodyText}>&ldquo;{currentQuote.quote}&rdquo;</Text>
-              <Text style={styles.quoteAuthorText}>— {currentQuote.author}</Text>
+            <View style={styles.quoteCardFooterBranding}>
+              <Text style={styles.footerBrandText}>CASHTRACK</Text>
+              <Text style={styles.footerBrandUrl}>NASDIGITAL.UK</Text>
             </View>
           </View>
         </View>
@@ -445,35 +592,133 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 16,
   },
-  wisdomPill: {
-    flexDirection: 'row',
+  quoteCardContainer: {
+    backgroundColor: Brand.deep,
+    overflow: 'visible',
+    height: 255,
+  },
+  quoteBgGlow1: {
+    position: 'absolute',
+    width: 230,
+    height: 230,
+    borderRadius: 115,
+    right: -90,
+    top: -100,
+    backgroundColor: 'rgba(139, 123, 255, 0.25)',
+  },
+  quoteBgGlow2: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    left: -50,
+    bottom: -60,
+    backgroundColor: 'rgba(20, 231, 253, 0.2)',
+  },
+  floatingQuoteBadge: {
+    position: 'absolute',
+    top: 37,
+    left: 28,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#0152F5',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 999,
+    justifyContent: 'center',
+    zIndex: 10,
+    shadowColor: '#0152F5',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  wisdomText: {
-    color: '#c084fc',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  quoteBody: {
-    paddingVertical: 8,
-  },
-  quoteBodyText: {
+  floatingQuoteSymbol: {
     color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: 5,
+  },
+  quoteCardWrapper: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 56,
+    paddingBottom: 16,
+    justifyContent: 'space-between',
+  },
+  quoteCardContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  referenceQuoteText: {
+    color: '#111827',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     fontStyle: 'italic',
     lineHeight: 22,
+    marginBottom: 10,
   },
-  quoteAuthorText: {
-    color: '#e2e8f0',
-    fontSize: 13,
+  referenceAuthorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingTop: 8,
+  },
+  referenceAuthorInfo: {
+    flex: 1,
+  },
+  referenceAuthorName: {
+    color: '#111827',
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  referenceAuthorTitle: {
+    color: '#6B7280',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  shareCardButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  shareCardButtonText: {
+    color: '#111827',
+    fontSize: 11,
     fontWeight: '700',
-    marginTop: 6,
+  },
+  quoteCardFooterBranding: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  footerBrandText: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  footerBrandUrl: {
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
   },
   paginationContainer: {
     flexDirection: 'row',

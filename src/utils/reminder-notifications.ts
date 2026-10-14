@@ -6,6 +6,15 @@ if (Platform.OS !== 'web') {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     NotificationsModule = require('expo-notifications');
+    NotificationsModule.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
   } catch {
     // Fallback for environments without notifications
   }
@@ -50,6 +59,18 @@ export async function scheduleReminderNotificationsAsync(reminder: FinancialRemi
   const dueDate = new Date(reminder.dueDate);
   if (Number.isNaN(dueDate.getTime())) return;
 
+  if (Platform.OS === 'android' && NotificationsModule.setNotificationChannelAsync) {
+    try {
+      await NotificationsModule.setNotificationChannelAsync('reminder-alarms-channel', {
+        name: 'High Priority Bill Alarms',
+        importance: NotificationsModule.AndroidImportance.MAX,
+        sound: 'default',
+        vibrationPattern: [0, 500, 500, 500],
+        lightColor: '#0152F5',
+      });
+    } catch {}
+  }
+
   const now = new Date();
   const amountStr = reminder.amount !== null && formatAmount ? formatAmount(reminder.amount) : reminder.amount !== null ? `৳${reminder.amount}` : '';
   const titleText = reminder.title;
@@ -66,12 +87,21 @@ export async function scheduleReminderNotificationsAsync(reminder: FinancialRemi
 
   // Due date
   const dateDue = new Date(dueDate);
-  dateDue.setHours(9, 0, 0, 0);
+  if (reminder.isAlarm && reminder.alarmTime) {
+    const [hours, minutes] = reminder.alarmTime.split(':').map(Number);
+    if (!Number.isNaN(hours) && !Number.isNaN(minutes)) {
+      dateDue.setHours(hours, minutes, 0, 0);
+    } else {
+      dateDue.setHours(9, 0, 0, 0);
+    }
+  } else {
+    dateDue.setHours(9, 0, 0, 0);
+  }
 
   const schedules = [
-    { key: '3days', triggerDate: date3Days, body: `Your ${titleText}${amountStr ? ` of ${amountStr}` : ''} is due in 3 days.` },
-    { key: '1day', triggerDate: date1Day, body: `Your ${titleText}${amountStr ? ` of ${amountStr}` : ''} is due tomorrow.` },
-    { key: 'due', triggerDate: dateDue, body: `Your ${titleText}${amountStr ? ` of ${amountStr}` : ''} is due today!` },
+    { key: '3days', triggerDate: date3Days, body: `Your ${titleText}${amountStr ? ` of ${amountStr}` : ''} is due in 3 days.`, isAlarm: false },
+    { key: '1day', triggerDate: date1Day, body: `Your ${titleText}${amountStr ? ` of ${amountStr}` : ''} is due tomorrow.`, isAlarm: false },
+    { key: 'due', triggerDate: dateDue, body: reminder.isAlarm ? `🚨 ALARM: ${titleText}${amountStr ? ` (${amountStr})` : ''} is due now!` : `Your ${titleText}${amountStr ? ` of ${amountStr}` : ''} is due today!`, isAlarm: reminder.isAlarm },
   ];
 
   for (const sched of schedules) {
@@ -80,9 +110,11 @@ export async function scheduleReminderNotificationsAsync(reminder: FinancialRemi
         await NotificationsModule.scheduleNotificationAsync({
           identifier: `reminder:${reminder.id}:${sched.key}`,
           content: {
-            title: 'Payment Reminder',
+            title: sched.isAlarm ? '🚨 Bill Alarm' : 'Payment Reminder',
             body: sched.body,
             sound: true,
+            priority: sched.isAlarm ? NotificationsModule.AndroidNotificationPriority.MAX : NotificationsModule.AndroidNotificationPriority.DEFAULT,
+            channelId: sched.isAlarm ? 'reminder-alarms-channel' : undefined,
           },
           trigger: {
             type: NotificationsModule.SchedulableTriggerInputTypes.DATE,

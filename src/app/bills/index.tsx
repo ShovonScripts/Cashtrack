@@ -303,6 +303,15 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
                 {statusLabel}
               </ThemedText>
             </View>
+
+            {reminder.isAlarm && (
+              <View style={[styles.badgePill, { backgroundColor: '#0152F518', flexDirection: 'row', alignItems: 'center', gap: 3 }]}>
+                <MaterialCommunityIcons name="alarm" size={11} color="#0152F5" />
+                <ThemedText type="caption" style={{ color: '#0152F5', fontWeight: '800', fontSize: 10 }}>
+                  {reminder.alarmTime ? `Alarm ${reminder.alarmTime}` : 'Alarm'}
+                </ThemedText>
+              </View>
+            )}
           </View>
         </View>
 

@@ -140,6 +140,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       installmentAmount: draft.installmentAmount ?? null,
       totalInstallments: draft.totalInstallments ?? null,
       paidInstallments: 0,
+      isAlarm: draft.isAlarm,
+      alarmTime: draft.alarmTime ?? null,
       createdAt: now,
       updatedAt: now,
     };
@@ -167,6 +169,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       totalAmount: draft.totalAmount ?? null,
       installmentAmount: draft.installmentAmount ?? null,
       totalInstallments: draft.totalInstallments ?? null,
+      isAlarm: draft.isAlarm,
+      alarmTime: draft.alarmTime ?? null,
       updatedAt: new Date().toISOString(),
     };
 

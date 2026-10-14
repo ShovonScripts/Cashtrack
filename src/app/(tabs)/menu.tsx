@@ -158,6 +158,15 @@ export default function MenuScreen() {
       badgeColor: overdueRemindersCount > 0 ? '#FF6B6B' : '#EB5757',
     },
     {
+      id: 'calendar',
+      title: 'Bill & Renewal Calendar',
+      subtitle: 'Interactive monthly schedule grid',
+      icon: 'calendar-month',
+      color: '#4F46E5',
+      route: '/bills/calendar',
+      badge: 'Calendar',
+    },
+    {
       id: 'debts',
       title: 'Debts & IOUs',
       subtitle: 'Track money lent and borrowed',

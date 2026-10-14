@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ExpenseCategoryGrid } from '@/components/expense-category-grid';
@@ -76,6 +76,8 @@ export function ExpenseCalculator({
   const [recurringFrequency, setRecurringFrequency] = useState<RecurringFrequency>(
     initialValues?.recurringFrequency ?? 'monthly'
   );
+
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const calculatedAmount = evaluateExpression(expression);
   const isValid = Number.isFinite(calculatedAmount) && calculatedAmount > 0;
@@ -181,7 +183,8 @@ export function ExpenseCalculator({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
       <ScrollView
-        contentContainerStyle={styles.contentContainer}
+        ref={scrollViewRef}
+        contentContainerStyle={[styles.contentContainer, { paddingBottom: 280 }]}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag">
         <View style={styles.container}>
@@ -270,6 +273,11 @@ export function ExpenseCalculator({
             <TextInput
               value={note}
               onChangeText={setNote}
+              onFocus={() => {
+                setTimeout(() => {
+                  scrollViewRef.current?.scrollToEnd({ animated: true });
+                }, 150);
+              }}
               placeholder="What was it for?"
               placeholderTextColor={theme.textSecondary}
               accessibilityLabel="Expense note"

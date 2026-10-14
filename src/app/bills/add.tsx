@@ -42,6 +42,10 @@ export default function AddBillScreen() {
   const [repeatType, setRepeatType] = useState<ReminderRepeatType>('monthly');
   const [notes, setNotes] = useState('');
 
+  // Alarm fields
+  const [isAlarm, setIsAlarm] = useState(false);
+  const [alarmTime, setAlarmTime] = useState('09:00');
+
   // EMI specific fields
   const [totalAmountText, setTotalAmountText] = useState('');
   const [totalInstallmentsText, setTotalInstallmentsText] = useState('');
@@ -75,6 +79,8 @@ export default function AddBillScreen() {
       installmentAmount: isVariableAmount ? null : parsedAmount,
       totalInstallments: Number.isInteger(totalInstallments) ? totalInstallments : null,
       paidInstallments: 0,
+      isAlarm,
+      alarmTime: isAlarm ? alarmTime.trim() : null,
     });
 
     router.back();
@@ -198,6 +204,33 @@ export default function AddBillScreen() {
             <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />
           </View>
 
+          {/* High-Priority Alarm Mode Toggle */}
+          <View style={[styles.alarmCard, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
+            <View style={styles.dueDateHeader}>
+              <View style={{ flex: 1, gap: 2 }}>
+                <ThemedText type="defaultBold">🚨 High-Priority Alarm Mode</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">Ring high-importance alarm notification on due date</ThemedText>
+              </View>
+              <Switch
+                value={isAlarm}
+                onValueChange={setIsAlarm}
+                trackColor={{ false: theme.border, true: theme.accent }}
+              />
+            </View>
+            {isAlarm && (
+              <View style={styles.alarmTimeRow}>
+                <ThemedText type="smallBold">Exact Alarm Time</ThemedText>
+                <TextInput
+                  value={alarmTime}
+                  onChangeText={setAlarmTime}
+                  placeholder="09:00"
+                  placeholderTextColor={theme.textSecondary}
+                  style={[styles.input, styles.alarmTimeInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
+                />
+              </View>
+            )}
+          </View>
+
           {/* Repeat / Recurrence */}
           <View style={styles.field}>
             <ThemedText type="caption" themeColor="textSecondary">REPEAT FREQUENCY</ThemedText>
@@ -279,6 +312,9 @@ const styles = StyleSheet.create({
   chipScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
   chip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   emiCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth },
+  alarmCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth },
+  alarmTimeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.one },
+  alarmTimeInput: { width: 100, textAlign: 'center', paddingVertical: Spacing.two },
   rowFields: { flexDirection: 'row', gap: Spacing.two },
   flex1: { flex: 1 },
   typeRow: { flexDirection: 'row', gap: Spacing.two },

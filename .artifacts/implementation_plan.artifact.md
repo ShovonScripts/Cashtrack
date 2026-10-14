@@ -1,34 +1,37 @@
-# Implementation Plan: Subscriptions Hub & Savings Pot Contribution Charts
+# Alarm System for Financial Reminders Implementation Plan
 
-Implement two high-value features for Spendly:
-1. **Dedicated Subscriptions & Recurring Bills Hub**: A dedicated screen (`src/app/subscriptions.tsx`) aggregating all recurring subscriptions and bills with monthly cost totals and renewal alerts.
-2. **Visual Contribution Charts for Savings Pots**: A contribution timeline & trend visualization on the goal detail screen (`src/app/goals/[id].tsx`) to track savings velocity.
+Add a high-priority alarm notification mode with custom time selection and urgent sound/vibration channels for bills and financial reminders.
 
 ## User Review Required
 
-> [!NOTE]
-> - **Subscriptions Hub**: Accessible via a new route `src/app/subscriptions.tsx` and linked from the Bills & Reminders widget on the home screen.
-> - **Contribution Charts**: Added directly to `src/app/goals/[id].tsx` using clean SVG/bar UI elements representing contribution history chronologically.
+> [!IMPORTANT]
+> Alarm notifications require notification permissions on Android/iOS. On Android, high-importance notification channels are created with maximum priority (`AndroidImportance.MAX`) to ring loudly.
 
 ## Proposed Changes
 
-### Subscriptions & Recurring Bills Hub
-#### [NEW] [subscriptions.tsx](file:///C:/xampp/htdocs/ProDo/App/spendly/src/app/subscriptions.tsx)
-- Create a dedicated subscriptions screen showing total monthly recurring outflows, active subscriptions list (Netflix, Spotify, Cloud, Gym, etc.), days until renewal, and quick add/pay actions.
+### Data & Storage Layer
+#### [MODIFY] [reminder.ts](file:///C:/xampp/htdocs/ProDo/App/spendly/src/types/reminder.ts)
+- Add `isAlarm` and `alarmTime` properties to `FinancialReminder` and `ReminderDraft`.
 
-#### [MODIFY] [index.tsx](file:///C:/xampp/htdocs/ProDo/App/spendly/src/app/(tabs)/index.tsx)
-- Link the Bills & Reminders widget or menu to the new Subscriptions Hub.
+#### [MODIFY] [financial-reminders-repository.ts](file:///C:/xampp/htdocs/ProDo/App/spendly/src/storage/financial-reminders-repository.ts)
+- Update SQLite table schema, mapping, and CRUD operations to persist `is_alarm` and `alarm_time`.
 
-### Visual Contribution Charts for Savings Pots
-#### [MODIFY] [[id].tsx](file:///C:/xampp/htdocs/ProDo/App/spendly/src/app/goals/[id].tsx)
-- Add a visual contribution history timeline / progress chart component showing accumulation milestones over time.
+### Notification Engine
+#### [MODIFY] [reminder-notifications.ts](file:///C:/xampp/htdocs/ProDo/App/spendly/src/utils/reminder-notifications.ts)
+- Configure Android high-importance notification channel (`reminder-alarms-channel`) with maximum importance, sound, and vibration.
+- Update `scheduleReminderNotificationsAsync` to handle custom `alarmTime` and `isAlarm`.
+
+### UI Layer
+#### [MODIFY] [add.tsx](file:///C:/xampp/htdocs/ProDo/App/spendly/src/app/bills/add.tsx)
+- Add "High-Priority Alarm Mode" toggle switch and alarm time selector.
+
+#### [MODIFY] [index.tsx](file:///C:/xampp/htdocs/ProDo/App/spendly/src/app/bills/index.tsx)
+- Display alarm badge on reminder list items when alarm mode is enabled.
 
 ## Verification Plan
 
 ### Automated Tests
 - Run `npx tsc --noEmit` and `npx expo lint`.
-- Run `npm test`.
 
 ### Manual Verification
-- Verify Subscriptions Hub renders recurring outflows and monthly totals correctly.
-- Verify goal detail screen displays the contribution trend chart properly.
+- Create a new bill with Alarm Mode enabled and verify notifications are scheduled correctly.

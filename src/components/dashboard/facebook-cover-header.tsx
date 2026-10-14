@@ -17,8 +17,6 @@ import { router } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
 import { Brand } from '@/constants/theme';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
@@ -51,121 +49,12 @@ export function FacebookCoverHeader({
 
   const handleShareCard = async (quote: { quote: string; author: string }) => {
     try {
-      const html = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <style>
-              body {
-                background: #00109D;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                padding: 20px;
-              }
-              .card-wrapper {
-                position: relative;
-                width: 100%;
-                max-width: 480px;
-                margin: auto;
-              }
-              .floating-badge {
-                position: absolute;
-                top: -22px;
-                left: 20px;
-                width: 52px;
-                height: 52px;
-                background: #0152F5;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 10px 25px rgba(1, 82, 245, 0.4);
-                z-index: 10;
-                font-size: 32px;
-                color: #FFFFFF;
-                font-weight: bold;
-              }
-              .white-card {
-                background: #FFFFFF;
-                border-radius: 24px;
-                padding: 44px 28px 24px 28px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-              }
-              .quote-text {
-                font-size: 22px;
-                line-height: 1.45;
-                color: #111827;
-                font-weight: 700;
-                margin-bottom: 24px;
-                font-style: italic;
-              }
-              .author-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-top: 1px solid #E5E7EB;
-                padding-top: 14px;
-              }
-              .author-info h4 {
-                margin: 0;
-                font-size: 13px;
-                color: #111827;
-                font-weight: 800;
-                letter-spacing: 0.5px;
-              }
-              .author-info p {
-                margin: 3px 0 0 0;
-                font-size: 11px;
-                color: #6B7280;
-                font-weight: 600;
-              }
-              .footer-branding {
-                margin-top: 16px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                color: #9CA3AF;
-                font-size: 11px;
-                font-weight: 800;
-                letter-spacing: 1.5px;
-                padding: 0 4px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="card-wrapper">
-              <div class="floating-badge">“</div>
-              <div class="white-card">
-                <div class="quote-text">“${quote.quote}”</div>
-                <div class="author-row">
-                  <div class="author-info">
-                    <h4>${quote.author.toUpperCase()}</h4>
-                    <p>Daily Financial Wisdom</p>
-                  </div>
-                </div>
-              </div>
-              <div class="footer-branding">
-                <span>CASHTRACK</span>
-                <span>NASDIGITAL.UK</span>
-              </div>
-            </div>
-          </body>
-        </html>
-      `;
-      const { uri } = await Print.printToFileAsync({ html });
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: 'Share Wisdom Card' });
-        return;
-      }
-    } catch {
       await Share.share({
-        message: `“${quote.quote}”\n— ${quote.author}\n\n💡 Daily Financial Wisdom via CashTrack\nhttps://nasdigital.uk`,
+        message: `“${quote.quote}”\n— ${quote.author.toUpperCase()}\n\n💡 Daily Financial Wisdom via CashTrack\nhttps://nasdigital.uk`,
         title: 'CashTrack Wisdom Card',
       });
+    } catch (error) {
+      console.error('Error sharing quote:', error);
     }
   };
 

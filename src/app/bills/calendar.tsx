@@ -176,7 +176,7 @@ export default function BillCalendarScreen() {
         {/* Selected Day Bills Header & List */}
         <View style={styles.sectionHeader}>
           <ThemedText type="defaultBold">
-            Bills on {month} {selectedDay}, {year}
+            Bills on {monthLabel.split(' ')[0]} {selectedDay}, {year}
           </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary">
             {selectedDayReminders.length} {selectedDayReminders.length === 1 ? 'item' : 'items'}

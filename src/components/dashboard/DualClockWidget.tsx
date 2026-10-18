@@ -1,32 +1,36 @@
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Modal, Pressable, ScrollView, StyleSheet, View, Platform, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import { GlassView } from 'expo-glass-effect';
-import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
 
-const STORAGE_KEY = '@cashtrack_second_clock_city';
+const CLOCK_1_KEY = '@cashtrack_banner_clock_1';
+const CLOCK_2_KEY = '@cashtrack_banner_clock_2';
 
 export function DualClockWidget() {
   const theme = useTheme();
-  const scheme = useColorScheme();
-  const isDark = scheme === 'dark';
 
-  const [secondCityId, setSecondCityId] = useState<string>('london');
-  const [pickerVisible, setPickerVisible] = useState<boolean>(false);
+  const [city1Id, setCity1Id] = useState<string>('local');
+  const [city2Id, setCity2Id] = useState<string>('london');
+  const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);
+  const [activeSlot, setActiveSlot] = useState<1 | 2>(1);
   const [, setTick] = useState<number>(0);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((val) => {
-      if (val) setSecondCityId(val);
-    });
+    async function loadSavedClocks() {
+      try {
+        const val1 = await AsyncStorage.getItem(CLOCK_1_KEY);
+        const val2 = await AsyncStorage.getItem(CLOCK_2_KEY);
+        if (val1) setCity1Id(val1);
+        if (val2) setCity2Id(val2);
+      } catch {}
+    }
+    void loadSavedClocks();
 
     const interval = setInterval(() => {
       setTick((c) => c + 1);
@@ -36,138 +40,96 @@ export function DualClockWidget() {
   }, []);
 
   const handleSelectCity = async (city: WorldCity) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSecondCityId(city.id);
-    setPickerVisible(false);
-    await AsyncStorage.setItem(STORAGE_KEY, city.id);
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    if (activeSlot === 1) {
+      setCity1Id(city.id);
+      await AsyncStorage.setItem(CLOCK_1_KEY, city.id);
+    } else {
+      setCity2Id(city.id);
+      await AsyncStorage.setItem(CLOCK_2_KEY, city.id);
+    }
+    setPickerModalVisible(false);
   };
 
-  const secondCity = WORLD_CITIES.find((c) => c.id === secondCityId) || WORLD_CITIES[2]; // Default London
+  const city1 = WORLD_CITIES.find((c) => c.id === city1Id) || WORLD_CITIES[0];
+  const city2 = WORLD_CITIES.find((c) => c.id === city2Id) || WORLD_CITIES[2];
 
-  const localTime = getFormattedTimeForZone(undefined);
-  const secondTime = getFormattedTimeForZone(secondCity.timeZone);
+  const time1 = getFormattedTimeForZone(city1.id === 'local' ? undefined : city1.timeZone);
+  const time2 = getFormattedTimeForZone(city2.id === 'local' ? undefined : city2.timeZone);
 
-  // Ultra-refined glassmorphism styling for pristine frosted glass effect
-  const glassCardStyle = {
-    backgroundColor: isDark ? 'rgba(30, 30, 42, 0.55)' : 'rgba(255, 255, 255, 0.65)',
-    borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.85)',
-    borderTopWidth: 1.5,
-    borderTopColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.95)',
-    shadowColor: isDark ? '#000' : '#8898aa',
-  };
-
-  const renderCardContent = (label: string, dateStr: string, timeStr: string, ampm: string, accentColor: string, rightIcon?: React.ReactNode, isLocal?: boolean) => (
-    <>
+  const renderClockCard = (slot: 1 | 2, city: WorldCity, timeInfo: ReturnType<typeof getFormattedTimeForZone>, accentColor: string) => (
+    <Pressable
+      key={slot}
+      onPress={() => {
+        if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setActiveSlot(slot);
+        setPickerModalVisible(true);
+      }}
+      style={({ pressed }) => [
+        styles.clockCard,
+        pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+      ]}>
       <View style={styles.clockTopRow}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          {isLocal && <MaterialCommunityIcons name="map-marker" size={12} color={theme.textSecondary} />}
-          <ThemedText type="caption" themeColor="textSecondary" style={styles.clockLabel}>
-            {label}
-          </ThemedText>
-        </View>
-        {rightIcon || <ThemedText type="caption" themeColor="textSecondary">{dateStr}</ThemedText>}
+        <Text style={styles.clockLabel} numberOfLines={1}>
+          {city.flag} {city.cityName.toUpperCase()}
+        </Text>
+        <Ionicons name="swap-horizontal" size={11} color="rgba(255,255,255,0.6)" />
       </View>
       <View style={styles.timeRow}>
-        <ThemedText type="defaultBold" style={[styles.timeText, { color: theme.text }]}>
-          {timeStr}
-        </ThemedText>
-        <ThemedText type="smallBold" style={[styles.ampmText, { color: accentColor }]}>
-          {ampm}
-        </ThemedText>
+        <Text style={styles.timeText} numberOfLines={1}>
+          {timeInfo.timeStr}
+        </Text>
+        <Text style={[styles.ampmText, { color: accentColor }]}>
+          {timeInfo.ampm}
+        </Text>
       </View>
-    </>
+      <Text style={styles.dateText} numberOfLines={1}>
+        {timeInfo.dateStr}
+      </Text>
+    </Pressable>
   );
 
   return (
     <View style={styles.container}>
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          router.push('/world-clock');
-        }}
-        style={styles.headerRow}>
-        <View style={styles.titleRow}>
-          <MaterialCommunityIcons name="clock-outline" size={16} color={theme.accent} />
-          <ThemedText type="smallBold" style={{ letterSpacing: 0.6 }}>WORLD CLOCKS</ThemedText>
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <ThemedText type="caption" themeColor="textSecondary">
-            {localTime.dateStr}
-          </ThemedText>
-          <Ionicons name="chevron-forward" size={12} color={theme.textSecondary} />
-        </View>
-      </Pressable>
-
       <View style={styles.clocksRow}>
-        {/* Clock 1: Local */}
-        {Platform.OS === 'ios' ? (
-          <GlassView glassEffectStyle="regular" style={[styles.clockCard, glassCardStyle]}>
-            {renderCardContent('LOCAL', localTime.dateStr, localTime.timeStr, localTime.ampm, theme.accent, undefined, true)}
-          </GlassView>
-        ) : (
-          <View style={[styles.clockCard, glassCardStyle]}>
-            {renderCardContent('LOCAL', localTime.dateStr, localTime.timeStr, localTime.ampm, theme.accent, undefined, true)}
-          </View>
-        )}
-
-        {/* Clock 2: Configurable World Clock */}
-        <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setPickerVisible(true);
-          }}
-          style={({ pressed }) => [
-            styles.clockCard,
-            glassCardStyle,
-            pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-          ]}>
-          {Platform.OS === 'ios' ? (
-            <GlassView glassEffectStyle="regular" style={styles.innerGlassWrapper}>
-              {renderCardContent(
-                `${secondCity.flag} ${secondCity.cityName.toUpperCase()}`,
-                secondTime.dateStr,
-                secondTime.timeStr,
-                secondTime.ampm,
-                theme.success,
-                <Ionicons name="swap-horizontal" size={14} color={theme.accent} />
-              )}
-            </GlassView>
-          ) : (
-            renderCardContent(
-              `${secondCity.flag} ${secondCity.cityName.toUpperCase()}`,
-              secondTime.dateStr,
-              secondTime.timeStr,
-              secondTime.ampm,
-              theme.success,
-              <Ionicons name="swap-horizontal" size={14} color={theme.accent} />
-            )
-          )}
-        </Pressable>
+        {renderClockCard(1, city1, time1, '#4ade80')}
+        {renderClockCard(2, city2, time2, '#38bdf8')}
       </View>
 
-      {/* Timezone Selector Modal */}
-      <Modal visible={pickerVisible} transparent animationType="fade" onRequestClose={() => setPickerVisible(false)}>
+      {/* City Selector Modal */}
+      <Modal
+        visible={pickerModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPickerModalVisible(false)}>
         <View style={styles.backdrop}>
-          <Pressable style={styles.backdropPressable} onPress={() => setPickerVisible(false)} />
+          <Pressable style={styles.backdropPressable} onPress={() => setPickerModalVisible(false)} />
           <View style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.modalHeader}>
-              <ThemedText type="subtitle">Select 2nd Country Clock</ThemedText>
-              <Pressable onPress={() => setPickerVisible(false)} style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
+              <ThemedText type="subtitle">Select Clock {activeSlot} Pin</ThemedText>
+              <Pressable
+                onPress={() => setPickerModalVisible(false)}
+                style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
                 <Ionicons name="close" size={18} color={theme.text} />
               </Pressable>
             </View>
 
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
-              {WORLD_CITIES.filter((c) => c.id !== 'local').map((city) => {
-                const selected = city.id === secondCityId;
-                const cityTime = getFormattedTimeForZone(city.timeZone);
+              {WORLD_CITIES.map((city) => {
+                const selected = (activeSlot === 1 ? city1Id : city2Id) === city.id;
+                const cityTime = getFormattedTimeForZone(city.id === 'local' ? undefined : city.timeZone);
                 return (
                   <Pressable
                     key={city.id}
                     onPress={() => handleSelectCity(city)}
                     style={[
                       styles.cityRow,
-                      { backgroundColor: selected ? `${theme.accent}15` : theme.cardMuted, borderColor: selected ? theme.accent : theme.border },
+                      {
+                        backgroundColor: selected ? `${theme.accent}15` : theme.cardMuted,
+                        borderColor: selected ? theme.accent : theme.border,
+                      },
                     ]}>
                     <View style={styles.cityLeft}>
                       <ThemedText style={styles.flagEmoji}>{city.flag}</ThemedText>
@@ -192,40 +154,20 @@ export function DualClockWidget() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: Spacing.two,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 2,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    width: '100%',
   },
   clocksRow: {
     flexDirection: 'row',
-    gap: Spacing.two,
+    gap: 10,
   },
   clockCard: {
     flex: 1,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.large,
-    padding: Spacing.two,
-    gap: Spacing.half,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  innerGlassWrapper: {
-    flex: 1,
-    margin: -Spacing.two,
-    padding: Spacing.two,
-    gap: Spacing.half,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
+    borderRadius: Radius.medium,
+    padding: 10,
+    gap: 3,
   },
   clockTopRow: {
     flexDirection: 'row',
@@ -233,22 +175,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   clockLabel: {
+    color: '#FFFFFF',
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
+    flex: 1,
+    marginRight: 4,
   },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 4,
+    gap: 3,
   },
   timeText: {
-    fontSize: 17,
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
     fontVariant: ['tabular-nums'],
+    letterSpacing: 0.2,
   },
   ampmText: {
     fontSize: 10,
     fontWeight: '800',
+  },
+  dateText: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10.5,
+    fontWeight: '500',
   },
   backdrop: {
     flex: 1,

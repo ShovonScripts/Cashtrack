@@ -95,8 +95,8 @@ export function QuickAddModal({
         />
 
         <Animated.View
-          entering={SlideInDown.springify().damping(20).stiffness(180)}
-          exiting={SlideOutDown.duration(200)}
+          entering={SlideInDown.duration(200)}
+          exiting={SlideOutDown.duration(150)}
           style={[
             styles.sheet,
             {

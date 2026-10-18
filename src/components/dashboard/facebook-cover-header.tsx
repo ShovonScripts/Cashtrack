@@ -14,6 +14,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 import { Brand } from '@/constants/theme';
@@ -24,6 +25,7 @@ import { getQuoteOfTheDay } from '@/constants/quotes';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
+import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -41,6 +43,7 @@ export function FacebookCoverHeader({
   onPressProfile,
 }: FacebookCoverHeaderProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const { temperatureUnit, formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -60,7 +63,7 @@ export function FacebookCoverHeader({
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Auto slide every 10 seconds
+  // Auto slide every 10 seconds (3 slides)
   useEffect(() => {
     const timer = setInterval(() => {
       const nextIndex = (activeIndex + 1) % 3;
@@ -114,6 +117,8 @@ export function FacebookCoverHeader({
 
   const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
 
+  const topPadding = Math.max(insets.top + 12, 40);
+
   return (
     <View style={styles.container}>
       {/* FULL-WIDTH EDGE-TO-EDGE FACEBOOK MOBILE COVER CAROUSEL */}
@@ -128,28 +133,25 @@ export function FacebookCoverHeader({
         snapToInterval={SCREEN_WIDTH}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* SLIDE 1: GREETING, DATE & WEALTH OVERVIEW */}
-        <TouchableOpacity
-          activeOpacity={0.95}
-          onPress={onPressProfile || (() => router.push('/profile'))}
-          accessibilityRole="button"
-          accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
-          style={styles.slideCard}
-        >
+        {/* SLIDE 1: MERGED PINNED CLOCKS (TOP) + PROFILE & NET BALANCE (BOTTOM) */}
+        <View style={styles.slideCard}>
           <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
-          <View style={styles.cardInner}>
-            {/* Top row status pushed down below status bar */}
-            <View style={styles.topRowBadge}>
-              <View style={styles.liveBadge}>
-                <Ionicons name="sparkles" size={12} color="#4ade80" />
-                <Text style={styles.badgeText}>Live Dashboard</Text>
-              </View>
-            </View>
+          <View style={[styles.cardInnerCombined, { paddingTop: topPadding }]}>
+            {/* Dual Pinned Clocks Widget on Top */}
+            <DualClockWidget />
 
-            {/* Facebook Mobile Profile Layout */}
-            <View style={styles.facebookBottomRow}>
+            <View style={styles.combinedDivider} />
+
+            {/* Profile & Greeting on Bottom */}
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={onPressProfile || (() => router.push('/profile'))}
+              accessibilityRole="button"
+              accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
+              style={styles.facebookBottomRow}
+            >
               <View
                 style={[
                   styles.avatarContainer,
@@ -176,9 +178,9 @@ export function FacebookCoverHeader({
                   Net Balance: <Text style={{ color: '#4ade80', fontWeight: '700' }}>{formatAmount(totalBalance)}</Text>
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
         <TouchableOpacity
@@ -189,7 +191,7 @@ export function FacebookCoverHeader({
           style={styles.slideCard}>
           <WeatherBackground conditionType={weather.conditionType} />
 
-          <View style={styles.cardInner}>
+          <View style={[styles.cardInner, { paddingTop: topPadding }]}>
             <View style={styles.topRowBadge}>
               <View style={styles.outlookPill}>
                 <Ionicons name="location" size={13} color="#38bdf8" />
@@ -236,11 +238,11 @@ export function FacebookCoverHeader({
           <View pointerEvents="none" style={styles.quoteBgGlow2} />
 
           {/* Floating Lime-Green Quote Badge overlapping top-left */}
-          <View style={styles.floatingQuoteBadge}>
+          <View style={[styles.floatingQuoteBadge, { top: topPadding - 8 }]}>
             <Text style={styles.floatingQuoteSymbol}>“</Text>
           </View>
 
-          <View style={styles.quoteCardWrapper}>
+          <View style={[styles.quoteCardWrapper, { paddingTop: topPadding + 14 }]}>
             <View style={styles.quoteCardContent}>
               <Text style={styles.referenceQuoteText} numberOfLines={3} adjustsFontSizeToFit>
                 &ldquo;{currentQuote.quote}&rdquo;
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
   },
   slideCard: {
     width: SCREEN_WIDTH,
-    height: 250,
+    minHeight: 265,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -322,10 +324,20 @@ const styles = StyleSheet.create({
   },
   cardInner: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 45,
-    paddingBottom: 22,
+    paddingHorizontal: 18,
+    paddingBottom: 24,
     justifyContent: 'space-between',
+  },
+  cardInnerCombined: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingBottom: 22,
+    gap: 12,
+  },
+  combinedDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    marginVertical: 4,
   },
   topRowBadge: {
     flexDirection: 'row',
@@ -349,13 +361,13 @@ const styles = StyleSheet.create({
   facebookBottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
   },
   avatarContainer: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    borderWidth: 2.5,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 2,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
@@ -373,7 +385,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     color: '#FFFFFF',
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: '700',
   },
   profileTextInfo: {
@@ -381,20 +393,20 @@ const styles = StyleSheet.create({
   },
   whiteTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '700',
-    lineHeight: 24,
+    lineHeight: 22,
   },
   whiteSubtext: {
     color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '500',
   },
   netBalanceText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: 1,
   },
   outlookPill: {
     flexDirection: 'row',
@@ -433,7 +445,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    marginVertical: 6,
+    marginVertical: 4,
   },
   weatherTextColumn: {
     flex: 1,
@@ -445,7 +457,7 @@ const styles = StyleSheet.create({
   },
   giantTemp: {
     color: '#FFFFFF',
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: '800',
     letterSpacing: -1,
   },
@@ -469,14 +481,14 @@ const styles = StyleSheet.create({
     gap: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
     paddingHorizontal: 14,
-    paddingVertical: 9,
+    paddingVertical: 8,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   tipContentText: {
     color: '#FFFFFF',
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '500',
     flex: 1,
     lineHeight: 16,
@@ -484,7 +496,6 @@ const styles = StyleSheet.create({
   quoteCardContainer: {
     backgroundColor: Brand.deep,
     overflow: 'visible',
-    height: 255,
   },
   quoteBgGlow1: {
     position: 'absolute',
@@ -506,11 +517,10 @@ const styles = StyleSheet.create({
   },
   floatingQuoteBadge: {
     position: 'absolute',
-    top: 37,
-    left: 28,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    left: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#0152F5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -523,23 +533,22 @@ const styles = StyleSheet.create({
   },
   floatingQuoteSymbol: {
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '900',
-    marginTop: 5,
+    marginTop: 4,
   },
   quoteCardWrapper: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 56,
     paddingBottom: 16,
     justifyContent: 'space-between',
   },
   quoteCardContent: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 14,
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingTop: 24,
+    paddingBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
@@ -548,11 +557,11 @@ const styles = StyleSheet.create({
   },
   referenceQuoteText: {
     color: '#111827',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     fontStyle: 'italic',
-    lineHeight: 22,
-    marginBottom: 10,
+    lineHeight: 20,
+    marginBottom: 8,
   },
   referenceAuthorRow: {
     flexDirection: 'row',
@@ -615,7 +624,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     position: 'absolute',
-    bottom: 12,
+    bottom: 8,
     left: 0,
     right: 0,
   },

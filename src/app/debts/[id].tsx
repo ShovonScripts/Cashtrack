@@ -10,6 +10,7 @@ import { useDebts } from '@/context/debt-context';
 import { useExpenses } from '@/context/expense-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { withAlpha } from '@/utils/color';
+import { getRemainingBalance, getTotalPaid } from '@/utils/debt';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { shareDebtReminder } from '@/utils/debt-share';
@@ -65,8 +66,8 @@ export default function DebtDetailsScreen() {
   const isLent = debt.type === 'lent';
   const isSettled = debt.status === 'settled';
   const payments = debt.payments ?? [];
-  const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
-  const remainingBalance = Math.max(0, debt.amount - totalPaid);
+  const totalPaid = getTotalPaid(debt);
+  const remainingBalance = getRemainingBalance(debt);
 
   const handleSettle = () => {
     if (isSubmitting) return;

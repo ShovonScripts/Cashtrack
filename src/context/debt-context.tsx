@@ -15,73 +15,7 @@ import { loadDebts, saveDebts } from '@/storage/debt-storage';
 import { checkAndTriggerDebtNotifications } from '@/utils/notifications';
 import { useExpenses } from '@/context/expense-context';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
-
-type DebtAction =
-  | { type: 'HYDRATE'; debts: DebtRecord[] }
-  | { type: 'ADD_DEBT'; debt: DebtRecord }
-  | { type: 'UPDATE_DEBT'; id: string; changes: DebtDraft }
-  | { type: 'DELETE_DEBT'; id: string }
-  | { type: 'SETTLE_DEBT'; id: string; settledDate: string }
-  | { type: 'ADD_PAYMENT'; debtId: string; payment: DebtPayment }
-  | { type: 'DELETE_PAYMENT'; debtId: string; paymentId: string };
-
-function debtReducer(state: DebtRecord[], action: DebtAction): DebtRecord[] {
-  switch (action.type) {
-    case 'HYDRATE':
-      return action.debts;
-    case 'ADD_DEBT':
-      return [action.debt, ...state];
-    case 'UPDATE_DEBT':
-      return state.map((debt) =>
-        debt.id === action.id
-          ? {
-              ...debt,
-              ...action.changes,
-              date: action.changes.date ?? debt.date,
-              dueDate: action.changes.dueDate !== undefined ? action.changes.dueDate : debt.dueDate,
-            }
-          : debt
-      );
-    case 'DELETE_DEBT':
-      return state.filter((debt) => debt.id !== action.id);
-    case 'SETTLE_DEBT':
-      return state.map((debt) =>
-        debt.id === action.id
-          ? { ...debt, status: 'settled', settledDate: action.settledDate }
-          : debt
-      );
-    case 'ADD_PAYMENT': {
-      return state.map((debt) => {
-        if (debt.id !== action.debtId) return debt;
-        const existingPayments = debt.payments ?? [];
-        const newPayments = [action.payment, ...existingPayments];
-        const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
-        const isNowSettled = totalPaid >= debt.amount;
-        return {
-          ...debt,
-          payments: newPayments,
-          status: isNowSettled ? ('settled' as const) : debt.status,
-          settledDate: isNowSettled && !debt.settledDate ? new Date().toISOString() : debt.settledDate,
-        };
-      });
-    }
-    case 'DELETE_PAYMENT': {
-      return state.map((debt) => {
-        if (debt.id !== action.debtId) return debt;
-        const newPayments = (debt.payments ?? []).filter((p) => p.id !== action.paymentId);
-        const totalPaid = newPayments.reduce((sum, p) => sum + p.amount, 0);
-        return {
-          ...debt,
-          payments: newPayments,
-          status: totalPaid >= debt.amount ? 'settled' : 'active',
-          settledDate: totalPaid >= debt.amount ? debt.settledDate : null,
-        };
-      });
-    }
-    default:
-      return state;
-  }
-}
+import { debtReducer } from '@/utils/debt-reducer';
 
 let debtIdCounter = 0;
 

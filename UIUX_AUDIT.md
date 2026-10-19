@@ -114,4 +114,23 @@ This report provides an exhaustive, evidence-based UI/UX audit of all screens an
 - **Fixed**: 5 core findings (error banner colors, close button touch target, camera permission fallback, expense delete confirmation, profile reset double-confirmation).
 - **Deferred**: 0 findings (all High/Medium items resolved; remaining feature ideas deferred with user consent).
 - **Removed**: Redundant conflicting route files.
-- **Verification**: Typecheck (`tsc`), linter (`expo lint`), and unit test suite (`npm test`) all passed successfully with **0 errors**.
+- **Verification** (re-confirmed after the reliability pass in §6): `npm test` → **118 pass / 0 fail** (exit 0); `npx tsc --noEmit` → exit 0; `npx expo lint` → exit 0.
+
+---
+
+## 6. Post-Audit Reliability Fixes (Phases 1–4)
+
+These are storage, financial-calculation and theme-internals fixes. They are recorded here for integration context only and are **not** UI/UX findings, so they are deliberately **not** added as rows to `UIUX_LEDGER.md`.
+
+| Phase | Area (files) | Fix | Verification evidence |
+| :--- | :--- | :--- | :--- |
+| 1 | Native SQLite goals (`src/storage/db.ts`, `src/storage/goal-migration.ts`, `src/storage/goal-repository.ts`) | `deadline_date` made nullable through a data-preserving, idempotent, transactional table rebuild so flexible savings pots save on native. | `tests/goal-migration.test.ts` (6 tests, real `node:sqlite`): legacy detection, preservation of goals + contributions, post-migration flexible insert, idempotency, fresh-schema nullability, transaction rollback. |
+| 2 | Debt balances (`src/utils/debt.ts`, `src/utils/debt-reducer.ts`, `src/app/debts/index.tsx`, `src/app/debts/[id].tsx`, `src/utils/debt-share.ts`) | List summaries, detail screen, cards and share text use the remaining balance; settled debts report zero outstanding; settling is idempotent. | `tests/debt-calculations.test.ts` (14 tests). |
+| 3 | Web repositories (`src/storage/goal-repository.web.ts`, `src/storage/income-repository.web.ts`, `src/storage/financial-reminders-repository.web.ts`, `src/storage/json-collection.ts`, `src/storage/goal-rows.ts`) | Corrupt/unreadable JSON throws instead of collapsing to `[]`; writers abort before persisting, so the stored value is never overwritten. | `tests/json-collection.test.ts` (13 tests). |
+| 4 | Theme context (`src/hooks/use-theme.ts`, `src/context/theme-context.ts`, `src/utils/theme-mode.ts`, `src/context/expense-context.tsx`) | `useTheme` reads a narrow theme-mode context instead of `ExpenseContext`, so theme-only consumers no longer re-render on unrelated expense/preference changes; theme changes still propagate immediately. | `tests/theme-mode.test.ts` (7 tests) + `tests/theme-render-isolation.test.ts` (2 render-count tests). |
+
+### Remaining limitations (honest)
+- No Android/iOS device run or production/store build was performed. Native SQL is exercised with the `expo-sqlite`-equivalent statements run through Node's built-in `node:sqlite`, not on a device.
+- The web-storage fix blocks writes on corrupt data but adds no user-facing banner; existing load-error handling is unchanged.
+- `react-test-renderer` is a test-only dev dependency and is deprecated in React 19 (warning only, no runtime impact).
+- `ExpenseContext` remains one broad context, so `useExpenses()` consumers still re-render on any expense/preference change (by design, out of scope).

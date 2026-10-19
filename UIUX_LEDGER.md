@@ -172,3 +172,6 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 - **Deferred**: 1
 - **Removed**: 2
 - **Not reproducible**: 8
+
+### Reliability pass (Phases 1–4) — not ledger rows
+Storage, debt-calculation and theme-internals fixes were completed and verified separately. Because the ledger tracks visual/accessibility findings only, these are intentionally **not** recorded as rows here (adding them would misclassify non-UI work as UI/UX fixes). They are documented with evidence and limitations in `UIUX_AUDIT.md` §6. Ledger counts above are unchanged.

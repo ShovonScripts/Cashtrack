@@ -18,6 +18,8 @@ import { mergeExpenseChanges } from '@/utils/expense-draft';
 import { DEFAULT_PREFERENCES, type UserPreferences, type UserProfile } from '@/types/preferences';
 import { loadExpenses, saveExpenses } from '@/storage/expense-storage';
 import { loadPreferences, savePreferences } from '@/storage/preferences-storage';
+import { ThemeModeContext } from '@/context/theme-context';
+import { nextThemeMode } from '@/utils/theme-mode';
 import { clearRelationalData } from '@/storage/reset-repository';
 import { createSeedExpenses } from '@/data/seed-expenses';
 import { processRecurringExpenses } from '@/utils/recurring';
@@ -378,7 +380,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const toggleThemeMode = useCallback(() => {
     setPreferences((current) => ({
       ...current,
-      themeMode: current.themeMode === 'dark' ? 'light' : 'dark',
+      themeMode: nextThemeMode(current.themeMode ?? 'system'),
     }));
   }, []);
 
@@ -443,6 +445,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const themeMode = preferences.themeMode ?? 'system';
+
   const value = useMemo(() => ({
     expenses,
     isLoading,
@@ -459,7 +463,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     registerResetHandler,
     hasCompletedOnboarding: preferences.hasCompletedOnboarding ?? false,
     setHasCompletedOnboarding,
-    themeMode: preferences.themeMode ?? 'system',
+    themeMode,
     setThemeMode,
     toggleThemeMode,
     temperatureUnit: preferences.temperatureUnit ?? 'F',
@@ -504,6 +508,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setCategoryLimit,
     setCategoryIcon,
     setHasCompletedOnboarding,
+    themeMode,
     setThemeMode,
     toggleThemeMode,
     setTemperatureUnit,
@@ -516,7 +521,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     registerResetHandler,
   ]);
 
-  return <ExpenseContext.Provider value={value}>{children}</ExpenseContext.Provider>;
+  return (
+    <ExpenseContext.Provider value={value}>
+      <ThemeModeContext.Provider value={themeMode}>{children}</ThemeModeContext.Provider>
+    </ExpenseContext.Provider>
+  );
 }
 
 export function useExpenses(): ExpenseContextValue {

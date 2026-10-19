@@ -1,5 +1,12 @@
 import * as SQLite from 'expo-sqlite';
 
+import {
+  buildGoalDeadlineRebuildSql,
+  createMoneyGoalsTableSql,
+  goalDeadlineNeedsNullableMigration,
+  type SqliteTableInfoColumn,
+} from '@/storage/goal-migration';
+
 export const DATABASE_NAME = 'cashtrack.db';
 
 /**
@@ -38,19 +45,7 @@ CREATE TABLE IF NOT EXISTS income_transactions (
 CREATE INDEX IF NOT EXISTS idx_income_date
 ON income_transactions (date DESC);
 
-CREATE TABLE IF NOT EXISTS money_goals (
-  id TEXT PRIMARY KEY NOT NULL,
-  title TEXT NOT NULL,
-  target_amount REAL NOT NULL CHECK (target_amount > 0),
-  start_date TEXT NOT NULL,
-  deadline_date TEXT NOT NULL,
-  frequency TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active',
-  pot_type TEXT NOT NULL DEFAULT 'general',
-  allocation_type TEXT NOT NULL DEFAULT 'manual',
-  allocation_percent REAL,
-  icon TEXT NOT NULL DEFAULT 'piggy-bank'
-);
+${createMoneyGoalsTableSql('money_goals')};
 
 CREATE TABLE IF NOT EXISTS goal_contributions (
   id TEXT PRIMARY KEY NOT NULL,
@@ -142,7 +137,28 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
     await db.execAsync("ALTER TABLE money_goals ADD COLUMN icon TEXT NOT NULL DEFAULT 'piggy-bank';");
   } catch {}
 
+  // Legacy databases declared `deadline_date` as NOT NULL, which blocks flexible
+  // savings pots. Rebuild the table in place (data-preserving) when detected.
+  await migrateGoalDeadlineNullable(db);
+
   return db;
+}
+
+/**
+ * Makes `money_goals.deadline_date` nullable on databases created before the
+ * flexible-pot feature. Idempotent: the rebuild only runs while the live schema
+ * still reports the column as NOT NULL, and it is wrapped in a transaction so a
+ * failure leaves the original table (and all rows) intact.
+ */
+async function migrateGoalDeadlineNullable(db: SQLite.SQLiteDatabase): Promise<void> {
+  const tableInfo = await db.getAllAsync<SqliteTableInfoColumn>('PRAGMA table_info(money_goals);');
+  if (!goalDeadlineNeedsNullableMigration(tableInfo)) {
+    return;
+  }
+
+  await db.withTransactionAsync(async () => {
+    await db.execAsync(buildGoalDeadlineRebuildSql());
+  });
 }
 
 export function initDatabase(): Promise<SQLite.SQLiteDatabase> {

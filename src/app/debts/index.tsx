@@ -11,6 +11,7 @@ import { useExpenses } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
+import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
 import { formatDate } from '@/utils/expense';
 import type { DebtRecord } from '@/types/debt';
 
@@ -22,15 +23,8 @@ export default function DebtsScreen() {
   const { formatAmount } = useExpenses();
   const [filter, setFilter] = useState<FilterType>('Active');
 
-  // Summary calculations (active only)
-  const activeDebts = debts.filter((d) => d.status === 'active');
-  const youAreOwed = activeDebts
-    .filter((d) => d.type === 'lent')
-    .reduce((sum, d) => sum + d.amount, 0);
-  const youOwe = activeDebts
-    .filter((d) => d.type === 'borrowed')
-    .reduce((sum, d) => sum + d.amount, 0);
-  const net = youAreOwed - youOwe;
+  // Summary calculations (open debts, by remaining balance)
+  const { youAreOwed, youOwe, net } = summarizeDebts(debts);
 
   const filteredDebts = debts.filter((debt) => {
     if (filter === 'Active') return debt.status === 'active';
@@ -143,6 +137,7 @@ function DebtCard({ debt, formatAmount }: { debt: DebtRecord; formatAmount: (amo
   const theme = useTheme();
   const isLent = debt.type === 'lent';
   const isSettled = debt.status === 'settled';
+  const remaining = getRemainingBalance(debt);
 
   const initials = debt.personName
     .trim()
@@ -156,7 +151,7 @@ function DebtCard({ debt, formatAmount }: { debt: DebtRecord; formatAmount: (amo
     <Pressable
       onPress={() => router.push({ pathname: '/debts/[id]', params: { id: debt.id } })}
       accessibilityRole="button"
-      accessibilityLabel={`Debt with ${debt.personName}, ${formatAmount(debt.amount)}`}
+      accessibilityLabel={`Debt with ${debt.personName}, ${formatAmount(remaining)} outstanding`}
       style={({ pressed }) => [
         styles.debtCard,
         {
@@ -194,7 +189,7 @@ function DebtCard({ debt, formatAmount }: { debt: DebtRecord; formatAmount: (amo
           </View>
         </View>
         <ThemedText type="subtitle" style={[styles.amount, { color: isLent ? theme.success : theme.danger }]}>
-          {formatAmount(debt.amount)}
+          {formatAmount(remaining)}
         </ThemedText>
       </View>
 

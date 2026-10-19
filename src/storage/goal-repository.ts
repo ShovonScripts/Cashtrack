@@ -6,7 +6,7 @@ interface GoalRow {
   title: string;
   target_amount: number;
   start_date: string;
-  deadline_date: string;
+  deadline_date: string | null;
   frequency: string;
   status: string;
   pot_type: string;
@@ -29,7 +29,7 @@ function mapGoalRow(row: GoalRow): MoneyGoal {
     title: row.title,
     targetAmount: row.target_amount,
     startDate: row.start_date,
-    deadlineDate: row.deadline_date,
+    deadlineDate: row.deadline_date ?? null,
     frequency: row.frequency as GoalFrequency,
     status: row.status as GoalStatus,
     potType: (row.pot_type as PotType) ?? 'general',

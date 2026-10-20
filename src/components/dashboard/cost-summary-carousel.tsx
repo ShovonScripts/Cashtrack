@@ -16,6 +16,7 @@ type CostSummaryCarouselProps = {
   formatAmount: (amount: number) => string;
   categoryIcons?: Record<string, string>;
   onOpenReport: (period: SummaryPeriod) => void;
+  onAddExpense?: () => void;
 };
 
 export function CostSummaryCarousel({
@@ -24,6 +25,7 @@ export function CostSummaryCarousel({
   formatAmount,
   categoryIcons,
   onOpenReport,
+  onAddExpense,
 }: CostSummaryCarouselProps) {
   const theme = useTheme();
   const screenWidth = useWindowDimensions().width;
@@ -89,6 +91,7 @@ export function CostSummaryCarousel({
             width={cardWidth}
             formatAmount={formatAmount}
             onPressReport={() => onOpenReport(summary.period)}
+            onAddExpense={summary.period === 'daily' ? onAddExpense : undefined}
           />
         ))}
       </ScrollView>

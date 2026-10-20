@@ -642,6 +642,10 @@ export default function DashboardScreen() {
           formatAmount={formatAmount}
           categoryIcons={categoryIcons}
           onOpenReport={openCostReport}
+          onAddExpense={() => {
+            triggerHaptic();
+            router.push('/add-expense');
+          }}
         />
 
         {/* Tier 2: Actionable Alerts & Secondary Swipeable Carousel (Cash Flow ⇄ Money Overview) */}

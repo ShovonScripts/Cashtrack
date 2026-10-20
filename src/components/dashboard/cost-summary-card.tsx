@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -17,6 +18,7 @@ type CostSummaryCardProps = {
   width: number;
   formatAmount: (amount: number) => string;
   onPressReport: () => void;
+  onAddExpense?: () => void;
 };
 
 export function CostSummaryCard({
@@ -24,58 +26,79 @@ export function CostSummaryCard({
   width,
   formatAmount,
   onPressReport,
+  onAddExpense,
 }: CostSummaryCardProps) {
   return (
-    <Pressable
-      onPress={onPressReport}
-      accessibilityRole="button"
-      accessibilityLabel={`${summary.title}, ${formatAmount(summary.amount)}, ${summary.detail} Opens the report.`}
-      style={({ pressed }) => [
+    <View
+      style={[
         styles.card,
         { width, backgroundColor: CARD_BACKGROUND[summary.period] },
-        pressed && styles.pressed,
       ]}>
-      <View style={styles.content}>
-        <View style={styles.topline}>
-          <ThemedText type="caption" style={styles.label}>
-            {summary.title}
-          </ThemedText>
-          <View style={styles.rangePill}>
-            <ThemedText type="caption" style={styles.rangePillText}>
-              {summary.rangeLabel}
+      <Pressable
+        onPress={onPressReport}
+        accessibilityRole="button"
+        accessibilityLabel={`${summary.title}, ${formatAmount(summary.amount)}, ${summary.detail} Opens the report.`}
+        style={({ pressed }) => [styles.reportPress, pressed && styles.pressed]}>
+        <View style={styles.content}>
+          <View style={styles.topline}>
+            <ThemedText type="caption" style={styles.label}>
+              {summary.title}
             </ThemedText>
+            <View style={styles.rangePill}>
+              <ThemedText type="caption" style={styles.rangePillText}>
+                {summary.rangeLabel}
+              </ThemedText>
+            </View>
           </View>
+
+          <ThemedText
+            type="hero"
+            style={styles.value}
+            numberOfLines={1}
+            adjustsFontSizeToFit>
+            {formatAmount(summary.amount)}
+          </ThemedText>
+
+          <ThemedText
+            type="small"
+            style={[styles.detail, onAddExpense && styles.detailWithAction]}
+            numberOfLines={2}>
+            {summary.detail}
+          </ThemedText>
         </View>
+      </Pressable>
 
-        <ThemedText
-          type="hero"
-          style={styles.value}
-          numberOfLines={1}
-          adjustsFontSizeToFit>
-          {formatAmount(summary.amount)}
-        </ThemedText>
-
-        <ThemedText type="small" style={styles.detail} numberOfLines={2}>
-          {summary.detail}
-        </ThemedText>
-      </View>
+      {onAddExpense && (
+        <Pressable
+          onPress={onAddExpense}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={`Add expense for ${summary.title.toLowerCase()}`}
+          style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
+          <Ionicons name="add" size={14} color="#FFFFFF" />
+          <ThemedText type="smallBold" style={styles.addButtonText}>
+            Add expense
+          </ThemedText>
+        </Pressable>
+      )}
 
       <View pointerEvents="none" style={styles.orbLarge} />
       <View pointerEvents="none" style={styles.orbSmall} />
-    </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     borderRadius: Radius.xlarge,
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
     overflow: 'hidden',
   },
+  reportPress: {
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+  },
   pressed: {
-    opacity: 0.94,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.9,
   },
   content: {
     gap: Spacing.two,
@@ -110,6 +133,34 @@ const styles = StyleSheet.create({
   },
   detail: {
     color: 'rgba(255,255,255,0.82)',
+  },
+  detailWithAction: {
+    paddingRight: 116,
+    fontSize: 12.5,
+    lineHeight: 17,
+  },
+  addButton: {
+    position: 'absolute',
+    right: Spacing.four,
+    bottom: Spacing.three,
+    zIndex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.38)',
+  },
+  addButtonPressed: {
+    opacity: 0.72,
+    transform: [{ scale: 0.97 }],
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
   },
   orbLarge: {
     position: 'absolute',

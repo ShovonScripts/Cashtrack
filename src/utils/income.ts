@@ -1,5 +1,18 @@
-import type { IncomeRecord } from '../types/income.ts';
+import type { IncomeRecord, IncomeDraft } from '../types/income.ts';
 import type { Expense } from '../types/expense.ts';
+
+/** Merges an edit into an income record. Omitted optional fields keep their stored value. */
+export function applyIncomeUpdate(record: IncomeRecord, changes: IncomeDraft): IncomeRecord {
+  return {
+    ...record,
+    amount: changes.amount,
+    date: changes.date ?? record.date,
+    note: changes.note ?? record.note,
+    isRecurring: changes.isRecurring ?? record.isRecurring,
+    recurringFrequency: changes.recurringFrequency ?? record.recurringFrequency,
+    recurringEndDate: changes.recurringEndDate ?? record.recurringEndDate,
+  };
+}
 
 export function getMonthIncome(incomeList: IncomeRecord[], month: Date): IncomeRecord[] {
   const year = month.getFullYear();

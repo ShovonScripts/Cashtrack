@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { IncomeRecord, IncomeDraft } from '@/types/income';
 import { mutateJsonArray, objectRows, readJsonArray } from '@/storage/json-collection';
+import { applyIncomeUpdate } from '@/utils/income';
 
 const INCOME_KEY = '@cashtrack/income';
 
@@ -24,18 +25,7 @@ export async function getIncomeById(id: string): Promise<IncomeRecord | undefine
 
 export async function updateIncome(id: string, changes: IncomeDraft): Promise<void> {
   await mutateJsonArray(AsyncStorage, INCOME_KEY, 'income', incomeRows, (list) =>
-    list.map((item) =>
-      item.id === id
-        ? {
-            ...item,
-            amount: changes.amount,
-            note: changes.note ?? item.note,
-            isRecurring: changes.isRecurring ?? item.isRecurring,
-            recurringFrequency: changes.recurringFrequency ?? item.recurringFrequency,
-            recurringEndDate: changes.recurringEndDate ?? item.recurringEndDate,
-          }
-        : item
-    )
+    list.map((item) => (item.id === id ? applyIncomeUpdate(item, changes) : item))
   );
 }
 

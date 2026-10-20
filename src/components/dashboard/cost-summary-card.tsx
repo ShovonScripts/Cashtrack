@@ -1,4 +1,3 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -18,7 +17,6 @@ type CostSummaryCardProps = {
   width: number;
   formatAmount: (amount: number) => string;
   onPressReport: () => void;
-  onPressAddExpense: () => void;
 };
 
 export function CostSummaryCard({
@@ -26,7 +24,6 @@ export function CostSummaryCard({
   width,
   formatAmount,
   onPressReport,
-  onPressAddExpense,
 }: CostSummaryCardProps) {
   return (
     <Pressable
@@ -61,20 +58,6 @@ export function CostSummaryCard({
         <ThemedText type="small" style={styles.detail} numberOfLines={2}>
           {summary.detail}
         </ThemedText>
-
-        <Pressable
-          onPress={(event) => {
-            event.stopPropagation();
-            onPressAddExpense();
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={`Add expense for ${summary.title.toLowerCase()}`}
-          style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
-          <MaterialCommunityIcons name="plus" size={20} color={Brand.deep} />
-          <ThemedText type="smallBold" style={styles.addButtonText}>
-            Add expense
-          </ThemedText>
-        </Pressable>
       </View>
 
       <View pointerEvents="none" style={styles.orbLarge} />
@@ -85,9 +68,9 @@ export function CostSummaryCard({
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 212,
     borderRadius: Radius.xlarge,
-    padding: Spacing.four,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
     overflow: 'hidden',
   },
   pressed: {
@@ -95,9 +78,7 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.99 }],
   },
   content: {
-    flex: 1,
-    justifyContent: 'space-between',
-    gap: Spacing.one,
+    gap: Spacing.two,
     zIndex: 1,
   },
   topline: {
@@ -123,29 +104,12 @@ const styles = StyleSheet.create({
   },
   value: {
     color: '#FFFFFF',
-    fontSize: 38,
-    lineHeight: 46,
+    fontSize: 34,
+    lineHeight: 40,
     fontVariant: ['tabular-nums'],
   },
   detail: {
     color: 'rgba(255,255,255,0.82)',
-  },
-  addButton: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    borderRadius: Radius.pill,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: Spacing.four,
-  },
-  addButtonPressed: {
-    opacity: 0.86,
-    transform: [{ scale: 0.99 }],
-  },
-  addButtonText: {
-    color: Brand.deep,
   },
   orbLarge: {
     position: 'absolute',

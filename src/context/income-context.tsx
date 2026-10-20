@@ -17,6 +17,7 @@ import {
 } from '@/storage/income-repository';
 import { getAllGoals, insertContribution } from '@/storage/goal-repository';
 import { calculateIncomeAllocations } from '@/utils/savings-allocator';
+import { applyIncomeUpdate } from '@/utils/income';
 import { processRecurringIncome } from '@/utils/recurring-income';
 import { useExpenses } from '@/context/expense-context';
 
@@ -109,18 +110,7 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
     await updateIncomeRepo(id, changes);
     setIncomeList((current) =>
       processRecurringIncome(
-        current.map((item) =>
-          item.id === id
-            ? {
-                ...item,
-                amount: changes.amount,
-                note: changes.note ?? item.note,
-                isRecurring: changes.isRecurring ?? item.isRecurring,
-                recurringFrequency: changes.recurringFrequency ?? item.recurringFrequency,
-                recurringEndDate: changes.recurringEndDate ?? item.recurringEndDate,
-              }
-            : item
-        )
+        current.map((item) => (item.id === id ? applyIncomeUpdate(item, changes) : item))
       )
     );
   }, []);

@@ -57,8 +57,9 @@ export async function getIncomeById(id: string): Promise<IncomeRecord | undefine
 export async function updateIncome(id: string, changes: IncomeDraft): Promise<void> {
   const db = await initDatabase();
   await db.runAsync(
-    'UPDATE income_transactions SET amount = ?, note = ?, is_recurring = ?, recurring_frequency = ?, recurring_end_date = ? WHERE id = ?',
+    'UPDATE income_transactions SET amount = ?, date = COALESCE(?, date), note = ?, is_recurring = ?, recurring_frequency = ?, recurring_end_date = ? WHERE id = ?',
     changes.amount,
+    changes.date ?? null,
     changes.note ?? '',
     changes.isRecurring ? 1 : 0,
     changes.recurringFrequency ?? null,

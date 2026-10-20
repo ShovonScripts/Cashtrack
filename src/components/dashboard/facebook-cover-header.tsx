@@ -46,7 +46,6 @@ export function FacebookCoverHeader({
   const insets = useSafeAreaInsets();
   const { temperatureUnit, formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [clockPickerOpen, setClockPickerOpen] = useState(false);
 
   // Live weather state
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
@@ -64,10 +63,8 @@ export function FacebookCoverHeader({
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Auto slide every 10 seconds (3 slides), paused while choosing a clock city
+  // Auto slide every 10 seconds (3 slides)
   useEffect(() => {
-    if (clockPickerOpen) return;
-
     const timer = setInterval(() => {
       const nextIndex = (activeIndex + 1) % 3;
       setActiveIndex(nextIndex);
@@ -78,7 +75,7 @@ export function FacebookCoverHeader({
     }, 10000);
 
     return () => clearInterval(timer);
-  }, [activeIndex, clockPickerOpen]);
+  }, [activeIndex]);
 
   useEffect(() => {
     async function loadWeather() {
@@ -181,7 +178,15 @@ export function FacebookCoverHeader({
         </View>
 
         {/* SLIDE 2: LIVE WEATHER + WORLD CLOCKS */}
-        <View style={styles.slideCard}>
+        <TouchableOpacity
+          activeOpacity={0.92}
+          onPress={() => {
+            Haptics.selectionAsync().catch(() => {});
+            router.push('/weather');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`Weather for ${weather.locationName}, ${displayTemp}, ${weather.condition}. World clocks. Opens Weather and Insights.`}
+          style={styles.slideCard}>
           <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={[styles.cardInner, { paddingTop: topPadding }]}>
@@ -220,25 +225,16 @@ export function FacebookCoverHeader({
               <View style={styles.clockDivider} />
 
               <View style={styles.clockColumn}>
-                <DualClockWidget variant="compact" onPickerOpenChange={setClockPickerOpen} />
+                <DualClockWidget variant="compact" readOnly />
               </View>
             </View>
 
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                router.push('/weather');
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`View full forecast and insights for ${weather.locationName}`}
-              style={styles.weatherLinkButton}
-            >
-              <Text style={styles.weatherLinkText}>Full forecast & insights</Text>
-              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-            </TouchableOpacity>
+            <View style={styles.slideHint}>
+              <Text style={styles.slideHintText}>Tap for details</Text>
+              <Ionicons name="chevron-forward" size={13} color="rgba(255,255,255,0.8)" />
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
         <View style={[styles.slideCard, styles.quoteCardContainer]}>
@@ -491,23 +487,20 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '700',
   },
-  weatherLinkButton: {
+  slideHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.32)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 999,
+    alignSelf: 'flex-end',
+    gap: 3,
   },
-  weatherLinkText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.1,
+  slideHintText: {
+    color: 'rgba(255, 255, 255, 0.88)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.2,
+    textShadowColor: 'rgba(0, 0, 0, 0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   quoteCardContainer: {
     backgroundColor: Brand.deep,

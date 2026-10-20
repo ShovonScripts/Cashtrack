@@ -9,6 +9,7 @@ import { Card } from '@/components/card';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
+import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
 
 export default function WeatherScreen() {
   const theme = useTheme();
@@ -116,6 +117,18 @@ export default function WeatherScreen() {
           </View>
         </View>
         <ThemedText style={styles.insightBody}>{weather.financialTip}</ThemedText>
+      </Card>
+
+      {/* WORLD CLOCKS - EDIT THE TWO CLOCKS PINNED TO THE HOME BANNER */}
+      <Card style={styles.clockCardSection}>
+        <View style={styles.clockSectionHeader}>
+          <View style={styles.clockSectionTitleRow}>
+            <Ionicons name="globe-outline" size={16} color={rainBadgeColor} />
+            <ThemedText style={styles.clockSectionTitle}>WORLD CLOCKS</ThemedText>
+          </View>
+          <ThemedText style={styles.clockSectionHint}>Tap to edit</ThemedText>
+        </View>
+        <DualClockWidget variant="page" />
       </Card>
 
       {/* 24-HOUR HOURLY FORECAST CAROUSEL */}
@@ -526,6 +539,32 @@ const styles = StyleSheet.create({
     fontSize: 14.5,
     lineHeight: 21.5,
     opacity: 0.9,
+  },
+  clockCardSection: {
+    padding: 16,
+    gap: 12,
+    borderRadius: 22,
+  },
+  clockSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  clockSectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  clockSectionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+    opacity: 0.8,
+  },
+  clockSectionHint: {
+    fontSize: 11,
+    fontWeight: '600',
+    opacity: 0.5,
   },
   forecastCard: {
     padding: 16,

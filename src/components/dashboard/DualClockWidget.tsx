@@ -13,13 +13,15 @@ const CLOCK_1_KEY = '@cashtrack_banner_clock_1';
 const CLOCK_2_KEY = '@cashtrack_banner_clock_2';
 
 type DualClockWidgetProps = {
-  variant?: 'default' | 'compact';
-  onPickerOpenChange?: (open: boolean) => void;
+  variant?: 'default' | 'compact' | 'page';
+  readOnly?: boolean;
 };
 
-export function DualClockWidget({ variant = 'default', onPickerOpenChange }: DualClockWidgetProps) {
+export function DualClockWidget({ variant = 'default', readOnly = false }: DualClockWidgetProps) {
   const theme = useTheme();
   const compact = variant === 'compact';
+  const page = variant === 'page';
+  const isDark = theme.text === '#ffffff';
 
   const [city1Id, setCity1Id] = useState<string>('local');
   const [city2Id, setCity2Id] = useState<string>('london');
@@ -49,12 +51,10 @@ export function DualClockWidget({ variant = 'default', onPickerOpenChange }: Dua
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setActiveSlot(slot);
     setPickerModalVisible(true);
-    onPickerOpenChange?.(true);
   };
 
   const closePicker = () => {
     setPickerModalVisible(false);
-    onPickerOpenChange?.(false);
   };
 
   const handleSelectCity = async (city: WorldCity) => {
@@ -77,40 +77,88 @@ export function DualClockWidget({ variant = 'default', onPickerOpenChange }: Dua
   const time1 = getFormattedTimeForZone(city1.id === 'local' ? undefined : city1.timeZone);
   const time2 = getFormattedTimeForZone(city2.id === 'local' ? undefined : city2.timeZone);
 
-  const renderClockCard = (slot: 1 | 2, city: WorldCity, timeInfo: ReturnType<typeof getFormattedTimeForZone>, accentColor: string) => (
-    <Pressable
-      key={slot}
-      onPress={() => openPicker(slot)}
-      style={({ pressed }) => [
-        styles.clockCard,
-        compact && styles.clockCardCompact,
-        pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-      ]}>
-      <View style={styles.clockTopRow}>
-        <Text style={[styles.clockLabel, compact && styles.clockLabelCompact]} numberOfLines={1}>
-          {city.flag} {city.cityName.toUpperCase()}
+  const renderClockCard = (slot: 1 | 2, city: WorldCity, timeInfo: ReturnType<typeof getFormattedTimeForZone>, accentColor: string) => {
+    const cardStyle = [
+      styles.clockCard,
+      compact && styles.clockCardCompact,
+      page && { backgroundColor: theme.cardMuted, borderColor: theme.border },
+    ];
+
+    const content = (
+      <>
+        <View style={styles.clockTopRow}>
+          <Text
+            style={[
+              styles.clockLabel,
+              compact && styles.clockLabelCompact,
+              page && styles.clockLabelPage,
+              page && { color: theme.textSecondary },
+            ]}
+            numberOfLines={1}>
+            {city.flag} {city.cityName.toUpperCase()}
+          </Text>
+          {!readOnly && (
+            <Ionicons
+              name={page ? 'pencil' : 'swap-horizontal'}
+              size={compact ? 10 : 11}
+              color={page ? theme.textSecondary : 'rgba(255,255,255,0.6)'}
+            />
+          )}
+        </View>
+        <View style={styles.timeRow}>
+          <Text
+            style={[
+              styles.timeText,
+              compact && styles.timeTextCompact,
+              page && { color: theme.text },
+            ]}
+            numberOfLines={1}>
+            {timeInfo.timeStr}
+          </Text>
+          <Text style={[styles.ampmText, { color: accentColor }]}>
+            {timeInfo.ampm}
+          </Text>
+        </View>
+        <Text
+          style={[
+            styles.dateText,
+            compact && styles.dateTextCompact,
+            page && { color: theme.textSecondary },
+          ]}
+          numberOfLines={1}>
+          {timeInfo.dateStr}
         </Text>
-        <Ionicons name="swap-horizontal" size={compact ? 10 : 11} color="rgba(255,255,255,0.6)" />
-      </View>
-      <View style={styles.timeRow}>
-        <Text style={[styles.timeText, compact && styles.timeTextCompact]} numberOfLines={1}>
-          {timeInfo.timeStr}
-        </Text>
-        <Text style={[styles.ampmText, { color: accentColor }]}>
-          {timeInfo.ampm}
-        </Text>
-      </View>
-      <Text style={[styles.dateText, compact && styles.dateTextCompact]} numberOfLines={1}>
-        {timeInfo.dateStr}
-      </Text>
-    </Pressable>
-  );
+      </>
+    );
+
+    if (readOnly) {
+      return (
+        <View key={slot} style={cardStyle}>
+          {content}
+        </View>
+      );
+    }
+
+    return (
+      <Pressable
+        key={slot}
+        onPress={() => openPicker(slot)}
+        accessibilityRole="button"
+        accessibilityLabel={`Change ${city.cityName} clock`}
+        style={({ pressed }) => [
+          cardStyle,
+          pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
+        ]}>
+        {content}
+      </Pressable>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={compact ? styles.clocksColumn : styles.clocksRow}>
-        {renderClockCard(1, city1, time1, '#4ade80')}
-        {renderClockCard(2, city2, time2, '#38bdf8')}
+        {renderClockCard(1, city1, time1, page ? (isDark ? '#4ade80' : '#16A34A') : '#4ade80')}
+        {renderClockCard(2, city2, time2, page ? (isDark ? '#38bdf8' : '#0284C7') : '#38bdf8')}
       </View>
 
       {/* City Selector Modal */}
@@ -211,6 +259,10 @@ const styles = StyleSheet.create({
   clockLabelCompact: {
     fontSize: 9.5,
     letterSpacing: 0.3,
+  },
+  clockLabelPage: {
+    fontSize: 10,
+    letterSpacing: 0.25,
   },
   timeRow: {
     flexDirection: 'row',

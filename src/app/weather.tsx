@@ -104,6 +104,20 @@ export default function WeatherScreen() {
         </View>
       </View>
 
+      {/* SMART MONEY INSIGHT — ATTACHED TO THE WEATHER COVER */}
+      <Card style={[styles.insightCard, { backgroundColor: insightCardBg, borderColor: insightBorderColor }]}>
+        <View style={styles.insightHeaderRow}>
+          <View style={styles.insightIconCircle}>
+            <Ionicons name="bulb" size={16} color="#D97706" />
+          </View>
+          <View style={styles.insightHeaderCopy}>
+            <ThemedText style={styles.insightEyebrow}>SMART MONEY & WEATHER</ThemedText>
+            <ThemedText type="defaultBold" style={styles.insightTitle}>Today&apos;s insight</ThemedText>
+          </View>
+        </View>
+        <ThemedText style={styles.insightBody}>{weather.financialTip}</ThemedText>
+      </Card>
+
       {/* 24-HOUR HOURLY FORECAST CAROUSEL */}
       <Card style={styles.hourlyCard}>
         <View style={styles.hourlyHeaderRow}>
@@ -204,15 +218,6 @@ export default function WeatherScreen() {
           </View>
         </Card>
       </View>
-
-      {/* FINANCIAL WEATHER INSIGHTS CARD */}
-      <Card style={[styles.insightCard, { backgroundColor: insightCardBg, borderColor: insightBorderColor }]}>
-        <View style={styles.insightBadge}>
-          <Ionicons name="bulb" size={15} color="#D97706" />
-          <ThemedText style={styles.insightBadgeText}>SMART MONEY & WEATHER ADVICE</ThemedText>
-        </View>
-        <ThemedText style={styles.insightBody}>{weather.financialTip}</ThemedText>
-      </Card>
 
       {/* APPLE-WEATHER STYLE 5-DAY FORECAST CARD */}
       <Card style={styles.forecastCard}>
@@ -482,30 +487,44 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   insightCard: {
+    marginTop: -10,
+    marginHorizontal: 4,
     padding: 16,
-    gap: 10,
+    gap: 12,
     borderRadius: 22,
     borderWidth: 1,
+    zIndex: 2,
   },
-  insightBadge: {
+  insightHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(250, 204, 21, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    gap: 10,
   },
-  insightBadgeText: {
+  insightIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(245, 158, 11, 0.16)',
+  },
+  insightHeaderCopy: {
+    flex: 1,
+    gap: 1,
+  },
+  insightEyebrow: {
     color: '#D97706',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+  },
+  insightTitle: {
+    fontSize: 15,
+    lineHeight: 19,
   },
   insightBody: {
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 14.5,
+    lineHeight: 21.5,
     opacity: 0.9,
   },
   forecastCard: {

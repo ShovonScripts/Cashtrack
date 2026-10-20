@@ -46,6 +46,7 @@ export function FacebookCoverHeader({
   const insets = useSafeAreaInsets();
   const { temperatureUnit, formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [clockPickerOpen, setClockPickerOpen] = useState(false);
 
   // Live weather state
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
@@ -63,8 +64,10 @@ export function FacebookCoverHeader({
 
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Auto slide every 10 seconds (3 slides)
+  // Auto slide every 10 seconds (3 slides), paused while choosing a clock city
   useEffect(() => {
+    if (clockPickerOpen) return;
+
     const timer = setInterval(() => {
       const nextIndex = (activeIndex + 1) % 3;
       setActiveIndex(nextIndex);
@@ -75,7 +78,7 @@ export function FacebookCoverHeader({
     }, 10000);
 
     return () => clearInterval(timer);
-  }, [activeIndex]);
+  }, [activeIndex, clockPickerOpen]);
 
   useEffect(() => {
     async function loadWeather() {
@@ -133,17 +136,12 @@ export function FacebookCoverHeader({
         snapToInterval={SCREEN_WIDTH}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* SLIDE 1: MERGED PINNED CLOCKS (TOP) + PROFILE & NET BALANCE (BOTTOM) */}
+        {/* SLIDE 1: COVER PHOTO + PROFILE & NET BALANCE */}
         <View style={styles.slideCard}>
           <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
           <View style={styles.overlayGradient} />
 
           <View style={[styles.cardInnerCombined, { paddingTop: topPadding }]}>
-            {/* Dual Pinned Clocks Widget on Top */}
-            <DualClockWidget />
-
-            <View style={styles.combinedDivider} />
-
             {/* Profile & Greeting on Bottom */}
             <TouchableOpacity
               activeOpacity={0.9}
@@ -182,20 +180,15 @@ export function FacebookCoverHeader({
           </View>
         </View>
 
-        {/* SLIDE 2: ADVANCED ANIMATED WEATHER FORECAST */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => router.push('/weather')}
-          accessibilityRole="button"
-          accessibilityLabel={`Weather forecast for ${weather.locationName}`}
-          style={styles.slideCard}>
+        {/* SLIDE 2: LIVE WEATHER + WORLD CLOCKS */}
+        <View style={styles.slideCard}>
           <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={[styles.cardInner, { paddingTop: topPadding }]}>
             <View style={styles.topRowBadge}>
               <View style={styles.outlookPill}>
                 <Ionicons name="location" size={13} color="#38bdf8" />
-                <Text style={styles.outlookText}>{weather.locationName}</Text>
+                <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
               </View>
 
               {/* Extra Forecast Pills */}
@@ -211,26 +204,41 @@ export function FacebookCoverHeader({
               </View>
             </View>
 
-            <View style={styles.weatherCenterRow}>
-              <AnimatedWeather conditionType={weather.conditionType} size={42} />
-              <View style={styles.weatherTextColumn}>
-                <View style={styles.tempAndLimitsRow}>
-                  <Text style={styles.giantTemp}>{displayTemp}</Text>
-                  <View style={styles.highLowBox}>
-                    <Text style={styles.highText}>H: {displayHigh}</Text>
-                    <Text style={styles.lowText}>L: {displayLow}</Text>
-                  </View>
+            <View style={styles.weatherClockRow}>
+              <View style={styles.weatherMainColumn}>
+                <View style={styles.weatherIconTempRow}>
+                  <AnimatedWeather conditionType={weather.conditionType} size={40} />
+                  <Text style={styles.giantTempCompact}>{displayTemp}</Text>
                 </View>
-                <Text style={styles.whiteSubtext}>{weather.condition}</Text>
+                <Text style={styles.whiteSubtext} numberOfLines={1}>{weather.condition}</Text>
+                <View style={styles.highLowBox}>
+                  <Text style={styles.highText}>H: {displayHigh}</Text>
+                  <Text style={styles.lowText}>L: {displayLow}</Text>
+                </View>
+              </View>
+
+              <View style={styles.clockDivider} />
+
+              <View style={styles.clockColumn}>
+                <DualClockWidget variant="compact" onPickerOpenChange={setClockPickerOpen} />
               </View>
             </View>
 
-            <View style={styles.glassTipBox}>
-              <Ionicons name="bulb" size={15} color="#facc15" />
-              <Text style={styles.tipContentText} numberOfLines={2}>{weather.financialTip}</Text>
-            </View>
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                Haptics.selectionAsync().catch(() => {});
+                router.push('/weather');
+              }}
+              accessibilityRole="button"
+              accessibilityLabel={`View full forecast and insights for ${weather.locationName}`}
+              style={styles.weatherLinkButton}
+            >
+              <Text style={styles.weatherLinkText}>Full forecast & insights</Text>
+              <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
 
         {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
         <View style={[styles.slideCard, styles.quoteCardContainer]}>
@@ -308,9 +316,10 @@ const styles = StyleSheet.create({
   },
   slideCard: {
     width: SCREEN_WIDTH,
-    minHeight: 265,
+    minHeight: 300,
     position: 'relative',
     overflow: 'hidden',
+    justifyContent: 'flex-end',
   },
   fullCoverImage: {
     ...StyleSheet.absoluteFill,
@@ -332,12 +341,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 18,
     paddingBottom: 22,
-    gap: 12,
-  },
-  combinedDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-    marginVertical: 4,
+    justifyContent: 'flex-end',
   },
   topRowBadge: {
     flexDirection: 'row',
@@ -412,6 +416,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    maxWidth: '60%',
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -421,6 +426,7 @@ const styles = StyleSheet.create({
     color: '#38bdf8',
     fontSize: 13,
     fontWeight: '600',
+    flexShrink: 1,
   },
   metricsRow: {
     flexDirection: 'row',
@@ -441,57 +447,67 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  weatherCenterRow: {
+  weatherClockRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
-    marginVertical: 4,
-  },
-  weatherTextColumn: {
-    flex: 1,
-  },
-  tempAndLimitsRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
     gap: 12,
   },
-  giantTemp: {
+  weatherMainColumn: {
+    flex: 1.15,
+    gap: 4,
+  },
+  weatherIconTempRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  giantTempCompact: {
     color: '#FFFFFF',
-    fontSize: 34,
+    fontSize: 30,
     fontWeight: '800',
-    letterSpacing: -1,
+    letterSpacing: -0.8,
+    fontVariant: ['tabular-nums'],
+  },
+  clockDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 88,
+    backgroundColor: 'rgba(255, 255, 255, 0.28)',
+  },
+  clockColumn: {
+    flex: 1,
   },
   highLowBox: {
     flexDirection: 'row',
     gap: 8,
+    marginTop: 1,
   },
   highText: {
     color: '#4ade80',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
   lowText: {
     color: '#38bdf8',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '700',
   },
-  glassTipBox: {
+  weatherLinkButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    alignSelf: 'flex-start',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.32)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
   },
-  tipContentText: {
+  weatherLinkText: {
     color: '#FFFFFF',
     fontSize: 12,
-    fontWeight: '500',
-    flex: 1,
-    lineHeight: 16,
+    fontWeight: '700',
+    letterSpacing: 0.1,
   },
   quoteCardContainer: {
     backgroundColor: Brand.deep,

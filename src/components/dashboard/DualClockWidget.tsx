@@ -12,8 +12,14 @@ import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/wo
 const CLOCK_1_KEY = '@cashtrack_banner_clock_1';
 const CLOCK_2_KEY = '@cashtrack_banner_clock_2';
 
-export function DualClockWidget() {
+type DualClockWidgetProps = {
+  variant?: 'default' | 'compact';
+  onPickerOpenChange?: (open: boolean) => void;
+};
+
+export function DualClockWidget({ variant = 'default', onPickerOpenChange }: DualClockWidgetProps) {
   const theme = useTheme();
+  const compact = variant === 'compact';
 
   const [city1Id, setCity1Id] = useState<string>('local');
   const [city2Id, setCity2Id] = useState<string>('london');
@@ -39,6 +45,18 @@ export function DualClockWidget() {
     return () => clearInterval(interval);
   }, []);
 
+  const openPicker = (slot: 1 | 2) => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActiveSlot(slot);
+    setPickerModalVisible(true);
+    onPickerOpenChange?.(true);
+  };
+
+  const closePicker = () => {
+    setPickerModalVisible(false);
+    onPickerOpenChange?.(false);
+  };
+
   const handleSelectCity = async (city: WorldCity) => {
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -50,7 +68,7 @@ export function DualClockWidget() {
       setCity2Id(city.id);
       await AsyncStorage.setItem(CLOCK_2_KEY, city.id);
     }
-    setPickerModalVisible(false);
+    closePicker();
   };
 
   const city1 = WORLD_CITIES.find((c) => c.id === city1Id) || WORLD_CITIES[0];
@@ -62,30 +80,27 @@ export function DualClockWidget() {
   const renderClockCard = (slot: 1 | 2, city: WorldCity, timeInfo: ReturnType<typeof getFormattedTimeForZone>, accentColor: string) => (
     <Pressable
       key={slot}
-      onPress={() => {
-        if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setActiveSlot(slot);
-        setPickerModalVisible(true);
-      }}
+      onPress={() => openPicker(slot)}
       style={({ pressed }) => [
         styles.clockCard,
+        compact && styles.clockCardCompact,
         pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
       ]}>
       <View style={styles.clockTopRow}>
-        <Text style={styles.clockLabel} numberOfLines={1}>
+        <Text style={[styles.clockLabel, compact && styles.clockLabelCompact]} numberOfLines={1}>
           {city.flag} {city.cityName.toUpperCase()}
         </Text>
-        <Ionicons name="swap-horizontal" size={11} color="rgba(255,255,255,0.6)" />
+        <Ionicons name="swap-horizontal" size={compact ? 10 : 11} color="rgba(255,255,255,0.6)" />
       </View>
       <View style={styles.timeRow}>
-        <Text style={styles.timeText} numberOfLines={1}>
+        <Text style={[styles.timeText, compact && styles.timeTextCompact]} numberOfLines={1}>
           {timeInfo.timeStr}
         </Text>
         <Text style={[styles.ampmText, { color: accentColor }]}>
           {timeInfo.ampm}
         </Text>
       </View>
-      <Text style={styles.dateText} numberOfLines={1}>
+      <Text style={[styles.dateText, compact && styles.dateTextCompact]} numberOfLines={1}>
         {timeInfo.dateStr}
       </Text>
     </Pressable>
@@ -93,7 +108,7 @@ export function DualClockWidget() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.clocksRow}>
+      <View style={compact ? styles.clocksColumn : styles.clocksRow}>
         {renderClockCard(1, city1, time1, '#4ade80')}
         {renderClockCard(2, city2, time2, '#38bdf8')}
       </View>
@@ -103,14 +118,14 @@ export function DualClockWidget() {
         visible={pickerModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setPickerModalVisible(false)}>
+        onRequestClose={closePicker}>
         <View style={styles.backdrop}>
-          <Pressable style={styles.backdropPressable} onPress={() => setPickerModalVisible(false)} />
+          <Pressable style={styles.backdropPressable} onPress={closePicker} />
           <View style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.modalHeader}>
               <ThemedText type="subtitle">Select Clock {activeSlot} Pin</ThemedText>
               <Pressable
-                onPress={() => setPickerModalVisible(false)}
+                onPress={closePicker}
                 style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
                 <Ionicons name="close" size={18} color={theme.text} />
               </Pressable>
@@ -160,6 +175,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
+  clocksColumn: {
+    flexDirection: 'column',
+    gap: 6,
+  },
   clockCard: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
@@ -168,6 +187,13 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     padding: 10,
     gap: 3,
+  },
+  clockCardCompact: {
+    flex: 0,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
+    gap: 1,
+    borderRadius: Radius.small,
   },
   clockTopRow: {
     flexDirection: 'row',
@@ -182,6 +208,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 4,
   },
+  clockLabelCompact: {
+    fontSize: 9.5,
+    letterSpacing: 0.3,
+  },
   timeRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
@@ -194,6 +224,10 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.2,
   },
+  timeTextCompact: {
+    fontSize: 16,
+    letterSpacing: 0,
+  },
   ampmText: {
     fontSize: 10,
     fontWeight: '800',
@@ -202,6 +236,9 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.75)',
     fontSize: 10.5,
     fontWeight: '500',
+  },
+  dateTextCompact: {
+    fontSize: 9,
   },
   backdrop: {
     flex: 1,

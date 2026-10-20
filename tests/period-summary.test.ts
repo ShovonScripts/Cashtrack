@@ -2,20 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildCategoryBreakdowns,
   buildCostSummaries,
   filterExpensesByPeriod,
   getAddExpenseDate,
+  getCategoryTotals,
   getPeriodRange,
   getPeriodRangeLabel,
   type SummaryPeriod,
 } from '../src/utils/period-summary.ts';
 import type { Expense } from '../src/types/expense.ts';
 
-function makeExpense(amount: number, date: Date): Expense {
+function makeExpense(amount: number, date: Date, category = 'Food'): Expense {
   return {
-    id: `expense-${amount}-${date.getTime()}`,
+    id: `expense-${category}-${amount}-${date.getTime()}`,
     amount,
-    category: 'Food',
+    category,
     date: date.toISOString(),
     note: '',
   };
@@ -106,6 +108,36 @@ test('weekly totals include only the selected calendar week', () => {
 
   const sundayWeek = filterExpensesByPeriod(expenses, 'weekly', now, 'sunday');
   assert.equal(sundayWeek.reduce((total, expense) => total + expense.amount, 0), 60);
+});
+
+test('category totals are sorted and scoped to the active period', () => {
+  const now = localDate(2026, 9, 20);
+  const expenses = [
+    makeExpense(100, localDate(2026, 9, 20), 'Food'),
+    makeExpense(300, localDate(2026, 9, 20), 'Transport'),
+    makeExpense(100, localDate(2026, 9, 19), 'Transport'),
+    makeExpense(200, localDate(2026, 8, 15), 'Food'),
+  ];
+
+  const daily = getCategoryTotals(expenses, 'daily', now, 'monday');
+  assert.deepEqual(daily.map((item) => item.category), ['Transport', 'Food']);
+  assert.deepEqual(daily.map((item) => item.amount), [300, 100]);
+  assert.equal(Math.round(daily[0]?.percent ?? 0), 75);
+
+  const weekly = getCategoryTotals(expenses, 'weekly', now, 'monday');
+  assert.deepEqual(weekly.map((item) => item.amount), [400, 100]);
+
+  const yearly = getCategoryTotals(expenses, 'yearly', now, 'monday');
+  assert.deepEqual(yearly.map((item) => item.amount), [400, 300]);
+});
+
+test('category breakdowns cover every carousel period and stay empty without expenses', () => {
+  const now = localDate(2026, 9, 20);
+  const breakdowns = buildCategoryBreakdowns([], now, 'monday');
+
+  assert.deepEqual(Object.keys(breakdowns), ['yesterday', 'daily', 'weekly', 'monthly', 'yearly']);
+  assert.deepEqual(breakdowns.daily, []);
+  assert.deepEqual(breakdowns.yearly, []);
 });
 
 test('cost summaries are ordered with Daily in the middle of the slide list', () => {

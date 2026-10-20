@@ -23,7 +23,7 @@ import type { Expense } from '@/types/expense';
 import { getBudgetInsights, type BudgetInsight } from '@/utils/advisor';
 import { FacebookCoverHeader } from '@/components/dashboard/facebook-cover-header';
 import { CostSummaryCarousel } from '@/components/dashboard/cost-summary-carousel';
-import { buildCostSummaries, getAddExpenseDate, getWeekDays, type SummaryPeriod } from '@/utils/period-summary';
+import { buildCategoryBreakdowns, buildCostSummaries, getAddExpenseDate, getWeekDays, type SummaryPeriod } from '@/utils/period-summary';
 
 const RECENT_LIMIT = 5;
 
@@ -568,7 +568,7 @@ function InsightLine({ insight, formatAmount }: { insight: BudgetInsight; format
 }
 
 export default function DashboardScreen() {
-  const { expenses, profile, categoryLimits, formatAmount, firstDayOfWeek, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
+  const { expenses, profile, categoryLimits, formatAmount, categoryIcons, firstDayOfWeek, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
   const { incomeList } = useIncome();
   const theme = useTheme();
   const now = new Date();
@@ -595,6 +595,8 @@ export default function DashboardScreen() {
         }
       : summary
   );
+
+  const categoryBreakdowns = buildCategoryBreakdowns(expenses, now, firstDayOfWeek);
 
   const openCostReport = (period: SummaryPeriod) => {
     triggerHaptic();
@@ -636,7 +638,9 @@ export default function DashboardScreen() {
         {/* Swipeable Summary Cards Carousel */}
         <CostSummaryCarousel
           summaries={costSummaries}
+          breakdowns={categoryBreakdowns}
           formatAmount={formatAmount}
+          categoryIcons={categoryIcons}
           onOpenReport={openCostReport}
         />
 

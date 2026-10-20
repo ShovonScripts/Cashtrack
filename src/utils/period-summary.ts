@@ -1,4 +1,4 @@
-import type { Expense } from '@/types/expense';
+import type { Expense, ExpenseCategory } from '@/types/expense';
 import type { FirstDayOfWeek } from '@/types/preferences';
 
 export type SummaryPeriod = 'yesterday' | 'daily' | 'weekly' | 'monthly' | 'yearly';
@@ -15,6 +15,12 @@ export type CostSummary = {
   detail: string;
   amount: number;
   count: number;
+};
+
+export type CategoryTotal = {
+  category: ExpenseCategory;
+  amount: number;
+  percent: number;
 };
 
 /** Slide order on the Home cost carousel. Daily is the default slide. */
@@ -196,6 +202,44 @@ export function buildCostSummaries(
   firstDayOfWeek: FirstDayOfWeek = 'monday'
 ): CostSummary[] {
   return SUMMARY_PERIODS.map((period) => buildCostSummary(expenses, period, now, firstDayOfWeek));
+}
+
+/** Category totals for a period, largest first, with percentage share of the period total. */
+export function getCategoryTotals(
+  expenses: Expense[],
+  period: SummaryPeriod,
+  now: Date = new Date(),
+  firstDayOfWeek: FirstDayOfWeek = 'monday'
+): CategoryTotal[] {
+  const periodExpenses = filterExpensesByPeriod(expenses, period, now, firstDayOfWeek);
+  const total = sumAmounts(periodExpenses);
+  const totals = new Map<ExpenseCategory, number>();
+
+  for (const expense of periodExpenses) {
+    totals.set(expense.category, (totals.get(expense.category) ?? 0) + expense.amount);
+  }
+
+  return [...totals.entries()]
+    .map(([category, amount]) => ({
+      category,
+      amount,
+      percent: total > 0 ? (amount / total) * 100 : 0,
+    }))
+    .sort((first, second) => second.amount - first.amount);
+}
+
+export function buildCategoryBreakdowns(
+  expenses: Expense[],
+  now: Date = new Date(),
+  firstDayOfWeek: FirstDayOfWeek = 'monday'
+): Record<SummaryPeriod, CategoryTotal[]> {
+  return SUMMARY_PERIODS.reduce(
+    (breakdowns, period) => {
+      breakdowns[period] = getCategoryTotals(expenses, period, now, firstDayOfWeek);
+      return breakdowns;
+    },
+    {} as Record<SummaryPeriod, CategoryTotal[]>
+  );
 }
 
 /** Date to prefill when adding an expense from a summary slide. */

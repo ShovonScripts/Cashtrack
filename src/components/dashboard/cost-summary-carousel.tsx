@@ -1,23 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { CostCategoryChart } from '@/components/dashboard/cost-category-chart';
 import { CostSummaryCard } from '@/components/dashboard/cost-summary-card';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
-import type { CostSummary, SummaryPeriod } from '@/utils/period-summary';
+import type { CategoryTotal, CostSummary, SummaryPeriod } from '@/utils/period-summary';
 
 const DAILY_INDEX = 1;
 
 type CostSummaryCarouselProps = {
   summaries: CostSummary[];
+  breakdowns: Record<SummaryPeriod, CategoryTotal[]>;
   formatAmount: (amount: number) => string;
+  categoryIcons?: Record<string, string>;
   onOpenReport: (period: SummaryPeriod) => void;
 };
 
 export function CostSummaryCarousel({
   summaries,
+  breakdowns,
   formatAmount,
+  categoryIcons,
   onOpenReport,
 }: CostSummaryCarouselProps) {
   const theme = useTheme();
@@ -60,6 +65,8 @@ export function CostSummaryCarousel({
     triggerHaptic();
     scrollRef.current?.scrollTo({ x: snapInterval * index, y: 0, animated: true });
   };
+
+  const activeSummary = summaries[activeIndex] ?? summaries[0];
 
   return (
     <View style={styles.wrapper}>
@@ -107,6 +114,16 @@ export function CostSummaryCarousel({
           </Pressable>
         ))}
       </View>
+
+      {activeSummary && (
+        <CostCategoryChart
+          period={activeSummary.period}
+          totals={breakdowns[activeSummary.period] ?? []}
+          width={cardWidth}
+          formatAmount={formatAmount}
+          categoryIcons={categoryIcons}
+        />
+      )}
     </View>
   );
 }
@@ -124,6 +141,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginTop: Spacing.two,
+    marginBottom: Spacing.three,
   },
   dot: {
     height: 6,

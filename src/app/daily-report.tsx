@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import * as Sharing from 'expo-sharing';
@@ -33,10 +34,12 @@ function isSameDay(a: Date, b: Date): boolean {
 export default function DailyReportScreen() {
   const theme = useTheme();
   const { expenses, categoryIcons, formatAmount } = useExpenses();
+  const { date: dateParam } = useLocalSearchParams<{ date?: string }>();
 
   const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0);
+    const requested = typeof dateParam === 'string' ? new Date(dateParam) : new Date();
+    const base = Number.isNaN(requested.getTime()) ? new Date() : requested;
+    return new Date(base.getFullYear(), base.getMonth(), base.getDate(), 12, 0, 0);
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState('');

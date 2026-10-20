@@ -10,7 +10,6 @@ import { ExpenseListItem } from '@/components/expense-list-item';
 import { MoneySummaryCard } from '@/components/money-summary-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
@@ -23,6 +22,8 @@ import { calculateMonthlyCashFlow } from '@/utils/income';
 import type { Expense } from '@/types/expense';
 import { getBudgetInsights, type BudgetInsight } from '@/utils/advisor';
 import { FacebookCoverHeader } from '@/components/dashboard/facebook-cover-header';
+import { CostSummaryCarousel } from '@/components/dashboard/cost-summary-carousel';
+import { buildCostSummaries, getAddExpenseDate, getWeekDays, type SummaryPeriod } from '@/utils/period-summary';
 
 const RECENT_LIMIT = 5;
 
@@ -40,23 +41,18 @@ function triggerHaptic() {
   }
 }
 
-function getWeekSpending(expenses: Expense[], today: Date): DaySpend[] {
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (6 - index));
-    date.setHours(12, 0, 0, 0);
-    return {
-      date,
-      label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date),
-      amount: totalForDate(expenses, date),
-    };
-  });
+function getWeekSpending(expenses: Expense[], today: Date, firstDayOfWeek: 'monday' | 'sunday'): DaySpend[] {
+  return getWeekDays(today, firstDayOfWeek).map((date) => ({
+    date,
+    label: new Intl.DateTimeFormat('en', { weekday: 'short' }).format(date),
+    amount: totalForDate(expenses, date),
+  }));
 }
 
 
-function WeeklySpending({ expenses, today, formatAmount }: { expenses: Expense[]; today: Date; formatAmount: (amount: number) => string }) {
+function WeeklySpending({ expenses, today, firstDayOfWeek, formatAmount }: { expenses: Expense[]; today: Date; firstDayOfWeek: 'monday' | 'sunday'; formatAmount: (amount: number) => string }) {
   const theme = useTheme();
-  const days = getWeekSpending(expenses, today);
+  const days = getWeekSpending(expenses, today, firstDayOfWeek);
   const maxAmount = Math.max(...days.map((day) => day.amount), 1);
   const weeklyTotal = days.reduce((total, day) => total + day.amount, 0);
   const dailyAvg = Math.round(weeklyTotal / 7);
@@ -572,12 +568,11 @@ function InsightLine({ insight, formatAmount }: { insight: BudgetInsight; format
 }
 
 export default function DashboardScreen() {
-  const { expenses, profile, categoryLimits, formatAmount, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
+  const { expenses, profile, categoryLimits, formatAmount, firstDayOfWeek, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
   const { incomeList } = useIncome();
   const theme = useTheme();
   const now = new Date();
   const monthSpend = totalForMonth(expenses, now);
-  const todaySpend = totalForDate(expenses, now);
   const recent = sortByDateDesc(expenses).slice(0, RECENT_LIMIT);
 
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('All');
@@ -592,17 +587,33 @@ export default function DashboardScreen() {
   const diffAmount = monthSpend - lastMonthSpend;
   const diffPercent = lastMonthSpend > 0 ? Math.round((Math.abs(diffAmount) / lastMonthSpend) * 100) : 0;
 
-  const todayExpenseCount = expenses.filter((expense) => {
-    const date = new Date(expense.date);
-    return (
-      date.getDate() === now.getDate() &&
-      date.getMonth() === now.getMonth() &&
-      date.getFullYear() === now.getFullYear()
-    );
-  }).length;
-  const todayLabel = new Intl.DateTimeFormat('en', { weekday: 'short', day: 'numeric', month: 'short' }).format(now);
+  const costSummaries = buildCostSummaries(expenses, now, firstDayOfWeek).map((summary) =>
+    summary.period === 'monthly' && lastMonthSpend > 0
+      ? {
+          ...summary,
+          detail: `${summary.detail} ${diffAmount <= 0 ? '↓' : '↑'} ${diffPercent}% vs last month.`,
+        }
+      : summary
+  );
+
+  const openCostReport = (period: SummaryPeriod) => {
+    triggerHaptic();
+    if (period === 'daily') {
+      router.push('/daily-report');
+      return;
+    }
+    if (period === 'yesterday') {
+      router.push({ pathname: '/daily-report', params: { date: getAddExpenseDate('yesterday', now) } });
+      return;
+    }
+    if (period === 'monthly') {
+      router.push('/(tabs)/reports');
+      return;
+    }
+    router.push({ pathname: '/period-report', params: { period } } as any);
+  };
+
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
-  const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [cashFlowCardIndex, setCashFlowCardIndex] = useState(0);
   const screenWidth = useWindowDimensions().width;
   const containerPadding = Spacing.four * 2;
@@ -623,161 +634,11 @@ export default function DashboardScreen() {
       <View style={styles.container}>
 
         {/* Swipeable Summary Cards Carousel */}
-        <View style={styles.carouselWrapper}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            snapToInterval={cardWidth + Spacing.three}
-            decelerationRate="fast"
-            onScroll={(e) => {
-              const offsetX = e.nativeEvent.contentOffset.x;
-              const newIndex = Math.round(offsetX / (cardWidth + Spacing.three));
-              if (newIndex !== activeCardIndex && newIndex >= 0 && newIndex <= 2) {
-                setActiveCardIndex(newIndex);
-                triggerHaptic();
-              }
-            }}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.carouselContent}>
-
-            {/* Card 1: Daily Cost */}
-            <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <ThemedView type="card" style={styles.hero}>
-                <View style={styles.heroContent}>
-                  <View style={styles.heroTopline}>
-                    <ThemedText type="caption" style={styles.heroLabel}>DAILY COST</ThemedText>
-                    <View style={styles.monthPill}>
-                      <ThemedText type="caption" style={styles.monthPillText}>{todayLabel}</ThemedText>
-                    </View>
-                  </View>
-                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-                    {formatAmount(todaySpend)}
-                  </ThemedText>
-                  <ThemedText type="small" style={styles.heroSubtext}>
-                    {todayExpenseCount === 0
-                      ? 'No expenses recorded today.'
-                      : `${todayExpenseCount} ${todayExpenseCount === 1 ? 'expense' : 'expenses'} recorded today.`}
-                  </ThemedText>
-                  <View style={styles.cardFooterRow}>
-                    <Pressable
-                      onPress={() => {
-                        triggerHaptic();
-                        router.push('/daily-report');
-                      }}
-                      accessibilityRole="button"
-                      style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
-                      <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>View report →</ThemedText>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => {
-                        triggerHaptic();
-                        router.push('/add-expense');
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel="Add an expense"
-                      style={({ pressed }) => [styles.heroAddButton, pressed && styles.pressed]}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
-                        <ThemedText type="smallBold" style={styles.heroAddButtonText}>Add expense</ThemedText>
-                      </View>
-                    </Pressable>
-                  </View>
-                </View>
-                <View pointerEvents="none" style={styles.heroOrbLarge} />
-                <View pointerEvents="none" style={styles.heroOrbSmall} />
-              </ThemedView>
-            </View>
-
-            {/* Card 2: Monthly Cost */}
-            <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <ThemedView type="card" style={styles.monthlyHero}>
-                <View style={styles.heroContent}>
-                  <View style={styles.heroTopline}>
-                    <ThemedText type="caption" style={styles.heroLabel}>
-                      {new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now).toUpperCase()} SPENDING
-                    </ThemedText>
-                    {lastMonthSpend > 0 && (
-                      <View style={styles.monthlyTrendPill}>
-                        <ThemedText type="caption" style={styles.monthlyTrendText}>
-                          {diffAmount <= 0 ? `↓ ${diffPercent}%` : `↑ ${diffPercent}%`}
-                        </ThemedText>
-                      </View>
-                    )}
-                  </View>
-                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-                    {formatAmount(monthSpend)}
-                  </ThemedText>
-                  <View style={styles.cardFooterRow}>
-                    <ThemedText type="small" style={styles.heroSubtext}>
-                      {new Intl.DateTimeFormat('en', { month: 'long' }).format(lastMonth)}: {formatAmount(lastMonthSpend)}
-                    </ThemedText>
-                    <Pressable
-                      onPress={() => {
-                        triggerHaptic();
-                        router.push('/(tabs)/reports');
-                      }}
-                      accessibilityRole="button"
-                      style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
-                      <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>View report →</ThemedText>
-                    </Pressable>
-                  </View>
-                </View>
-                <View pointerEvents="none" style={styles.heroOrbLarge} />
-              </ThemedView>
-            </View>
-
-            {/* Card 3: All-Time Cost */}
-            <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <ThemedView type="card" style={styles.allTimeHero}>
-                <View style={styles.heroContent}>
-                  <View style={styles.heroTopline}>
-                    <ThemedText type="caption" style={styles.heroLabel}>ALL-TIME COST</ThemedText>
-                    <View style={styles.cyanBadge}>
-                      <MaterialCommunityIcons name="wallet-outline" size={14} color={Brand.bright} />
-                      <ThemedText type="caption" style={styles.cyanBadgeText}>CUMULATIVE</ThemedText>
-                    </View>
-                  </View>
-                  <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-                    {formatAmount(sumAmounts(expenses))}
-                  </ThemedText>
-                  <View style={styles.cardFooterRow}>
-                    <ThemedText type="small" style={styles.heroSubtext}>
-                      {expenses.length} {expenses.length === 1 ? 'transaction' : 'transactions'} tracked
-                    </ThemedText>
-                    <Pressable
-                      onPress={() => {
-                        triggerHaptic();
-                        router.push('/(tabs)/expenses');
-                      }}
-                      accessibilityRole="button"
-                      style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
-                      <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>View all →</ThemedText>
-                    </Pressable>
-                  </View>
-                </View>
-                <View pointerEvents="none" style={styles.heroOrbCyan} />
-              </ThemedView>
-            </View>
-
-          </ScrollView>
-
-          {/* Pagination Indicator Dots */}
-          <View style={styles.paginationDots}>
-            {[0, 1, 2].map((i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  {
-                    backgroundColor: activeCardIndex === i ? theme.accent : theme.border,
-                    width: activeCardIndex === i ? 22 : 6,
-                  },
-                ]}
-              />
-            ))}
-          </View>
-        </View>
+        <CostSummaryCarousel
+          summaries={costSummaries}
+          formatAmount={formatAmount}
+          onOpenReport={openCostReport}
+        />
 
         {/* Tier 2: Actionable Alerts & Secondary Swipeable Carousel (Cash Flow ⇄ Money Overview) */}
         <UpcomingBillsWidget formatAmount={formatAmount} />
@@ -840,7 +701,7 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <WeeklySpending expenses={expenses} today={now} formatAmount={formatAmount} />
+        <WeeklySpending expenses={expenses} today={now} firstDayOfWeek={firstDayOfWeek} formatAmount={formatAmount} />
 
         {/* Tier 3: High-Frequency Recent Activity Log (Promoted Up for 1-Swipe Access!) */}
         <View style={styles.sectionHeader}>
@@ -971,13 +832,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hero: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    height: 190,
-  },
   heroContent: {
     flex: 1,
     justifyContent: 'space-between',
@@ -1007,10 +861,6 @@ const styles = StyleSheet.create({
     fontSize: 38,
     lineHeight: 46,
     fontVariant: ['tabular-nums'],
-  },
-  heroSubtext: {
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: Spacing.one,
   },
   addButton: {
     backgroundColor: '#FFFFFF',
@@ -1260,174 +1110,8 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: Radius.pill,
   },
-  metricsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
-  metric: {
-    flex: 1,
-    gap: 4,
-  },
-  divider: {
-    width: StyleSheet.hairlineWidth,
-    height: 32,
-  },
-  coloredDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 32,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  netRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.three,
-    borderRadius: Radius.medium,
-  },
-  coloredNetRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.three,
-    borderRadius: Radius.medium,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-  },
-  heroSummaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
-  heroStat: {
-    flex: 1,
-    gap: 2,
-  },
-  heroStatLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 11,
-  },
-  heroStatVal: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    lineHeight: 28,
-    fontVariant: ['tabular-nums'],
-  },
-  heroDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 36,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  heroNetRow: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,255,255,0.15)',
-    paddingTop: Spacing.two,
-  },
-  heroNetText: {
-    color: 'rgba(255,255,255,0.8)',
-  },
-  heroAddButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.pill,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-  },
-  heroAddButtonText: {
-    color: Brand.deep,
-  },
-  heroBottomAction: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: Radius.medium,
-    minHeight: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroBottomActionText: {
-    color: '#FFFFFF',
-  },
-  monthlyCostCard: {
-    padding: Spacing.four,
-    gap: Spacing.four,
-    justifyContent: 'space-between',
-    minHeight: 180,
-  },
-  monthlyCostValue: {
-    fontSize: 34,
-    lineHeight: 42,
-    fontVariant: ['tabular-nums'],
-    marginTop: 2,
-  },
-  monthlyCostFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(0,0,0,0.06)',
-    paddingTop: Spacing.three,
-  },
-  trendBadgeLarge: {
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
-  },
-  monthlyReportLink: {
-    paddingVertical: 4,
-  },
-  monthlyHero: {
-    backgroundColor: Brand.primary,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    height: 190,
-  },
-  allTimeHero: {
-    backgroundColor: '#0B192C',
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    height: 190,
-  },
-  monthlyTrendPill: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-  },
-  monthlyTrendText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  cyanBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(20,231,253,0.15)',
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-  },
-  cyanBadgeText: {
-    color: Brand.bright,
-    fontWeight: '700',
-  },
-  cardFooterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.one,
-  },
   whiteLinkButton: {
     paddingVertical: 4,
-  },
-  heroOrbCyan: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    right: -70,
-    top: -80,
-    backgroundColor: 'rgba(20,231,253,0.15)',
   },
   carouselWrapper: {
     width: '100%',

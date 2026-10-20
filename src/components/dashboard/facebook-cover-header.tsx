@@ -191,21 +191,21 @@ export function FacebookCoverHeader({
 
           <View style={[styles.cardInner, { paddingTop: topPadding }]}>
             <View style={styles.topRowBadge}>
-              <View style={styles.outlookPill}>
-                <Ionicons name="location" size={13} color="#38bdf8" />
-                <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
-              </View>
-
               {/* Extra Forecast Pills */}
               <View style={styles.metricsRow}>
                 <View style={styles.metricPill}>
-                  <Ionicons name="umbrella" size={12} color="#60a5fa" />
+                  <Ionicons name="umbrella" size={11} color="#60a5fa" />
                   <Text style={styles.metricText}>{weather.rainProbability}%</Text>
                 </View>
                 <View style={styles.metricPill}>
-                  <Ionicons name="water" size={12} color="#38bdf8" />
+                  <Ionicons name="water" size={11} color="#38bdf8" />
                   <Text style={styles.metricText}>{weather.humidity}%</Text>
                 </View>
+              </View>
+
+              <View style={styles.outlookPill}>
+                <Ionicons name="location" size={12} color="#38bdf8" />
+                <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
               </View>
             </View>
 
@@ -231,7 +231,7 @@ export function FacebookCoverHeader({
 
             <View style={styles.slideHint}>
               <Text style={styles.slideHintText}>Tap for details</Text>
-              <Ionicons name="chevron-forward" size={13} color="rgba(255,255,255,0.8)" />
+              <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.8)" />
             </View>
           </View>
         </TouchableOpacity>
@@ -343,6 +343,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
   },
   liveBadge: {
     flexDirection: 'row',
@@ -411,36 +412,36 @@ const styles = StyleSheet.create({
   outlookPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    maxWidth: '60%',
+    gap: 5,
+    maxWidth: '58%',
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   outlookText: {
     color: '#38bdf8',
-    fontSize: 13,
+    fontSize: 12.5,
     fontWeight: '600',
     flexShrink: 1,
   },
   metricsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   metricPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 11,
   },
   metricText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11.5,
     fontWeight: '600',
   },
   weatherClockRow: {
@@ -490,12 +491,12 @@ const styles = StyleSheet.create({
   slideHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    alignSelf: 'flex-end',
-    gap: 3,
+    alignSelf: 'flex-start',
+    gap: 2,
   },
   slideHintText: {
     color: 'rgba(255, 255, 255, 0.88)',
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '600',
     letterSpacing: 0.2,
     textShadowColor: 'rgba(0, 0, 0, 0.45)',

@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -575,9 +576,11 @@ export default function DashboardScreen() {
   const { incomeList } = useIncome();
   const theme = useTheme();
   const now = useNow(60_000);
+  const pageScrollRef = useRef<ScrollView>(null);
   const monthSpend = totalForMonth(expenses, now);
   const recent = sortByDateDesc(expenses).slice(0, RECENT_LIMIT);
 
+  const [pageScrolled, setPageScrolled] = useState(false);
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('All');
   const availableCategories = ['All', ...new Set(expenses.map((e) => e.category))];
   const filteredRecent = (selectedFilterCategory === 'All'
@@ -625,15 +628,27 @@ export default function DashboardScreen() {
   const cardWidth = Math.min(screenWidth - containerPadding, MaxContentWidth - containerPadding);
 
   return (
-    <ScrollView
+    <GestureScrollView
+      ref={pageScrollRef}
       style={styles.scrollView}
       contentContainerStyle={[styles.contentContainer, { paddingTop: 0 }]}
+      onScroll={(event) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        setPageScrolled((previous) => {
+          const next = offsetY > 8;
+          return next === previous ? previous : next;
+        });
+      }}
+      scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}>
       {/* Facebook Mobile Cover Header taking full top space */}
       <FacebookCoverHeader
         profile={profile}
         totalBalance={incomeList.reduce((acc, i) => acc + i.amount, 0) - sumAmounts(expenses)}
         monthlySpent={monthSpend}
+        lastMonthSpent={lastMonthSpend}
+        pageScrollRef={pageScrollRef}
+        pageScrolled={pageScrolled}
       />
 
       <View style={styles.container}>
@@ -807,7 +822,7 @@ export default function DashboardScreen() {
         visible={!hasCompletedOnboarding && !isLoading}
         onClose={() => setHasCompletedOnboarding(true)}
       />
-    </ScrollView>
+    </GestureScrollView>
   );
 }
 

@@ -1,55 +1,90 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  Share,
-} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  Dimensions,
+  Image,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
-import { Brand } from '@/constants/theme';
+import { Brand, Radius } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
+import { getYearProgress } from '@/utils/year-progress';
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
+import { YearProgressPanel } from '@/components/dashboard/year-progress-panel';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HERO_HEIGHT = 300;
+const SWIPE_HINT_KEY = '@cashtrack_cover_swipe_hint_seen';
+const VERTICAL_SPRING = { damping: 24, stiffness: 200, mass: 0.9 } as const;
+const SLIDE_LABELS = ['Cover', 'Weather', 'Daily wisdom'] as const;
 
 interface FacebookCoverHeaderProps {
   profile: UserProfile;
   totalBalance?: number;
   monthlySpent?: number;
+  lastMonthSpent?: number;
   onPressProfile?: () => void;
+  /** The home page ScrollView, used so the vertical cover swipe can block it. */
+  pageScrollRef?: React.RefObject<ScrollView | null>;
+  /** True while the home page is scrolled away from the top. */
+  pageScrolled?: boolean;
 }
 
 export function FacebookCoverHeader({
   profile,
   totalBalance = 0,
   monthlySpent = 0,
+  lastMonthSpent = 0,
   onPressProfile,
+  pageScrollRef,
+  pageScrolled = false,
 }: FacebookCoverHeaderProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { temperatureUnit, formatAmount } = useExpenses();
+  const { temperatureUnit, formatAmount, firstDayOfWeek } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [verticalPage, setVerticalPage] = useState(0);
+  const [autoSlideKey, setAutoSlideKey] = useState(0);
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const reducedMotion = useReducedMotion();
   const now = useNow(60_000);
+  const progress = getYearProgress(now, firstDayOfWeek);
 
-  // Live weather state
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
 
   const handleShareCard = async (quote: { quote: string; author: string }) => {
@@ -64,11 +99,127 @@ export function FacebookCoverHeader({
   };
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const programmaticSlideRef = useRef<number | null>(null);
+  const translateY = useSharedValue(0);
+  const hintScale = useSharedValue(1);
 
-  // Auto slide every 10 seconds (3 slides)
+  const resetAutoSlide = () => setAutoSlideKey((key) => key + 1);
+
+  const applyVerticalPage = (next: 0 | 1) => {
+    setVerticalPage(next);
+    Haptics.selectionAsync().catch(() => {});
+    resetAutoSlide();
+    AccessibilityInfo.announceForAccessibility(
+      next === 1 ? 'Year progress' : 'Greeting'
+    );
+    AsyncStorage.setItem(SWIPE_HINT_KEY, '1').catch(() => {});
+    setShowSwipeHint(false);
+  };
+
+  const animateVerticalTo = (next: 0 | 1, onDone?: (finished?: boolean) => void) => {
+    'worklet';
+    const target = next === 1 ? -HERO_HEIGHT : 0;
+    translateY.value = reducedMotion
+      ? withTiming(target, { duration: 180 }, onDone)
+      : withSpring(target, VERTICAL_SPRING, onDone);
+  };
+
+  const goToVerticalPage = (next: 0 | 1) => {
+    if (next === verticalPage) return;
+    applyVerticalPage(next);
+    hintScale.value = 1;
+    animateVerticalTo(next);
+  };
+
+  const blockablePageScrollRef = pageScrollRef as unknown as
+    | React.RefObject<React.ComponentType | undefined | null>
+    | undefined;
+
+  const gesturesEnabled = !pageScrolled;
+
+  const swipeUp = Gesture.Pan()
+    .enabled(gesturesEnabled && verticalPage === 0)
+    .activeOffsetY(-12)
+    .failOffsetY(12)
+    .failOffsetX([-14, 14])
+    .onUpdate((event) => {
+      translateY.value = Math.max(-HERO_HEIGHT, Math.min(0, event.translationY));
+    })
+    .onEnd((event) => {
+      const shouldOpen = event.translationY < -HERO_HEIGHT * 0.28 || event.velocityY < -450;
+      if (shouldOpen) {
+        animateVerticalTo(1, (finished) => {
+          if (finished) {
+            runOnJS(applyVerticalPage)(1);
+          }
+        });
+      } else {
+        translateY.value = withSpring(0, VERTICAL_SPRING);
+      }
+    });
+
+  const swipeDown = Gesture.Pan()
+    .enabled(gesturesEnabled && verticalPage === 1)
+    .activeOffsetY(12)
+    .failOffsetY(-12)
+    .failOffsetX([-14, 14])
+    .onUpdate((event) => {
+      translateY.value = Math.max(-HERO_HEIGHT, Math.min(0, -HERO_HEIGHT + event.translationY));
+    })
+    .onEnd((event) => {
+      const shouldClose = event.translationY > HERO_HEIGHT * 0.28 || event.velocityY > 450;
+      if (shouldClose) {
+        animateVerticalTo(0, (finished) => {
+          if (finished) {
+            runOnJS(applyVerticalPage)(0);
+          }
+        });
+      } else {
+        translateY.value = withSpring(-HERO_HEIGHT, VERTICAL_SPRING);
+      }
+    });
+
+  if (blockablePageScrollRef) {
+    swipeUp.blocksExternalGesture(blockablePageScrollRef);
+    swipeDown.blocksExternalGesture(blockablePageScrollRef);
+  }
+
+  const verticalTrackStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  const coverImageStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: reducedMotion ? 0 : translateY.value * 0.35 }],
+  }));
+
+  const pageAContentStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateY.value, [-HERO_HEIGHT * 0.6, 0], [0.2, 1], Extrapolation.CLAMP),
+  }));
+
+  const pageBContentStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateY.value,
+      [-HERO_HEIGHT, -HERO_HEIGHT * 0.4],
+      [1, 0.2],
+      Extrapolation.CLAMP
+    ),
+  }));
+
+  const scrimBoostStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(translateY.value, [-HERO_HEIGHT, 0], [0.22, 0], Extrapolation.CLAMP),
+  }));
+
+  const hintStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: hintScale.value }],
+  }));
+
+  // Auto slide every 10 seconds between the horizontal slides only.
+  // It pauses while the year progress page is open so the panel is not yanked away.
   useEffect(() => {
+    if (verticalPage === 1) return;
     const timer = setInterval(() => {
       const nextIndex = (activeIndex + 1) % 3;
+      programmaticSlideRef.current = nextIndex;
       setActiveIndex(nextIndex);
       scrollViewRef.current?.scrollTo({
         x: nextIndex * SCREEN_WIDTH,
@@ -77,7 +228,7 @@ export function FacebookCoverHeader({
     }, 10000);
 
     return () => clearInterval(timer);
-  }, [activeIndex]);
+  }, [activeIndex, autoSlideKey, verticalPage]);
 
   useEffect(() => {
     async function loadWeather() {
@@ -87,18 +238,73 @@ export function FacebookCoverHeader({
     void loadWeather();
   }, []);
 
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    AsyncStorage.getItem(SWIPE_HINT_KEY)
+      .then((seen) => {
+        if (seen) return;
+        timer = setTimeout(() => {
+          setShowSwipeHint(true);
+          if (!reducedMotion) {
+            hintScale.value = withRepeat(
+              withSequence(
+                withTiming(1.06, { duration: 220 }),
+                withTiming(1, { duration: 220 })
+              ),
+              3,
+              false
+            );
+          }
+        }, 1400);
+      })
+      .catch(() => {});
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [hintScale, reducedMotion]);
+
+  useEffect(() => {
+    if (!showSwipeHint) return;
+    const timer = setTimeout(() => setShowSwipeHint(false), 6000);
+    return () => clearTimeout(timer);
+  }, [showSwipeHint]);
+
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(contentOffsetX / SCREEN_WIDTH);
-    if (currentIndex !== activeIndex && currentIndex >= 0 && currentIndex <= 2) {
+    if (currentIndex < 0 || currentIndex > 2) return;
+
+    const isProgrammatic = currentIndex === programmaticSlideRef.current;
+    if (isProgrammatic) programmaticSlideRef.current = null;
+
+    if (currentIndex !== activeIndex) {
       setActiveIndex(currentIndex);
-      Haptics.selectionAsync().catch(() => {});
+      if (!isProgrammatic) Haptics.selectionAsync().catch(() => {});
     }
+
+    // Leaving slide 1 always returns it to the greeting so the cover never
+    // comes back showing the year progress panel mid-state.
+    if (currentIndex !== 0 && verticalPage !== 0) {
+      setVerticalPage(0);
+      translateY.set(0);
+    }
+  };
+
+  const goToSlide = (index: number) => {
+    if (index === activeIndex) return;
+    programmaticSlideRef.current = index;
+    setActiveIndex(index);
+    resetAutoSlide();
+    Haptics.selectionAsync().catch(() => {});
+    scrollViewRef.current?.scrollTo({
+      x: index * SCREEN_WIDTH,
+      animated: true,
+    });
   };
 
   const currentQuote = getQuoteOfTheDay(now);
 
-  // Convert temperatures based on user preference
   const formatTemp = (tempC: number) => {
     if (temperatureUnit === 'F') {
       return `${Math.round((tempC * 9) / 5 + 32)}°F`;
@@ -110,12 +316,17 @@ export function FacebookCoverHeader({
   const displayHigh = formatTemp(weather.tempMaxC);
   const displayLow = formatTemp(weather.tempMinC);
 
-  const hour = now.getHours();
-  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
+  const greeting = progress.greetingLabel;
 
   const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(now);
 
   const topPadding = Math.max(insets.top + 12, 40);
+
+  const spendDiffPercent =
+    lastMonthSpent > 0 ? Math.round((Math.abs(monthlySpent - lastMonthSpent) / lastMonthSpent) * 100) : 0;
+  const spendWentUp = monthlySpent > lastMonthSpent;
+
+  const showYearProgress = verticalPage === 0;
 
   return (
     <View style={styles.container}>
@@ -127,54 +338,138 @@ export function FacebookCoverHeader({
         disableIntervalMomentum
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
+        onScrollBeginDrag={resetAutoSlide}
         scrollEventThrottle={16}
         decelerationRate="normal"
         snapToInterval={SCREEN_WIDTH}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* SLIDE 1: COVER PHOTO + PROFILE & NET BALANCE */}
-        <View style={styles.slideCard}>
-          <Image source={getCoverSource(profile.coverPhotoUri)} style={styles.fullCoverImage} />
-          <View style={styles.overlayGradient} />
+        {/* SLIDE 1: COVER PHOTO WITH GREETING / YEAR PROGRESS SWAPPING UP-DOWN */}
+        <GestureDetector gesture={verticalPage === 0 ? swipeUp : swipeDown}>
+          <View style={styles.slideCard}>
+            <Animated.Image
+              source={getCoverSource(profile.coverPhotoUri)}
+              style={[styles.fullCoverImage, coverImageStyle]}
+            />
+            <LinearGradient
+              colors={['rgba(0,0,0,0.24)', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.88)']}
+              locations={[0, 0.42, 1]}
+              style={StyleSheet.absoluteFill}
+            />
+            <Animated.View
+              style={[StyleSheet.absoluteFill, styles.scrimBoost, scrimBoostStyle]}
+            />
 
-          <View style={[styles.cardInnerCombined, { paddingTop: topPadding }]}>
-            {/* Profile & Greeting on Bottom */}
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={onPressProfile || (() => router.push('/profile'))}
-              accessibilityRole="button"
-              accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
-              style={styles.facebookBottomRow}
-            >
-              <View
+            <Animated.View
+              style={[styles.verticalTrack, { height: HERO_HEIGHT * 2 }, verticalTrackStyle]}>
+              {/* PAGE A: GREETING */}
+              <Animated.View
+                accessibilityElementsHidden={verticalPage !== 0}
+                importantForAccessibility={verticalPage === 0 ? 'auto' : 'no-hide-descendants'}
                 style={[
-                  styles.avatarContainer,
-                  { borderColor: '#FFFFFF', backgroundColor: theme.background },
-                ]}
-              >
-                {profile.profilePhotoUri ? (
-                  <Image source={{ uri: profile.profilePhotoUri }} style={styles.avatarImage} />
-                ) : (
-                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
-                    <Text style={styles.avatarInitial}>
-                      {profile.name ? profile.name.charAt(0).toUpperCase() : 'S'}
+                  styles.coverPage,
+                  { paddingTop: topPadding },
+                  pageAContentStyle,
+                ]}>
+                <Text style={styles.brandMark}>CASHTRACK</Text>
+
+                <View style={styles.profileBlock}>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={onPressProfile || (() => router.push('/profile'))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
+                    style={styles.profileRow}>
+                    <View
+                      style={[
+                        styles.avatarContainer,
+                        { borderColor: '#FFFFFF', backgroundColor: theme.background },
+                      ]}>
+                      {profile.profilePhotoUri ? (
+                        <Image source={{ uri: profile.profilePhotoUri }} style={styles.avatarImage} />
+                      ) : (
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                          <Text style={styles.avatarInitial}>
+                            {profile.name ? profile.name.charAt(0).toUpperCase() : 'S'}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <View style={styles.profileTextInfo}>
+                      <Text style={styles.whiteTitle} numberOfLines={1}>
+                        {greeting}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
+                      </Text>
+                      <Text style={styles.whiteSubtext}>{todayStr}</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <View style={styles.balanceBlock}>
+                    <Text style={styles.balanceEyebrow}>NET BALANCE</Text>
+                    <Text
+                      style={styles.balanceValue}
+                      numberOfLines={1}
+                      adjustsFontSizeToFit>
+                      {formatAmount(totalBalance)}
+                    </Text>
+                    <Text style={styles.balanceMeta} numberOfLines={1}>
+                      Spent in {progress.monthShortLabel} · {formatAmount(monthlySpent)}
+                      {spendDiffPercent > 0
+                        ? `   ${spendWentUp ? '↑' : '↓'} ${spendDiffPercent}%`
+                        : ''}
                     </Text>
                   </View>
-                )}
-              </View>
+                </View>
+              </Animated.View>
 
-              <View style={styles.profileTextInfo}>
-                <Text style={styles.whiteSubtext}>{todayStr}</Text>
-                <Text style={styles.whiteTitle} numberOfLines={1}>
-                  {greeting}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
+              {/* PAGE B: YEAR PROGRESS */}
+              <Animated.View style={[styles.panelPage, pageBContentStyle]}>
+                <YearProgressPanel
+                  progress={progress}
+                  height={HERO_HEIGHT}
+                  topPadding={topPadding}
+                  hidden={verticalPage !== 1}
+                />
+              </Animated.View>
+            </Animated.View>
+
+            {/* Single vertical affordance: teaser, state and control in one chip */}
+            <Animated.View
+              style={[styles.verticalToggleWrap, { top: topPadding }, hintStyle]}>
+              <Pressable
+                onPress={() => goToVerticalPage(showYearProgress ? 1 : 0)}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityState={{ expanded: !showYearProgress }}
+                accessibilityLabel={
+                  showYearProgress
+                    ? `Year progress, ${progress.yearPercent} percent of ${progress.year} elapsed. Opens year progress.`
+                    : 'Greeting. Returns to the greeting.'
+                }
+                style={({ pressed }) => [styles.verticalToggle, pressed && styles.verticalTogglePressed]}>
+                <Ionicons
+                  name={showYearProgress ? 'chevron-up' : 'chevron-down'}
+                  size={12}
+                  color="#FFFFFF"
+                />
+                <Text style={styles.verticalToggleText} numberOfLines={1}>
+                  {showYearProgress ? `Year progress · ${progress.yearPercent}%` : 'Greeting'}
                 </Text>
-                <Text style={styles.netBalanceText}>
-                  Net Balance: <Text style={{ color: '#4ade80', fontWeight: '700' }}>{formatAmount(totalBalance)}</Text>
-                </Text>
-              </View>
-            </TouchableOpacity>
+              </Pressable>
+            </Animated.View>
+
+            {showSwipeHint && showYearProgress && (
+              <Pressable
+                onPress={() => setShowSwipeHint(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Dismiss hint"
+                style={[styles.swipeHint, { top: topPadding + 42 }]}>
+                <Ionicons name="arrow-up" size={11} color="#FFFFFF" />
+                <Text style={styles.swipeHintText}>Swipe up for your year</Text>
+              </Pressable>
+            )}
           </View>
-        </View>
+        </GestureDetector>
 
         {/* SLIDE 2: LIVE WEATHER + WORLD CLOCKS */}
         <TouchableOpacity
@@ -281,20 +576,25 @@ export function FacebookCoverHeader({
 
       {/* Floating Pagination Dots */}
       <View style={styles.paginationContainer}>
-        {[0, 1, 2].map((index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              {
-                backgroundColor:
-                  activeIndex === index
-                    ? '#FFFFFF'
-                    : 'rgba(255,255,255,0.4)',
-                width: activeIndex === index ? 22 : 6,
-              },
-            ]}
-          />
+        {SLIDE_LABELS.map((label, index) => (
+          <Pressable
+            key={label}
+            onPress={() => goToSlide(index)}
+            hitSlop={12}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+            accessibilityState={{ selected: activeIndex === index }}
+            style={styles.dotTarget}>
+            <View
+              style={[
+                styles.dot,
+                {
+                  backgroundColor: activeIndex === index ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                  width: activeIndex === index ? 22 : 6,
+                },
+              ]}
+            />
+          </Pressable>
         ))}
       </View>
     </View>
@@ -311,62 +611,56 @@ const styles = StyleSheet.create({
   },
   slideCard: {
     width: SCREEN_WIDTH,
-    minHeight: 280,
+    height: HERO_HEIGHT,
     position: 'relative',
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
   fullCoverImage: {
-    ...StyleSheet.absoluteFill,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: HERO_HEIGHT + 140,
     width: '100%',
-    height: '100%',
     resizeMode: 'cover',
   },
-  overlayGradient: {
-    ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+  scrimBoost: {
+    backgroundColor: '#000000',
   },
-  cardInner: {
-    flex: 1,
+  verticalTrack: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  coverPage: {
+    height: HERO_HEIGHT,
     paddingHorizontal: 18,
     paddingBottom: 24,
     justifyContent: 'space-between',
   },
-  cardInnerCombined: {
-    flex: 1,
-    paddingHorizontal: 18,
-    paddingBottom: 22,
-    justifyContent: 'flex-end',
+  panelPage: {
+    height: HERO_HEIGHT,
   },
-  topRowBadge: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 8,
+  brandMark: {
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
   },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 999,
+  profileBlock: {
+    gap: 14,
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  facebookBottomRow: {
+  profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
   avatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 2,
     overflow: 'hidden',
     justifyContent: 'center',
@@ -385,28 +679,106 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '700',
   },
   profileTextInfo: {
     flex: 1,
+    gap: 2,
   },
   whiteTitle: {
     color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-    lineHeight: 22,
+    fontSize: 21,
+    fontWeight: '800',
+    lineHeight: 26,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   whiteSubtext: {
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.86)',
+    fontSize: 12.5,
     fontWeight: '500',
   },
-  netBalanceText: {
+  balanceBlock: {
+    gap: 1,
+  },
+  balanceEyebrow: {
+    color: 'rgba(255,255,255,0.72)',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+  },
+  balanceValue: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '500',
-    marginTop: 1,
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    textShadowColor: 'rgba(0,0,0,0.45)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
+  balanceMeta: {
+    color: 'rgba(255,255,255,0.86)',
+    fontSize: 12.5,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
+  verticalToggleWrap: {
+    position: 'absolute',
+    right: 18,
+    zIndex: 5,
+  },
+  verticalToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0,0,0,0.32)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.34)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  verticalTogglePressed: {
+    opacity: 0.72,
+    transform: [{ scale: 0.97 }],
+  },
+  verticalToggleText: {
+    color: '#FFFFFF',
+    fontSize: 11.5,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  swipeHint: {
+    position: 'absolute',
+    right: 18,
+    zIndex: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: Radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  swipeHintText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  cardInner: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingBottom: 24,
+    justifyContent: 'space-between',
+  },
+  topRowBadge: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
   },
   outlookPill: {
     flexDirection: 'row',
@@ -636,6 +1008,10 @@ const styles = StyleSheet.create({
     bottom: 8,
     left: 0,
     right: 0,
+  },
+  dotTarget: {
+    height: 12,
+    justifyContent: 'center',
   },
   dot: {
     height: 6,

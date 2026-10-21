@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -56,7 +57,12 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [rawReminders, setRawReminders] = useState<FinancialReminder[]>([]);
   const [payments, setPayments] = useState<ReminderPaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addExpense, formatAmount, registerResetHandler } = useExpenses();
+  const { addExpense, formatAmount, registerResetHandler, enableBillReminders } = useExpenses();
+
+  const enableBillRemindersRef = useRef(enableBillReminders);
+  useEffect(() => {
+    enableBillRemindersRef.current = enableBillReminders;
+  }, [enableBillReminders]);
 
   useEffect(() => {
     return registerResetHandler(async () => {
@@ -78,9 +84,11 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         if (!cancelled) {
           setRawReminders(loadedReminders);
           setPayments(loadedPayments);
-          for (const rem of loadedReminders) {
-            if (rem.status !== 'paid' && rem.status !== 'skipped') {
-              void scheduleReminderNotificationsAsync(rem, safeFormat);
+          if (enableBillRemindersRef.current) {
+            for (const rem of loadedReminders) {
+              if (rem.status !== 'paid' && rem.status !== 'skipped') {
+                void scheduleReminderNotificationsAsync(rem, safeFormat);
+              }
             }
           }
         }
@@ -97,6 +105,27 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       cancelled = true;
     };
   }, [safeFormat]);
+
+  // Turning the preference off cancels every pending bill reminder; turning it
+  // back on reschedules the active ones.
+  const remindersRef = useRef(rawReminders);
+  useEffect(() => {
+    remindersRef.current = rawReminders;
+  }, [rawReminders]);
+
+  const previousEnableBillRemindersRef = useRef(enableBillReminders);
+  useEffect(() => {
+    if (previousEnableBillRemindersRef.current === enableBillReminders) return;
+    previousEnableBillRemindersRef.current = enableBillReminders;
+
+    for (const reminder of remindersRef.current) {
+      if (!enableBillReminders) {
+        void cancelReminderNotificationsAsync(reminder.id);
+      } else if (reminder.status !== 'paid' && reminder.status !== 'skipped') {
+        void scheduleReminderNotificationsAsync(reminder, safeFormat);
+      }
+    }
+  }, [enableBillReminders, safeFormat]);
 
   const reminders = useMemo<ReminderWithDerivedStatus[]>(() => {
     const today = new Date();
@@ -153,9 +182,11 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
 
     await insertReminder(reminder);
     setRawReminders((current) => [reminder, ...current]);
-    void scheduleReminderNotificationsAsync(reminder, safeFormat);
+    if (enableBillReminders) {
+      void scheduleReminderNotificationsAsync(reminder, safeFormat);
+    }
     return reminder;
-  }, [safeFormat]);
+  }, [safeFormat, enableBillReminders]);
 
   const updateReminder = useCallback(async (id: string, draft: FinancialReminderDraft) => {
     const existing = rawReminders.find((r) => r.id === id);
@@ -181,8 +212,10 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
 
     await updateReminderRepo(updated);
     setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
-    void scheduleReminderNotificationsAsync(updated, safeFormat);
-  }, [rawReminders, safeFormat]);
+    if (enableBillReminders) {
+      void scheduleReminderNotificationsAsync(updated, safeFormat);
+    }
+  }, [rawReminders, safeFormat, enableBillReminders]);
 
   const deleteReminder = useCallback(async (id: string) => {
     await deleteReminderRepo(id);
@@ -251,10 +284,10 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     setPayments((current) => [payment, ...current]);
     setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
     void cancelReminderNotificationsAsync(id);
-    if (updated.status === 'upcoming') {
+    if (updated.status === 'upcoming' && enableBillReminders) {
       void scheduleReminderNotificationsAsync(updated, safeFormat);
     }
-  }, [rawReminders, addExpense, safeFormat]);
+  }, [rawReminders, addExpense, safeFormat, enableBillReminders]);
 
   const skipReminder = useCallback(async (id: string) => {
     const target = rawReminders.find((r) => r.id === id);
@@ -272,7 +305,9 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       };
       await updateReminderRepo(updated);
       setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
-      void scheduleReminderNotificationsAsync(updated, safeFormat);
+      if (enableBillReminders) {
+        void scheduleReminderNotificationsAsync(updated, safeFormat);
+      }
     } else {
       const updated: FinancialReminder = {
         ...target,
@@ -282,7 +317,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       await updateReminderRepo(updated);
       setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
     }
-  }, [rawReminders, safeFormat]);
+  }, [rawReminders, safeFormat, enableBillReminders]);
 
   const getReminder = useCallback(
     (id: string) => reminders.find((r) => r.id === id),

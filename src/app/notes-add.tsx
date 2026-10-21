@@ -8,6 +8,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { saveNote } from '@/storage/notes-storage';
 import { NoteColor } from '@/types/note';
+import { notify } from '@/utils/confirm';
 
 const COLORS: { key: NoteColor; label: string; hex: string; darkHex: string }[] = [
   { key: 'default', label: 'Default', hex: '#F7F7F9', darkHex: '#17181A' },
@@ -36,8 +37,12 @@ export default function AddNoteScreen() {
       color,
       updatedAt: new Date().toISOString(),
     };
-    await saveNote(newNote);
-    router.back();
+    try {
+      await saveNote(newNote);
+      router.back();
+    } catch {
+      notify('Could not save note', 'Your saved notes could not be read. Please restart the app and try again.');
+    }
   };
 
   const selectedColorObj = COLORS.find((c) => c.key === color) || COLORS[0];

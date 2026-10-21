@@ -4,7 +4,10 @@ import type { Expense, RecurringFrequency } from '@/types/expense';
  * Checks recurring expense templates and automatically generates due instances
  * up to the current date without duplicating existing ones.
  */
-export function processRecurringExpenses(expenses: Expense[]): Expense[] {
+export function processRecurringExpenses(
+  expenses: Expense[],
+  skippedPeriods: Record<string, ReadonlySet<string>> = {}
+): Expense[] {
   const now = new Date();
   const existingExpenses = [...expenses];
   const templates = existingExpenses.filter((e) => e.isRecurring && !e.recurringParentId);
@@ -19,21 +22,22 @@ export function processRecurringExpenses(expenses: Expense[]): Expense[] {
 
     const endDate = template.recurringEndDate ? new Date(template.recurringEndDate) : now;
     const freq = template.recurringFrequency;
+    const skipped = skippedPeriods[template.id];
 
     let current = new Date(startDate);
     current = nextRecurringDate(startDate, current, freq);
 
     while (current <= now && current <= endDate) {
       const dateIso = current.toISOString();
-      const periodKey = getPeriodKey(current, freq);
+      const periodKey = getRecurringPeriodKey(current, freq);
 
       const exists = existingExpenses.some((e) => {
         if (e.recurringParentId !== template.id) return false;
         const eDate = new Date(e.date);
-        return getPeriodKey(eDate, freq) === periodKey;
+        return getRecurringPeriodKey(eDate, freq) === periodKey;
       });
 
-      if (!exists) {
+      if (!exists && !skipped?.has(periodKey)) {
         const newId = `rec-${template.id}-${periodKey}`;
         if (!addedInstances.some((a) => a.id === newId)) {
           addedInstances.push({
@@ -108,7 +112,7 @@ export function nextRecurringDate(
   return withClampedDay(anchor, current.getFullYear() + 1, current.getMonth(), anchor.getDate());
 }
 
-function getPeriodKey(date: Date, freq: 'weekly' | 'monthly' | 'yearly'): string {
+export function getRecurringPeriodKey(date: Date, freq: 'weekly' | 'monthly' | 'yearly'): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');

@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -18,7 +19,9 @@ import {
 import { getAllGoals, insertContribution } from '@/storage/goal-repository';
 import { calculateIncomeAllocations } from '@/utils/savings-allocator';
 import { applyIncomeUpdate } from '@/utils/income';
+import { getRecurringPeriodKey } from '@/utils/recurring';
 import { processRecurringIncome } from '@/utils/recurring-income';
+import { loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
 import { useExpenses } from '@/context/expense-context';
 
 type IncomeContextValue = {
@@ -41,20 +44,45 @@ function createIncomeId(): string {
 export function IncomeProvider({ children }: { children: ReactNode }) {
   const [incomeList, setIncomeList] = useState<IncomeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const incomeListRef = useRef<IncomeRecord[]>([]);
+  const skippedRef = useRef<Record<string, Set<string>>>({});
   const { registerResetHandler } = useExpenses();
 
   useEffect(() => {
+    incomeListRef.current = incomeList;
+  }, [incomeList]);
+
+  useEffect(() => {
     return registerResetHandler(async () => {
+      skippedRef.current = {};
       setIncomeList([]);
     });
   }, [registerResetHandler]);
+
+  const persistGeneratedIncome = useCallback(
+    async (processed: IncomeRecord[], knownIds: Set<string>) => {
+      for (const row of processed) {
+        if (knownIds.has(row.id)) continue;
+        try {
+          await insertIncome(row);
+        } catch (error) {
+          console.error('[cashtrack] Failed to persist recurring income occurrence', error);
+        }
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         const rows = await getAllIncome();
-        const processed = processRecurringIncome(rows);
+        const skipped = await loadRecurringSkips('income').catch(() => ({}));
+        skippedRef.current = skipped;
+
+        const processed = processRecurringIncome(rows, skipped);
+        await persistGeneratedIncome(processed, new Set(rows.map((row) => row.id)));
         if (!cancelled) {
           setIncomeList(processed);
         }
@@ -70,7 +98,7 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [persistGeneratedIncome]);
 
   const addIncome = useCallback(async (draft: IncomeDraft): Promise<IncomeRecord> => {
     const record: IncomeRecord = {
@@ -102,22 +130,46 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
       console.error('[cashtrack] Failed to auto-allocate savings from income', err);
     }
 
-    setIncomeList((current) => processRecurringIncome([record, ...current]));
+    const current = incomeListRef.current;
+    const next = processRecurringIncome([record, ...current], skippedRef.current);
+    await persistGeneratedIncome(next, new Set([record.id, ...current.map((item) => item.id)]));
+    setIncomeList(next);
     return record;
-  }, []);
+  }, [persistGeneratedIncome]);
 
   const updateIncome = useCallback(async (id: string, changes: IncomeDraft) => {
     await updateIncomeRepo(id, changes);
-    setIncomeList((current) =>
-      processRecurringIncome(
-        current.map((item) => (item.id === id ? applyIncomeUpdate(item, changes) : item))
-      )
+    const current = incomeListRef.current;
+    const next = processRecurringIncome(
+      current.map((item) => (item.id === id ? applyIncomeUpdate(item, changes) : item)),
+      skippedRef.current
     );
-  }, []);
+    await persistGeneratedIncome(next, new Set(current.map((item) => item.id)));
+    setIncomeList(next);
+  }, [persistGeneratedIncome]);
 
   const deleteIncome = useCallback(async (id: string) => {
+    const current = incomeListRef.current;
+    const target = current.find((item) => item.id === id);
+    const parent = target?.recurringParentId
+      ? current.find((item) => item.id === target.recurringParentId)
+      : undefined;
+
+    if (target?.recurringParentId && parent?.recurringFrequency) {
+      const periodKey = getRecurringPeriodKey(new Date(target.date), parent.recurringFrequency);
+      try {
+        await skipRecurringPeriod('income', parent.id, periodKey);
+        skippedRef.current = {
+          ...skippedRef.current,
+          [parent.id]: new Set([...(skippedRef.current[parent.id] ?? []), periodKey]),
+        };
+      } catch (error) {
+        console.error('[cashtrack] Failed to remember deleted recurring income', error);
+      }
+    }
+
     await deleteIncomeRepo(id);
-    setIncomeList((current) => current.filter((item) => item.id !== id && item.recurringParentId !== id));
+    setIncomeList((list) => list.filter((item) => item.id !== id && item.recurringParentId !== id));
   }, []);
 
   const getIncome = useCallback(

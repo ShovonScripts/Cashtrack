@@ -1,6 +1,7 @@
 import { initDatabase } from '@/storage/db';
 import type { IncomeRecord, IncomeDraft } from '@/types/income';
 import type { RecurringFrequency } from '@/types/expense';
+import { applyIncomeUpdate } from '@/utils/income';
 
 interface IncomeRow {
   id: string;
@@ -56,14 +57,20 @@ export async function getIncomeById(id: string): Promise<IncomeRecord | undefine
 
 export async function updateIncome(id: string, changes: IncomeDraft): Promise<void> {
   const db = await initDatabase();
+  const row = await db.getFirstAsync<IncomeRow>('SELECT * FROM income_transactions WHERE id = ?', id);
+  if (!row) return;
+
+  // Merge like the web repository does so omitted optional fields (notably
+  // `recurringEndDate`) keep their stored value instead of being cleared.
+  const updated = applyIncomeUpdate(mapIncomeRow(row), changes);
   await db.runAsync(
-    'UPDATE income_transactions SET amount = ?, date = COALESCE(?, date), note = ?, is_recurring = ?, recurring_frequency = ?, recurring_end_date = ? WHERE id = ?',
-    changes.amount,
-    changes.date ?? null,
-    changes.note ?? '',
-    changes.isRecurring ? 1 : 0,
-    changes.recurringFrequency ?? null,
-    changes.recurringEndDate ?? null,
+    'UPDATE income_transactions SET amount = ?, date = ?, note = ?, is_recurring = ?, recurring_frequency = ?, recurring_end_date = ? WHERE id = ?',
+    updated.amount,
+    updated.date,
+    updated.note,
+    updated.isRecurring ? 1 : 0,
+    updated.recurringFrequency ?? null,
+    updated.recurringEndDate ?? null,
     id
   );
 }

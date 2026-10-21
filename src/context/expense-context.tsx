@@ -22,7 +22,8 @@ import { ThemeModeContext } from '@/context/theme-context';
 import { nextThemeMode } from '@/utils/theme-mode';
 import { clearRelationalData } from '@/storage/reset-repository';
 import { createSeedExpenses } from '@/data/seed-expenses';
-import { processRecurringExpenses } from '@/utils/recurring';
+import { getRecurringPeriodKey, processRecurringExpenses } from '@/utils/recurring';
+import { clearRecurringSkips, loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
 import { checkAndTriggerBudgetNotifications } from '@/utils/notifications';
 import { deleteLocalReceipt } from '@/utils/receipt';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
@@ -161,6 +162,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         }),
       ]);
 
+      const skippedPeriods = await loadRecurringSkips('expense').catch(() => ({}));
       if (cancelled) return;
 
       expenseLoadFailedRef.current = expenseFailed;
@@ -168,7 +170,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       setDataLoadError(expenseFailed || prefFailed);
 
       const rawInitial = expenseFailed ? [] : (savedExpenses ?? (__DEV__ ? createSeedExpenses() : []));
-      const initialExpenses = processRecurringExpenses(rawInitial);
+      const initialExpenses = processRecurringExpenses(rawInitial, skippedPeriods);
       const basePreferences = prefFailed || !savedPreferences ? DEFAULT_PREFERENCES : savedPreferences;
 
       // Prune notifiedDebts older than 30 days without mutating DEFAULT_PREFERENCES
@@ -224,7 +226,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, [preferences]);
 
   useEffect(() => {
-    if (hasLoadedRef.current && !expenseLoadFailedRef.current) {
+    if (
+      hasLoadedRef.current &&
+      !expenseLoadFailedRef.current &&
+      (preferences.enableBudgetAlerts ?? true)
+    ) {
       void checkAndTriggerBudgetNotifications({
         expenses,
         limits: preferences.categoryLimits,
@@ -237,7 +243,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         },
       });
     }
-  }, [expenses, preferences.categoryLimits, preferences.notifiedThresholds]);
+  }, [
+    expenses,
+    preferences.categoryLimits,
+    preferences.notifiedThresholds,
+    preferences.enableBudgetAlerts,
+  ]);
 
   const updateNotifiedDebts = useCallback((updater: (current: Record<string, string>) => Record<string, string>) => {
     setPreferences((current) => ({
@@ -264,6 +275,18 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteExpense = useCallback((id: string) => {
+    const target = expensesRef.current.find((expense) => expense.id === id);
+    const parent = target?.recurringParentId
+      ? expensesRef.current.find((expense) => expense.id === target.recurringParentId)
+      : undefined;
+
+    if (target?.recurringParentId && parent?.recurringFrequency) {
+      const periodKey = getRecurringPeriodKey(new Date(target.date), parent.recurringFrequency);
+      void skipRecurringPeriod('expense', parent.id, periodKey).catch((error) => {
+        console.error('[cashtrack] Failed to remember deleted recurring expense', error);
+      });
+    }
+
     dispatch({ type: 'DELETE_EXPENSE', id });
   }, []);
 
@@ -415,6 +438,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     if (!prefRes) throw new Error('Failed to save default preferences during reset');
 
     await clearRelationalData();
+
+    try {
+      await clearRecurringSkips();
+    } catch (error) {
+      console.error('[cashtrack] Failed to clear recurring skips during reset', error);
+    }
 
     // c. Await registry.runAll()
     await resetRegistryRef.current.runAll();

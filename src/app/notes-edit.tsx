@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,7 +9,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteNote, getNotes, saveNote } from '@/storage/notes-storage';
 import { Note, NoteColor } from '@/types/note';
-import { confirmDelete } from '@/utils/confirm';
+import { confirmDelete, notify } from '@/utils/confirm';
 
 const COLORS: { key: NoteColor; label: string; hex: string; darkHex: string }[] = [
   { key: 'default', label: 'Default', hex: '#F7F7F9', darkHex: '#17181A' },
@@ -27,21 +27,44 @@ export default function EditNoteScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [color, setColor] = useState<NoteColor>('default');
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const [missingId, setMissingId] = useState<string | null>(null);
+
+  const isLoading = Boolean(id) && loadedId !== id && missingId !== id;
+  const notFound = !id || missingId === id;
 
   useEffect(() => {
     if (!id) return;
-    getNotes().then((notes) => {
-      const found = notes.find((n) => n.id === id);
-      if (found) {
+
+    let cancelled = false;
+
+    getNotes()
+      .then((notes) => {
+        if (cancelled) return;
+        const found = notes.find((n) => n.id === id);
+        if (!found) {
+          setMissingId(id);
+          return;
+        }
         setTitle(found.title);
         setContent(found.content);
         setColor(found.color);
-      }
-    });
+        setLoadedId(id);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          notify('Could not open note', 'Your saved notes could not be read. Please restart the app and try again.');
+          setMissingId(id);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const handleSave = async () => {
-    if (!id) return;
+    if (!id || isLoading || notFound) return;
     const updatedNote: Note = {
       id,
       title: title.trim(),
@@ -49,21 +72,54 @@ export default function EditNoteScreen() {
       color,
       updatedAt: new Date().toISOString(),
     };
-    await saveNote(updatedNote);
-    router.back();
+    try {
+      await saveNote(updatedNote);
+      router.back();
+    } catch {
+      notify('Could not save note', 'Your saved notes could not be read. Please restart the app and try again.');
+    }
   };
 
   const handleDelete = async () => {
     if (!id) return;
     confirmDelete('Delete Note', 'Are you sure you want to delete this note?', async () => {
-      await deleteNote(id);
-      router.back();
+      try {
+        await deleteNote(id);
+        router.back();
+      } catch {
+        notify('Could not delete note', 'Your saved notes could not be read. Please restart the app and try again.');
+      }
     });
   };
 
   const selectedColorObj = COLORS.find((c) => c.key === color) || COLORS[0];
   const isDark = theme.text === '#ffffff';
   const dynamicBg = isDark ? selectedColorObj.darkHex : selectedColorObj.hex;
+
+  if (isLoading) {
+    return (
+      <ThemedView style={[styles.container, styles.centered]}>
+        <Stack.Screen options={{ title: 'Edit Note' }} />
+        <ActivityIndicator size="large" color={theme.accent} />
+      </ThemedView>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <ThemedView style={[styles.container, styles.centered]}>
+        <Stack.Screen options={{ title: 'Edit Note' }} />
+        <ThemedText type="subtitle">Note not found</ThemedText>
+        <Pressable
+          onPress={() => router.back()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          style={{ marginTop: Spacing.three }}>
+          <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back</ThemedText>
+        </Pressable>
+      </ThemedView>
+    );
+  }
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: dynamicBg }]}>
@@ -133,6 +189,11 @@ export default function EditNoteScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
   },
   headerActions: {
     flexDirection: 'row',

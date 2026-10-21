@@ -1,33 +1,39 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Note } from '@/types/note';
+import type { Note } from '@/types/note';
+import { mutateJsonArray, objectRows, readJsonArray } from '@/storage/json-collection';
 
 const STORAGE_KEY = '@cashtrack_google_keep_notes';
 
+const noteRows = objectRows<Note>('note');
+
+/**
+ * Read-only access for screens. A corrupt payload is reported as empty so the
+ * UI can still render, but mutators below read strictly and abort instead of
+ * overwriting the user's notes with an empty list.
+ */
 export async function getNotes(): Promise<Note[]> {
   try {
-    const json = await AsyncStorage.getItem(STORAGE_KEY);
-    if (!json) return [];
-    return JSON.parse(json) as Note[];
-  } catch {
+    return await readJsonArray(AsyncStorage, STORAGE_KEY, 'notes', noteRows);
+  } catch (error) {
+    console.error('[cashtrack] Failed to read notes', error);
     return [];
   }
 }
 
 export async function saveNote(note: Note): Promise<void> {
-  const notes = await getNotes();
-  const index = notes.findIndex((n) => n.id === note.id);
-  let updated: Note[];
-  if (index >= 0) {
-    updated = [...notes];
-    updated[index] = note;
-  } else {
-    updated = [note, ...notes];
-  }
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  await mutateJsonArray(AsyncStorage, STORAGE_KEY, 'notes', noteRows, (notes) => {
+    const index = notes.findIndex((n) => n.id === note.id);
+    if (index >= 0) {
+      const updated = [...notes];
+      updated[index] = note;
+      return updated;
+    }
+    return [note, ...notes];
+  });
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  const notes = await getNotes();
-  const updated = notes.filter((n) => n.id !== id);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  await mutateJsonArray(AsyncStorage, STORAGE_KEY, 'notes', noteRows, (notes) =>
+    notes.filter((n) => n.id !== id)
+  );
 }

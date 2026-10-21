@@ -31,6 +31,11 @@ export default function GoalDetailScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionDismissed, setCompletionDismissed] = useState(false);
+  // Celebrate once per visit when the goal is already complete, but let the
+  // user dismiss the modal instead of forcing it open on every render.
+  const completionModalVisible =
+    showCompletionModal || (goal?.isCompleted === true && !completionDismissed);
 
   if (!goal) {
     return (
@@ -305,8 +310,11 @@ export default function GoalDetailScreen() {
 
       <GoalCompletionModal
         goal={goal}
-        visible={showCompletionModal || goal.isCompleted}
-        onClose={() => setShowCompletionModal(false)}
+        visible={completionModalVisible}
+        onClose={() => {
+          setShowCompletionModal(false);
+          setCompletionDismissed(true);
+        }}
         formatAmount={formatAmount}
       />
     </ScrollView>

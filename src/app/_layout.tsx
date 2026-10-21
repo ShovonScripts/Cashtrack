@@ -15,7 +15,10 @@ import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
 import { confirmDelete, notify } from '@/utils/confirm';
 import { scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
-import { scheduleDailySpendingReminderNotificationsAsync } from '@/utils/spending-reminder-notifications';
+import {
+  cancelSpendingReminderNotificationsAsync,
+  scheduleDailySpendingReminderNotificationsAsync,
+} from '@/utils/spending-reminder-notifications';
 import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsButton';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StopwatchProvider } from '@/context/stopwatch-context';
@@ -26,13 +29,17 @@ SplashScreen.preventAutoHideAsync();
 function Navigation() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLoading, dataLoadError, resetAllData } = useExpenses();
+  const { isLoading, dataLoadError, resetAllData, enableDailyReminder } = useExpenses();
   const { debtLoadError } = useDebts();
 
   useEffect(() => {
     void scheduleDailyQuoteNotificationsAsync();
-    void scheduleDailySpendingReminderNotificationsAsync();
-  }, []);
+    if (enableDailyReminder) {
+      void scheduleDailySpendingReminderNotificationsAsync();
+    } else {
+      void cancelSpendingReminderNotificationsAsync();
+    }
+  }, [enableDailyReminder]);
 
   if (isLoading) {
     return <LoadingScreen />;

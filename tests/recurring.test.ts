@@ -1,8 +1,14 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { nextRecurringDate, processRecurringExpenses } from '../src/utils/recurring.ts';
+import {
+  getRecurringPeriodKey,
+  nextRecurringDate,
+  processRecurringExpenses,
+} from '../src/utils/recurring.ts';
+import { processRecurringIncome } from '../src/utils/recurring-income.ts';
 import type { Expense } from '../src/types/expense.ts';
+import type { IncomeRecord } from '../src/types/income.ts';
 
 /**
  * Recurrence arithmetic works in local time (getFullYear/getMonth/setFullYear), so the
@@ -155,4 +161,51 @@ test('the template row itself is untouched', () => {
   const kept = after.find((expense) => expense.id === 'template-3');
 
   assert.deepEqual(kept, template);
+});
+
+test('a deleted recurring expense period stays deleted when it is skipped', () => {
+  const template: Expense = {
+    id: 'template-4',
+    amount: 30,
+    category: 'Bills',
+    date: local(2025, 0, 15).toISOString(),
+    note: 'Rent',
+    isRecurring: true,
+    recurringFrequency: 'monthly',
+  };
+
+  const generated = processRecurringExpenses([template]);
+  const child = generated.find((expense) => expense.recurringParentId === template.id);
+  assert.ok(child, 'expected at least one generated occurrence');
+
+  const periodKey = getRecurringPeriodKey(new Date(child.date), 'monthly');
+  const remaining = generated.filter((expense) => expense.id !== child.id);
+  const after = processRecurringExpenses(remaining, {
+    [template.id]: new Set([periodKey]),
+  });
+
+  assert.ok(!after.some((expense) => expense.id === child.id), 'the deleted period must not return');
+});
+
+test('a deleted recurring income period stays deleted when it is skipped', () => {
+  const template: IncomeRecord = {
+    id: 'income-template-1',
+    amount: 5000,
+    date: local(2025, 0, 10).toISOString(),
+    note: 'Salary',
+    isRecurring: true,
+    recurringFrequency: 'monthly',
+  };
+
+  const generated = processRecurringIncome([template]);
+  const child = generated.find((item) => item.recurringParentId === template.id);
+  assert.ok(child, 'expected at least one generated occurrence');
+
+  const periodKey = getRecurringPeriodKey(new Date(child.date), 'monthly');
+  const remaining = generated.filter((item) => item.id !== child.id);
+  const after = processRecurringIncome(remaining, {
+    [template.id]: new Set([periodKey]),
+  });
+
+  assert.ok(!after.some((item) => item.id === child.id), 'the deleted period must not return');
 });

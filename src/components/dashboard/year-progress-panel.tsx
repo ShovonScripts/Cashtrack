@@ -1,4 +1,5 @@
-import { StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
@@ -6,9 +7,27 @@ import type { YearProgress } from '@/utils/year-progress';
 import { formatDaysLeft } from '@/utils/year-progress';
 
 const MONTH_LETTERS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+const MONTH_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+const CHART_HEIGHT = 44;
 
 type YearProgressPanelProps = {
   progress: YearProgress;
+  /** Twelve calendar-month spend totals, January at index 0. */
+  monthlySpend: number[];
+  formatAmount: (amount: number) => string;
   height: number;
   topPadding: number;
   bottomPadding?: number;
@@ -18,31 +37,37 @@ type YearProgressPanelProps = {
 
 export function YearProgressPanel({
   progress,
+  monthlySpend,
+  formatAmount,
   height,
   topPadding,
   bottomPadding = 24,
   hidden = false,
 }: YearProgressPanelProps) {
+  const [selectedMonth, setSelectedMonth] = useState(progress.monthNumber);
+
+  const maxSpend = Math.max(...monthlySpend, 1);
+  const selectedSpend = monthlySpend[selectedMonth - 1] ?? 0;
+  const selectedIsCurrent = selectedMonth === progress.monthNumber;
+
   return (
     <View
-      accessible
       accessibilityElementsHidden={hidden}
       importantForAccessibility={hidden ? 'no-hide-descendants' : 'auto'}
-      accessibilityLabel={`Year progress for ${progress.year}. ${progress.yearPercent} percent elapsed. Day ${progress.dayOfYear} of ${progress.daysInYear}, week ${progress.weekOfYear} of ${progress.totalWeeksInYear}. ${formatDaysLeft(progress.daysLeftInYear)}.`}
       style={[
         styles.container,
         { height, paddingTop: topPadding, paddingBottom: bottomPadding },
       ]}>
-      <View style={styles.group}>
+      <View
+        accessible
+        accessibilityLabel={`Year progress for ${progress.year}. ${progress.yearPercent} percent elapsed. Day ${progress.dayOfYear} of ${progress.daysInYear}, week ${progress.weekOfYear} of ${progress.totalWeeksInYear}. Currently ${progress.monthLabel}, day ${progress.dayOfMonth} of ${progress.daysInMonth}. ${formatDaysLeft(progress.daysLeftInYear)}.`}
+        style={styles.group}>
         <ThemedText type="caption" style={styles.eyebrow} numberOfLines={1}>
           YEAR PROGRESS
         </ThemedText>
 
         <View style={styles.heroRow}>
-          <ThemedText
-            style={styles.heroValue}
-            numberOfLines={1}
-            adjustsFontSizeToFit>
+          <ThemedText style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
             {progress.yearPercent}%
           </ThemedText>
           <ThemedText type="small" style={styles.heroSuffix}>
@@ -64,31 +89,60 @@ export function YearProgressPanel({
         </View>
       </View>
 
-      <View style={styles.monthStrip}>
-        {MONTH_LETTERS.map((letter, index) => {
-          const monthNumber = index + 1;
-          const isPast = monthNumber < progress.monthNumber;
-          const isCurrent = monthNumber === progress.monthNumber;
-          return (
-            <View key={`${letter}-${monthNumber}`} style={styles.monthCell}>
-              <View
-                style={[
-                  styles.monthBar,
-                  isCurrent ? styles.monthBarCurrent : isPast ? styles.monthBarPast : styles.monthBarFuture,
-                ]}
-              />
-              <ThemedText
-                type="caption"
-                style={[
-                  styles.monthLetter,
-                  isCurrent && styles.monthLetterCurrent,
-                  isPast && styles.monthLetterPast,
-                ]}>
-                {letter}
-              </ThemedText>
-            </View>
-          );
-        })}
+      <View style={styles.chartSection}>
+        <View style={styles.chartHeader}>
+          <ThemedText type="caption" style={styles.chartTitle} numberOfLines={1}>
+            SPENDING BY MONTH
+          </ThemedText>
+          <ThemedText type="caption" style={styles.chartSelected} numberOfLines={1}>
+            {MONTH_SHORT[selectedMonth - 1]} ·{' '}
+            {selectedSpend > 0 ? formatAmount(selectedSpend) : 'No spending'}
+            {selectedIsCurrent && selectedSpend > 0 ? ' so far' : ''}
+          </ThemedText>
+        </View>
+
+        <View style={styles.chart}>
+          {MONTH_LETTERS.map((letter, index) => {
+            const monthNumber = index + 1;
+            const spend = monthlySpend[index] ?? 0;
+            const isSelected = monthNumber === selectedMonth;
+            const isCurrent = monthNumber === progress.monthNumber;
+            const barHeight = spend > 0 ? Math.max(4, (spend / maxSpend) * CHART_HEIGHT) : 2;
+            const barColor = isSelected
+              ? '#FFFFFF'
+              : isCurrent
+                ? 'rgba(255,255,255,0.34)'
+                : spend > 0
+                  ? 'rgba(255,255,255,0.5)'
+                  : 'rgba(255,255,255,0.16)';
+
+            return (
+              <Pressable
+                key={`${letter}-${monthNumber}`}
+                onPress={() => setSelectedMonth(monthNumber)}
+                hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isSelected }}
+                accessibilityLabel={`${MONTH_SHORT[index]}, ${
+                  spend > 0 ? formatAmount(spend) : 'no spending'
+                }${isCurrent && spend > 0 ? ', month to date' : ''}`}
+                style={styles.monthCell}>
+                <View style={styles.barArea}>
+                  <View style={[styles.bar, { height: barHeight, backgroundColor: barColor }]} />
+                </View>
+                <ThemedText
+                  type="caption"
+                  style={[
+                    styles.monthLetter,
+                    isCurrent && styles.monthLetterCurrent,
+                    isSelected && styles.monthLetterSelected,
+                  ]}>
+                  {letter}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -152,7 +206,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
-  monthStrip: {
+  chartSection: {
+    gap: 6,
+  },
+  chartHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  chartTitle: {
+    color: 'rgba(255,255,255,0.72)',
+    letterSpacing: 1.1,
+    fontWeight: '700',
+  },
+  chartSelected: {
+    flexShrink: 1,
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  chart: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: 4,
@@ -160,31 +234,28 @@ const styles = StyleSheet.create({
   monthCell: {
     flex: 1,
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
   },
-  monthBar: {
+  barArea: {
     width: '100%',
-    height: 4,
-    borderRadius: 2,
+    height: CHART_HEIGHT,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
-  monthBarPast: {
-    backgroundColor: 'rgba(255,255,255,0.5)',
-  },
-  monthBarCurrent: {
-    backgroundColor: '#FFFFFF',
-  },
-  monthBarFuture: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
+  bar: {
+    width: '78%',
+    borderRadius: 3,
   },
   monthLetter: {
     fontSize: 9,
     lineHeight: 11,
-    color: 'rgba(255,255,255,0.38)',
-  },
-  monthLetterPast: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.5)',
   },
   monthLetterCurrent: {
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '700',
+  },
+  monthLetterSelected: {
     color: '#FFFFFF',
     fontWeight: '800',
   },

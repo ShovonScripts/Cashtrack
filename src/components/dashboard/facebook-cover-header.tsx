@@ -3,7 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Dimensions,
@@ -42,6 +42,7 @@ import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
 import { getYearProgress } from '@/utils/year-progress';
+import { getMonthlySpendTotals } from '@/utils/monthly-spend';
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
@@ -76,7 +77,7 @@ export function FacebookCoverHeader({
 }: FacebookCoverHeaderProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { temperatureUnit, formatAmount, firstDayOfWeek } = useExpenses();
+  const { temperatureUnit, formatAmount, firstDayOfWeek, expenses } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
   const [verticalPage, setVerticalPage] = useState(0);
   const [autoSlideKey, setAutoSlideKey] = useState(0);
@@ -84,6 +85,10 @@ export function FacebookCoverHeader({
   const reducedMotion = useReducedMotion();
   const now = useNow(60_000);
   const progress = getYearProgress(now, firstDayOfWeek);
+  const monthlySpend = useMemo(
+    () => getMonthlySpendTotals(expenses, progress.year),
+    [expenses, progress.year]
+  );
 
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
 
@@ -426,6 +431,8 @@ export function FacebookCoverHeader({
               <Animated.View style={[styles.panelPage, pageBContentStyle]}>
                 <YearProgressPanel
                   progress={progress}
+                  monthlySpend={monthlySpend}
+                  formatAmount={formatAmount}
                   height={HERO_HEIGHT}
                   topPadding={topPadding}
                   hidden={verticalPage !== 1}

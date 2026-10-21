@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { sumAmounts } from '@/utils/expense';
@@ -27,9 +28,9 @@ export default function BudgetsScreen() {
   const { expenses, categories, categoryLimits, setCategoryLimit, formatAmount, country, categoryIcons } = useExpenses();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
-  const now = new Date();
+  const now = useNow(60_000);
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
-  const insights = getBudgetInsights(expenses, categoryLimits, now);
+  const insights = getBudgetInsights(expenses, categoryLimits, now, now);
   const currencySymbol = country.symbol.trim();
 
   const spentThisMonth = (category: string) => sumAmounts(expenses.filter((expense) => {

@@ -21,6 +21,7 @@ import {
 import { scheduleReminderNotificationsAsync, cancelReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { calculateNextDueDate } from '@/utils/reminder-recurrence';
 import { useExpenses } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 
 let idCounter = 0;
 function createReminderId(): string {
@@ -57,6 +58,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [rawReminders, setRawReminders] = useState<FinancialReminder[]>([]);
   const [payments, setPayments] = useState<ReminderPaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const now = useNow(60_000);
   const { addExpense, formatAmount, registerResetHandler, enableBillReminders } = useExpenses();
 
   const enableBillRemindersRef = useRef(enableBillReminders);
@@ -127,9 +129,11 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     }
   }, [enableBillReminders, safeFormat]);
 
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
   const reminders = useMemo<ReminderWithDerivedStatus[]>(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const [year, month, day] = todayKey.split('-').map(Number);
+    const today = new Date(year, month - 1, day);
 
     return rawReminders.map((rem) => {
       const due = new Date(rem.dueDate);
@@ -155,7 +159,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         daysUntilDue,
       };
     });
-  }, [rawReminders]);
+  }, [rawReminders, todayKey]);
 
   const addReminder = useCallback(async (draft: FinancialReminderDraft): Promise<FinancialReminder> => {
     const now = new Date().toISOString();

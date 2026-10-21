@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate, sortByDateDesc, sumAmounts } from '@/utils/expense';
 import {
@@ -24,7 +25,7 @@ export default function PeriodReportScreen() {
   const { period: periodParam } = useLocalSearchParams<{ period?: string }>();
   const period = periodParam === 'yearly' ? 'yearly' : 'weekly';
 
-  const now = new Date();
+  const now = useNow(60_000);
   const range = getPeriodRange(period, now, firstDayOfWeek);
   const rangeLabel = getPeriodRangeLabel(period, now, firstDayOfWeek);
   const periodExpenses = sortByDateDesc(filterExpensesByRange(expenses, range));

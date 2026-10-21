@@ -16,6 +16,7 @@ import { useDebts } from '@/context/debt-context';
 import { useIncome } from '@/context/income-context';
 import { useGoals } from '@/context/goal-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { sortByDateDesc, sumAmounts, totalForDate, totalForMonth } from '@/utils/expense';
 import { calculateMonthlyCashFlow } from '@/utils/income';
@@ -480,13 +481,15 @@ function SpendingAdvisor({
   expenses,
   limits,
   formatAmount,
+  now,
 }: {
   expenses: Expense[];
   limits: Record<string, number>;
   formatAmount: (amount: number) => string;
+  now: Date;
 }) {
   const theme = useTheme();
-  const allInsights = getBudgetInsights(expenses, limits);
+  const allInsights = getBudgetInsights(expenses, limits, now, now);
   const insights = allInsights.slice(0, 2);
   const hasLimits = Object.keys(limits).length > 0;
 
@@ -571,7 +574,7 @@ export default function DashboardScreen() {
   const { expenses, profile, categoryLimits, formatAmount, categoryIcons, firstDayOfWeek, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
   const { incomeList } = useIncome();
   const theme = useTheme();
-  const now = new Date();
+  const now = useNow(60_000);
   const monthSpend = totalForMonth(expenses, now);
   const recent = sortByDateDesc(expenses).slice(0, RECENT_LIMIT);
 
@@ -650,7 +653,7 @@ export default function DashboardScreen() {
 
         {/* Tier 2: Actionable Alerts & Secondary Swipeable Carousel (Cash Flow ⇄ Money Overview) */}
         <UpcomingBillsWidget formatAmount={formatAmount} />
-        <SpendingAdvisor expenses={expenses} limits={categoryLimits} formatAmount={formatAmount} />
+        <SpendingAdvisor expenses={expenses} limits={categoryLimits} formatAmount={formatAmount} now={now} />
 
         <View style={styles.carouselWrapper}>
           <ScrollView

@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
@@ -32,13 +32,27 @@ function Navigation() {
   const { isLoading, dataLoadError, resetAllData, enableDailyReminder } = useExpenses();
   const { debtLoadError } = useDebts();
 
+  const reminderQueueRef = useRef<Promise<void>>(Promise.resolve());
+
   useEffect(() => {
-    void scheduleDailyQuoteNotificationsAsync();
-    if (enableDailyReminder) {
-      void scheduleDailySpendingReminderNotificationsAsync();
-    } else {
-      void cancelSpendingReminderNotificationsAsync();
-    }
+    void scheduleDailyQuoteNotificationsAsync().catch((error) => {
+      console.error('[cashtrack] Failed to schedule daily quote notifications', error);
+    });
+  }, []);
+
+  useEffect(() => {
+    reminderQueueRef.current = reminderQueueRef.current
+      .catch(() => {})
+      .then(async () => {
+        if (enableDailyReminder) {
+          await scheduleDailySpendingReminderNotificationsAsync();
+        } else {
+          await cancelSpendingReminderNotificationsAsync();
+        }
+      })
+      .catch((error) => {
+        console.error('[cashtrack] Failed to update daily reminder notifications', error);
+      });
   }, [enableDailyReminder]);
 
   if (isLoading) {

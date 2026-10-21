@@ -65,8 +65,8 @@ export default function ExpenseDetailsScreen() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: () => {
-          deleteExpense(expense.id);
+        onPress: async () => {
+          await deleteExpense(expense.id);
           router.back();
         },
       },

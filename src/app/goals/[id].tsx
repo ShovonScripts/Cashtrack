@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { useExpenses } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
@@ -24,6 +25,7 @@ export default function GoalDetailScreen() {
   const theme = useTheme();
   const { goals, addContribution, deleteContribution, deleteGoal } = useGoals();
   const { formatAmount } = useExpenses();
+  const now = useNow(60_000);
 
   const goal = goals.find((g) => g.id === id);
   const [contribAmount, setContribAmount] = useState('');
@@ -58,7 +60,7 @@ export default function GoalDetailScreen() {
     deadlineDate: goal.deadlineDate,
     currentAmount: goal.contributedAmount,
     frequency: goal.frequency,
-    today: new Date(),
+    today: now,
   });
 
   const handleAddContribution = async () => {

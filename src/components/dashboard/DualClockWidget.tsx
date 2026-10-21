@@ -6,6 +6,7 @@ import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
 
@@ -27,7 +28,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
   const [city2Id, setCity2Id] = useState<string>('london');
   const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);
   const [activeSlot, setActiveSlot] = useState<1 | 2>(1);
-  const [, setTick] = useState<number>(0);
+  const now = useNow(1000);
 
   useEffect(() => {
     async function loadSavedClocks() {
@@ -39,12 +40,6 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
       } catch {}
     }
     void loadSavedClocks();
-
-    const interval = setInterval(() => {
-      setTick((c) => c + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
   }, []);
 
   const openPicker = (slot: 1 | 2) => {
@@ -74,8 +69,8 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
   const city1 = WORLD_CITIES.find((c) => c.id === city1Id) || WORLD_CITIES[0];
   const city2 = WORLD_CITIES.find((c) => c.id === city2Id) || WORLD_CITIES[2];
 
-  const time1 = getFormattedTimeForZone(city1.id === 'local' ? undefined : city1.timeZone);
-  const time2 = getFormattedTimeForZone(city2.id === 'local' ? undefined : city2.timeZone);
+  const time1 = getFormattedTimeForZone(city1.id === 'local' ? undefined : city1.timeZone, now);
+  const time2 = getFormattedTimeForZone(city2.id === 'local' ? undefined : city2.timeZone, now);
 
   const renderClockCard = (slot: 1 | 2, city: WorldCity, timeInfo: ReturnType<typeof getFormattedTimeForZone>, accentColor: string) => {
     const cardStyle = [
@@ -182,7 +177,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
               {WORLD_CITIES.map((city) => {
                 const selected = (activeSlot === 1 ? city1Id : city2Id) === city.id;
-                const cityTime = getFormattedTimeForZone(city.id === 'local' ? undefined : city.timeZone);
+                const cityTime = getFormattedTimeForZone(city.id === 'local' ? undefined : city.timeZone, now);
                 return (
                   <Pressable
                     key={city.id}

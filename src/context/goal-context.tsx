@@ -21,6 +21,7 @@ import {
 } from '@/storage/goal-repository';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
 import { useExpenses } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 
 export type GoalWithProgress = MoneyGoal & {
   contributedAmount: number;
@@ -62,6 +63,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   const [rawGoals, setRawGoals] = useState<MoneyGoal[]>([]);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const now = useNow(60_000);
   const { registerResetHandler } = useExpenses();
 
   useEffect(() => {
@@ -97,8 +99,11 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
   const goals = useMemo<GoalWithProgress[]>(() => {
-    const today = new Date();
+    const [year, month, day] = todayKey.split('-').map(Number);
+    const today = new Date(year, month - 1, day);
     return rawGoals.map((goal) => {
       const goalContribs = contributions.filter((c) => c.goalId === goal.id);
       const contributedAmount = goalContribs.reduce((sum, c) => sum + c.amount, 0);
@@ -124,7 +129,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         contributions: goalContribs,
       };
     });
-  }, [rawGoals, contributions]);
+  }, [rawGoals, contributions, todayKey]);
 
   const addGoal = useCallback(async (draft: GoalDraft): Promise<MoneyGoal> => {
     const goal: MoneyGoal = {

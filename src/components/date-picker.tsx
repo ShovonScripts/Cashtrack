@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 
@@ -18,7 +19,7 @@ export function DatePicker({ value, onChange, label = 'Date' }: { value: Date; o
   const theme = useTheme();
   const [visible, setVisible] = useState(false);
   const [month, setMonth] = useState(() => new Date(value.getFullYear(), value.getMonth(), 1));
-  const today = useMemo(() => new Date(), []);
+  const today = useNow(60_000);
 
   const year = month.getFullYear();
   const monthIndex = month.getMonth();

@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate, sumAmounts } from '@/utils/expense';
 
@@ -35,6 +36,7 @@ export default function DailyReportScreen() {
   const theme = useTheme();
   const { expenses, categoryIcons, formatAmount } = useExpenses();
   const { date: dateParam } = useLocalSearchParams<{ date?: string }>();
+  const now = useNow(60_000);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     const requested = typeof dateParam === 'string' ? new Date(dateParam) : new Date();
@@ -44,7 +46,7 @@ export default function DailyReportScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState('');
 
-  const isToday = isSameDay(selectedDate, new Date());
+  const isToday = isSameDay(selectedDate, now);
   const dateLabel = new Intl.DateTimeFormat('en', {
     weekday: 'short',
     month: 'short',
@@ -80,8 +82,7 @@ export default function DailyReportScreen() {
 
   const jumpToToday = () => {
     triggerHaptic();
-    const today = new Date();
-    setSelectedDate(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0, 0));
+    setSelectedDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0));
     setMessage('');
   };
 

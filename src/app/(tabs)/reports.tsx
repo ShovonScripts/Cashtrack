@@ -15,6 +15,7 @@ import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { getBudgetInsights, getMonthExpenses } from '@/utils/advisor';
 import { formatDate, sumAmounts, totalForMonth } from '@/utils/expense';
@@ -246,18 +247,17 @@ export default function ReportsScreen() {
     themeMode,
   } = useExpenses();
   const { incomeList } = useIncome();
+  const now = useNow(60_000);
 
-  const [month, setMonth] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1, 12);
-  });
+  const [selectedMonth, setSelectedMonth] = useState<Date | null>(null);
+  const month = selectedMonth ?? new Date(now.getFullYear(), now.getMonth(), 1, 12);
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState('');
 
   const monthExpenses = getMonthExpenses(expenses, month);
   const total = sumAmounts(monthExpenses);
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(month);
-  const isCurrentMonth = sameMonth(month, new Date());
+  const isCurrentMonth = sameMonth(month, now);
 
   // Category aggregates
   const categoryTotals = new Map<string, number>();
@@ -267,11 +267,10 @@ export default function ReportsScreen() {
     .map((category) => [category, categoryTotals.get(category) ?? 0] as const)
     .sort((first, second) => second[1] - first[1]);
 
-  const budgetInsights = getBudgetInsights(expenses, categoryLimits, month);
+  const budgetInsights = getBudgetInsights(expenses, categoryLimits, month, now);
   const overBudgetCount = budgetInsights.filter((insight) => insight.level === 'over').length;
 
   // Executive Metric Calculations
-  const now = new Date();
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const activeDays = isCurrentMonth ? Math.min(now.getDate(), daysInMonth) : daysInMonth;
   const dailyAvg = Math.round(total / (activeDays || 1));
@@ -287,7 +286,10 @@ export default function ReportsScreen() {
 
   const changeMonth = (amount: number) => {
     triggerHaptic();
-    setMonth((current) => new Date(current.getFullYear(), current.getMonth() + amount, 1, 12));
+    setSelectedMonth((current) => {
+      const base = current ?? new Date(now.getFullYear(), now.getMonth(), 1, 12);
+      return new Date(base.getFullYear(), base.getMonth() + amount, 1, 12);
+    });
     setMessage('');
   };
 
@@ -592,7 +594,7 @@ export default function ReportsScreen() {
         <SixMonthTrendChart
           expenses={expenses}
           currentMonth={month}
-          onSelectMonth={(selectedDate) => setMonth(selectedDate)}
+          onSelectMonth={(selectedDate) => setSelectedMonth(selectedDate)}
           formatAmount={formatAmount}
         />
 

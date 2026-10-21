@@ -37,9 +37,9 @@ export function getCategoryMonthlySpend(expenses: Expense[], category: string, m
 export function getBudgetInsights(
   expenses: Expense[],
   limits: Record<string, number>,
-  month: Date = new Date()
+  month: Date = new Date(),
+  today: Date = new Date()
 ): BudgetInsight[] {
-  const today = new Date();
   const isCurrentMonth = month.getFullYear() === today.getFullYear() && month.getMonth() === today.getMonth();
   const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const daysElapsed = isCurrentMonth ? today.getDate() : daysInMonth;

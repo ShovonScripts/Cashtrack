@@ -16,6 +16,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { Brand } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
@@ -46,6 +47,7 @@ export function FacebookCoverHeader({
   const insets = useSafeAreaInsets();
   const { temperatureUnit, formatAmount } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
+  const now = useNow(60_000);
 
   // Live weather state
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
@@ -94,7 +96,7 @@ export function FacebookCoverHeader({
     }
   };
 
-  const currentQuote = getQuoteOfTheDay();
+  const currentQuote = getQuoteOfTheDay(now);
 
   // Convert temperatures based on user preference
   const formatTemp = (tempC: number) => {
@@ -108,14 +110,10 @@ export function FacebookCoverHeader({
   const displayHigh = formatTemp(weather.tempMaxC);
   const displayLow = formatTemp(weather.tempMinC);
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
-  };
+  const hour = now.getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 18 ? 'Good Afternoon' : 'Good Evening';
 
-  const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(new Date());
+  const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(now);
 
   const topPadding = Math.max(insets.top + 12, 40);
 
@@ -126,10 +124,11 @@ export function FacebookCoverHeader({
         ref={scrollViewRef}
         horizontal
         pagingEnabled
+        disableIntervalMomentum
         showsHorizontalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        decelerationRate="fast"
+        decelerationRate="normal"
         snapToInterval={SCREEN_WIDTH}
         contentContainerStyle={styles.scrollContent}
       >
@@ -167,7 +166,7 @@ export function FacebookCoverHeader({
               <View style={styles.profileTextInfo}>
                 <Text style={styles.whiteSubtext}>{todayStr}</Text>
                 <Text style={styles.whiteTitle} numberOfLines={1}>
-                  {getGreeting()}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
+                  {greeting}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
                 </Text>
                 <Text style={styles.netBalanceText}>
                   Net Balance: <Text style={{ color: '#4ade80', fontWeight: '700' }}>{formatAmount(totalBalance)}</Text>
@@ -305,14 +304,14 @@ export function FacebookCoverHeader({
 const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   scrollContent: {
     // Edge to edge cover
   },
   slideCard: {
     width: SCREEN_WIDTH,
-    minHeight: 300,
+    minHeight: 280,
     position: 'relative',
     overflow: 'hidden',
     justifyContent: 'flex-end',

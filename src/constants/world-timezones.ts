@@ -21,9 +21,10 @@ export const WORLD_CITIES: WorldCity[] = [
   { id: 'sao_paulo', cityName: 'São Paulo', countryName: 'Brazil', timeZone: 'America/Sao_Paulo', flag: '🇧🇷' },
 ];
 
-export function getFormattedTimeForZone(timeZone?: string): { timeStr: string; ampm: string; dateStr: string; offsetStr: string } {
-  const now = new Date();
-
+export function getFormattedTimeForZone(
+  timeZone?: string,
+  now: Date = new Date()
+): { timeStr: string; ampm: string; dateStr: string; offsetStr: string } {
   try {
     const options: Intl.DateTimeFormatOptions = {
       timeZone: timeZone || undefined,

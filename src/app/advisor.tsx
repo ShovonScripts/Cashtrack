@@ -10,6 +10,7 @@ import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { getBudgetInsights, getCategoryMonthlySpend, getSmartFinancialIntelligence, type BudgetInsight } from '@/utils/advisor';
 import { calculateMonthlyCashFlow } from '@/utils/income';
@@ -27,9 +28,9 @@ export default function AdvisorScreen() {
   const theme = useTheme();
   const { expenses, categoryLimits, categories, categoryIcons, formatAmount } = useExpenses();
   const { incomeList } = useIncome();
-  const now = new Date();
+  const now = useNow(60_000);
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);
-  const insights = getBudgetInsights(expenses, categoryLimits, now);
+  const insights = getBudgetInsights(expenses, categoryLimits, now, now);
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
   const intelligence = getSmartFinancialIntelligence({ expenses, totalIncome: cashFlow.moneyIn, month: now });
 

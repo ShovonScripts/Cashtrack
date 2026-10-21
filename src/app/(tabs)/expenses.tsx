@@ -12,6 +12,7 @@ import { ExpenseListItem } from '@/components/expense-list-item';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses } from '@/context/expense-context';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
 import type { Expense } from '@/types/expense';
@@ -30,13 +31,12 @@ type ExpenseSection = {
   sectionTotal: number;
 };
 
-function formatSectionHeaderDate(dateString: string): string {
+function formatSectionHeaderDate(dateString: string, today: Date): string {
   const d = new Date(dateString);
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
 
-  if (d.toDateString() === now.toDateString()) {
+  if (d.toDateString() === today.toDateString()) {
     return 'TODAY';
   }
   if (d.toDateString() === yesterday.toDateString()) {
@@ -47,12 +47,12 @@ function formatSectionHeaderDate(dateString: string): string {
     .toUpperCase();
 }
 
-function groupExpensesByDate(expensesList: Expense[]): ExpenseSection[] {
+function groupExpensesByDate(expensesList: Expense[], today: Date): ExpenseSection[] {
   const sorted = sortByDateDesc(expensesList);
   const groups = new Map<string, Expense[]>();
 
   sorted.forEach((expense) => {
-    const key = formatSectionHeaderDate(expense.date);
+    const key = formatSectionHeaderDate(expense.date, today);
     const existing = groups.get(key) ?? [];
     groups.set(key, [...existing, expense]);
   });
@@ -67,13 +67,14 @@ function groupExpensesByDate(expensesList: Expense[]): ExpenseSection[] {
 export default function ExpensesScreen() {
   const { expenses, categories, formatAmount, toggleThemeMode, themeMode } = useExpenses();
   const theme = useTheme();
+  const now = useNow(60_000);
 
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('All');
 
   const visible = sortByDateDesc(filterExpenses(expenses, query, category));
   const isFiltering = query.trim().length > 0 || category !== 'All';
-  const groupedSections = groupExpensesByDate(visible);
+  const groupedSections = groupExpensesByDate(visible, now);
 
   const totalSpentVisible = sumAmounts(visible);
   const avgExpense = visible.length > 0 ? Math.round(totalSpentVisible / visible.length) : 0;

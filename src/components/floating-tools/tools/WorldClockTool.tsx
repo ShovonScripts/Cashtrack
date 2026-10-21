@@ -7,6 +7,7 @@ import { GlassView } from 'expo-glass-effect';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
@@ -22,7 +23,7 @@ export function WorldClockTool() {
   const [selectedCityIds, setSelectedCityIds] = useState<string[]>(DEFAULT_SELECTED_IDS);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [, setTick] = useState<number>(0);
+  const now = useNow(1000);
 
   useEffect(() => {
     AsyncStorage.getItem(CUSTOM_CLOCKS_KEY).then((val) => {
@@ -35,11 +36,6 @@ export function WorldClockTool() {
         } catch {}
       }
     });
-
-    const interval = setInterval(() => {
-      setTick((c) => c + 1);
-    }, 1000);
-    return () => clearInterval(interval);
   }, []);
 
   const saveSelectedIds = async (ids: string[]) => {
@@ -75,7 +71,6 @@ export function WorldClockTool() {
   const getTimeDifferenceLabel = (timeZone: string) => {
     if (!timeZone) return '';
     try {
-      const now = new Date();
       const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const localFormatter = new Intl.DateTimeFormat('en-US', { timeZone: localTz, hour: 'numeric', minute: 'numeric', hour12: false });
       const targetFormatter = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: 'numeric', hour12: false });
@@ -116,7 +111,7 @@ export function WorldClockTool() {
     );
   });
 
-  const localTime = getFormattedTimeForZone(undefined);
+  const localTime = getFormattedTimeForZone(undefined, now);
 
   return (
     <View style={styles.container}>
@@ -170,7 +165,7 @@ export function WorldClockTool() {
       ) : (
         <View style={styles.citiesGrid}>
           {activeCities.map((city) => {
-            const timeInfo = getFormattedTimeForZone(city.timeZone);
+            const timeInfo = getFormattedTimeForZone(city.timeZone, now);
             const diffLabel = getTimeDifferenceLabel(city.timeZone);
 
             const cardContent = (
@@ -264,7 +259,7 @@ export function WorldClockTool() {
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
               {filteredModalCities.map((city) => {
                 const added = selectedCityIds.includes(city.id);
-                const cityTime = getFormattedTimeForZone(city.timeZone);
+                const cityTime = getFormattedTimeForZone(city.timeZone, now);
 
                 return (
                   <Pressable

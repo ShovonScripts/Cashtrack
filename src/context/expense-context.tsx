@@ -90,7 +90,7 @@ type ExpenseContextValue = {
   registerResetHandler: (handler: () => Promise<void>) => () => void;
   addExpense: (draft: ExpenseDraft) => Expense;
   updateExpense: (id: string, changes: ExpenseDraft) => void;
-  deleteExpense: (id: string) => void;
+  deleteExpense: (id: string) => Promise<void>;
   getExpense: (id: string) => Expense | undefined;
   updateProfile: (profile: UserProfile) => void;
   setCountryCode: (countryCode: CountryCode) => void;
@@ -274,7 +274,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'UPDATE_EXPENSE', id, changes });
   }, []);
 
-  const deleteExpense = useCallback((id: string) => {
+  const deleteExpense = useCallback(async (id: string) => {
     const target = expensesRef.current.find((expense) => expense.id === id);
     const parent = target?.recurringParentId
       ? expensesRef.current.find((expense) => expense.id === target.recurringParentId)
@@ -282,9 +282,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     if (target?.recurringParentId && parent?.recurringFrequency) {
       const periodKey = getRecurringPeriodKey(new Date(target.date), parent.recurringFrequency);
-      void skipRecurringPeriod('expense', parent.id, periodKey).catch((error) => {
+      try {
+        await skipRecurringPeriod('expense', parent.id, periodKey);
+      } catch (error) {
         console.error('[cashtrack] Failed to remember deleted recurring expense', error);
-      });
+      }
     }
 
     dispatch({ type: 'DELETE_EXPENSE', id });

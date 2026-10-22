@@ -27,6 +27,8 @@ import { useExpenses } from '@/context/expense-context';
 type IncomeContextValue = {
   incomeList: IncomeRecord[];
   isLoading: boolean;
+  incomeLoadError: boolean;
+  reloadIncome: () => void;
   addIncome: (draft: IncomeDraft) => Promise<IncomeRecord>;
   updateIncome: (id: string, changes: IncomeDraft) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
@@ -44,6 +46,8 @@ function createIncomeId(): string {
 export function IncomeProvider({ children }: { children: ReactNode }) {
   const [incomeList, setIncomeList] = useState<IncomeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [incomeLoadError, setIncomeLoadError] = useState(false);
+  const [loadToken, setLoadToken] = useState(0);
   const incomeListRef = useRef<IncomeRecord[]>([]);
   const skippedRef = useRef<Record<string, Set<string>>>({});
   const { registerResetHandler } = useExpenses();
@@ -85,9 +89,11 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
         await persistGeneratedIncome(processed, new Set(rows.map((row) => row.id)));
         if (!cancelled) {
           setIncomeList(processed);
+          setIncomeLoadError(false);
         }
       } catch (error) {
         console.error('[cashtrack] Failed to load income transactions', error);
+        if (!cancelled) setIncomeLoadError(true);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -98,7 +104,12 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [persistGeneratedIncome]);
+  }, [persistGeneratedIncome, loadToken]);
+
+  const reloadIncome = useCallback(() => {
+    setIsLoading(true);
+    setLoadToken((token) => token + 1);
+  }, []);
 
   const addIncome = useCallback(async (draft: IncomeDraft): Promise<IncomeRecord> => {
     const record: IncomeRecord = {
@@ -181,12 +192,14 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
     () => ({
       incomeList,
       isLoading,
+      incomeLoadError,
+      reloadIncome,
       addIncome,
       updateIncome,
       deleteIncome,
       getIncome,
     }),
-    [incomeList, isLoading, addIncome, updateIncome, deleteIncome, getIncome]
+    [incomeList, isLoading, incomeLoadError, reloadIncome, addIncome, updateIncome, deleteIncome, getIncome]
   );
 
   return <IncomeContext.Provider value={value}>{children}</IncomeContext.Provider>;

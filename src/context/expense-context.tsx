@@ -114,6 +114,8 @@ type ExpenseContextValue = {
   setEnableBudgetAlerts: (enabled: boolean) => void;
   enableDailyReminder: boolean;
   setEnableDailyReminder: (enabled: boolean) => void;
+  enableDailyQuotes: boolean;
+  setEnableDailyQuotes: (enabled: boolean) => void;
   resetAllData: () => Promise<void>;
 };
 
@@ -429,6 +431,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, enableDailyReminder: enabled }));
   }, []);
 
+  const setEnableDailyQuotes = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, enableDailyQuotes: enabled }));
+  }, []);
+
   const resetAllData = useCallback(async () => {
     // a. Snapshot receiptUris
     const receiptUris = expensesRef.current.filter((e) => e.receiptUri).map((e) => e.receiptUri!);
@@ -507,6 +513,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableBudgetAlerts,
     enableDailyReminder: preferences.enableDailyReminder ?? false,
     setEnableDailyReminder,
+    enableDailyQuotes: preferences.enableDailyQuotes ?? false,
+    setEnableDailyQuotes,
     resetAllData,
     addExpense,
     updateExpense,
@@ -547,6 +555,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableBillReminders,
     setEnableBudgetAlerts,
     setEnableDailyReminder,
+    setEnableDailyQuotes,
     resetAllData,
     updateNotifiedDebts,
     registerResetHandler,

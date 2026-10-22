@@ -157,7 +157,7 @@ export function ExpenseForm({
             accessibilityState={{ disabled: !isValid }}
             style={({ pressed }) => [
               styles.saveButton,
-              { backgroundColor: theme.accent },
+              { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card, CardDivider } from '@/components/card';
@@ -113,8 +113,12 @@ export default function DebtDetailsScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+      <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
         {/* Next-Level Hero Card */}
         <ThemedView
           type="card"
@@ -127,7 +131,7 @@ export default function DebtDetailsScreen() {
             },
           ]}>
           <View style={styles.heroTop}>
-            <View style={[styles.heroIconBadge, { backgroundColor: isLent ? theme.success : theme.danger }]}>
+            <View style={[styles.heroIconBadge, { backgroundColor: isLent ? theme.successFill : theme.dangerFill }]}>
               <MaterialCommunityIcons name={isLent ? 'arrow-up-right' : 'arrow-down-left'} size={20} color={theme.onBrand} />
             </View>
             <View style={styles.heroTopCopy}>
@@ -245,7 +249,7 @@ export default function DebtDetailsScreen() {
                   onPress={handleAddPayment}
                   accessibilityRole="button"
                   accessibilityLabel="Add payment"
-                  style={[styles.addPayBtn, { backgroundColor: theme.accent }]}>
+                  style={[styles.addPayBtn, { backgroundColor: theme.accentFill }]}>
                   <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
                 </Pressable>
               </View>
@@ -272,7 +276,7 @@ export default function DebtDetailsScreen() {
               accessibilityRole="button"
               accessibilityLabel="Settle debt"
               accessibilityState={{ disabled: isSubmitting }}
-              style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.success }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
+              style={({ pressed }) => [styles.primaryButton, { backgroundColor: theme.successFill }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
               <MaterialCommunityIcons name="check" size={18} color={theme.onBrand} />
               <ThemedText type="defaultBold" style={[styles.onAccent, { color: theme.onBrand }]}>{isSubmitting ? 'Settling…' : 'Settle Full'}</ThemedText>
             </Pressable>
@@ -294,12 +298,14 @@ export default function DebtDetailsScreen() {
             <ThemedText type="defaultBold" themeColor="danger">Delete</ThemedText>
           </Pressable>
         </View>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   contentContainer: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   hero: { borderRadius: Radius.xlarge, padding: Spacing.four, gap: Spacing.two },

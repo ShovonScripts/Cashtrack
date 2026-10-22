@@ -269,7 +269,7 @@ export default function ExpensesScreen() {
         accessibilityLabel="Add expense"
         style={({ pressed }) => [
           styles.fab,
-          { backgroundColor: theme.accent },
+          { backgroundColor: theme.accentFill },
           pressed && styles.pressed,
         ]}>
         <MaterialCommunityIcons name="plus" size={28} color={theme.onBrand} />

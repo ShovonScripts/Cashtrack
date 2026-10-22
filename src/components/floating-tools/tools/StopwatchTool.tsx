@@ -65,7 +65,7 @@ export function StopwatchTool() {
           onPress={handleStartPause}
           style={({ pressed }) => [
             styles.actionButton,
-            { backgroundColor: isRunning ? theme.danger : theme.accent },
+            { backgroundColor: isRunning ? theme.dangerFill : theme.accentFill },
             pressed && styles.pressed,
           ]}>
           <Ionicons name={isRunning ? 'pause' : 'play'} size={20} color="#FFFFFF" />

@@ -171,7 +171,7 @@ export default function NotesIndexScreen() {
         }}
         style={({ pressed }) => [
           styles.fab,
-          { backgroundColor: theme.accent, shadowColor: theme.accent },
+          { backgroundColor: theme.accentFill, shadowColor: theme.accent },
           pressed && { transform: [{ scale: 0.93 }] },
         ]}>
         <Ionicons name="add" size={28} color="#FFFFFF" />

@@ -14,7 +14,7 @@ import { FinancialRemindersProvider } from '@/context/financial-reminders-contex
 import { useTheme } from '@/hooks/use-theme';
 import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
 import { confirmDelete, notify } from '@/utils/confirm';
-import { scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
+import { cancelQuoteNotificationsAsync, scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
 import {
   cancelSpendingReminderNotificationsAsync,
   scheduleDailySpendingReminderNotificationsAsync,
@@ -29,16 +29,20 @@ SplashScreen.preventAutoHideAsync();
 function Navigation() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLoading, dataLoadError, resetAllData, enableDailyReminder } = useExpenses();
+  const { isLoading, dataLoadError, resetAllData, enableDailyReminder, enableDailyQuotes } = useExpenses();
   const { debtLoadError } = useDebts();
 
   const reminderQueueRef = useRef<Promise<void>>(Promise.resolve());
 
   useEffect(() => {
+    if (!enableDailyQuotes) {
+      void cancelQuoteNotificationsAsync();
+      return;
+    }
     void scheduleDailyQuoteNotificationsAsync().catch((error) => {
       console.error('[cashtrack] Failed to schedule daily quote notifications', error);
     });
-  }, []);
+  }, [enableDailyQuotes]);
 
   useEffect(() => {
     reminderQueueRef.current = reminderQueueRef.current
@@ -79,7 +83,7 @@ function Navigation() {
       hitSlop={8}
       style={({ pressed }) => [
         styles.addButton,
-        { backgroundColor: theme.accent },
+        { backgroundColor: theme.accentFill },
         pressed && styles.addButtonPressed,
       ]}>
       <View style={styles.addIcon}>
@@ -97,7 +101,7 @@ function Navigation() {
       hitSlop={8}
       style={({ pressed }) => [
         styles.addButton,
-        { backgroundColor: theme.accent },
+        { backgroundColor: theme.accentFill },
         pressed && styles.addButtonPressed,
       ]}>
       <View style={styles.addIcon}>
@@ -111,7 +115,7 @@ function Navigation() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: theme.background }}>
       {showLoadErrorBanner && (
-        <View style={{ backgroundColor: theme.danger, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
+        <View style={{ backgroundColor: theme.dangerFill, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
           <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
             Saved data could not be read. New changes will NOT be saved.
           </ThemedText>

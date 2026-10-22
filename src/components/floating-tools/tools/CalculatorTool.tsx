@@ -116,7 +116,7 @@ export function CalculatorTool() {
               let textColor: string = theme.text;
 
               if (isEquals) {
-                bg = theme.accent;
+                bg = theme.accentFill;
                 textColor = '#FFFFFF';
               } else if (isOperator) {
                 bg = `${theme.accent}18`;

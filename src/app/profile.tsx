@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -29,6 +30,7 @@ import { useGoals } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
 import type { GenderOption, UserProfile, FirstDayOfWeek } from '@/types/preferences';
 import { generateCsvReport } from '@/utils/csv';
+import { requestQuoteNotificationPermissionsAsync } from '@/utils/quote-notifications';
 
 type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 
@@ -64,6 +66,8 @@ export default function ProfileScreen() {
     setEnableBudgetAlerts,
     enableDailyReminder,
     setEnableDailyReminder,
+    enableDailyQuotes,
+    setEnableDailyQuotes,
     resetAllData,
   } = useExpenses();
 
@@ -266,8 +270,12 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <View style={styles.container}>
           {/* Cover & Avatar Header Card */}
           <Card style={styles.bannerCard} padded={false}>
             {/* Cover Photo Area */}
@@ -314,13 +322,13 @@ export default function ProfileScreen() {
                 {profilePhotoUri ? (
                   <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
                 ) : (
-                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accentFill }]}>
                     <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 24 }}>
                       {name ? name.charAt(0).toUpperCase() : 'S'}
                     </ThemedText>
                   </View>
                 )}
-                <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accent, borderColor: theme.card }]}>
+                <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accentFill, borderColor: theme.card }]}>
                   <MaterialCommunityIcons name="camera" size={12} color="#FFFFFF" />
                 </View>
               </Pressable>
@@ -624,9 +632,9 @@ export default function ProfileScreen() {
                           accessibilityState={{ selected }}
                           style={[
                             styles.segmentedBtnCompact,
-                            { backgroundColor: selected ? theme.accent : 'transparent' },
+                            { backgroundColor: selected ? theme.accentFill : 'transparent' },
                           ]}>
-                          <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
+                          <ThemedText type="caption" style={{ color: selected ? theme.onBrand : theme.text, fontWeight: '700' }}>
                             °{unit}
                           </ThemedText>
                         </Pressable>
@@ -658,9 +666,9 @@ export default function ProfileScreen() {
                           accessibilityState={{ selected }}
                           style={[
                             styles.segmentedBtnCompact,
-                            { backgroundColor: selected ? theme.accent : 'transparent' },
+                            { backgroundColor: selected ? theme.accentFill : 'transparent' },
                           ]}>
-                          <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.text, fontWeight: '700' }}>
+                          <ThemedText type="caption" style={{ color: selected ? theme.onBrand : theme.text, fontWeight: '700' }}>
                             {day === 'monday' ? 'Mon' : 'Sun'}
                           </ThemedText>
                         </Pressable>
@@ -735,6 +743,36 @@ export default function ProfileScreen() {
                     setEnableDailyReminder(val);
                   }}
                   accessibilityLabel="Daily expense log check-in"
+                  trackColor={{ false: theme.border, true: theme.accent }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
+                <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#F2994A1E' }]}>
+                  <MaterialCommunityIcons name="weather-sunny" size={17} color="#F2994A" />
+                </View>
+                <View style={styles.switchCopy}>
+                  <ThemedText type="smallBold">Daily Motivation</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">Morning quote at 8:00 AM</ThemedText>
+                </View>
+                <Switch
+                  value={enableDailyQuotes}
+                  onValueChange={async (val) => {
+                    triggerHaptic();
+                    if (val) {
+                      const granted = await requestQuoteNotificationPermissionsAsync();
+                      if (!granted) {
+                        Alert.alert(
+                          'Notifications are off',
+                          'Allow notifications for CashTrack in your device settings to receive the daily quote.'
+                        );
+                        return;
+                      }
+                    }
+                    setEnableDailyQuotes(val);
+                  }}
+                  accessibilityLabel="Daily motivation quote notification"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor="#FFFFFF"
                 />
@@ -853,8 +891,9 @@ export default function ProfileScreen() {
           <ThemedText type="caption" themeColor="textSecondary" style={styles.footerNote}>
             CashTrack is 100% local-first. Your financial records never leave your device.
           </ThemedText>
-        </View>
-      </ScrollView>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Floating Unsaved Changes Action Bar */}
       {isDirty && (
@@ -877,7 +916,7 @@ export default function ProfileScreen() {
               accessibilityState={{ disabled: !ageIsValid }}
               style={({ pressed }) => [
                 styles.saveBtn,
-                { backgroundColor: theme.accent },
+                { backgroundColor: theme.accentFill },
                 pressed && styles.pressed,
                 !ageIsValid && styles.disabled,
               ]}>
@@ -946,7 +985,7 @@ export default function ProfileScreen() {
                         </ThemedText>
                       </View>
                       {isSelected && (
-                        <View style={[styles.selectedCheckBadge, { backgroundColor: theme.accent }]}>
+                        <View style={[styles.selectedCheckBadge, { backgroundColor: theme.accentFill }]}>
                           <MaterialCommunityIcons name="check" size={12} color="#FFFFFF" />
                         </View>
                       )}
@@ -982,6 +1021,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   outerContainer: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: 100 },
   container: {

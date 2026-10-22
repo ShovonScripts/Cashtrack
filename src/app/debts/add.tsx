@@ -160,7 +160,7 @@ export default function AddDebtScreen() {
                 accessibilityRole="switch"
                 accessibilityState={{ checked: affectBalance }}
                 accessibilityLabel="Affect main balance"
-                style={[styles.toggleBadge, { backgroundColor: affectBalance ? theme.accent : theme.cardMuted, borderColor: theme.border }]}>
+                style={[styles.toggleBadge, { backgroundColor: affectBalance ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
                 <ThemedText type="smallBold" style={{ color: affectBalance ? '#FFFFFF' : theme.textSecondary }}>
                   {affectBalance ? 'YES' : 'NO'}
                 </ThemedText>
@@ -183,7 +183,7 @@ export default function AddDebtScreen() {
                 accessibilityRole="switch"
                 accessibilityState={{ checked: hasDueDate }}
                 accessibilityLabel="Enable due date"
-                style={[styles.toggleBadge, { backgroundColor: hasDueDate ? theme.accent : theme.cardMuted, borderColor: theme.border }]}>
+                style={[styles.toggleBadge, { backgroundColor: hasDueDate ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
                 <ThemedText type="smallBold" style={{ color: hasDueDate ? '#FFFFFF' : theme.textSecondary }}>
                   {hasDueDate ? 'ENABLED' : 'NONE'}
                 </ThemedText>
@@ -215,7 +215,7 @@ export default function AddDebtScreen() {
             accessibilityState={{ disabled: !isValid }}
             style={({ pressed }) => [
               styles.saveButton,
-              { backgroundColor: theme.accent },
+              { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>

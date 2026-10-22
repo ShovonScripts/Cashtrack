@@ -87,8 +87,8 @@ export function CurrencyTool() {
                 style={[
                   styles.popularChip,
                   {
-                    backgroundColor: active ? theme.accent : theme.cardMuted,
-                    borderColor: active ? theme.accent : theme.border,
+                    backgroundColor: active ? theme.accentFill : theme.cardMuted,
+                    borderColor: active ? theme.accentFill : theme.border,
                   },
                 ]}>
                 <ThemedText

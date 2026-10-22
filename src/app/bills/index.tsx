@@ -7,10 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
+import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { useExpenses } from '@/context/expense-context';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
@@ -49,7 +50,7 @@ function getReminderCategoryIcon(category: string): keyof typeof MaterialCommuni
 export default function BillsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { reminders } = useFinancialReminders();
+  const { reminders, isLoading, remindersLoadError, reloadReminders } = useFinancialReminders();
   const { formatAmount } = useExpenses();
   const [tab, setTab] = useState<FilterTab>('all');
 
@@ -203,12 +204,12 @@ export default function BillsScreen() {
                 style={({ pressed }) => [
                   styles.filterChip,
                   {
-                    backgroundColor: selected ? chipColor : theme.cardMuted,
+                    backgroundColor: selected ? withAlpha(chipColor, 0.16) : theme.cardMuted,
                     borderColor: selected ? chipColor : theme.border,
                   },
                   pressed && styles.pressed,
                 ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontSize: 12 }}>
+                <ThemedText type="smallBold" style={{ color: selected ? chipColor : theme.textSecondary, fontSize: 12 }}>
                   {t.label} ({t.count})
                 </ThemedText>
               </Pressable>
@@ -218,7 +219,16 @@ export default function BillsScreen() {
 
         {/* Reminders List */}
         <View style={styles.listSection}>
-          {filteredReminders.length === 0 ? (
+          {remindersLoadError ? (
+            <Card style={styles.emptyCard}>
+              <LoadErrorState
+                title="Couldn't load your bills"
+                message="Your bills and reminders are safe, but they couldn't be read just now."
+                onRetry={reloadReminders}
+                isRetrying={isLoading}
+              />
+            </Card>
+          ) : filteredReminders.length === 0 ? (
             <Card style={styles.emptyCard}>
               <EmptyState
                 title="No bills or reminders"
@@ -338,7 +348,7 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
               }}
               accessibilityRole="button"
               accessibilityLabel={`Mark Paid, ${reminder.title}`}
-              style={({ pressed }) => [styles.payActionBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+              style={({ pressed }) => [styles.payActionBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
               <MaterialCommunityIcons name="check" size={13} color={theme.onBrand} />
               <ThemedText type="caption" style={{ color: theme.onBrand, fontWeight: '800' }}>Mark Paid</ThemedText>
             </Pressable>

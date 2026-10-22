@@ -52,8 +52,8 @@ export async function cancelQuoteNotificationsAsync(): Promise<void> {
 export async function scheduleDailyQuoteNotificationsAsync(morningHour: number = 8, morningMinute: number = 0): Promise<boolean> {
   if (Platform.OS === 'web' || !NotificationsModule) return false;
 
-  const hasPermission = await requestQuoteNotificationPermissionsAsync();
-  if (!hasPermission) return false;
+  const { status } = await NotificationsModule.getPermissionsAsync();
+  if (status !== 'granted') return false;
 
   await cancelQuoteNotificationsAsync();
 

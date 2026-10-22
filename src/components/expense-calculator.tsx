@@ -244,7 +244,7 @@ export function ExpenseCalculator({
                         accessibilityLabel={`Key ${key}`}
                         style={({ pressed }) => [
                           styles.keyButton,
-                          { backgroundColor: isEquals ? theme.accent : isToday || isAction ? theme.cardMuted : theme.card },
+                          { backgroundColor: isEquals ? theme.accentFill : isToday || isAction ? theme.cardMuted : theme.card },
                           { borderColor: theme.border },
                           pressed && styles.pressed,
                         ]}>
@@ -298,7 +298,7 @@ export function ExpenseCalculator({
                 accessibilityState={{ checked: isRecurring }}
                 style={[
                   styles.toggleBadge,
-                  { backgroundColor: isRecurring ? theme.accent : theme.cardMuted, borderColor: theme.border },
+                  { backgroundColor: isRecurring ? theme.accentFill : theme.cardMuted, borderColor: theme.border },
                 ]}>
                 <ThemedText type="smallBold" style={{ color: isRecurring ? '#FFFFFF' : theme.textSecondary }}>
                   {isRecurring ? 'ON' : 'OFF'}
@@ -343,7 +343,7 @@ export function ExpenseCalculator({
             accessibilityState={{ disabled: !isValid }}
             style={({ pressed }) => [
               styles.saveButton,
-              { backgroundColor: theme.accent },
+              { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>

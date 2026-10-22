@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -161,8 +161,12 @@ export default function EditGoalScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
         <View style={styles.intro}>
           <ThemedText type="subtitle" style={styles.title}>Edit Savings Pot</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
@@ -187,8 +191,8 @@ export default function EditGoalScreen() {
                     style={[
                       styles.iconButton,
                       {
-                        borderColor: selected ? theme.accent : theme.border,
-                        backgroundColor: selected ? theme.accent : theme.cardMuted,
+                        borderColor: selected ? theme.accentFill : theme.border,
+                        backgroundColor: selected ? theme.accentFill : theme.cardMuted,
                       },
                     ]}>
                     <MaterialCommunityIcons
@@ -292,8 +296,8 @@ export default function EditGoalScreen() {
                     style={[
                       styles.percentChip,
                       {
-                        backgroundColor: allocationPercent === p ? theme.accent : theme.cardMuted,
-                        borderColor: allocationPercent === p ? theme.accent : theme.border,
+                        backgroundColor: allocationPercent === p ? theme.accentFill : theme.cardMuted,
+                        borderColor: allocationPercent === p ? theme.accentFill : theme.border,
                       },
                     ]}>
                     <ThemedText type="smallBold" style={{ color: allocationPercent === p ? '#FFFFFF' : theme.text }}>
@@ -332,11 +336,11 @@ export default function EditGoalScreen() {
                     style={[
                       styles.freqButton,
                       {
-                        borderColor: selected ? theme.accent : theme.border,
-                        backgroundColor: selected ? theme.accent : theme.cardMuted,
+                        borderColor: selected ? theme.accentFill : theme.border,
+                        backgroundColor: selected ? theme.accentFill : theme.cardMuted,
                       },
                     ]}>
-                    <ThemedText type="caption" style={{ fontWeight: '700', color: selected ? '#FFFFFF' : theme.textSecondary }}>
+                    <ThemedText type="caption" style={{ fontWeight: '700', color: selected ? theme.onBrand : theme.textSecondary }}>
                       {freq.label}
                     </ThemedText>
                   </Pressable>
@@ -360,16 +364,18 @@ export default function EditGoalScreen() {
             disabled={isSubmitting}
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
-            style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+            style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Save changes</ThemedText>
           </Pressable>
         </Card>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: 2 },

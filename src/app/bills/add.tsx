@@ -152,8 +152,8 @@ export default function AddBillScreen() {
                     style={[
                       styles.chip,
                       {
-                        backgroundColor: selected ? theme.accent : theme.cardMuted,
-                        borderColor: selected ? theme.accent : theme.border,
+                        backgroundColor: selected ? theme.accentFill : theme.cardMuted,
+                        borderColor: selected ? theme.accentFill : theme.border,
                       },
                     ]}>
                     <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary }}>
@@ -282,7 +282,7 @@ export default function AddBillScreen() {
             accessibilityState={{ disabled: !isValid }}
             style={({ pressed }) => [
               styles.saveButton,
-              { backgroundColor: theme.accent },
+              { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
               !isValid && styles.saveButtonDisabled,
             ]}>

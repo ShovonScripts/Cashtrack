@@ -53,7 +53,7 @@ export function GoalCompletionModal({
           <Pressable
             onPress={onClose}
             accessibilityRole="button"
-            style={({ pressed }) => [styles.button, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+            style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Awesome</ThemedText>
           </Pressable>
         </View>

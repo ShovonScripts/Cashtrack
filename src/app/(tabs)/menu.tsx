@@ -197,12 +197,12 @@ export default function MenuScreen() {
   const INTELLIGENCE_REPORTS: MenuItem[] = [
     {
       id: 'advisor',
-      title: 'AI Financial Advisor',
+      title: 'Spending Advisor',
       subtitle: 'Personalized budget check-in',
-      icon: 'robot-outline',
+      icon: 'lightbulb-on-outline',
       color: '#F2C94C',
       route: '/advisor',
-      badge: 'AI',
+      badge: 'SMART',
       badgeColor: '#F2C94C',
     },
     {
@@ -391,13 +391,13 @@ export default function MenuScreen() {
                   {profile.profilePhotoUri ? (
                     <Image source={{ uri: profile.profilePhotoUri }} style={styles.avatarImage} />
                   ) : (
-                    <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                    <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accentFill }]}>
                       <ThemedText type="defaultBold" style={styles.avatarInitial}>
                         {profile.name ? profile.name.charAt(0).toUpperCase() : 'S'}
                       </ThemedText>
                     </View>
                   )}
-                  <View style={[styles.badgeIconOverlay, { backgroundColor: theme.accent }]}>
+                  <View style={[styles.badgeIconOverlay, { backgroundColor: theme.accentFill }]}>
                     <MaterialCommunityIcons name="shield-check" size={10} color="#FFFFFF" />
                   </View>
                 </View>
@@ -474,7 +474,7 @@ export default function MenuScreen() {
                 { key: 'all', label: 'All' },
                 { key: 'finances', label: 'Finances' },
                 { key: 'tools', label: 'Utility Tools' },
-                { key: 'reports', label: 'AI & Analytics' },
+                { key: 'reports', label: 'Insights & Analytics' },
                 { key: 'preferences', label: 'Preferences' },
               ] as const
             ).map((chip) => {
@@ -491,15 +491,15 @@ export default function MenuScreen() {
                   style={({ pressed }) => [
                     styles.chipBtn,
                     {
-                      backgroundColor: active ? theme.accent : theme.cardMuted,
-                      borderColor: active ? theme.accent : theme.border,
+                      backgroundColor: active ? theme.accentFill : theme.cardMuted,
+                      borderColor: active ? theme.accentFill : theme.border,
                     },
                     pressed && styles.rowPressed,
                   ]}>
                   <ThemedText
                     type="caption"
                     style={{
-                      color: active ? '#FFFFFF' : theme.textSecondary,
+                      color: active ? theme.onBrand : theme.textSecondary,
                       fontWeight: active ? '700' : '600',
                     }}>
                     {chip.label}

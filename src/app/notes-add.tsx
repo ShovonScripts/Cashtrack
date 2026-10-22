@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Stack, router } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
@@ -58,17 +58,20 @@ export default function AddNoteScreen() {
           headerRight: () => (
             <Pressable
               onPress={handleSave}
-              style={[styles.saveHeaderBtn, { backgroundColor: theme.accent }]}>
+              style={[styles.saveHeaderBtn, { backgroundColor: theme.accentFill }]}>
               <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Save</ThemedText>
             </Pressable>
           ),
         }}
       />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled">
-        {/* Color Palette Picker */}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled">
+          {/* Color Palette Picker */}
         <View style={styles.colorRow}>
           {COLORS.map((c) => {
             const selected = color === c.key;
@@ -102,12 +105,14 @@ export default function AddNoteScreen() {
           multiline
           style={[styles.contentInput, { color: theme.text }]}
         />
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: {
     flex: 1,
   },

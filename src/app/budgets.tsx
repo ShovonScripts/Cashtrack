@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View, Platform } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -66,8 +66,12 @@ export default function BudgetsScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
         {/* Spendly Multi-Tone Glass Hero Section */}
         <View style={styles.heroGlassCard}>
           <View pointerEvents="none" style={styles.primaryBlueOrb} />
@@ -189,7 +193,7 @@ export default function BudgetsScreen() {
                   onPress={() => saveLimit(category)}
                   accessibilityRole="button"
                   accessibilityLabel={`Save ${category} limit`}
-                  style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+                  style={({ pressed }) => [styles.saveButton, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
                   <ThemedText type="smallBold" style={{ color: theme.onBrand }}>Save</ThemedText>
                 </Pressable>
                 {limit !== undefined && (
@@ -206,12 +210,14 @@ export default function BudgetsScreen() {
             </Card>
           );
         })}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   heroGlassCard: {

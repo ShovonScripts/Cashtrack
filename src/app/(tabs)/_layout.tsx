@@ -96,8 +96,8 @@ export default function TabLayout() {
                 accessibilityRole="button"
                 accessibilityLabel="Quick add transaction or entry"
                 style={styles.addButtonWrapper}>
-                <View style={[styles.addButton, { backgroundColor: theme.accent }]}>
-                  <MaterialCommunityIcons name="plus" size={28} color="#FFFFFF" />
+                <View style={[styles.addButton, { backgroundColor: theme.accentFill }]}>
+                  <MaterialCommunityIcons name="plus" size={28} color={theme.onBrand} />
                 </View>
               </Pressable>
             ),

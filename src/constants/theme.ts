@@ -28,7 +28,11 @@ export const Brand = {
   deep: '#00109D',
   /** Alias of `primary`, safe for filled buttons and tinted surfaces. 5.95:1 on white. */
   accent: '#0152F5',
-  /** Lifted for dark mode, where the base accent lacks contrast on black. 9.41:1. */
+  /**
+   * Lifted for dark mode, where the base accent lacks contrast on black. 9.41:1.
+   * Use only for accent-coloured text and icons, never as a fill behind white
+   * text (that combination only reaches 2.1:1).
+   */
   accentOnDark: '#5AB4FF',
   /** 13% wash of the accent, for selected chips and tinted surfaces. */
   accentMuted: 'rgba(1, 82, 245, 0.13)',
@@ -50,6 +54,9 @@ export const Colors = {
     danger: '#C8252C',
     success: '#0B7252',
     warning: '#96520B',
+    dangerFill: '#C8252C',
+    successFill: '#0B7252',
+    warningFill: '#96520B',
     info: '#026AA7',
     overlay: 'rgba(0, 0, 0, 0.45)',
     onBrand: '#FFFFFF',
@@ -59,6 +66,7 @@ export const Colors = {
     infoOnBrand: '#38BDF8',
     accentOnBrand: '#14E7FD',
     accent: Brand.accent,
+    accentFill: Brand.primary,
     accentMuted: Brand.accentMuted,
   },
   dark: {
@@ -73,6 +81,9 @@ export const Colors = {
     danger: '#FF6B6B',
     success: '#34D399',
     warning: '#F59E0B',
+    dangerFill: '#B4232B',
+    successFill: '#0B7252',
+    warningFill: '#96520B',
     info: '#38BDF8',
     overlay: 'rgba(0, 0, 0, 0.65)',
     onBrand: '#FFFFFF',
@@ -82,6 +93,7 @@ export const Colors = {
     infoOnBrand: '#38BDF8',
     accentOnBrand: '#14E7FD',
     accent: Brand.accentOnDark,
+    accentFill: Brand.primary,
     accentMuted: Brand.accentMutedDark,
   },
 } as const;

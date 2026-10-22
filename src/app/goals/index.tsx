@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { GoalProgressCard } from '@/components/goal-progress-card';
+import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
@@ -15,7 +16,7 @@ type FilterTab = 'active' | 'completed' | 'all';
 
 export default function GoalsOverviewScreen() {
   const theme = useTheme();
-  const { goals } = useGoals();
+  const { goals, isLoading, goalLoadError, reloadGoals } = useGoals();
   const { formatAmount } = useExpenses();
   const [tab, setTab] = useState<FilterTab>('active');
 
@@ -81,8 +82,8 @@ export default function GoalsOverviewScreen() {
                 style={[
                   styles.tab,
                   {
-                    backgroundColor: selected ? theme.accent : theme.cardMuted,
-                    borderColor: selected ? theme.accent : theme.border,
+                    backgroundColor: selected ? theme.accentFill : theme.cardMuted,
+                    borderColor: selected ? theme.accentFill : theme.border,
                   },
                 ]}>
                 <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, textTransform: 'capitalize' }}>
@@ -95,7 +96,16 @@ export default function GoalsOverviewScreen() {
 
         {/* Goals List */}
         <View style={styles.listSection}>
-          {filtered.length === 0 ? (
+          {goalLoadError ? (
+            <Card style={styles.emptyCard}>
+              <LoadErrorState
+                title="Couldn't load your pots"
+                message="Your savings data couldn't be read just now. Nothing has been deleted."
+                onRetry={reloadGoals}
+                isRetrying={isLoading}
+              />
+            </Card>
+          ) : filtered.length === 0 ? (
             <Card style={styles.emptyCard}>
               <EmptyState
                 title="No financial pots yet"

@@ -98,7 +98,7 @@ export function CalendarTool() {
                 style={[
                   styles.dayCell,
                   {
-                    backgroundColor: isSelected ? theme.accent : hasBills ? theme.cardMuted : 'transparent',
+                    backgroundColor: isSelected ? theme.accentFill : hasBills ? theme.cardMuted : 'transparent',
                     borderColor: hasBills && !isSelected ? theme.accent : 'transparent',
                     borderWidth: hasBills && !isSelected ? 1 : 0,
                   },

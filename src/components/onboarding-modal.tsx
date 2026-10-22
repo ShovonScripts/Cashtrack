@@ -119,14 +119,14 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     {
       id: 'insights',
       icon: 'chart-box-outline' as const,
-      title: 'AI Advisor & Reports',
-      subtitle: 'Deep intelligence and exportable data.',
+      title: 'Insights & Reports',
+      subtitle: 'Personalised guidance and exportable data.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
-            icon="robot-outline"
-            title="AI Financial Advisor"
-            description="Get personalized budget check-ins and insights generated right on your phone."
+            icon="lightbulb-on-outline"
+            title="Spending Advisor"
+            description="Get personalised budget check-ins and rule-based insights generated right on your phone."
           />
           <FeatureBullet
             icon="chart-donut-variant"
@@ -151,7 +151,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
           <FeatureBullet
             icon="shield-check-outline"
             title="No Account Required"
-            description="Your expenses are stored locally in an encrypted SQLite database."
+            description="Your expenses are stored locally on this device. No account or cloud sync required."
           />
           <FeatureBullet
             icon="cancel"
@@ -273,7 +273,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                 accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.nextButton,
-                  { backgroundColor: theme.accent },
+                  { backgroundColor: theme.accentFill },
                   pressed && styles.pressed,
                 ]}>
                 <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>

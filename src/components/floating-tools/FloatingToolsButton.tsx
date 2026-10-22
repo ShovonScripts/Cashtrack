@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
@@ -12,19 +13,44 @@ import { useStopwatch } from '@/context/stopwatch-context';
 import { ToolsMenuModal } from './ToolsMenuModal';
 
 const BUTTON_SIZE = 44;
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const RUNNING_WIDTH = 100;
+const EDGE_GAP = 16;
+const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 80;
+const TAB_BAR_CLEARANCE = TAB_BAR_HEIGHT + 12;
 
 export function FloatingToolsButton() {
+  const { width, height } = useWindowDimensions();
+  return <FloatingToolsButtonInner key={`${Math.round(width)}x${Math.round(height)}`} />;
+}
+
+function FloatingToolsButtonInner() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
   const { seconds, isRunning } = useStopwatch();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [isInteracting, setIsInteracting] = useState<boolean>(false);
 
-  const translateX = useSharedValue<number>(SCREEN_WIDTH - (isRunning ? 110 : BUTTON_SIZE) - 20);
-  const translateY = useSharedValue<number>(SCREEN_HEIGHT - BUTTON_SIZE - 100);
+  const currentWidth = isRunning ? RUNNING_WIDTH : BUTTON_SIZE;
+  const currentHeight = isRunning ? 38 : BUTTON_SIZE;
+
+  const defaultX = EDGE_GAP;
+  const defaultY = height - insets.bottom - TAB_BAR_CLEARANCE - currentHeight;
+
+  const translateX = useSharedValue<number>(defaultX);
+  const translateY = useSharedValue<number>(defaultY);
 
   const contextX = useSharedValue<number>(0);
   const contextY = useSharedValue<number>(0);
+
+  const clampX = (value: number) => {
+    'worklet';
+    return Math.min(Math.max(value, EDGE_GAP), width - currentWidth - EDGE_GAP);
+  };
+  const clampY = (value: number) => {
+    'worklet';
+    return Math.min(Math.max(value, insets.top + EDGE_GAP), height - insets.bottom - currentHeight - EDGE_GAP);
+  };
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
@@ -32,14 +58,16 @@ export function FloatingToolsButton() {
       contextY.value = translateY.value;
     })
     .onUpdate((event) => {
-      translateX.value = contextX.value + event.translationX;
-      translateY.value = contextY.value + event.translationY;
+      translateX.value = clampX(contextX.value + event.translationX);
+      translateY.value = clampY(contextY.value + event.translationY);
     })
     .onEnd(() => {
-      const middle = SCREEN_WIDTH / 2;
-      const currentWidth = isRunning ? 100 : BUTTON_SIZE;
-      const targetX = translateX.value + currentWidth / 2 < middle ? 16 : SCREEN_WIDTH - currentWidth - 16;
+      const middle = width / 2;
+      const targetX = translateX.value + currentWidth / 2 < middle
+        ? EDGE_GAP
+        : width - currentWidth - EDGE_GAP;
       translateX.value = withSpring(targetX, { damping: 15 });
+      translateY.value = withSpring(clampY(translateY.value), { damping: 15 });
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -81,9 +109,9 @@ export function FloatingToolsButton() {
               styles.button,
               isRunning && styles.runningPill,
               {
-                backgroundColor: isRunning ? theme.card : theme.accent,
+                backgroundColor: isRunning ? theme.card : theme.accentFill,
                 borderColor: isRunning ? theme.accent : 'transparent',
-                opacity: isInteracting || pressed || isRunning ? 1 : 0.4,
+                opacity: isInteracting || pressed || isRunning || modalVisible ? 1 : 0.85,
                 shadowColor: '#000000',
               },
               pressed && { transform: [{ scale: 0.93 }] },

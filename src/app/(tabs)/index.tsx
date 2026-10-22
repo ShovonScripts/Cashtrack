@@ -646,7 +646,6 @@ export default function DashboardScreen() {
         profile={profile}
         totalBalance={incomeList.reduce((acc, i) => acc + i.amount, 0) - sumAmounts(expenses)}
         monthlySpent={monthSpend}
-        lastMonthSpent={lastMonthSpend}
         pageScrollRef={pageScrollRef}
         pageScrolled={pageScrolled}
       />
@@ -765,11 +764,11 @@ export default function DashboardScreen() {
                   style={[
                     styles.filterChip,
                     {
-                      backgroundColor: selected ? theme.accent : theme.cardMuted,
-                      borderColor: selected ? theme.accent : theme.border,
+                      backgroundColor: selected ? theme.accentFill : theme.cardMuted,
+                      borderColor: selected ? theme.accentFill : theme.border,
                     },
                   ]}>
-                  <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontWeight: '700' }}>
+                  <ThemedText type="caption" style={{ color: selected ? theme.onBrand : theme.textSecondary, fontWeight: '700' }}>
                     {cat}
                   </ThemedText>
                 </Pressable>

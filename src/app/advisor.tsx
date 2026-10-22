@@ -55,7 +55,7 @@ export default function AdvisorScreen() {
         {/* Intro Topline */}
         <View style={styles.intro}>
           <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
-            AI FINANCIAL INTELLIGENCE
+            SMART MONEY INSIGHTS
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {monthLabel} · Live spending analysis & budget advisor
@@ -72,7 +72,7 @@ export default function AdvisorScreen() {
               <View style={styles.liveAiBadge}>
                 <Ionicons name="sparkles" size={12} color={theme.success} />
                 <ThemedText type="caption" style={{ color: theme.success, fontWeight: '800' }}>
-                  Live AI Advisor
+                  Live Spending Advisor
                 </ThemedText>
               </View>
 
@@ -378,7 +378,7 @@ function ActionButton({ title, onPress }: { title: string; onPress: () => void }
         onPress();
       }}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.actionButton, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.actionButton, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
       <ThemedText type="smallBold" style={styles.actionText}>{title}</ThemedText>
     </Pressable>
   );

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
@@ -109,8 +109,12 @@ export default function GoalDetailScreen() {
   const isAhead = calc.aheadBehindAmount >= 0;
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
         {/* Hero Card */}
         <View style={[styles.hero, { backgroundColor: Brand.deep }]}>
           <View style={styles.heroContent}>
@@ -264,7 +268,7 @@ export default function GoalDetailScreen() {
             disabled={isSubmitting}
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
-            style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+            style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Contribute</ThemedText>
           </Pressable>
         </Card>
@@ -319,7 +323,8 @@ export default function GoalDetailScreen() {
         }}
         formatAmount={formatAmount}
       />
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -397,6 +402,7 @@ function ContributionItem({ contribution, formatAmount, onDelete }: { contributi
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   hero: {

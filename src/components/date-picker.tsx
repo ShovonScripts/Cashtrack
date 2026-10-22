@@ -108,7 +108,7 @@ export function DatePicker({ value, onChange, label = 'Date' }: { value: Date; o
                     accessibilityState={{ selected }}
                     style={[
                       styles.dayCell,
-                      selected && { backgroundColor: theme.accent },
+                      selected && { backgroundColor: theme.accentFill },
                       todayDate && !selected && { borderColor: theme.accent, borderWidth: 1 },
                     ]}>
                     <ThemedText type={selected ? 'smallBold' : 'small'} style={selected ? styles.selectedDay : undefined}>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
+import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { DatePicker } from '@/components/date-picker';
 import { useIncome } from '@/context/income-context';
@@ -24,7 +25,7 @@ const FREQUENCIES: { label: string; value: RecurringFrequency }[] = [
 
 export default function IncomeScreen() {
   const theme = useTheme();
-  const { incomeList, addIncome, updateIncome, deleteIncome } = useIncome();
+  const { incomeList, isLoading, incomeLoadError, reloadIncome, addIncome, updateIncome, deleteIncome } = useIncome();
   const { formatAmount } = useExpenses();
 
   const [amount, setAmount] = useState('');
@@ -102,8 +103,12 @@ export default function IncomeScreen() {
   const totalAllTime = incomeList.reduce((sum, item) => sum + item.amount, 0);
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <View style={styles.container}>
         {/* Multi-Tone Spendly Brand Glass Hero Card */}
         <View style={styles.heroGlassCard}>
           <View pointerEvents="none" style={styles.primaryBlueOrb} />
@@ -231,7 +236,7 @@ export default function IncomeScreen() {
             disabled={isSubmitting}
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
-            style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accent }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
+            style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accentFill }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
             <MaterialCommunityIcons name={editingId ? "content-save-check" : "plus-circle"} size={18} color={theme.onBrand} />
             <ThemedText type="smallBold" style={{ color: theme.onBrand }}>
               {isSubmitting ? 'Saving…' : editingId ? 'Update Money In' : 'Add Money In'}
@@ -245,7 +250,16 @@ export default function IncomeScreen() {
           <ThemedText type="caption" themeColor="textSecondary">Most recent first</ThemedText>
         </View>
 
-        {incomeList.length === 0 ? (
+        {incomeLoadError ? (
+          <Card style={styles.emptyCard}>
+            <LoadErrorState
+              title="Couldn't load income history"
+              message="Your income records are safe, but they couldn't be read just now."
+              onRetry={reloadIncome}
+              isRetrying={isLoading}
+            />
+          </Card>
+        ) : incomeList.length === 0 ? (
           <Card style={styles.emptyCard}>
             <EmptyState
               title="No income recorded yet"
@@ -267,8 +281,9 @@ export default function IncomeScreen() {
             ))}
           </View>
         )}
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -311,6 +326,7 @@ function IncomeItem({
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   heroGlassCard: {

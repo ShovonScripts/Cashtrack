@@ -126,7 +126,7 @@ export default function ExpenseDetailsScreen() {
             accessibilityLabel="Edit expense"
             style={({ pressed }) => [
               styles.primaryButton,
-              { backgroundColor: theme.accent },
+              { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
             ]}>
             <ThemedText type="defaultBold" style={styles.onAccent}>

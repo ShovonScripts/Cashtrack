@@ -113,7 +113,7 @@ export default function SubscriptionsHubScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel="Add subscription"
-                style={[styles.emptyActionBtn, { backgroundColor: theme.accent }]}>
+                style={[styles.emptyActionBtn, { backgroundColor: theme.accentFill }]}>
                 <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Add subscription</ThemedText>
               </Pressable>
             </Card>

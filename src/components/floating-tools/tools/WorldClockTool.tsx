@@ -145,7 +145,7 @@ export function WorldClockTool() {
           }}
           style={({ pressed }) => [
             styles.addBtn,
-            { backgroundColor: theme.accent },
+            { backgroundColor: theme.accentFill },
             pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
           ]}>
           <Ionicons name="add" size={18} color="#FFFFFF" />
@@ -293,7 +293,7 @@ export function WorldClockTool() {
                       <View
                         style={[
                           styles.addIndicator,
-                          { backgroundColor: added ? theme.accent : theme.card, borderColor: theme.border },
+                          { backgroundColor: added ? theme.accentFill : theme.card, borderColor: theme.border },
                         ]}>
                         <Ionicons name={added ? 'checkmark' : 'add'} size={14} color={added ? '#FFFFFF' : theme.text} />
                       </View>

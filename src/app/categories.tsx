@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, TextInput, View, Platform } from 'react-native';
+import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -59,8 +59,12 @@ export default function CategoriesScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.container}>
         {/* Intro */}
         <View style={styles.intro}>
           <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
@@ -138,7 +142,7 @@ export default function CategoriesScreen() {
                 accessibilityState={{ disabled: !newName.trim() }}
                 style={({ pressed }) => [
                   styles.addButton,
-                  { backgroundColor: theme.accent },
+                  { backgroundColor: theme.accentFill },
                   pressed && styles.pressed,
                   !newName.trim() && styles.disabled,
                 ]}>
@@ -239,7 +243,7 @@ export default function CategoriesScreen() {
                           onPress={() => saveRename(category)}
                           accessibilityRole="button"
                           accessibilityLabel={`Save rename for ${category}`}
-                          style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.accent }, pressed && styles.pressed]}>
+                          style={({ pressed }) => [styles.actionPill, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
                           <ThemedText type="caption" style={{ color: theme.onBrand, fontWeight: '800' }}>Save</ThemedText>
                         </Pressable>
                         <Pressable
@@ -276,12 +280,14 @@ export default function CategoriesScreen() {
             );
           })}
         </Card>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },

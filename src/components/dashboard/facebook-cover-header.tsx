@@ -6,7 +6,6 @@ import { router } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Dimensions,
   Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
@@ -16,6 +15,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -48,17 +48,17 @@ import { WeatherBackground } from '@/components/weather-background';
 import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
 import { YearProgressPanel } from '@/components/dashboard/year-progress-panel';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const HERO_HEIGHT = 300;
+const HERO_HEIGHT = 320;
+const H_PADDING = 24;
 const SWIPE_HINT_KEY = '@cashtrack_cover_swipe_hint_seen';
 const VERTICAL_SPRING = { damping: 24, stiffness: 200, mass: 0.9 } as const;
 const SLIDE_LABELS = ['Cover', 'Weather', 'Daily wisdom'] as const;
+const MONTH_SHORT = new Intl.DateTimeFormat('en', { month: 'short' });
 
 interface FacebookCoverHeaderProps {
   profile: UserProfile;
   totalBalance?: number;
   monthlySpent?: number;
-  lastMonthSpent?: number;
   onPressProfile?: () => void;
   /** The home page ScrollView, used so the vertical cover swipe can block it. */
   pageScrollRef?: React.RefObject<ScrollView | null>;
@@ -70,12 +70,12 @@ export function FacebookCoverHeader({
   profile,
   totalBalance = 0,
   monthlySpent = 0,
-  lastMonthSpent = 0,
   onPressProfile,
   pageScrollRef,
   pageScrolled = false,
 }: FacebookCoverHeaderProps) {
   const theme = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { temperatureUnit, formatAmount, firstDayOfWeek, expenses } = useExpenses();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -227,13 +227,13 @@ export function FacebookCoverHeader({
       programmaticSlideRef.current = nextIndex;
       setActiveIndex(nextIndex);
       scrollViewRef.current?.scrollTo({
-        x: nextIndex * SCREEN_WIDTH,
+        x: nextIndex * screenWidth,
         animated: true,
       });
     }, 10000);
 
     return () => clearInterval(timer);
-  }, [activeIndex, autoSlideKey, verticalPage]);
+  }, [activeIndex, autoSlideKey, screenWidth, verticalPage]);
 
   useEffect(() => {
     async function loadWeather() {
@@ -277,7 +277,7 @@ export function FacebookCoverHeader({
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const currentIndex = Math.round(contentOffsetX / SCREEN_WIDTH);
+    const currentIndex = screenWidth > 0 ? Math.round(contentOffsetX / screenWidth) : 0;
     if (currentIndex < 0 || currentIndex > 2) return;
 
     const isProgrammatic = currentIndex === programmaticSlideRef.current;
@@ -303,7 +303,7 @@ export function FacebookCoverHeader({
     resetAutoSlide();
     Haptics.selectionAsync().catch(() => {});
     scrollViewRef.current?.scrollTo({
-      x: index * SCREEN_WIDTH,
+      x: index * screenWidth,
       animated: true,
     });
   };
@@ -325,16 +325,37 @@ export function FacebookCoverHeader({
 
   const todayStr = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(now);
 
-  const topPadding = Math.max(insets.top + 12, 40);
+  const topPadding = Math.max(insets.top + 10, 38);
+
+  // Compare the same slice of this month with the same slice of last month, so
+  // an early-month check does not look falsely cheaper than a full month.
+  const lastMonthToDateSpent = useMemo(() => {
+    const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return expenses.reduce((sum, expense) => {
+      const date = new Date(expense.date);
+      const isSameMonth =
+        date.getFullYear() === previousMonth.getFullYear() &&
+        date.getMonth() === previousMonth.getMonth();
+      return isSameMonth && date.getDate() <= progress.dayOfMonth ? sum + expense.amount : sum;
+    }, 0);
+  }, [expenses, now, progress.dayOfMonth]);
+
+  const lastMonthLabel = MONTH_SHORT.format(new Date(now.getFullYear(), now.getMonth() - 1, 1));
 
   const spendDiffPercent =
-    lastMonthSpent > 0 ? Math.round((Math.abs(monthlySpent - lastMonthSpent) / lastMonthSpent) * 100) : 0;
-  const spendWentUp = monthlySpent > lastMonthSpent;
+    lastMonthToDateSpent > 0
+      ? Math.round((Math.abs(monthlySpent - lastMonthToDateSpent) / lastMonthToDateSpent) * 100)
+      : 0;
+  const spendWentUp = monthlySpent > lastMonthToDateSpent;
+  const showTrend = lastMonthToDateSpent > 0 && spendDiffPercent > 0;
+  const trendColor = spendWentUp ? theme.warningOnBrand : theme.successOnBrand;
+  const trendBackground = spendWentUp ? 'rgba(251, 191, 36, 0.18)' : 'rgba(52, 211, 153, 0.18)';
+  const dailyAverage = monthlySpent / Math.max(1, progress.dayOfMonth);
 
   const showYearProgress = verticalPage === 0;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { width: screenWidth }]}>
       {/* FULL-WIDTH EDGE-TO-EDGE FACEBOOK MOBILE COVER CAROUSEL */}
       <ScrollView
         ref={scrollViewRef}
@@ -346,12 +367,12 @@ export function FacebookCoverHeader({
         onScrollBeginDrag={resetAutoSlide}
         scrollEventThrottle={16}
         decelerationRate="normal"
-        snapToInterval={SCREEN_WIDTH}
+        snapToInterval={screenWidth}
         contentContainerStyle={styles.scrollContent}
       >
         {/* SLIDE 1: COVER PHOTO WITH GREETING / YEAR PROGRESS SWAPPING UP-DOWN */}
         <GestureDetector gesture={verticalPage === 0 ? swipeUp : swipeDown}>
-          <View style={styles.slideCard}>
+          <View style={[styles.slideCard, { width: screenWidth }]}>
             <Animated.Image
               source={getCoverSource(profile.coverPhotoUri)}
               style={[styles.fullCoverImage, coverImageStyle]}
@@ -376,24 +397,28 @@ export function FacebookCoverHeader({
                   { paddingTop: topPadding },
                   pageAContentStyle,
                 ]}>
-                <Text style={styles.brandMark}>CASHTRACK</Text>
+                <View style={styles.brandChip}>
+                  <MaterialCommunityIcons name="wallet" size={13} color="#FFFFFF" />
+                  <Text style={styles.brandMark}>CASHTRACK</Text>
+                </View>
 
-                <View style={styles.profileBlock}>
+                <View style={styles.bottomStack}>
                   <TouchableOpacity
-                    activeOpacity={0.9}
+                    activeOpacity={0.85}
                     onPress={onPressProfile || (() => router.push('/profile'))}
                     accessibilityRole="button"
                     accessibilityLabel={`Profile overview for ${profile.name || 'User'}`}
+                    accessibilityHint="Opens your profile"
                     style={styles.profileRow}>
                     <View
                       style={[
                         styles.avatarContainer,
-                        { borderColor: '#FFFFFF', backgroundColor: theme.background },
+                        { borderColor: 'rgba(255,255,255,0.92)', backgroundColor: theme.background },
                       ]}>
                       {profile.profilePhotoUri ? (
                         <Image source={{ uri: profile.profilePhotoUri }} style={styles.avatarImage} />
                       ) : (
-                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                        <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accentFill }]}>
                           <Text style={styles.avatarInitial}>
                             {profile.name ? profile.name.charAt(0).toUpperCase() : 'S'}
                           </Text>
@@ -402,27 +427,82 @@ export function FacebookCoverHeader({
                     </View>
 
                     <View style={styles.profileTextInfo}>
-                      <Text style={styles.whiteTitle} numberOfLines={1}>
-                        {greeting}, {profile.name ? profile.name.split(/\s+/)[0] : 'User'}
+                      <Text style={styles.greetingLabel} numberOfLines={1}>
+                        {greeting}
                       </Text>
-                      <Text style={styles.whiteSubtext}>{todayStr}</Text>
+                      <Text style={styles.whiteTitle} numberOfLines={1}>
+                        {profile.name?.trim() || 'User'}
+                      </Text>
+                      <View style={styles.profileDateRow}>
+                        <Ionicons
+                          name="calendar-outline"
+                          size={11}
+                          color="rgba(255,255,255,0.76)"
+                        />
+                        <Text style={styles.whiteSubtext} numberOfLines={1}>
+                          {todayStr}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.profileChevron}>
+                      <Ionicons name="chevron-forward" size={15} color="rgba(255,255,255,0.92)" />
                     </View>
                   </TouchableOpacity>
 
-                  <View style={styles.balanceBlock}>
-                    <Text style={styles.balanceEyebrow}>NET BALANCE</Text>
+                  <View style={styles.balancePanel}>
+                    <View style={styles.panelTopRow}>
+                      <View style={styles.panelLabelGroup}>
+                        <View style={styles.panelDot} />
+                        <Text style={styles.balanceEyebrow}>NET BALANCE</Text>
+                      </View>
+
+                      {showTrend && (
+                        <View style={[styles.trendPill, { backgroundColor: trendBackground }]}>
+                          <Text
+                            style={[styles.trendText, { color: trendColor }]}
+                            numberOfLines={1}>
+                            Spent {spendWentUp ? '+' : '−'}
+                            {spendDiffPercent}% vs {lastMonthLabel}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
                     <Text
-                      style={styles.balanceValue}
+                      style={[styles.balanceValue, totalBalance < 0 && styles.balanceValueNegative]}
                       numberOfLines={1}
                       adjustsFontSizeToFit>
                       {formatAmount(totalBalance)}
                     </Text>
-                    <Text style={styles.balanceMeta} numberOfLines={1}>
-                      Spent in {progress.monthShortLabel} · {formatAmount(monthlySpent)}
-                      {spendDiffPercent > 0
-                        ? `   ${spendWentUp ? '↑' : '↓'} ${spendDiffPercent}%`
-                        : ''}
-                    </Text>
+
+                    <View style={styles.panelDivider} />
+
+                    <View style={styles.panelStatsRow}>
+                      <View style={styles.panelStat}>
+                        <Text style={styles.panelStatLabel} numberOfLines={1}>
+                          SPENT IN {progress.monthShortLabel.toUpperCase()}
+                        </Text>
+                        <Text
+                          style={styles.panelStatValue}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit>
+                          {formatAmount(monthlySpent)}
+                        </Text>
+                      </View>
+
+                      <View style={styles.panelStatDivider} />
+
+                      <View style={styles.panelStat}>
+                        <Text style={styles.panelStatLabel} numberOfLines={1}>AVG / DAY</Text>
+                        <Text
+                          style={styles.panelStatValue}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit>
+                          {formatAmount(dailyAverage)}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
                 </View>
               </Animated.View>
@@ -460,21 +540,11 @@ export function FacebookCoverHeader({
                   color="#FFFFFF"
                 />
                 <Text style={styles.verticalToggleText} numberOfLines={1}>
-                  {showYearProgress ? `Year progress · ${progress.yearPercent}%` : 'Greeting'}
+                  {showYearProgress ? `${progress.yearPercent}% of ${progress.year}` : 'Greeting'}
                 </Text>
               </Pressable>
             </Animated.View>
 
-            {showSwipeHint && showYearProgress && (
-              <Pressable
-                onPress={() => setShowSwipeHint(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Dismiss hint"
-                style={[styles.swipeHint, { top: topPadding + 42 }]}>
-                <Ionicons name="arrow-up" size={11} color="#FFFFFF" />
-                <Text style={styles.swipeHintText}>Swipe up for your year</Text>
-              </Pressable>
-            )}
           </View>
         </GestureDetector>
 
@@ -487,7 +557,7 @@ export function FacebookCoverHeader({
           }}
           accessibilityRole="button"
           accessibilityLabel={`Weather for ${weather.locationName}, ${displayTemp}, ${weather.condition}. World clocks. Opens Weather and Insights.`}
-          style={styles.slideCard}>
+          style={[styles.slideCard, { width: screenWidth }]}>
           <WeatherBackground conditionType={weather.conditionType} />
 
           <View style={[styles.cardInner, { paddingTop: topPadding }]}>
@@ -538,7 +608,7 @@ export function FacebookCoverHeader({
         </TouchableOpacity>
 
         {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
-        <View style={[styles.slideCard, styles.quoteCardContainer]}>
+        <View style={[styles.slideCard, styles.quoteCardContainer, { width: screenWidth }]}>
           <View pointerEvents="none" style={styles.quoteBgGlow1} />
           <View pointerEvents="none" style={styles.quoteBgGlow2} />
 
@@ -587,7 +657,7 @@ export function FacebookCoverHeader({
           <Pressable
             key={label}
             onPress={() => goToSlide(index)}
-            hitSlop={12}
+            hitSlop={14}
             accessibilityRole="button"
             accessibilityLabel={label}
             accessibilityState={{ selected: activeIndex === index }}
@@ -610,14 +680,12 @@ export function FacebookCoverHeader({
 
 const styles = StyleSheet.create({
   container: {
-    width: SCREEN_WIDTH,
     marginBottom: 12,
   },
   scrollContent: {
     // Edge to edge cover
   },
   slideCard: {
-    width: SCREEN_WIDTH,
     height: HERO_HEIGHT,
     position: 'relative',
     overflow: 'hidden',
@@ -643,35 +711,54 @@ const styles = StyleSheet.create({
   },
   coverPage: {
     height: HERO_HEIGHT,
-    paddingHorizontal: 18,
-    paddingBottom: 24,
+    paddingHorizontal: H_PADDING,
+    paddingBottom: 30,
     justifyContent: 'space-between',
   },
   panelPage: {
     height: HERO_HEIGHT,
   },
+  brandChip: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 30,
+    paddingHorizontal: 11,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(8,12,28,0.34)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.24)',
+  },
   brandMark: {
-    color: 'rgba(255,255,255,0.62)',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 1.5,
+    letterSpacing: 1.6,
   },
-  profileBlock: {
-    gap: 14,
+  bottomStack: {
+    gap: 10,
   },
   profileRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    minHeight: 48,
+    paddingRight: 2,
   },
   avatarContainer: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 2,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.28,
+    shadowRadius: 6,
+    elevation: 4,
   },
   avatarImage: {
     width: '100%',
@@ -686,67 +773,171 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     color: '#FFFFFF',
-    fontSize: 19,
+    fontSize: 20,
     fontWeight: '700',
   },
   profileTextInfo: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
-  whiteTitle: {
-    color: '#FFFFFF',
-    fontSize: 21,
-    fontWeight: '800',
-    lineHeight: 26,
+  greetingLabel: {
+    color: 'rgba(255, 255, 255, 0.84)',
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 15,
+    letterSpacing: 0.2,
     textShadowColor: 'rgba(0,0,0,0.4)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
-  whiteSubtext: {
-    color: 'rgba(255, 255, 255, 0.86)',
-    fontSize: 12.5,
-    fontWeight: '500',
+  whiteTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: '800',
+    lineHeight: 27,
+    letterSpacing: -0.3,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  balanceBlock: {
-    gap: 1,
+  profileDateRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 1,
+  },
+  whiteSubtext: {
+    color: 'rgba(255, 255, 255, 0.78)',
+    fontSize: 11.5,
+    fontWeight: '500',
+    lineHeight: 14,
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  profileChevron: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.22)',
+  },
+  balancePanel: {
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 8,
+    backgroundColor: 'rgba(6,10,24,0.5)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 16,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  panelTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  panelLabelGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  panelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#14E7FD',
   },
   balanceEyebrow: {
-    color: 'rgba(255,255,255,0.72)',
+    color: 'rgba(255,255,255,0.68)',
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 1.3,
+  },
+  trendPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  trendText: {
     fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 1.2,
+    fontVariant: ['tabular-nums'],
   },
   balanceValue: {
     color: '#FFFFFF',
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 38,
+    lineHeight: 42,
     fontWeight: '800',
+    letterSpacing: -0.8,
     fontVariant: ['tabular-nums'],
-    textShadowColor: 'rgba(0,0,0,0.45)',
+    marginTop: 2,
+    textShadowColor: 'rgba(0,0,0,0.35)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },
-  balanceMeta: {
-    color: 'rgba(255,255,255,0.86)',
-    fontSize: 12.5,
-    fontWeight: '600',
+  balanceValueNegative: {
+    color: '#FFB4B4',
+  },
+  panelDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    marginVertical: 6,
+  },
+  panelStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  panelStat: {
+    flex: 1,
+    gap: 2,
+  },
+  panelStatLabel: {
+    color: 'rgba(255,255,255,0.62)',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  panelStatValue: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    lineHeight: 18,
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
+  },
+  panelStatDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 26,
+    backgroundColor: 'rgba(255,255,255,0.14)',
   },
   verticalToggleWrap: {
     position: 'absolute',
-    right: 18,
+    right: H_PADDING,
     zIndex: 5,
   },
   verticalToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(0,0,0,0.32)',
+    height: 30,
+    backgroundColor: 'rgba(8,12,28,0.34)',
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.34)',
+    borderColor: 'rgba(255,255,255,0.24)',
     borderRadius: Radius.pill,
     paddingHorizontal: 11,
-    paddingVertical: 7,
   },
   verticalTogglePressed: {
     opacity: 0.72,
@@ -758,27 +949,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.2,
   },
-  swipeHint: {
-    position: 'absolute',
-    right: 18,
-    zIndex: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: Radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  swipeHintText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
-  },
   cardInner: {
     flex: 1,
-    paddingHorizontal: 18,
-    paddingBottom: 24,
+    paddingHorizontal: H_PADDING,
+    paddingBottom: 30,
     justifyContent: 'space-between',
   },
   topRowBadge: {
@@ -927,8 +1101,8 @@ const styles = StyleSheet.create({
   },
   quoteCardWrapper: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: H_PADDING,
+    paddingBottom: 30,
     justifyContent: 'space-between',
   },
   quoteCardContent: {
@@ -1012,7 +1186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     position: 'absolute',
-    bottom: 8,
+    bottom: 12,
     left: 0,
     right: 0,
   },

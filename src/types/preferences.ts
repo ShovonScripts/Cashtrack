@@ -30,6 +30,7 @@ export type UserPreferences = {
   enableBillReminders?: boolean;
   enableBudgetAlerts?: boolean;
   enableDailyReminder?: boolean;
+  enableDailyQuotes?: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -47,5 +48,6 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   enableBillReminders: true,
   enableBudgetAlerts: true,
   enableDailyReminder: false,
+  enableDailyQuotes: false,
 };
 

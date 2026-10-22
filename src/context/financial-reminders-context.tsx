@@ -44,6 +44,8 @@ type FinancialRemindersContextValue = {
   reminders: ReminderWithDerivedStatus[];
   payments: ReminderPaymentRecord[];
   isLoading: boolean;
+  remindersLoadError: boolean;
+  reloadReminders: () => void;
   addReminder: (draft: FinancialReminderDraft) => Promise<FinancialReminder>;
   updateReminder: (id: string, draft: FinancialReminderDraft) => Promise<void>;
   deleteReminder: (id: string) => Promise<void>;
@@ -58,6 +60,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [rawReminders, setRawReminders] = useState<FinancialReminder[]>([]);
   const [payments, setPayments] = useState<ReminderPaymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [remindersLoadError, setRemindersLoadError] = useState(false);
+  const [loadToken, setLoadToken] = useState(0);
   const now = useNow(60_000);
   const { addExpense, formatAmount, registerResetHandler, enableBillReminders } = useExpenses();
 
@@ -86,6 +90,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         if (!cancelled) {
           setRawReminders(loadedReminders);
           setPayments(loadedPayments);
+          setRemindersLoadError(false);
           if (enableBillRemindersRef.current) {
             for (const rem of loadedReminders) {
               if (rem.status !== 'paid' && rem.status !== 'skipped') {
@@ -96,6 +101,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         }
       } catch (error) {
         console.error('[cashtrack] Failed to load reminders', error);
+        if (!cancelled) setRemindersLoadError(true);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -106,7 +112,12 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     return () => {
       cancelled = true;
     };
-  }, [safeFormat]);
+  }, [safeFormat, loadToken]);
+
+  const reloadReminders = useCallback(() => {
+    setIsLoading(true);
+    setLoadToken((token) => token + 1);
+  }, []);
 
   // Turning the preference off cancels every pending bill reminder; turning it
   // back on reschedules the active ones.
@@ -333,6 +344,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       reminders,
       payments,
       isLoading,
+      remindersLoadError,
+      reloadReminders,
       addReminder,
       updateReminder,
       deleteReminder,
@@ -340,7 +353,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       skipReminder,
       getReminder,
     }),
-    [reminders, payments, isLoading, addReminder, updateReminder, deleteReminder, markAsPaid, skipReminder, getReminder]
+    [reminders, payments, isLoading, remindersLoadError, reloadReminders, addReminder, updateReminder, deleteReminder, markAsPaid, skipReminder, getReminder]
   );
 
   return <FinancialRemindersContext.Provider value={value}>{children}</FinancialRemindersContext.Provider>;

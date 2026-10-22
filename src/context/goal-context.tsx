@@ -36,6 +36,8 @@ type GoalContextValue = {
   goals: GoalWithProgress[];
   allContributions: GoalContribution[];
   isLoading: boolean;
+  goalLoadError: boolean;
+  reloadGoals: () => void;
   addGoal: (draft: GoalDraft) => Promise<MoneyGoal>;
   updateGoal: (goal: MoneyGoal) => Promise<void>;
   updateGoalStatus: (id: string, status: GoalStatus) => Promise<void>;
@@ -63,6 +65,8 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   const [rawGoals, setRawGoals] = useState<MoneyGoal[]>([]);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [goalLoadError, setGoalLoadError] = useState(false);
+  const [loadToken, setLoadToken] = useState(0);
   const now = useNow(60_000);
   const { registerResetHandler } = useExpenses();
 
@@ -84,9 +88,11 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         if (!cancelled) {
           setRawGoals(loadedGoals);
           setContributions(loadedContribs);
+          setGoalLoadError(false);
         }
       } catch (error) {
         console.error('[cashtrack] Failed to load goals and contributions', error);
+        if (!cancelled) setGoalLoadError(true);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -97,6 +103,11 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, [loadToken]);
+
+  const reloadGoals = useCallback(() => {
+    setIsLoading(true);
+    setLoadToken((token) => token + 1);
   }, []);
 
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -198,6 +209,8 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       goals,
       allContributions: contributions,
       isLoading,
+      goalLoadError,
+      reloadGoals,
       addGoal,
       updateGoal,
       updateGoalStatus,
@@ -206,7 +219,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       deleteContribution,
       getGoal,
     }),
-    [goals, contributions, isLoading, addGoal, updateGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
+    [goals, contributions, isLoading, goalLoadError, reloadGoals, addGoal, updateGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
   );
 
   return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;

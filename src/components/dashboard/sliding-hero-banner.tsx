@@ -116,7 +116,7 @@ export function SlidingHeroBanner({
                 {profile.profilePhotoUri ? (
                   <Image source={{ uri: profile.profilePhotoUri }} style={styles.avatarImage} />
                 ) : (
-                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accent }]}>
+                  <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accentFill }]}>
                     <Text style={styles.avatarInitial}>
                       {profile.name ? profile.name.charAt(0).toUpperCase() : 'S'}
                     </Text>

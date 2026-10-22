@@ -166,9 +166,17 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-160 | `src/components/goal-completion-modal.tsx:25` | `color={theme.success}` | Hardcoded modal backdrop and trophy badge colors | Low | Fixed | Replaced `'rgba(0,0,0,0.7)'`, `#27AE60`, and `#FFFFFF` with `theme.overlay`, `theme.success`, and `theme.onBrand`. |
 | F-161 | `src/app/(tabs)/expenses.tsx:265` | `styles.fab` | Add expense button was located in top header row instead of floating on bottom right | Low | Fixed | Moved Add Expense button from header row to floating action button (FAB) on bottom right of Expenses screen. |
 
+| F-162 | `src/constants/theme.ts:69` | `accentFill` / `dangerFill` / `successFill` | White text on `theme.accent` measured ~2.1:1 in dark mode; buttons and chips failed contrast | High | Fixed | Added `accentFill`, `dangerFill`, `successFill`, `warningFill` tokens (both themes) and switched every filled accent surface plus its label to fill + `onBrand`. |
+| F-163 | `src/app/bills/index.tsx:207` | Status filter chips | Selected/status chips used solid status colors with 11-12px white text | Medium | Fixed | Chips now use `withAlpha(chipColor, 0.16)` background with the status color as text; selected-accent chips use `accentFill` + `onBrand`. |
+| F-164 | `src/app/goals/add.tsx:159` | Forms | Add/edit forms were covered by the keyboard (goal, budget, category, income, notes, country, profile, debt detail) | High | Fixed | Wrapped root ScrollViews in `KeyboardAvoidingView` (`behavior="padding"`, iOS offset 80) with `flex: 1` on 11 screens. |
+| F-165 | `src/components/floating-tools/FloatingToolsButton.tsx:19` | Floating tools FAB | FAB sat on the tab bar/FAB, could be dragged off-screen, overflowed right when running, and idled at 40% opacity | High | Fixed | Position derives from `useWindowDimensions` + `useSafeAreaInsets` above the tab bar; drag clamps to screen, snaps to nearest edge, remounts on rotation; idle opacity 0.85 (1.0 while active). |
+| F-166 | `src/components/onboarding-modal.tsx:122` | Onboarding/advisor copy | Claimed encrypted storage and an AI advisor that does not exist | High | Fixed | Copy now says "Insights & Reports"/"Spending Advisor", describes rule-based insights, and discloses local-only storage; menu/advisor labels aligned. |
+| F-167 | `src/utils/quote-notifications.ts:52` | Daily quote notifications | Quotes were scheduled on launch and requested permission without consent, with no way to disable | High | Fixed | Scheduling only checks existing permission (never prompts on launch); new `enableDailyQuotes` preference (default false) plus Profile toggle requesting permission on opt-in; disabling cancels pending quotes. |
+| F-168 | `src/app/goals/index.tsx:101` | Goals / Income / Bills lists | Failed loads only logged to console and rendered the empty state, looking like data loss | High | Fixed | Contexts expose `goalLoadError`/`incomeLoadError`/`remindersLoadError` + retry (clears error, reloads); lists show `LoadErrorState` with a retry button instead of the empty state. |
+
 ### Current Ledger Counts:
 - **Open**: 3
-- **Fixed**: 147
+- **Fixed**: 154
 - **Deferred**: 1
 - **Removed**: 2
 - **Not reproducible**: 8

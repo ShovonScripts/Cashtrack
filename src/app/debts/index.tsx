@@ -100,8 +100,8 @@ export default function DebtsScreen() {
                 style={[
                   styles.filterChip,
                   {
-                    backgroundColor: selected ? theme.accent : theme.cardMuted,
-                    borderColor: selected ? theme.accent : theme.border,
+                    backgroundColor: selected ? theme.accentFill : theme.cardMuted,
+                    borderColor: selected ? theme.accentFill : theme.border,
                   },
                 ]}>
                 <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary }}>

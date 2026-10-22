@@ -37,3 +37,8 @@ export async function deleteNote(id: string): Promise<void> {
     notes.filter((n) => n.id !== id)
   );
 }
+
+/** Removes every note. Used by the full "reset all data" flow. */
+export async function clearNotes(): Promise<void> {
+  await AsyncStorage.removeItem(STORAGE_KEY);
+}

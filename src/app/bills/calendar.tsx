@@ -42,9 +42,9 @@ export default function BillCalendarScreen() {
   const changeMonth = (offset: number) => {
     triggerHaptic();
     setCurrentDate((cur) => {
-      const next = new Date(cur);
-      next.setMonth(next.getMonth() + offset);
-      return next;
+      // Anchor on day 1 so months with fewer days never cause a skip
+      // (e.g. Jan 31 + 1 month must be February, not March 3).
+      return new Date(cur.getFullYear(), cur.getMonth() + offset, 1);
     });
     setSelectedDay(1);
   };

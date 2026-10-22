@@ -20,6 +20,7 @@ export default function PayBillScreen() {
   const [recordAsExpense, setRecordAsExpense] = useState(true);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!reminder) {
     return (
@@ -40,13 +41,23 @@ export default function PayBillScreen() {
   const isValid = !Number.isNaN(parsedAmount) && Number.isFinite(parsedAmount) && parsedAmount > 0;
 
   const handlePay = async () => {
+    if (isSubmitting) return;
     if (!isValid) {
       setError('Please enter a valid payment amount greater than zero.');
       return;
     }
 
-    await markAsPaid(reminder.id, parsedAmount, paidDate.toISOString(), recordAsExpense, note);
-    router.back();
+    setIsSubmitting(true);
+    setError('');
+    try {
+      await markAsPaid(reminder.id, parsedAmount, paidDate.toISOString(), recordAsExpense, note);
+      router.back();
+    } catch (err) {
+      console.error('[cashtrack] Failed to mark bill as paid', err);
+      setError('Could not save this payment. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -123,16 +134,18 @@ export default function PayBillScreen() {
 
           <Pressable
             onPress={handlePay}
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid }}
+            accessibilityState={{ disabled: !isValid || isSubmitting, busy: isSubmitting }}
             style={({ pressed }) => [
               styles.saveButton,
               { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
-              !isValid && styles.saveButtonDisabled,
+              (!isValid || isSubmitting) && styles.saveButtonDisabled,
             ]}>
-            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Confirm Payment ✓</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>
+              {isSubmitting ? 'Saving…' : 'Confirm Payment ✓'}
+            </ThemedText>
           </Pressable>
 
           <Pressable

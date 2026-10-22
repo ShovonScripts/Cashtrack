@@ -78,6 +78,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
   const enableBillReminders = typeof candidate.enableBillReminders === 'boolean' ? candidate.enableBillReminders : true;
   const enableBudgetAlerts = typeof candidate.enableBudgetAlerts === 'boolean' ? candidate.enableBudgetAlerts : true;
   const enableDailyReminder = typeof candidate.enableDailyReminder === 'boolean' ? candidate.enableDailyReminder : false;
+  const enableDailyQuotes = typeof candidate.enableDailyQuotes === 'boolean' ? candidate.enableDailyQuotes : false;
 
   return {
     profile: {
@@ -101,6 +102,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
     enableBillReminders,
     enableBudgetAlerts,
     enableDailyReminder,
+    enableDailyQuotes,
   };
 }
 

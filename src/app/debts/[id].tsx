@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card, CardDivider } from '@/components/card';
@@ -14,6 +14,7 @@ import { getRemainingBalance, getTotalPaid } from '@/utils/debt';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { shareDebtReminder } from '@/utils/debt-share';
+import { confirmAction, confirmDelete, notify } from '@/utils/confirm';
 
 type RowProps = {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -71,26 +72,25 @@ export default function DebtDetailsScreen() {
 
   const handleSettle = () => {
     if (isSubmitting) return;
-    Alert.alert('Mark as settled?', `Confirm that ${debt.personName}'s debt of ${formatAmount(debt.amount)} has been settled.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Mark as Settled',
-        onPress: async () => {
-          setIsSubmitting(true);
-          try {
-            await settleDebt(debt.id);
-          } finally {
-            setIsSubmitting(false);
-          }
-        },
+    confirmAction(
+      'Mark as settled?',
+      `Confirm that ${debt.personName}'s debt of ${formatAmount(debt.amount)} has been settled.`,
+      async () => {
+        setIsSubmitting(true);
+        try {
+          await settleDebt(debt.id);
+        } finally {
+          setIsSubmitting(false);
+        }
       },
-    ]);
+      'Mark as Settled',
+    );
   };
 
   const handleAddPayment = () => {
     const parsed = Number(paymentAmount);
     if (!Number.isFinite(parsed) || parsed <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid payment amount.');
+      notify('Invalid Amount', 'Please enter a valid payment amount.');
       return;
     }
     addDebtPayment(debt.id, parsed, paymentNote);
@@ -99,17 +99,10 @@ export default function DebtDetailsScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete debt record?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteDebt(debt.id);
-          router.back();
-        },
-      },
-    ]);
+    confirmDelete('Delete debt record?', 'This cannot be undone.', () => {
+      deleteDebt(debt.id);
+      router.back();
+    });
   };
 
   return (

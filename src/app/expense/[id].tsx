@@ -1,5 +1,5 @@
 import { useLocalSearchParams, router } from 'expo-router';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Card, CardDivider } from '@/components/card';
@@ -11,6 +11,7 @@ import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
+import { confirmDelete } from '@/utils/confirm';
 
 type RowProps = {
   label: string;
@@ -60,17 +61,10 @@ export default function ExpenseDetailsScreen() {
   const accent = getCategoryColor(expense.category);
 
   const handleDelete = () => {
-    Alert.alert('Delete expense?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await deleteExpense(expense.id);
-          router.back();
-        },
-      },
-    ]);
+    confirmDelete('Delete expense?', 'This cannot be undone.', async () => {
+      await deleteExpense(expense.id);
+      router.back();
+    });
   };
 
   return (

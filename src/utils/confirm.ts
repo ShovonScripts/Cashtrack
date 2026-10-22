@@ -1,6 +1,11 @@
 import { Alert, Platform } from 'react-native';
 
-export function confirmDelete(title: string, message: string, onConfirm: () => void | Promise<void>) {
+export function confirmAction(
+  title: string,
+  message: string,
+  onConfirm: () => void | Promise<void>,
+  confirmLabel = 'Delete',
+) {
   if (Platform.OS === 'web') {
     if (window.confirm(`${title}\n\n${message}`)) {
       void onConfirm();
@@ -11,13 +16,17 @@ export function confirmDelete(title: string, message: string, onConfirm: () => v
   Alert.alert(title, message, [
     { text: 'Cancel', style: 'cancel' },
     {
-      text: 'Delete',
+      text: confirmLabel,
       style: 'destructive',
       onPress: () => {
         void onConfirm();
       },
     },
   ]);
+}
+
+export function confirmDelete(title: string, message: string, onConfirm: () => void | Promise<void>) {
+  confirmAction(title, message, onConfirm);
 }
 
 export function notify(title: string, message: string) {

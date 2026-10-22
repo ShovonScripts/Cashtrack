@@ -29,9 +29,8 @@ export function CalendarTool() {
 
   const changeMonth = (offset: number) => {
     setCurrentDate((cur) => {
-      const next = new Date(cur);
-      next.setMonth(next.getMonth() + offset);
-      return next;
+      // Anchor on day 1 so months with fewer days never cause a skip.
+      return new Date(cur.getFullYear(), cur.getMonth() + offset, 1);
     });
     setSelectedDay(1);
   };

@@ -10,7 +10,6 @@ import {
   View,
   Image,
   Switch,
-  Alert,
   Platform,
   Modal,
 } from 'react-native';
@@ -31,6 +30,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { GenderOption, UserProfile, FirstDayOfWeek } from '@/types/preferences';
 import { generateCsvReport } from '@/utils/csv';
 import { requestQuoteNotificationPermissionsAsync } from '@/utils/quote-notifications';
+import { confirmAction, notify } from '@/utils/confirm';
 
 type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Photo library permission is needed to set a cover photo.');
+        notify('Permission Required', 'Photo library permission is needed to set a cover photo.');
         return;
       }
 
@@ -130,7 +130,7 @@ export default function ProfileScreen() {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Photo library permission is needed to set a profile picture.');
+        notify('Permission Required', 'Photo library permission is needed to set a profile picture.');
         return;
       }
 
@@ -212,12 +212,12 @@ export default function ProfileScreen() {
             dialogTitle: 'Export CashTrack Transactions (CSV)',
           });
         } else {
-          Alert.alert('Export Ready', 'CSV file generated successfully.');
+          notify('Export Ready', 'CSV file generated successfully.');
         }
       }
     } catch (error) {
       console.error('Export failed', error);
-      Alert.alert('Export Error', 'Unable to export transactions right now.');
+      notify('Export Error', 'Unable to export transactions right now.');
     } finally {
       setExporting(false);
     }
@@ -225,36 +225,29 @@ export default function ProfileScreen() {
 
   const handleResetData = () => {
     triggerHaptic();
-    Alert.alert(
+    confirmAction(
       '⚠️ Reset All Local Data?',
-      'This will permanently delete all your transactions, goals, debts, and reset settings back to default.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'I understand, proceed',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Final Confirmation',
-              'Are you 100% sure? This action cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Wipe Everything',
-                  style: 'destructive',
-                  onPress: async () => {
-                    await resetAllData();
-                    if (Platform.OS !== 'web') {
-                      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-                    }
-                    Alert.alert('Data Cleared', 'Your account and settings have been reset.');
-                  },
-                },
-              ]
-            );
+      'This will permanently delete all your transactions, notes, goals, debts, and reset settings back to default.',
+      () => {
+        confirmAction(
+          'Final Confirmation',
+          'Are you 100% sure? This action cannot be undone.',
+          async () => {
+            try {
+              await resetAllData();
+              if (Platform.OS !== 'web') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+              }
+              notify('Data Cleared', 'Your account and settings have been reset.');
+            } catch (error) {
+              console.error('[cashtrack] Failed to reset all data', error);
+              notify('Reset Failed', 'Could not reset all data. Please try again.');
+            }
           },
-        },
-      ]
+          'Wipe Everything',
+        );
+      },
+      'I understand, proceed',
     );
   };
 
@@ -763,7 +756,7 @@ export default function ProfileScreen() {
                     if (val) {
                       const granted = await requestQuoteNotificationPermissionsAsync();
                       if (!granted) {
-                        Alert.alert(
+                        notify(
                           'Notifications are off',
                           'Allow notifications for CashTrack in your device settings to receive the daily quote.'
                         );

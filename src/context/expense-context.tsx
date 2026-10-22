@@ -20,7 +20,7 @@ import { loadExpenses, saveExpenses } from '@/storage/expense-storage';
 import { loadPreferences, savePreferences } from '@/storage/preferences-storage';
 import { ThemeModeContext } from '@/context/theme-context';
 import { nextThemeMode } from '@/utils/theme-mode';
-import { clearRelationalData } from '@/storage/reset-repository';
+import { clearAuxiliaryData, clearRelationalData } from '@/storage/reset-repository';
 import { createSeedExpenses } from '@/data/seed-expenses';
 import { getRecurringPeriodKey, processRecurringExpenses } from '@/utils/recurring';
 import { clearRecurringSkips, loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
@@ -55,7 +55,9 @@ function expenseReducer(state: Expense[], action: ExpenseAction): Expense[] {
         ? mergeExpenseChanges(expense, action.changes)
         : expense);
     case 'DELETE_EXPENSE':
-      return state.filter((expense) => expense.id !== action.id);
+      return state.filter(
+        (expense) => expense.id !== action.id && expense.recurringParentId !== action.id
+      );
     case 'RENAME_CATEGORY':
       return state.map((expense) => expense.category === action.from
         ? { ...expense, category: action.to }
@@ -277,9 +279,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const deleteExpense = useCallback(async (id: string) => {
-    const target = expensesRef.current.find((expense) => expense.id === id);
+    const current = expensesRef.current;
+    const target = current.find((expense) => expense.id === id);
     const parent = target?.recurringParentId
-      ? expensesRef.current.find((expense) => expense.id === target.recurringParentId)
+      ? current.find((expense) => expense.id === target.recurringParentId)
       : undefined;
 
     if (target?.recurringParentId && parent?.recurringFrequency) {
@@ -291,7 +294,19 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Deleting a recurring template removes every occurrence it generated, so
+    // orphaned instances cannot linger in lists or totals.
+    const removed = current.filter(
+      (expense) => expense.id === id || expense.recurringParentId === id
+    );
+
     dispatch({ type: 'DELETE_EXPENSE', id });
+
+    for (const expense of removed) {
+      if (expense.receiptUri) {
+        await deleteLocalReceipt(expense.receiptUri);
+      }
+    }
   }, []);
 
   const getExpense = useCallback(
@@ -446,6 +461,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     if (!prefRes) throw new Error('Failed to save default preferences during reset');
 
     await clearRelationalData();
+    await clearAuxiliaryData();
 
     try {
       await clearRecurringSkips();

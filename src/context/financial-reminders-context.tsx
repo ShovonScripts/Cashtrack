@@ -63,7 +63,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [remindersLoadError, setRemindersLoadError] = useState(false);
   const [loadToken, setLoadToken] = useState(0);
   const now = useNow(60_000);
-  const { addExpense, formatAmount, registerResetHandler, enableBillReminders } = useExpenses();
+  const { addExpense, deleteExpense, formatAmount, registerResetHandler, enableBillReminders } = useExpenses();
 
   const enableBillRemindersRef = useRef(enableBillReminders);
   useEffect(() => {
@@ -295,14 +295,29 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       };
     }
 
-    await markPaymentAndReminderRepo(payment, updated);
+    try {
+      await markPaymentAndReminderRepo(payment, updated);
+    } catch (error) {
+      // The expense is persisted on its own, so roll it back when the payment
+      // row cannot be written. Otherwise the ledger would record money leaving
+      // without advancing the bill.
+      if (expenseId) {
+        try {
+          await deleteExpense(expenseId);
+        } catch (rollbackError) {
+          console.error('[cashtrack] Failed to roll back expense after payment error', rollbackError);
+        }
+      }
+      throw error;
+    }
+
     setPayments((current) => [payment, ...current]);
     setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
     void cancelReminderNotificationsAsync(id);
     if (updated.status === 'upcoming' && enableBillReminders) {
       void scheduleReminderNotificationsAsync(updated, safeFormat);
     }
-  }, [rawReminders, addExpense, safeFormat, enableBillReminders]);
+  }, [rawReminders, addExpense, deleteExpense, safeFormat, enableBillReminders]);
 
   const skipReminder = useCallback(async (id: string) => {
     const target = rawReminders.find((r) => r.id === id);

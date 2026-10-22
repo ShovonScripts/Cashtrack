@@ -51,6 +51,7 @@ export default function AddBillScreen() {
   const [totalInstallmentsText, setTotalInstallmentsText] = useState('');
 
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
   const isValid =
@@ -58,6 +59,7 @@ export default function AddBillScreen() {
     (isVariableAmount || (!Number.isNaN(parsedAmount) && Number.isFinite(parsedAmount) && parsedAmount > 0));
 
   const handleSave = async () => {
+    if (isSubmitting) return;
     if (!isValid) {
       setError('Please provide a valid bill name and amount.');
       return;
@@ -67,23 +69,32 @@ export default function AddBillScreen() {
     const totalAmount = isEmi && totalAmountText.trim() ? Number(totalAmountText) : null;
     const totalInstallments = isEmi && totalInstallmentsText.trim() ? Number(totalInstallmentsText) : null;
 
-    await addReminder({
-      title: title.trim().slice(0, 60),
-      amount: isVariableAmount ? null : parsedAmount,
-      isVariableAmount,
-      category,
-      dueDate: dueDate.toISOString(),
-      repeatType,
-      notes: notes.trim().slice(0, 200),
-      totalAmount: Number.isFinite(totalAmount) ? totalAmount : null,
-      installmentAmount: isVariableAmount ? null : parsedAmount,
-      totalInstallments: Number.isInteger(totalInstallments) ? totalInstallments : null,
-      paidInstallments: 0,
-      isAlarm,
-      alarmTime: isAlarm ? alarmTime.trim() : null,
-    });
+    setIsSubmitting(true);
+    setError('');
+    try {
+      await addReminder({
+        title: title.trim().slice(0, 60),
+        amount: isVariableAmount ? null : parsedAmount,
+        isVariableAmount,
+        category,
+        dueDate: dueDate.toISOString(),
+        repeatType,
+        notes: notes.trim().slice(0, 200),
+        totalAmount: Number.isFinite(totalAmount) ? totalAmount : null,
+        installmentAmount: isVariableAmount ? null : parsedAmount,
+        totalInstallments: Number.isInteger(totalInstallments) ? totalInstallments : null,
+        paidInstallments: 0,
+        isAlarm,
+        alarmTime: isAlarm ? alarmTime.trim() : null,
+      });
 
-    router.back();
+      router.back();
+    } catch (err) {
+      console.error('[cashtrack] Failed to save bill reminder', err);
+      setError('Could not save this bill. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -277,16 +288,18 @@ export default function AddBillScreen() {
 
           <Pressable
             onPress={handleSave}
-            disabled={!isValid}
+            disabled={!isValid || isSubmitting}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid }}
+            accessibilityState={{ disabled: !isValid || isSubmitting, busy: isSubmitting }}
             style={({ pressed }) => [
               styles.saveButton,
               { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
-              !isValid && styles.saveButtonDisabled,
+              (!isValid || isSubmitting) && styles.saveButtonDisabled,
             ]}>
-            <ThemedText type="defaultBold" style={styles.saveText}>Save Reminder</ThemedText>
+            <ThemedText type="defaultBold" style={styles.saveText}>
+              {isSubmitting ? 'Saving…' : 'Save Reminder'}
+            </ThemedText>
           </Pressable>
 
           <Pressable

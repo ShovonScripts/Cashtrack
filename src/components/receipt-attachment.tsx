@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { saveReceiptLocally } from '@/utils/receipt';
+import { notify } from '@/utils/confirm';
 
 type ReceiptAttachmentProps = {
   receiptUri?: string;
@@ -26,12 +27,9 @@ export function ReceiptAttachment({ receiptUri, onChange }: ReceiptAttachmentPro
         : await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (!permissionResult.granted) {
-        Alert.alert(
+        notify(
           'Permission Required',
           'Camera or photo library permission is required to attach receipt photos. Please enable permissions in your device settings.',
-          [
-            { text: 'OK', style: 'cancel' }
-          ]
         );
         return;
       }
@@ -45,13 +43,20 @@ export function ReceiptAttachment({ receiptUri, onChange }: ReceiptAttachmentPro
         onChange(localUri);
       }
     } catch {
-      Alert.alert('Error', 'Could not load image. Please try again.');
+      notify('Error', 'Could not load image. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
   const showSourceOptions = () => {
+    // react-native-web renders Alert as a no-op and the camera is unavailable,
+    // so go straight to the file picker there.
+    if (Platform.OS === 'web') {
+      void pickImage(false);
+      return;
+    }
+
     Alert.alert(
       'Attach Receipt',
       'Choose receipt source',

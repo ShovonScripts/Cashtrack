@@ -21,6 +21,7 @@ interface ContributionRow {
   amount: number;
   date: string;
   note: string;
+  source_income_id: string | null;
 }
 
 function mapGoalRow(row: GoalRow): MoneyGoal {
@@ -46,6 +47,7 @@ function mapContributionRow(row: ContributionRow): GoalContribution {
     amount: row.amount,
     date: row.date,
     note: row.note,
+    sourceIncomeId: row.source_income_id ?? null,
   };
 }
 
@@ -126,18 +128,38 @@ export async function getAllContributions(): Promise<GoalContribution[]> {
 }
 
 export async function insertContribution(contribution: GoalContribution): Promise<void> {
+  await insertContributions([contribution]);
+}
+
+export async function insertContributions(contributions: readonly GoalContribution[]): Promise<void> {
+  if (contributions.length === 0) return;
   const db = await initDatabase();
-  await db.runAsync(
-    'INSERT INTO goal_contributions (id, goal_id, amount, date, note) VALUES (?, ?, ?, ?, ?)',
-    contribution.id,
-    contribution.goalId,
-    contribution.amount,
-    contribution.date,
-    contribution.note
-  );
+  await db.withTransactionAsync(async () => {
+    for (const contribution of contributions) {
+      await db.runAsync(
+        'INSERT INTO goal_contributions (id, goal_id, amount, date, note, source_income_id) VALUES (?, ?, ?, ?, ?, ?)',
+        contribution.id,
+        contribution.goalId,
+        contribution.amount,
+        contribution.date,
+        contribution.note,
+        contribution.sourceIncomeId ?? null
+      );
+    }
+  });
 }
 
 export async function deleteContribution(id: string): Promise<void> {
   const db = await initDatabase();
   await db.runAsync('DELETE FROM goal_contributions WHERE id = ?', id);
+}
+
+export async function deleteContributionsForIncome(incomeIds: readonly string[]): Promise<void> {
+  if (incomeIds.length === 0) return;
+  const db = await initDatabase();
+  const placeholders = incomeIds.map(() => '?').join(', ');
+  await db.runAsync(
+    `DELETE FROM goal_contributions WHERE source_income_id IN (${placeholders})`,
+    ...incomeIds
+  );
 }

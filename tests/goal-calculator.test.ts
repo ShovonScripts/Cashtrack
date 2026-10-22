@@ -157,6 +157,23 @@ test('goal calculator - scenario 9: different frequencies (quarterly, half-yearl
   assert.strictEqual(halfYearly.frequencyRequired > 0, true);
 });
 
+test('goal calculator - open-ended pots have no fake timeline or expected amount', () => {
+  const result = calculateGoalProgress({
+    targetAmount: 10000,
+    startDate: '2026-01-01T00:00:00.000Z',
+    deadlineDate: null,
+    currentAmount: 2500,
+    frequency: 'monthly',
+    today: new Date('2026-06-01T00:00:00.000Z'),
+  });
+
+  assert.strictEqual(result.remainingDays, 0);
+  assert.strictEqual(result.expectedProgress, 0);
+  assert.strictEqual(result.aheadBehindAmount, 0);
+  assert.strictEqual(result.remainingAmount, 7500);
+  assert.strictEqual(result.frequencyRequired, 0);
+});
+
 test('goal calculator - scenario 10: recovery contribution and overdue goals', () => {
   const recovery = calculateGoalProgress({
     targetAmount: 60000,

@@ -26,13 +26,15 @@ export function GoalCompletionModal({
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <View style={[styles.backdrop, { backgroundColor: theme.overlay }]}>
-        <View style={[styles.container, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View
+          accessibilityViewIsModal
+          style={[styles.container, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={[styles.badge, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
             <MaterialCommunityIcons name="trophy" size={36} color={theme.success} />
           </View>
 
           <View style={styles.textGroup}>
-            <ThemedText type="subtitle" style={styles.title}>Goal Completed!</ThemedText>
+            <ThemedText type="subtitle" style={styles.title} accessibilityLiveRegion="polite">Goal Completed!</ThemedText>
             <ThemedText type="defaultBold" style={{ color: theme.accent }}>{goal.title}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
               You planned it. You saved for it. You achieved it.
@@ -53,6 +55,7 @@ export function GoalCompletionModal({
           <Pressable
             onPress={onClose}
             accessibilityRole="button"
+            accessibilityLabel="Close goal completed celebration"
             style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
             <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Awesome</ThemedText>
           </Pressable>

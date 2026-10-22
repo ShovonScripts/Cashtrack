@@ -20,6 +20,7 @@ import {
   deleteContribution as deleteContributionRepo,
 } from '@/storage/goal-repository';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
+import { subscribeToGoalChanges } from '@/utils/goal-events';
 import { useExpenses } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 
@@ -109,6 +110,22 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setLoadToken((token) => token + 1);
   }, []);
+
+  const refreshFromStorage = useCallback(async () => {
+    try {
+      const [loadedGoals, loadedContribs] = await Promise.all([
+        getAllGoals(),
+        getAllContributions(),
+      ]);
+      setRawGoals(loadedGoals);
+      setContributions(loadedContribs);
+      setGoalLoadError(false);
+    } catch (error) {
+      console.error('[cashtrack] Failed to refresh goals after income change', error);
+    }
+  }, []);
+
+  useEffect(() => subscribeToGoalChanges(() => void refreshFromStorage()), [refreshFromStorage]);
 
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 

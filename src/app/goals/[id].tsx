@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
@@ -16,14 +16,23 @@ import { withAlpha } from '@/utils/color';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
-import type { GoalContribution } from '@/types/goal';
+import type { GoalContribution, GoalFrequency } from '@/types/goal';
 
 const QUICK_AMOUNTS = [100, 500, 1000, 5000];
+
+const FREQUENCY_LABELS: Record<GoalFrequency, string> = {
+  daily: 'day',
+  weekly: 'week',
+  monthly: 'month',
+  quarterly: 'quarter',
+  'half-yearly': 'half-year',
+  yearly: 'year',
+};
 
 export default function GoalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
-  const { goals, addContribution, deleteContribution, deleteGoal } = useGoals();
+  const { goals, addContribution, deleteContribution, deleteGoal, isLoading } = useGoals();
   const { formatAmount } = useExpenses();
   const now = useNow(60_000);
 
@@ -33,11 +42,15 @@ export default function GoalDetailScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [showCompletionModal, setShowCompletionModal] = useState(false);
-  const [completionDismissed, setCompletionDismissed] = useState(false);
-  // Celebrate once per visit when the goal is already complete, but let the
-  // user dismiss the modal instead of forcing it open on every render.
-  const completionModalVisible =
-    showCompletionModal || (goal?.isCompleted === true && !completionDismissed);
+
+  if (!goal && isLoading) {
+    return (
+      <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four, gap: Spacing.two }]}>
+        <ActivityIndicator color={theme.accent} size="large" />
+        <ThemedText type="small" themeColor="textSecondary">Loading pot…</ThemedText>
+      </View>
+    );
+  }
 
   if (!goal) {
     return (
@@ -107,6 +120,12 @@ export default function GoalDetailScreen() {
   };
 
   const isAhead = calc.aheadBehindAmount >= 0;
+  const isFlexible = goal.allocationType === 'flexible';
+  const deadline = goal.deadlineDate ? new Date(goal.deadlineDate) : null;
+  const overdueDays =
+    deadline && !goal.isCompleted && now.getTime() > deadline.getTime()
+      ? Math.max(1, Math.ceil((now.getTime() - deadline.getTime()) / 86_400_000))
+      : 0;
 
   return (
     <KeyboardAvoidingView
@@ -119,7 +138,9 @@ export default function GoalDetailScreen() {
         <View style={[styles.hero, { backgroundColor: Brand.deep }]}>
           <View style={styles.heroContent}>
             <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>FINANCIAL POT · {goal.frequency.toUpperCase()}</ThemedText>
+              <ThemedText type="caption" style={styles.heroLabel}>
+                FINANCIAL POT · {isFlexible ? 'OPEN-ENDED' : goal.frequency.toUpperCase()}
+              </ThemedText>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
                 <Pressable
                   onPress={() => router.push({ pathname: '/goals/[id]/edit', params: { id: goal.id } })}
@@ -166,29 +187,56 @@ export default function GoalDetailScreen() {
             <View style={[styles.fill, { width: `${Math.min(100, goal.progressPercent)}%`, backgroundColor: goal.isCompleted ? theme.success : theme.accent }]} />
           </View>
 
+          {!isFlexible && deadline ? (
+            <ThemedText type="caption" themeColor={overdueDays > 0 ? 'danger' : 'textSecondary'}>
+              {goal.isCompleted
+                ? `Completed · target date ${formatDate(goal.deadlineDate!)}`
+                : overdueDays > 0
+                  ? `Overdue by ${overdueDays} ${overdueDays === 1 ? 'day' : 'days'} · was due ${formatDate(goal.deadlineDate!)}`
+                  : `Due ${formatDate(goal.deadlineDate!)}`}
+            </ThemedText>
+          ) : null}
+
           <View style={styles.metricsGrid}>
-            <MetricItem label="Remaining" value={formatAmount(calc.remainingAmount)} />
-            <MetricItem label="Time Left" value={`${calc.remainingDays} days`} />
-            <MetricItem label="Expected" value={formatAmount(calc.expectedProgress)} />
-            <MetricItem
-              label="Status"
-              value={goal.isCompleted ? 'Completed' : isAhead ? 'Ahead' : 'Behind'}
-              valueColor={goal.isCompleted ? theme.success : isAhead ? theme.accent : theme.danger}
-            />
+            {isFlexible ? (
+              <>
+                <MetricItem label="Remaining" value={formatAmount(calc.remainingAmount)} />
+                <MetricItem label="Contributions" value={String(goal.contributions.length)} />
+              </>
+            ) : (
+              <>
+                <MetricItem label="Remaining" value={formatAmount(calc.remainingAmount)} />
+                <MetricItem
+                  label={overdueDays > 0 ? 'Deadline' : 'Time Left'}
+                  value={overdueDays > 0 ? `${overdueDays} ${overdueDays === 1 ? 'day' : 'days'} late` : `${calc.remainingDays} days`}
+                  valueColor={overdueDays > 0 ? theme.danger : undefined}
+                />
+                <MetricItem label="Expected by now" value={formatAmount(calc.expectedProgress)} />
+                <MetricItem
+                  label="Status"
+                  value={goal.isCompleted ? 'Completed' : isAhead ? 'Ahead' : 'Behind'}
+                  valueColor={goal.isCompleted ? theme.success : isAhead ? theme.accent : theme.danger}
+                />
+              </>
+            )}
           </View>
         </Card>
 
         {/* Dynamic Recovery / Required Contributions */}
-        {!goal.isCompleted && calc.remainingDays > 0 && (
+        {!goal.isCompleted && !isFlexible && deadline && calc.remainingAmount > 0 && (
           <Card style={styles.card}>
             <ThemedText type="defaultBold">Required contributions</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">
-              Dynamically calculated based on your remaining target and timeline.
+              {overdueDays > 0
+                ? 'The target date has passed — the full remaining amount is due now.'
+                : 'Based on your remaining target and the time left.'}
             </ThemedText>
             <View style={styles.requiredRow}>
-              <RequiredBadge label="Per Period" amount={formatAmount(calc.frequencyRequired)} />
-              <RequiredBadge label="Weekly" amount={formatAmount(calc.weeklyRequired)} />
-              <RequiredBadge label="Monthly" amount={formatAmount(calc.monthlyRequired)} />
+              <RequiredBadge label={`Per ${FREQUENCY_LABELS[goal.frequency]}`} amount={formatAmount(calc.frequencyRequired)} />
+              <RequiredBadge
+                label={goal.frequency === 'monthly' ? 'Per week' : 'Per month'}
+                amount={formatAmount(goal.frequency === 'monthly' ? calc.weeklyRequired : calc.monthlyRequired)}
+              />
             </View>
           </Card>
         )}
@@ -230,11 +278,12 @@ export default function GoalDetailScreen() {
           <ThemedText type="defaultBold">Add contribution</ThemedText>
           <View style={styles.quickChipsRow}>
             {QUICK_AMOUNTS.map((amt) => (
-              <Pressable
-                key={amt}
-                onPress={() => setContribAmount(String(amt))}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.quickChip, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
+                <Pressable
+                  key={amt}
+                  onPress={() => setContribAmount(String(amt))}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Use ${formatAmount(amt)}`}
+                  style={({ pressed }) => [styles.quickChip, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
                 <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>+{amt}</ThemedText>
               </Pressable>
             ))}
@@ -296,8 +345,8 @@ export default function GoalDetailScreen() {
                 contribution={c}
                 formatAmount={formatAmount}
                 onDelete={() => {
-                  confirmDelete('Delete contribution?', 'Are you sure you want to remove this contribution?', () => {
-                    deleteContribution(c.id);
+                  confirmDelete('Delete contribution?', 'Are you sure you want to remove this contribution?', async () => {
+                    await deleteContribution(c.id);
                   });
                 }}
               />
@@ -316,11 +365,8 @@ export default function GoalDetailScreen() {
 
       <GoalCompletionModal
         goal={goal}
-        visible={completionModalVisible}
-        onClose={() => {
-          setShowCompletionModal(false);
-          setCompletionDismissed(true);
-        }}
+        visible={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
         formatAmount={formatAmount}
       />
       </ScrollView>

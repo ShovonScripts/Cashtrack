@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS goal_contributions (
   goal_id TEXT NOT NULL,
   amount REAL NOT NULL CHECK (amount > 0),
   date TEXT NOT NULL,
-  note TEXT NOT NULL DEFAULT ''
+  note TEXT NOT NULL DEFAULT '',
+  source_income_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_goal_contributions_goal
@@ -135,6 +136,9 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   } catch {}
   try {
     await db.execAsync("ALTER TABLE money_goals ADD COLUMN icon TEXT NOT NULL DEFAULT 'piggy-bank';");
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE goal_contributions ADD COLUMN source_income_id TEXT;');
   } catch {}
 
   // Legacy databases declared `deadline_date` as NOT NULL, which blocks flexible

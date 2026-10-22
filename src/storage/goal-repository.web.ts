@@ -53,14 +53,28 @@ export async function getAllContributions(): Promise<GoalContribution[]> {
 }
 
 export async function insertContribution(contribution: GoalContribution): Promise<void> {
+  await insertContributions([contribution]);
+}
+
+export async function insertContributions(contributions: readonly GoalContribution[]): Promise<void> {
+  if (contributions.length === 0) return;
+  const ids = new Set(contributions.map((c) => c.id));
   await mutateJsonArray(AsyncStorage, CONTRIBUTIONS_KEY, 'goal contributions', contributionRows, (contribs) => [
-    contribution,
-    ...contribs.filter((c) => c.id !== contribution.id),
+    ...contributions,
+    ...contribs.filter((c) => !ids.has(c.id)),
   ]);
 }
 
 export async function deleteContribution(id: string): Promise<void> {
   await mutateJsonArray(AsyncStorage, CONTRIBUTIONS_KEY, 'goal contributions', contributionRows, (contribs) =>
     contribs.filter((c) => c.id !== id)
+  );
+}
+
+export async function deleteContributionsForIncome(incomeIds: readonly string[]): Promise<void> {
+  if (incomeIds.length === 0) return;
+  const ids = new Set(incomeIds);
+  await mutateJsonArray(AsyncStorage, CONTRIBUTIONS_KEY, 'goal contributions', contributionRows, (contribs) =>
+    contribs.filter((c) => !c.sourceIncomeId || !ids.has(c.sourceIncomeId))
   );
 }

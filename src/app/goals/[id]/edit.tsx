@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
-import { useGoals } from '@/context/goal-context';
+import { useGoals, type GoalWithProgress } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
 import type { GoalFrequency, PotType, AllocationType } from '@/types/goal';
@@ -74,24 +74,17 @@ const PERCENT_PRESETS = ['5', '10', '15', '20'];
 export default function EditGoalScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
-  const { goals, updateGoal } = useGoals();
-
+  const { goals, isLoading } = useGoals();
   const goal = goals.find((g) => g.id === id);
 
-  const [title, setTitle] = useState(goal?.title ?? '');
-  const [targetAmount, setTargetAmount] = useState(goal ? String(goal.targetAmount) : '');
-  const [potType, setPotType] = useState<PotType>(goal?.potType ?? 'piggy_bank');
-  const [allocationType, setAllocationType] = useState<AllocationType>(goal?.allocationType ?? 'percentage');
-  const [allocationPercent, setAllocationPercent] = useState(goal?.allocationPercent ? String(goal.allocationPercent) : '10');
-  const [frequency, setFrequency] = useState<GoalFrequency>(goal?.frequency ?? 'monthly');
-  const [deadlineDate, setDeadlineDate] = useState(() => {
-    if (goal?.deadlineDate) return new Date(goal.deadlineDate);
-    const d = new Date();
-    d.setMonth(d.getMonth() + 6);
-    return d;
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
+  if (!goal && isLoading) {
+    return (
+      <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four, gap: Spacing.two }]}>
+        <ActivityIndicator color={theme.accent} size="large" />
+        <ThemedText type="small" themeColor="textSecondary">Loading pot…</ThemedText>
+      </View>
+    );
+  }
 
   if (!goal) {
     return (
@@ -107,6 +100,40 @@ export default function EditGoalScreen() {
       </View>
     );
   }
+
+  return <EditGoalForm key={goal.id} goal={goal} />;
+}
+
+function EditGoalForm({ goal }: { goal: GoalWithProgress }) {
+  const theme = useTheme();
+  const { goals, updateGoal } = useGoals();
+
+  const [title, setTitle] = useState(goal.title);
+  const [targetAmount, setTargetAmount] = useState(String(goal.targetAmount));
+  const [potType, setPotType] = useState<PotType>(goal.potType ?? 'piggy_bank');
+  const [allocationType, setAllocationType] = useState<AllocationType>(goal.allocationType ?? 'percentage');
+  const [allocationPercent, setAllocationPercent] = useState(goal.allocationPercent ? String(goal.allocationPercent) : '10');
+  const [frequency, setFrequency] = useState<GoalFrequency>(goal.frequency ?? 'monthly');
+  const [deadlineDate, setDeadlineDate] = useState(() => {
+    if (goal.deadlineDate) return new Date(goal.deadlineDate);
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return d;
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const committedPercent = goals.reduce(
+    (sum, g) =>
+      sum +
+      (g.id !== goal.id && !g.isCompleted && g.allocationType === 'percentage'
+        ? g.allocationPercent ?? 0
+        : 0),
+    0
+  );
+  const currentPercent = allocationType === 'percentage' ? Number(allocationPercent) || 0 : 0;
+  const totalAutoSavePercent = Math.round((committedPercent + currentPercent) * 100) / 100;
+  const exceedsAutoSaveLimit = allocationType === 'percentage' && totalAutoSavePercent > 100;
 
   const handleSelectPot = (pt: typeof POT_TYPES[number]) => {
     triggerHaptic();
@@ -135,6 +162,12 @@ export default function EditGoalScreen() {
         setMessage('Please enter a valid percentage between 1 and 100.');
         return;
       }
+      if (committedPercent + parsedPercent > 100) {
+        setMessage(
+          `Auto-Save would total ${Math.round((committedPercent + parsedPercent) * 100) / 100}% of every income. Reduce this pot or another pot to stay within 100%.`
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -144,6 +177,8 @@ export default function EditGoalScreen() {
         ...goal,
         title: trimmedTitle,
         targetAmount: parsedTarget,
+        // Raising a target above what is already saved reopens a completed pot.
+        status: parsedTarget > goal.contributedAmount ? 'active' : goal.status,
         deadlineDate: allocationType !== 'flexible' ? deadlineDate.toISOString() : null,
         frequency,
         potType,
@@ -315,10 +350,16 @@ export default function EditGoalScreen() {
                 accessibilityLabel="Auto-save percentage"
                 style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
               />
+              <ThemedText type="caption" themeColor={exceedsAutoSaveLimit ? 'danger' : 'textSecondary'}>
+                {committedPercent > 0
+                  ? `Other pots auto-save ${committedPercent}% · total with this pot: ${totalAutoSavePercent}% of every income.`
+                  : `Total auto-save will be ${totalAutoSavePercent}% of every income.`}
+              </ThemedText>
             </View>
           )}
 
           {/* Frequency */}
+          {allocationType !== 'flexible' && (
           <View style={styles.field}>
             <ThemedText type="smallBold">Pacing Frequency</ThemedText>
             <View style={styles.frequencyGrid}>
@@ -348,6 +389,7 @@ export default function EditGoalScreen() {
               })}
             </View>
           </View>
+          )}
 
           {/* Deadline Picker if not flexible */}
           {allocationType !== 'flexible' && (

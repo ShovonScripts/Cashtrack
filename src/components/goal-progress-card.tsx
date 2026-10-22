@@ -27,7 +27,8 @@ export function GoalProgressCard({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Goal ${goal.title}, progress ${Math.round(goal.progressPercent)} percent`}
+      accessibilityLabel={`${goal.title}, ${formatAmount(goal.contributedAmount)} saved of ${formatAmount(goal.targetAmount)}, ${Math.round(goal.progressPercent)} percent${goal.isCompleted ? ', completed' : ''}`}
+      accessibilityHint="Opens pot details"
       style={({ pressed }) => [pressed && styles.pressed]}>
       <Card style={styles.card}>
         <View style={styles.headerRow}>

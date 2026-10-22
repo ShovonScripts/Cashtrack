@@ -197,11 +197,11 @@ export async function checkAndTriggerGoalNotifications({
       stateKey = `completed-${goal.id}`;
       title = 'Goal Achieved!';
       body = `Congratulations! You successfully achieved your goal "${goal.title}" of ${formattedTarget}.`;
-    } else if (calc.remainingDays <= 3 && calc.remainingDays >= 0) {
+    } else if (goal.deadlineDate && calc.remainingDays <= 3 && calc.remainingDays >= 0) {
       stateKey = `deadline-${goal.id}-${dateKey}`;
       title = 'Deadline Approaching';
       body = `Your goal "${goal.title}" is due in ${calc.remainingDays} days.`;
-    } else if (calc.aheadBehindAmount < -5000) {
+    } else if (goal.deadlineDate && calc.aheadBehindAmount < -5000) {
       stateKey = `behind-${goal.id}-${dateKey}`;
       title = 'Money Plan Notice';
       body = `You are behind on your target for "${goal.title}". Check your required contributions.`;

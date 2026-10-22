@@ -67,15 +67,23 @@ export function calculateGoalProgress({
   const totalMs = Math.max(0, deadline.getTime() - start.getTime());
   const elapsedMs = Math.max(0, Math.min(totalMs, today.getTime() - start.getTime()));
 
-  const totalDays = Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)) + 1);
-  const elapsedDays = Math.max(0, Math.min(totalDays, Math.round(elapsedMs / (1000 * 60 * 60 * 24))));
-  const remainingDays = !hasDeadline ? 999999 : today.getTime() >= deadline.getTime() ? 0 : Math.max(0, totalDays - elapsedDays);
+  const totalDays = hasDeadline
+    ? Math.max(1, Math.round(totalMs / (1000 * 60 * 60 * 24)) + 1)
+    : 0;
+  const elapsedDays = hasDeadline
+    ? Math.max(0, Math.min(totalDays, Math.round(elapsedMs / (1000 * 60 * 60 * 24))))
+    : 0;
+  const remainingDays = !hasDeadline
+    ? 0
+    : today.getTime() >= deadline.getTime()
+      ? 0
+      : Math.max(0, totalDays - elapsedDays);
 
   const timeFraction = !hasDeadline ? 0 : Math.min(1, Math.max(0, elapsedDays / totalDays));
   const expectedProgress = targetAmount * timeFraction;
   const actualProgress = Math.max(0, currentAmount);
   const remainingAmount = Math.max(0, targetAmount - actualProgress);
-  const aheadBehindAmount = !hasDeadline ? actualProgress : (actualProgress - expectedProgress);
+  const aheadBehindAmount = hasDeadline ? actualProgress - expectedProgress : 0;
   const isCompleted = actualProgress >= targetAmount;
 
   const totalPeriods = getFrequencyPeriods(frequency, start, deadline, totalDays);

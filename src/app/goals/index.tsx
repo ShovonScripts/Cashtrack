@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -30,7 +30,14 @@ export default function GoalsOverviewScreen() {
   });
 
   const totalPlanned = activeGoals.reduce((sum, g) => sum + g.targetAmount, 0);
-  const totalSaved = goals.reduce((sum, g) => sum + g.contributedAmount, 0);
+  const totalSaved = activeGoals.reduce((sum, g) => sum + g.contributedAmount, 0);
+  const emptyTitle = goals.length === 0 ? 'No financial pots yet' : tab === 'completed' ? 'No completed pots yet' : 'No active pots';
+  const emptyMessage =
+    goals.length === 0
+      ? 'Plan ahead for travel, investments, or major purchases by creating your first pot.'
+      : tab === 'completed'
+        ? 'Pots you fully fund will appear here.'
+        : 'Every pot is fully funded. Create another or check the completed tab.';
 
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -51,7 +58,7 @@ export default function GoalsOverviewScreen() {
 
             <View style={styles.heroSummaryRow}>
               <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>TOTAL SAVED</ThemedText>
+                <ThemedText type="caption" style={styles.heroStatLabel}>ACTIVE SAVED</ThemedText>
                 <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
                   {formatAmount(totalSaved)}
                 </ThemedText>
@@ -96,7 +103,12 @@ export default function GoalsOverviewScreen() {
 
         {/* Goals List */}
         <View style={styles.listSection}>
-          {goalLoadError ? (
+          {isLoading && goals.length === 0 ? (
+            <Card style={styles.emptyCard}>
+              <ActivityIndicator color={theme.accent} />
+              <ThemedText type="caption" themeColor="textSecondary">Loading your pots…</ThemedText>
+            </Card>
+          ) : goalLoadError ? (
             <Card style={styles.emptyCard}>
               <LoadErrorState
                 title="Couldn't load your pots"
@@ -107,11 +119,7 @@ export default function GoalsOverviewScreen() {
             </Card>
           ) : filtered.length === 0 ? (
             <Card style={styles.emptyCard}>
-              <EmptyState
-                title="No financial pots yet"
-                message="Plan ahead for travel, investments, or major purchases by creating your first pot."
-                tone={theme.accent}
-              />
+              <EmptyState title={emptyTitle} message={emptyMessage} tone={theme.accent} />
             </Card>
           ) : (
             filtered.map((goal) => (
@@ -155,6 +163,6 @@ const styles = StyleSheet.create({
   tabsRow: { flexDirection: 'row', gap: Spacing.two },
   tab: { flex: 1, height: 44, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
-  emptyCard: { padding: Spacing.four, alignItems: 'center' },
+  emptyCard: { padding: Spacing.four, alignItems: 'center', gap: Spacing.one },
   pressed: { opacity: 0.75 },
 });

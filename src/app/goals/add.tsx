@@ -79,7 +79,7 @@ const PERCENT_PRESETS = ['5', '10', '15', '20'];
 
 export default function AddGoalScreen() {
   const theme = useTheme();
-  const { addGoal } = useGoals();
+  const { addGoal, goals } = useGoals();
 
   const [title, setTitle] = useState('');
   const [targetAmount, setTargetAmount] = useState('');
@@ -96,6 +96,15 @@ export default function AddGoalScreen() {
   const [message, setMessage] = useState('');
 
   const selectedPotMeta = POT_TYPES.find((p) => p.value === potType) ?? POT_TYPES[0];
+
+  const committedPercent = goals.reduce(
+    (sum, g) =>
+      sum + (!g.isCompleted && g.allocationType === 'percentage' ? g.allocationPercent ?? 0 : 0),
+    0
+  );
+  const currentPercent = allocationType === 'percentage' ? Number(allocationPercent) || 0 : 0;
+  const totalAutoSavePercent = Math.round((committedPercent + currentPercent) * 100) / 100;
+  const exceedsAutoSaveLimit = allocationType === 'percentage' && totalAutoSavePercent > 100;
 
   const handleSelectPot = (pt: typeof POT_TYPES[number]) => {
     triggerHaptic();
@@ -126,6 +135,12 @@ export default function AddGoalScreen() {
       parsedPercent = Number(allocationPercent);
       if (!Number.isFinite(parsedPercent) || parsedPercent <= 0 || parsedPercent > 100) {
         setMessage('Please enter a valid percentage between 1 and 100.');
+        return;
+      }
+      if (committedPercent + parsedPercent > 100) {
+        setMessage(
+          `Auto-Save would total ${Math.round((committedPercent + parsedPercent) * 100) / 100}% of every income. Reduce this pot or another pot to stay within 100%.`
+        );
         return;
       }
     }
@@ -314,6 +329,11 @@ export default function AddGoalScreen() {
               <ThemedText type="caption" themeColor="textSecondary">
                 Whenever you record earnings, {allocationPercent || '0'}% is automatically saved into this pot.
               </ThemedText>
+              <ThemedText type="caption" themeColor={exceedsAutoSaveLimit ? 'danger' : 'textSecondary'}>
+                {committedPercent > 0
+                  ? `Other pots already auto-save ${committedPercent}% · total with this pot: ${totalAutoSavePercent}% of every income.`
+                  : `Total auto-save will be ${totalAutoSavePercent}% of every income.`}
+              </ThemedText>
             </Animated.View>
           )}
 
@@ -332,10 +352,11 @@ export default function AddGoalScreen() {
             </View>
           )}
 
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Contribution Frequency</ThemedText>
-            <View style={styles.freqGrid}>
-              {FREQUENCIES.map((f) => {
+          {allocationType !== 'flexible' && (
+            <View style={styles.field}>
+              <ThemedText type="smallBold">Contribution Frequency</ThemedText>
+              <View style={styles.freqGrid}>
+                {FREQUENCIES.map((f) => {
                 const selected = frequency === f.value;
                 return (
                   <Pressable
@@ -356,9 +377,10 @@ export default function AddGoalScreen() {
                     <ThemedText type="smallBold" numberOfLines={1} themeColor={selected ? 'accent' : 'textSecondary'}>{f.label}</ThemedText>
                   </Pressable>
                 );
-              })}
+                })}
+              </View>
             </View>
-          </View>
+          )}
 
           {message ? <ThemedText type="caption" themeColor="danger">{message}</ThemedText> : null}
 

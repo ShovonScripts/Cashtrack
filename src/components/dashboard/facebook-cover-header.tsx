@@ -3,7 +3,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Image,
@@ -18,11 +18,9 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   Extrapolation,
   interpolate,
-  runOnJS,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -60,10 +58,6 @@ interface FacebookCoverHeaderProps {
   totalBalance?: number;
   monthlySpent?: number;
   onPressProfile?: () => void;
-  /** The home page ScrollView, used so the vertical cover swipe can block it. */
-  pageScrollRef?: React.RefObject<ScrollView | null>;
-  /** True while the home page is scrolled away from the top. */
-  pageScrolled?: boolean;
 }
 
 export function FacebookCoverHeader({
@@ -71,8 +65,6 @@ export function FacebookCoverHeader({
   totalBalance = 0,
   monthlySpent = 0,
   onPressProfile,
-  pageScrollRef,
-  pageScrolled = false,
 }: FacebookCoverHeaderProps) {
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
@@ -135,59 +127,6 @@ export function FacebookCoverHeader({
     hintScale.value = 1;
     animateVerticalTo(next);
   };
-
-  const blockablePageScrollRef = pageScrollRef as unknown as
-    | React.RefObject<React.ComponentType | undefined | null>
-    | undefined;
-
-  const gesturesEnabled = !pageScrolled;
-
-  const swipeUp = Gesture.Pan()
-    .enabled(gesturesEnabled && verticalPage === 0)
-    .activeOffsetY(-12)
-    .failOffsetY(12)
-    .failOffsetX([-14, 14])
-    .onUpdate((event) => {
-      translateY.value = Math.max(-HERO_HEIGHT, Math.min(0, event.translationY));
-    })
-    .onEnd((event) => {
-      const shouldOpen = event.translationY < -HERO_HEIGHT * 0.28 || event.velocityY < -450;
-      if (shouldOpen) {
-        animateVerticalTo(1, (finished) => {
-          if (finished) {
-            runOnJS(applyVerticalPage)(1);
-          }
-        });
-      } else {
-        translateY.value = withSpring(0, VERTICAL_SPRING);
-      }
-    });
-
-  const swipeDown = Gesture.Pan()
-    .enabled(gesturesEnabled && verticalPage === 1)
-    .activeOffsetY(12)
-    .failOffsetY(-12)
-    .failOffsetX([-14, 14])
-    .onUpdate((event) => {
-      translateY.value = Math.max(-HERO_HEIGHT, Math.min(0, -HERO_HEIGHT + event.translationY));
-    })
-    .onEnd((event) => {
-      const shouldClose = event.translationY > HERO_HEIGHT * 0.28 || event.velocityY > 450;
-      if (shouldClose) {
-        animateVerticalTo(0, (finished) => {
-          if (finished) {
-            runOnJS(applyVerticalPage)(0);
-          }
-        });
-      } else {
-        translateY.value = withSpring(-HERO_HEIGHT, VERTICAL_SPRING);
-      }
-    });
-
-  if (blockablePageScrollRef) {
-    swipeUp.blocksExternalGesture(blockablePageScrollRef);
-    swipeDown.blocksExternalGesture(blockablePageScrollRef);
-  }
 
   const verticalTrackStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -352,7 +291,7 @@ export function FacebookCoverHeader({
   const trendBackground = spendWentUp ? 'rgba(251, 191, 36, 0.18)' : 'rgba(52, 211, 153, 0.18)';
   const dailyAverage = monthlySpent / Math.max(1, progress.dayOfMonth);
 
-  const showYearProgress = verticalPage === 0;
+  const isGreetingPage = verticalPage === 0;
 
   return (
     <View style={[styles.container, { width: screenWidth }]}>
@@ -371,8 +310,7 @@ export function FacebookCoverHeader({
         contentContainerStyle={styles.scrollContent}
       >
         {/* SLIDE 1: COVER PHOTO WITH GREETING / YEAR PROGRESS SWAPPING UP-DOWN */}
-        <GestureDetector gesture={verticalPage === 0 ? swipeUp : swipeDown}>
-          <View style={[styles.slideCard, { width: screenWidth }]}>
+        <View style={[styles.slideCard, { width: screenWidth }]}>
             <Animated.Image
               source={getCoverSource(profile.coverPhotoUri)}
               style={[styles.fullCoverImage, coverImageStyle]}
@@ -454,7 +392,7 @@ export function FacebookCoverHeader({
                     <View style={styles.panelTopRow}>
                       <View style={styles.panelLabelGroup}>
                         <View style={styles.panelDot} />
-                        <Text style={styles.balanceEyebrow}>NET BALANCE</Text>
+                        <Text style={styles.balanceEyebrow}>TOTAL BALANCE</Text>
                       </View>
 
                       {showTrend && (
@@ -524,29 +462,28 @@ export function FacebookCoverHeader({
             <Animated.View
               style={[styles.verticalToggleWrap, { top: topPadding }, hintStyle]}>
               <Pressable
-                onPress={() => goToVerticalPage(showYearProgress ? 1 : 0)}
+                onPress={() => goToVerticalPage(isGreetingPage ? 1 : 0)}
                 hitSlop={10}
                 accessibilityRole="button"
-                accessibilityState={{ expanded: !showYearProgress }}
+                accessibilityState={{ expanded: !isGreetingPage }}
                 accessibilityLabel={
-                  showYearProgress
+                  isGreetingPage
                     ? `Year progress, ${progress.yearPercent} percent of ${progress.year} elapsed. Opens year progress.`
                     : 'Greeting. Returns to the greeting.'
                 }
                 style={({ pressed }) => [styles.verticalToggle, pressed && styles.verticalTogglePressed]}>
                 <Ionicons
-                  name={showYearProgress ? 'chevron-up' : 'chevron-down'}
+                  name={isGreetingPage ? 'chevron-up' : 'chevron-down'}
                   size={12}
                   color="#FFFFFF"
                 />
                 <Text style={styles.verticalToggleText} numberOfLines={1}>
-                  {showYearProgress ? `${progress.yearPercent}% of ${progress.year}` : 'Greeting'}
+                  {isGreetingPage ? `${progress.yearPercent}% of ${progress.year}` : 'Greeting'}
                 </Text>
               </Pressable>
             </Animated.View>
 
-          </View>
-        </GestureDetector>
+        </View>
 
         {/* SLIDE 2: LIVE WEATHER + WORLD CLOCKS */}
         <TouchableOpacity
@@ -850,6 +787,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 0,
   },
   panelDot: {
     width: 6,
@@ -870,11 +808,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radius.pill,
+    flexShrink: 1,
+    minWidth: 0,
   },
   trendText: {
     fontSize: 11,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
+    flexShrink: 1,
   },
   balanceValue: {
     color: '#FFFFFF',

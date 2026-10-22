@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { ScrollView as GestureScrollView } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -23,6 +22,7 @@ import { sortByDateDesc, sumAmounts, totalForDate, totalForMonth } from '@/utils
 import { calculateMonthlyCashFlow } from '@/utils/income';
 import type { Expense } from '@/types/expense';
 import { getBudgetInsights, type BudgetInsight } from '@/utils/advisor';
+import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
 import { FacebookCoverHeader } from '@/components/dashboard/facebook-cover-header';
 import { CostSummaryCarousel } from '@/components/dashboard/cost-summary-carousel';
 import { buildCategoryBreakdowns, buildCostSummaries, getAddExpenseDate, getWeekDays, type SummaryPeriod } from '@/utils/period-summary';
@@ -402,10 +402,8 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
 
 function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { debts } = useDebts();
-  const activeDebts = debts.filter((d) => d.status === 'active');
-  const youAreOwed = activeDebts.filter((d) => d.type === 'lent').reduce((sum, d) => sum + d.amount, 0);
-  const youOwe = activeDebts.filter((d) => d.type === 'borrowed').reduce((sum, d) => sum + d.amount, 0);
-  const net = youAreOwed - youOwe;
+  const { youAreOwed, youOwe, net } = summarizeDebts(debts);
+  const openDebtCount = debts.filter((debt) => getRemainingBalance(debt) > 0).length;
 
   return (
     <View style={styles.heroCardSummary}>
@@ -420,7 +418,7 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
             LEND & BORROW
           </ThemedText>
           <View style={styles.monthPill}>
-            <ThemedText type="caption" style={styles.monthPillText}>{activeDebts.length} active</ThemedText>
+            <ThemedText type="caption" style={styles.monthPillText}>{openDebtCount} open</ThemedText>
           </View>
         </View>
 
@@ -576,11 +574,9 @@ export default function DashboardScreen() {
   const { incomeList } = useIncome();
   const theme = useTheme();
   const now = useNow(60_000);
-  const pageScrollRef = useRef<ScrollView>(null);
   const monthSpend = totalForMonth(expenses, now);
   const recent = sortByDateDesc(expenses).slice(0, RECENT_LIMIT);
 
-  const [pageScrolled, setPageScrolled] = useState(false);
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('All');
   const availableCategories = ['All', ...new Set(expenses.map((e) => e.category))];
   const filteredRecent = (selectedFilterCategory === 'All'
@@ -628,26 +624,15 @@ export default function DashboardScreen() {
   const cardWidth = Math.min(screenWidth - containerPadding, MaxContentWidth - containerPadding);
 
   return (
-    <GestureScrollView
-      ref={pageScrollRef}
+    <ScrollView
       style={styles.scrollView}
       contentContainerStyle={[styles.contentContainer, { paddingTop: 0 }]}
-      onScroll={(event) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setPageScrolled((previous) => {
-          const next = offsetY > 8;
-          return next === previous ? previous : next;
-        });
-      }}
-      scrollEventThrottle={16}
       showsVerticalScrollIndicator={false}>
       {/* Facebook Mobile Cover Header taking full top space */}
       <FacebookCoverHeader
         profile={profile}
         totalBalance={incomeList.reduce((acc, i) => acc + i.amount, 0) - sumAmounts(expenses)}
         monthlySpent={monthSpend}
-        pageScrollRef={pageScrollRef}
-        pageScrolled={pageScrolled}
       />
 
       <View style={styles.container}>
@@ -821,7 +806,7 @@ export default function DashboardScreen() {
         visible={!hasCompletedOnboarding && !isLoading}
         onClose={() => setHasCompletedOnboarding(true)}
       />
-    </GestureScrollView>
+    </ScrollView>
   );
 }
 

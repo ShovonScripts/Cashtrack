@@ -147,44 +147,42 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
       <View pointerEvents="none" style={styles.heroOrbSmall} />
 
       <View style={styles.heroContent}>
-        {/* Topline: Label & Pill */}
-        <View style={styles.heroTopline}>
-          <ThemedText type="caption" style={styles.heroLabel}>
-            MONEY PLAN & POTS
-          </ThemedText>
-          <View style={styles.monthPill}>
-            <ThemedText type="caption" style={styles.monthPillText}>{overallProgress}% saved</ThemedText>
-          </View>
-        </View>
-
-        {/* Main Hero Value - Pure White like Daily Cost card */}
-        <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-          {formatAmount(totalSaved)}
-        </ThemedText>
-
-        {/* Footer Metrics Row with Clean White Style & View Pots Link */}
-        <View style={styles.footerRow}>
-          <View style={styles.metricsPillsRow}>
-            <View style={styles.whiteChip}>
-              <View style={styles.cyanDot} />
-              <ThemedText type="small" style={styles.chipText}>
-                {activeGoals.length} {activeGoals.length === 1 ? 'active pot' : 'active pots'}
-              </ThemedText>
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/goals');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`Money plan and pots. ${formatAmount(totalSaved)} saved of ${formatAmount(totalTarget)}. ${activeGoals.length} active ${activeGoals.length === 1 ? 'pot' : 'pots'}. ${overallProgress}% saved.`}
+          accessibilityHint="Opens the savings goals and pots page"
+          style={({ pressed }) => [styles.cardPressArea, pressed && styles.cardPressed]}>
+          {/* Topline: Label & Pill */}
+          <View style={styles.heroTopline}>
+            <ThemedText type="caption" style={styles.heroLabel}>
+              MONEY PLAN & POTS
+            </ThemedText>
+            <View style={styles.monthPill}>
+              <ThemedText type="caption" style={styles.monthPillText}>{overallProgress}% saved</ThemedText>
             </View>
           </View>
 
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              router.push('/goals');
-            }}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-              View pots →
-            </ThemedText>
-          </Pressable>
-        </View>
+          {/* Main Hero Value - Pure White like Daily Cost card */}
+          <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+            {formatAmount(totalSaved)}
+          </ThemedText>
+
+          {/* Footer Metrics Row with Clean White Style */}
+          <View style={styles.footerRow}>
+            <View style={styles.metricsPillsRow}>
+              <View style={styles.whiteChip}>
+                <View style={styles.cyanDot} />
+                <ThemedText type="small" style={styles.chipText}>
+                  {activeGoals.length} {activeGoals.length === 1 ? 'active pot' : 'active pots'}
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+        </Pressable>
 
         {/* Solid White Action Button like Daily Cost card */}
         <Pressable
@@ -412,50 +410,56 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
       <View pointerEvents="none" style={styles.heroOrbSmall} />
 
       <View style={styles.heroContent}>
-        {/* Header Topline */}
-        <View style={styles.heroTopline}>
-          <ThemedText type="caption" style={styles.heroLabel}>
-            LEND & BORROW
-          </ThemedText>
-          <View style={styles.monthPill}>
-            <ThemedText type="caption" style={styles.monthPillText}>{openDebtCount} open</ThemedText>
-          </View>
-        </View>
-
-        {/* Hero Net Value - Pure White like Daily Cost card */}
-        <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-          {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
-        </ThemedText>
-
-        {/* Footer Metrics Row with Clean White Style */}
-        <View style={styles.footerRow}>
-          <View style={styles.metricsPillsRow}>
-            <View style={styles.whiteChip}>
-              <View style={styles.greenDot} />
-              <ThemedText type="small" style={styles.chipText}>
-                Owed: {formatAmount(youAreOwed)}
-              </ThemedText>
-            </View>
-            <View style={styles.whiteChip}>
-              <View style={styles.redDot} />
-              <ThemedText type="small" style={styles.chipText}>
-                Owe: {formatAmount(youOwe)}
-              </ThemedText>
-            </View>
-          </View>
-
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              router.push('/debts');
-            }}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.whiteLinkButton, pressed && styles.pressed]}>
-            <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
-              View debts →
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/debts');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`Lend and borrow. Net ${formatAmount(net)}. Owed to you ${formatAmount(youAreOwed)}. You owe ${formatAmount(youOwe)}. ${openDebtCount} open.`}
+          accessibilityHint="Opens the debts and IOUs page"
+          style={({ pressed }) => [styles.cardPressArea, pressed && styles.cardPressed]}>
+          {/* Header Topline */}
+          <View style={styles.heroTopline}>
+            <ThemedText type="caption" style={styles.heroLabel}>
+              LEND & BORROW
             </ThemedText>
-          </Pressable>
-        </View>
+            <View style={styles.monthPill}>
+              <ThemedText type="caption" style={styles.monthPillText}>{openDebtCount} open</ThemedText>
+            </View>
+          </View>
+
+          {/* Hero Net Value - Pure White like Daily Cost card */}
+          <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
+            {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
+          </ThemedText>
+
+          {/* Footer Metrics Row with Clean White Style */}
+          <View style={styles.footerRow}>
+            <View style={styles.metricsPillsRow}>
+              <View style={[styles.whiteChip, styles.shrinkChip]}>
+                <View style={styles.greenDot} />
+                <ThemedText
+                  type="small"
+                  style={styles.chipText}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit>
+                  Owed: {formatAmount(youAreOwed)}
+                </ThemedText>
+              </View>
+              <View style={[styles.whiteChip, styles.shrinkChip]}>
+                <View style={styles.redDot} />
+                <ThemedText
+                  type="small"
+                  style={styles.chipText}
+                  numberOfLines={1}
+                  adjustsFontSizeToFit>
+                  Owe: {formatAmount(youOwe)}
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+        </Pressable>
 
         {/* Solid White Action Button like Daily Cost card */}
         <Pressable
@@ -847,6 +851,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     zIndex: 1,
   },
+  cardPressArea: {
+    gap: Spacing.three,
+  },
+  cardPressed: {
+    opacity: 0.9,
+  },
   heroTopline: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -875,7 +885,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.pill,
-    minHeight: 44,
+    minHeight: 36,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,
@@ -1088,6 +1098,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: Radius.small,
   },
+  shrinkChip: {
+    flexShrink: 1,
+  },
   chipText: {
     color: '#FFFFFF',
     fontWeight: '700',
@@ -1119,9 +1132,6 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: Radius.pill,
-  },
-  whiteLinkButton: {
-    paddingVertical: 4,
   },
   carouselWrapper: {
     width: '100%',

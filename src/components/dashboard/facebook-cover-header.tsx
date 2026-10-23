@@ -133,7 +133,13 @@ export function FacebookCoverHeader({
   }));
 
   const coverImageStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: reducedMotion ? 0 : translateY.value * 0.35 }],
+    transform: [
+      {
+        scale: reducedMotion
+          ? 1
+          : interpolate(translateY.value, [-HERO_HEIGHT, 0], [1.06, 1], Extrapolation.CLAMP),
+      },
+    ],
   }));
 
   const pageAContentStyle = useAnimatedStyle(() => ({
@@ -633,8 +639,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: HERO_HEIGHT + 140,
-    width: '100%',
+    bottom: 0,
     resizeMode: 'cover',
   },
   scrimBoost: {

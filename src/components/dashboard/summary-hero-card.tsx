@@ -130,11 +130,13 @@ export function SummaryHeroCard({
           onPress={handleActionPress}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
-          style={({ pressed }) => [styles.addButton, pressed && styles.actionPressed]}>
-          <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-          <ThemedText type="defaultBold" style={styles.addButtonText}>
-            {actionLabel}
-          </ThemedText>
+          style={({ pressed }) => [styles.actionTouchArea, pressed && styles.actionPressed]}>
+          <View style={styles.addButton}>
+            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+            <ThemedText type="defaultBold" style={styles.addButtonText}>
+              {actionLabel}
+            </ThemedText>
+          </View>
         </Pressable>
       </View>
     </View>
@@ -242,19 +244,22 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
     flexShrink: 1,
   },
+  actionTouchArea: {
+    width: '100%',
+    minHeight: 44,
+    justifyContent: 'center',
+    marginTop: Spacing.one,
+  },
   addButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.pill,
-    minHeight: 44,
+    height: 32,
     width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
-    paddingHorizontal: Spacing.four,
-    marginTop: Spacing.one,
+    paddingHorizontal: Spacing.three,
   },
   actionPressed: {
     opacity: 0.75,

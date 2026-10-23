@@ -54,8 +54,8 @@ export async function scheduleDailySpendingReminderNotificationsAsync(
 ): Promise<boolean> {
   if (Platform.OS === 'web' || !NotificationsModule) return false;
 
-  const hasPermission = await requestSpendingReminderPermissionsAsync();
-  if (!hasPermission) return false;
+  const { status } = await NotificationsModule.getPermissionsAsync();
+  if (status !== 'granted') return false;
 
   await cancelSpendingReminderNotificationsAsync();
 

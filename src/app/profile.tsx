@@ -23,13 +23,16 @@ import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing, Brand } from '@/constants/theme';
-import { COVER_PRESETS, getCoverSource } from '@/constants/cover-presets';
+import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
 import { useExpenses } from '@/context/expense-context';
 import { useGoals } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
 import type { GenderOption, UserProfile, FirstDayOfWeek } from '@/types/preferences';
 import { generateCsvReport } from '@/utils/csv';
 import { requestQuoteNotificationPermissionsAsync } from '@/utils/quote-notifications';
+import { requestNotificationPermissionsAsync } from '@/utils/reminder-notifications';
+import { requestSpendingReminderPermissionsAsync } from '@/utils/spending-reminder-notifications';
+import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 import { confirmAction, notify } from '@/utils/confirm';
 
 type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
@@ -80,6 +83,7 @@ export default function ProfileScreen() {
     setEnableDailyReminder,
     enableDailyQuotes,
     setEnableDailyQuotes,
+    appLockEnabled,
     resetAllData,
   } = useExpenses();
 
@@ -584,6 +588,37 @@ export default function ProfileScreen() {
                 </View>
               </Card>
 
+              {/* Privacy & Security Card */}
+              <Card style={styles.sectionCard}>
+                <View style={styles.cardHeaderRow}>
+                  <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#159A8C" />
+                  <ThemedText type="defaultBold">Privacy & Security</ThemedText>
+                </View>
+
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    router.push('/app-lock');
+                  }}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.settingRowItemCompact,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#159A8C1E' }]}>
+                    <MaterialCommunityIcons name="cellphone-lock" size={17} color="#159A8C" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">App Lock</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      {appLockEnabled ? 'On · Unlock with device security' : 'Off · Protect your data'}
+                    </ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+                </Pressable>
+              </Card>
+
               {/* Regional & Currency Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
@@ -703,8 +738,18 @@ export default function ProfileScreen() {
                 </View>
                 <Switch
                   value={enableBillReminders}
-                  onValueChange={(val) => {
+                  onValueChange={async (val) => {
                     triggerHaptic();
+                    if (val) {
+                      const granted = await requestNotificationPermissionsAsync();
+                      if (!granted) {
+                        notify(
+                          'Notifications are off',
+                          'Allow notifications for CashTrack in your device settings to receive bill reminders.'
+                        );
+                        return;
+                      }
+                    }
                     setEnableBillReminders(val);
                   }}
                   accessibilityLabel="Bill payment reminders"
@@ -725,6 +770,7 @@ export default function ProfileScreen() {
                   value={enableBudgetAlerts}
                   onValueChange={(val) => {
                     triggerHaptic();
+                    if (val) void registerForBudgetNotificationsAsync();
                     setEnableBudgetAlerts(val);
                   }}
                   accessibilityLabel="Budget cap threshold warnings"
@@ -743,8 +789,18 @@ export default function ProfileScreen() {
                 </View>
                 <Switch
                   value={enableDailyReminder}
-                  onValueChange={(val) => {
+                  onValueChange={async (val) => {
                     triggerHaptic();
+                    if (val) {
+                      const granted = await requestSpendingReminderPermissionsAsync();
+                      if (!granted) {
+                        notify(
+                          'Notifications are off',
+                          'Allow notifications for CashTrack in your device settings to receive the daily check-in.'
+                        );
+                        return;
+                      }
+                    }
                     setEnableDailyReminder(val);
                   }}
                   accessibilityLabel="Daily expense log check-in"
@@ -963,8 +1019,10 @@ export default function ProfileScreen() {
             <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
               <View style={styles.presetGrid}>
                 {COVER_PRESETS.map((preset) => {
-                  const activeUri = coverPhotoUri || 'default-cover';
-                  const isSelected = activeUri === preset.uri || (!coverPhotoUri && preset.id === 'default-cover');
+                  const activeUri = !coverPhotoUri || coverPhotoUri === DEFAULT_COVER_KEY
+                    ? DEFAULT_COVER_URI
+                    : coverPhotoUri;
+                  const isSelected = activeUri === preset.uri;
                   return (
                     <Pressable
                       key={preset.id}

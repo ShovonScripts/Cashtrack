@@ -14,7 +14,7 @@ import type { DebtType } from '@/types/debt';
 
 export default function AddDebtScreen() {
   const theme = useTheme();
-  const { addDebt } = useDebts();
+  const { addDebt, deleteDebt } = useDebts();
   const { addExpense } = useExpenses();
   const { addIncome } = useIncome();
 
@@ -27,6 +27,7 @@ export default function AddDebtScreen() {
   const [note, setNote] = useState('');
   const [affectBalance, setAffectBalance] = useState(false);
   const [error, setError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
   const isValid =
@@ -36,12 +37,14 @@ export default function AddDebtScreen() {
     parsedAmount > 0;
 
   const handleSave = async () => {
-    if (!isValid) {
-      setError('Please provide a valid person name and an amount greater than zero.');
+    if (!isValid || isSaving) {
+      if (!isValid) setError('Please provide a valid person name and an amount greater than zero.');
       return;
     }
 
-    addDebt({
+    setIsSaving(true);
+    setError('');
+    const debt = addDebt({
       personName: personName.trim().slice(0, 50),
       amount: parsedAmount,
       type,
@@ -50,25 +53,32 @@ export default function AddDebtScreen() {
       note: note.trim().slice(0, 200),
     });
 
-    if (affectBalance) {
-      if (type === 'lent') {
-        addExpense({
-          amount: parsedAmount,
-          category: 'Lending',
-          date: date.toISOString(),
-          note: `Lent to ${personName.trim()}${note ? ` · ${note.trim()}` : ''}`,
-        });
-      } else {
-        await addIncome({
-          amount: parsedAmount,
-          date: date.toISOString(),
-          note: `Borrowed from ${personName.trim()}${note ? ` · ${note.trim()}` : ''}`,
-          isRecurring: false,
-        });
+    try {
+      if (affectBalance) {
+        if (type === 'lent') {
+          addExpense({
+            amount: parsedAmount,
+            category: 'Lending',
+            date: date.toISOString(),
+            note: `Lent to ${personName.trim()}${note ? ` · ${note.trim()}` : ''}`,
+          });
+        } else {
+          await addIncome({
+            amount: parsedAmount,
+            date: date.toISOString(),
+            note: `Borrowed from ${personName.trim()}${note ? ` · ${note.trim()}` : ''}`,
+            isRecurring: false,
+          });
+        }
       }
+      router.back();
+    } catch (saveError) {
+      console.error('[cashtrack] Failed to save the debt balance entry', saveError);
+      deleteDebt(debt.id);
+      setError('The debt was not saved because its balance entry failed. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
-
-    router.back();
   };
 
   return (
@@ -210,16 +220,18 @@ export default function AddDebtScreen() {
 
           <Pressable
             onPress={handleSave}
-            disabled={!isValid}
+            disabled={!isValid || isSaving}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid }}
+            accessibilityState={{ disabled: !isValid || isSaving }}
             style={({ pressed }) => [
               styles.saveButton,
               { backgroundColor: theme.accentFill },
               pressed && styles.pressed,
-              !isValid && styles.saveButtonDisabled,
+              (!isValid || isSaving) && styles.saveButtonDisabled,
             ]}>
-            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Save Debt</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>
+              {isSaving ? 'Saving…' : 'Save Debt'}
+            </ThemedText>
           </Pressable>
 
           <Pressable

@@ -53,10 +53,9 @@ export function CostCategoryChart({
           <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
             CATEGORY BREAKDOWN
           </ThemedText>
-          <ThemedText type="defaultBold">Where your money went</ThemedText>
         </View>
-        <View style={[styles.periodPill, { backgroundColor: theme.backgroundElement }]}>
-          <ThemedText type="caption" themeColor="textSecondary" style={styles.periodPillText}>
+        <View style={[styles.periodPill, { backgroundColor: theme.accentMuted }]}>
+          <ThemedText type="caption" themeColor="accent" style={styles.periodPillText} numberOfLines={1}>
             {PERIOD_LABEL[period]}
           </ThemedText>
         </View>
@@ -142,12 +141,13 @@ const styles = StyleSheet.create({
     fontSize: 10,
   },
   periodPill: {
+    flexShrink: 0,
     paddingHorizontal: Spacing.two,
     paddingVertical: 3,
     borderRadius: Radius.pill,
   },
   periodPillText: {
-    fontWeight: '600',
+    fontWeight: '700',
   },
   rows: {
     gap: Spacing.two,

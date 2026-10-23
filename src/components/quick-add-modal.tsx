@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -51,6 +51,14 @@ const QUICK_ACTIONS: QuickAction[] = [
     icon: 'account-cash-outline',
     color: '#2D9CDB',
     route: '/debts/add',
+  },
+  {
+    id: 'pot',
+    title: 'New Savings Pot',
+    subtitle: 'Stash cash, target optional',
+    icon: 'piggy-bank',
+    color: '#9B51E0',
+    route: '/goals/add',
   },
 ];
 
@@ -131,7 +139,10 @@ export function QuickAddModal({
           </View>
 
           {/* Action Grid */}
-          <View style={styles.actionGrid}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={styles.actionScroll}
+            contentContainerStyle={styles.actionGrid}>
             {QUICK_ACTIONS.map((action) => {
               const actionColor =
                 action.id === 'expense'
@@ -140,7 +151,9 @@ export function QuickAddModal({
                     ? theme.success
                     : action.id === 'bill'
                       ? theme.warning
-                      : theme.info;
+                      : action.id === 'pot'
+                        ? theme.accent
+                        : theme.info;
 
               return (
                 <Pressable
@@ -168,7 +181,7 @@ export function QuickAddModal({
                 </Pressable>
               );
             })}
-          </View>
+          </ScrollView>
         </Animated.View>
       </Animated.View>
     </Modal>
@@ -187,6 +200,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
     gap: Spacing.three,
+    maxHeight: '90%',
   },
   handle: {
     width: 36,
@@ -214,6 +228,9 @@ const styles = StyleSheet.create({
   actionGrid: {
     gap: Spacing.two,
     paddingTop: Spacing.one,
+  },
+  actionScroll: {
+    flexShrink: 1,
   },
   actionCard: {
     flexDirection: 'row',

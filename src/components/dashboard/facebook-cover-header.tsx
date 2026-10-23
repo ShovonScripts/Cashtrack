@@ -556,11 +556,11 @@ export function FacebookCoverHeader({
           <View pointerEvents="none" style={styles.quoteBgGlow2} />
 
           {/* Floating Lime-Green Quote Badge overlapping top-left */}
-          <View style={[styles.floatingQuoteBadge, { top: topPadding - 8 }]}>
+          <View style={[styles.floatingQuoteBadge, { top: topPadding + 16 }]}>
             <Text style={styles.floatingQuoteSymbol}>“</Text>
           </View>
 
-          <View style={[styles.quoteCardWrapper, { paddingTop: topPadding + 14 }]}>
+          <View style={[styles.quoteCardWrapper, { paddingTop: topPadding + 38 }]}>
             <View style={styles.quoteCardContent}>
               <Text style={styles.referenceQuoteText} numberOfLines={3} adjustsFontSizeToFit>
                 &ldquo;{currentQuote.quote}&rdquo;

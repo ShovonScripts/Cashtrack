@@ -96,8 +96,8 @@ export default function TabLayout() {
                 accessibilityRole="button"
                 accessibilityLabel="Quick add transaction or entry"
                 style={styles.addButtonWrapper}>
-                <View style={[styles.addButton, { backgroundColor: theme.accentFill }]}>
-                  <MaterialCommunityIcons name="plus" size={28} color={theme.onBrand} />
+                <View style={[styles.addButton, { backgroundColor: theme.accentFill, borderColor: theme.card }]}>
+                  <MaterialCommunityIcons name="plus" size={34} color={theme.onBrand} />
                 </View>
               </Pressable>
             ),
@@ -149,18 +149,19 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   addButtonWrapper: {
-    top: -12,
+    top: -24,
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
   },
   addButton: {
-    width: 48,
-    height: 48,
+    width: 64,
+    height: 64,
     borderRadius: Radius.pill,
+    borderWidth: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 6,
     shadowColor: '#0152F5',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,

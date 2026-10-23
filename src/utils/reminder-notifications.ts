@@ -35,6 +35,16 @@ export async function requestNotificationPermissionsAsync(): Promise<boolean> {
   }
 }
 
+export async function hasReminderNotificationPermissionAsync(): Promise<boolean> {
+  if (Platform.OS === 'web' || !NotificationsModule) return false;
+  try {
+    const { status } = await NotificationsModule.getPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
+}
+
 export async function cancelReminderNotificationsAsync(reminderId: string): Promise<void> {
   if (Platform.OS === 'web' || !NotificationsModule) return;
   try {
@@ -48,9 +58,15 @@ export async function cancelReminderNotificationsAsync(reminderId: string): Prom
   } catch {}
 }
 
-export async function scheduleReminderNotificationsAsync(reminder: FinancialReminder, formatAmount?: (amount: number | null) => string): Promise<void> {
+export async function scheduleReminderNotificationsAsync(
+  reminder: FinancialReminder,
+  formatAmount?: (amount: number | null) => string,
+  options?: { requestPermission?: boolean },
+): Promise<void> {
   if (Platform.OS === 'web' || !NotificationsModule) return;
-  const hasPermission = await requestNotificationPermissionsAsync();
+  const hasPermission = options?.requestPermission
+    ? await requestNotificationPermissionsAsync()
+    : await hasReminderNotificationPermissionAsync();
   if (!hasPermission || reminder.status === 'paid' || reminder.status === 'skipped') return;
 
   // First cancel any existing notifications for this reminder to avoid duplicates

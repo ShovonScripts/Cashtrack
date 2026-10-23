@@ -98,7 +98,7 @@ export default function GoalDetailScreen() {
       setMessage('Contribution recorded.');
 
       const nextTotal = goal.contributedAmount + parsed;
-      if (nextTotal >= goal.targetAmount && !goal.isCompleted) {
+      if (goal.targetAmount > 0 && nextTotal >= goal.targetAmount && !goal.isCompleted) {
         setShowCompletionModal(true);
       }
     } catch {
@@ -121,6 +121,8 @@ export default function GoalDetailScreen() {
 
   const isAhead = calc.aheadBehindAmount >= 0;
   const isFlexible = goal.allocationType === 'flexible';
+  const hasTarget = goal.targetAmount > 0;
+  const isOpenEnded = isFlexible || !hasTarget;
   const deadline = goal.deadlineDate ? new Date(goal.deadlineDate) : null;
   const overdueDays =
     deadline && !goal.isCompleted && now.getTime() > deadline.getTime()
@@ -139,7 +141,7 @@ export default function GoalDetailScreen() {
           <View style={styles.heroContent}>
             <View style={styles.heroTopline}>
               <ThemedText type="caption" style={styles.heroLabel}>
-                FINANCIAL POT · {isFlexible ? 'OPEN-ENDED' : goal.frequency.toUpperCase()}
+                FINANCIAL POT · {isOpenEnded ? 'OPEN-ENDED' : goal.frequency.toUpperCase()}
               </ThemedText>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
                 <Pressable
@@ -151,7 +153,7 @@ export default function GoalDetailScreen() {
                 </Pressable>
                 <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? withAlpha(theme.successOnBrand, 0.25) : 'rgba(255,255,255,0.15)' }]}>
                   <ThemedText type="caption" style={{ color: goal.isCompleted ? theme.successOnBrand : theme.onBrand, fontWeight: '700' }}>
-                    {goal.isCompleted ? 'Completed' : 'Active'}
+                    {goal.isCompleted ? 'Completed' : isOpenEnded ? 'Open-ended' : 'Active'}
                   </ThemedText>
                 </View>
               </View>
@@ -168,7 +170,7 @@ export default function GoalDetailScreen() {
               <View style={styles.heroStat}>
                 <ThemedText type="caption" style={styles.heroStatLabel}>TARGET</ThemedText>
                 <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatAmount(goal.targetAmount)}
+                  {hasTarget ? formatAmount(goal.targetAmount) : 'None'}
                 </ThemedText>
               </View>
             </View>
@@ -180,14 +182,18 @@ export default function GoalDetailScreen() {
         <Card style={styles.card}>
           <View style={styles.sectionHeader}>
             <ThemedText type="defaultBold">Progress breakdown</ThemedText>
-            <ThemedText type="subtitle" style={{ color: theme.accent }}>{Math.round(goal.progressPercent)}%</ThemedText>
+            <ThemedText type="subtitle" style={{ color: theme.accent }}>
+              {hasTarget ? `${Math.round(goal.progressPercent)}%` : 'No target'}
+            </ThemedText>
           </View>
 
-          <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
-            <View style={[styles.fill, { width: `${Math.min(100, goal.progressPercent)}%`, backgroundColor: goal.isCompleted ? theme.success : theme.accent }]} />
-          </View>
+          {hasTarget ? (
+            <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
+              <View style={[styles.fill, { width: `${Math.min(100, goal.progressPercent)}%`, backgroundColor: goal.isCompleted ? theme.success : theme.accent }]} />
+            </View>
+          ) : null}
 
-          {!isFlexible && deadline ? (
+          {!isOpenEnded && deadline ? (
             <ThemedText type="caption" themeColor={overdueDays > 0 ? 'danger' : 'textSecondary'}>
               {goal.isCompleted
                 ? `Completed · target date ${formatDate(goal.deadlineDate!)}`
@@ -198,9 +204,9 @@ export default function GoalDetailScreen() {
           ) : null}
 
           <View style={styles.metricsGrid}>
-            {isFlexible ? (
+            {isOpenEnded ? (
               <>
-                <MetricItem label="Remaining" value={formatAmount(calc.remainingAmount)} />
+                <MetricItem label="Remaining" value={hasTarget ? formatAmount(calc.remainingAmount) : 'None'} />
                 <MetricItem label="Contributions" value={String(goal.contributions.length)} />
               </>
             ) : (
@@ -242,36 +248,38 @@ export default function GoalDetailScreen() {
         )}
 
         {/* Milestone Projections Card */}
-        <Card style={styles.card}>
-          <ThemedText type="defaultBold">Milestone Projections</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Target thresholds and progress breakdown.
-          </ThemedText>
-          <View style={{ gap: Spacing.two, marginTop: Spacing.one }}>
-            {[
-              { pct: 25, label: 'Quarter Goal (25%)' },
-              { pct: 50, label: 'Halfway Mark (50%)' },
-              { pct: 75, label: 'Three-Quarters (75%)' },
-              { pct: 100, label: 'Full Target (100%)' },
-            ].map((m) => {
-              const target = goal.targetAmount * (m.pct / 100);
-              const reached = goal.contributedAmount >= target;
-              return (
-                <View key={m.pct} style={[styles.milestoneRow, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-                  <View style={styles.milestoneInfo}>
-                    <ThemedText type="smallBold">{m.label}</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">{formatAmount(target)}</ThemedText>
+        {hasTarget ? (
+          <Card style={styles.card}>
+            <ThemedText type="defaultBold">Milestone Projections</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Target thresholds and progress breakdown.
+            </ThemedText>
+            <View style={{ gap: Spacing.two, marginTop: Spacing.one }}>
+              {[
+                { pct: 25, label: 'Quarter Goal (25%)' },
+                { pct: 50, label: 'Halfway Mark (50%)' },
+                { pct: 75, label: 'Three-Quarters (75%)' },
+                { pct: 100, label: 'Full Target (100%)' },
+              ].map((m) => {
+                const target = goal.targetAmount * (m.pct / 100);
+                const reached = goal.contributedAmount >= target;
+                return (
+                  <View key={m.pct} style={[styles.milestoneRow, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
+                    <View style={styles.milestoneInfo}>
+                      <ThemedText type="smallBold">{m.label}</ThemedText>
+                      <ThemedText type="caption" themeColor="textSecondary">{formatAmount(target)}</ThemedText>
+                    </View>
+                    <View style={[styles.milestoneBadge, { backgroundColor: reached ? withAlpha(theme.success, 0.15) : theme.backgroundElement }]}>
+                      <ThemedText type="caption" style={{ color: reached ? theme.success : theme.textSecondary, fontWeight: '700' }}>
+                        {reached ? '✓ Reached' : `${Math.min(100, Math.round((goal.contributedAmount / target) * 100))}%`}
+                      </ThemedText>
+                    </View>
                   </View>
-                  <View style={[styles.milestoneBadge, { backgroundColor: reached ? withAlpha(theme.success, 0.15) : theme.backgroundElement }]}>
-                    <ThemedText type="caption" style={{ color: reached ? theme.success : theme.textSecondary, fontWeight: '700' }}>
-                      {reached ? '✓ Reached' : `${Math.min(100, Math.round((goal.contributedAmount / target) * 100))}%`}
-                    </ThemedText>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </Card>
+                );
+              })}
+            </View>
+          </Card>
+        ) : null}
 
         {/* Add Contribution Form */}
         <Card style={styles.card}>

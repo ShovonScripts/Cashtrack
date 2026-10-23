@@ -14,9 +14,10 @@ function roundCurrency(value: number): number {
 /**
  * Splits an income across percentage-based pots.
  *
- * Contributions are capped by the pot's remaining target and by the income
- * available, so auto-save can never allocate more than the money received or
- * push a pot past its goal.
+ * Contributions are capped by the pot's remaining target (when it has one) and
+ * by the income available, so auto-save can never allocate more than the money
+ * received or push a targeted pot past its goal. A pot with no target stores
+ * `targetAmount = 0` and only the income cap applies.
  */
 export function calculateIncomeAllocations(
   income: IncomeRecord,
@@ -48,7 +49,8 @@ export function calculateIncomeAllocations(
     if (remainingIncome <= 0) break;
 
     const contributed = contributedByGoal.get(goal.id) ?? 0;
-    const remainingTarget = roundCurrency(goal.targetAmount - contributed);
+    const hasTarget = goal.targetAmount > 0;
+    const remainingTarget = hasTarget ? roundCurrency(goal.targetAmount - contributed) : Infinity;
     if (remainingTarget <= 0) continue;
 
     const percent = goal.allocationPercent ?? 0;

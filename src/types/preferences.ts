@@ -17,6 +17,8 @@ export type UserPreferences = {
   profile: UserProfile;
   countryCode: CountryCode;
   customCategories: string[];
+  /** Persisted display order for built-in and custom categories. */
+  categoryOrder: string[];
   /** Monthly spending caps, keyed by category name. */
   categoryLimits: Record<string, number>;
   /** Custom icons for categories, keyed by category name. */
@@ -31,12 +33,14 @@ export type UserPreferences = {
   enableBudgetAlerts?: boolean;
   enableDailyReminder?: boolean;
   enableDailyQuotes?: boolean;
+  appLockEnabled?: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   profile: { name: '', age: null, gender: '', bio: '' },
   countryCode: 'BD',
   customCategories: [],
+  categoryOrder: [],
   categoryLimits: {},
   categoryIcons: {},
   notifiedThresholds: {},
@@ -49,5 +53,6 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   enableBudgetAlerts: true,
   enableDailyReminder: false,
   enableDailyQuotes: false,
+  appLockEnabled: false,
 };
 

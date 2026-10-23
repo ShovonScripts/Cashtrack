@@ -131,12 +131,14 @@ test('parseJsonArray treats null and blank as empty and throws on garbage', () =
 
 test('mapGoalRow fills legacy defaults and keeps stored values', () => {
   const mapped = mapGoalRow({ id: 'g1', title: 'Trip', targetAmount: 100 });
+  assert.equal(mapped.targetAmount, 100);
   assert.equal(mapped.potType, 'general');
   assert.equal(mapped.allocationType, 'manual');
   assert.equal(mapped.allocationPercent, null);
   assert.equal(mapped.icon, 'piggy-bank');
 
   const explicit = mapGoalRow({ id: 'g2', potType: 'dream', icon: '🎯' });
+  assert.equal(explicit.targetAmount, 0);
   assert.equal(explicit.potType, 'dream');
   assert.equal(explicit.icon, '🎯');
 });

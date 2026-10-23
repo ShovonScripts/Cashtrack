@@ -1,6 +1,7 @@
 /**
- * Pure helpers describing the `money_goals` schema and the one-time rebuild that
- * makes `deadline_date` nullable so flexible savings pots can be saved on native.
+ * Pure helpers describing the `money_goals` schema and the one-time rebuilds
+ * that keep older databases compatible: `deadline_date` must be nullable for
+ * flexible pots, and `target_amount` must allow `0` for pots without a target.
  *
  * This module deliberately imports nothing native, so the exact SQL executed by
  * `db.ts` can be exercised in unit tests with the built-in SQLite engine.
@@ -36,7 +37,7 @@ export const MONEY_GOALS_COLUMN_NAMES = [
 const MONEY_GOALS_COLUMNS_SQL = `
   id TEXT PRIMARY KEY NOT NULL,
   title TEXT NOT NULL,
-  target_amount REAL NOT NULL CHECK (target_amount > 0),
+  target_amount REAL NOT NULL DEFAULT 0 CHECK (target_amount >= 0),
   start_date TEXT NOT NULL,
   deadline_date TEXT,
   frequency TEXT NOT NULL,
@@ -65,14 +66,24 @@ export function goalDeadlineNeedsNullableMigration(
 }
 
 /**
- * SQLite cannot drop a `NOT NULL` constraint in place, so the table is rebuilt:
- * create a nullable copy, move every row across by id-preserving `INSERT ...
- * SELECT`, drop the old table, and rename the copy. Data, ids and the
+ * True only when the live table still rejects a zero target via
+ * `CHECK (target_amount > 0)`. A fresh install, or one already migrated, returns
+ * false.
+ */
+export function goalTargetNeedsOptionalMigration(tableSql: string | null | undefined): boolean {
+  if (!tableSql) return false;
+  return /target_amount\s+REAL\s+NOT\s+NULL\s+CHECK\s*\(\s*target_amount\s*>\s*0\s*\)/i.test(tableSql);
+}
+
+/**
+ * SQLite cannot drop `NOT NULL` or `CHECK` constraints in place, so the table is
+ * rebuilt: create a canonical copy, move every row across by id-preserving
+ * `INSERT ... SELECT`, drop the old table, and rename the copy. Data, ids and the
  * `goal_contributions` relationship (keyed by `goal_id`) are untouched.
  *
  * Must run inside a transaction; SQLite rolls back DDL on failure.
  */
-export function buildGoalDeadlineRebuildSql(): string {
+export function buildGoalTableRebuildSql(): string {
   const columns = MONEY_GOALS_COLUMN_NAMES.join(', ');
   return [
     'DROP TABLE IF EXISTS money_goals_migrated;',

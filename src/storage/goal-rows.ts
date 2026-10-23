@@ -15,6 +15,7 @@ export function mapGoalRow(row: unknown): MoneyGoal {
   const goal = row as Partial<MoneyGoal>;
   return {
     ...(row as MoneyGoal),
+    targetAmount: typeof goal.targetAmount === 'number' ? goal.targetAmount : 0,
     potType: goal.potType ?? 'general',
     allocationType: goal.allocationType ?? 'manual',
     allocationPercent: goal.allocationPercent ?? null,

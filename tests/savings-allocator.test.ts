@@ -92,3 +92,21 @@ test('calculateIncomeAllocations skips pots that are already fully funded', () =
   const allocations = calculateIncomeAllocations(income, goals, existing);
   assert.equal(allocations.length, 0);
 });
+
+test('calculateIncomeAllocations keeps auto-saving into a pot without a target', () => {
+  const goals = [mockGoal({ id: 'g1', targetAmount: 0, allocationPercent: 10 })];
+  const income = mockIncome({ amount: 1000 });
+  const existing = [
+    {
+      id: 'c1',
+      goalId: 'g1',
+      amount: 500,
+      date: '2026-09-01T00:00:00.000Z',
+      note: '',
+    },
+  ];
+
+  const allocations = calculateIncomeAllocations(income, goals, existing);
+  assert.equal(allocations.length, 1);
+  assert.equal(allocations[0].amount, 100);
+});

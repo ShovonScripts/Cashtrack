@@ -3,9 +3,10 @@ import test from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 
 import {
-  buildGoalDeadlineRebuildSql,
+  buildGoalTableRebuildSql,
   createMoneyGoalsTableSql,
   goalDeadlineNeedsNullableMigration,
+  goalTargetNeedsOptionalMigration,
   MONEY_GOALS_COLUMN_NAMES,
   type SqliteTableInfoColumn,
 } from '../src/storage/goal-migration.ts';
@@ -60,6 +61,13 @@ function tableInfo(db: DatabaseSync): SqliteTableInfoColumn[] {
     .all() as unknown as SqliteTableInfoColumn[];
 }
 
+function tableSql(db: DatabaseSync): string {
+  const row = db
+    .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'money_goals'")
+    .get() as unknown as { sql: string };
+  return row.sql;
+}
+
 /** node:sqlite returns null-prototype rows; copy them so strict deep-equal compares values. */
 function plain<T>(rows: unknown[]): T[] {
   return rows.map((row) => ({ ...(row as object) })) as T[];
@@ -110,6 +118,18 @@ test('legacy NOT NULL deadline is detected, nullable and missing columns are not
   assert.equal(goalDeadlineNeedsNullableMigration([]), false);
 });
 
+test('legacy zero-rejecting target CHECK is detected, canonical and missing tables are not', () => {
+  const legacy = createLegacyDb();
+  assert.equal(goalTargetNeedsOptionalMigration(tableSql(legacy)), true);
+
+  const fresh = new DatabaseSync(':memory:');
+  fresh.exec(createMoneyGoalsTableSql('money_goals'));
+  assert.equal(goalTargetNeedsOptionalMigration(tableSql(fresh)), false);
+
+  assert.equal(goalTargetNeedsOptionalMigration(null), false);
+  assert.equal(goalTargetNeedsOptionalMigration(''), false);
+});
+
 test('legacy schema rejects a flexible goal (documents the bug being fixed)', () => {
   const db = createLegacyDb();
   assert.throws(
@@ -132,7 +152,7 @@ test('migration preserves existing goals and contributions and enables flexible 
     "INSERT INTO goal_contributions (id, goal_id, amount, date, note) VALUES (?, ?, ?, ?, ?)"
   ).run('contrib-1', 'goal-dated-1', 300, '2026-02-01T00:00:00.000Z', 'first');
 
-  db.exec(buildGoalDeadlineRebuildSql());
+  db.exec(buildGoalTableRebuildSql());
 
   const goals = plain<GoalRecord>(db.prepare('SELECT * FROM money_goals ORDER BY id').all());
   assert.deepEqual(goals, [
@@ -164,9 +184,9 @@ test('migration is idempotent and safe to run repeatedly', () => {
   const db = createLegacyDb();
   insertLegacyGoal(db, datedGoal);
 
-  db.exec(buildGoalDeadlineRebuildSql());
+  db.exec(buildGoalTableRebuildSql());
   assert.equal(goalDeadlineNeedsNullableMigration(tableInfo(db)), false);
-  db.exec(buildGoalDeadlineRebuildSql());
+  db.exec(buildGoalTableRebuildSql());
 
   const goals = plain<GoalRecord>(db.prepare('SELECT * FROM money_goals').all());
   assert.deepEqual(goals, [datedGoal]);
@@ -180,6 +200,31 @@ test('fresh schema allows a NULL deadline out of the box', () => {
   );
 });
 
+test('fresh schema allows a zero target for open-ended pots', () => {
+  const db = new DatabaseSync(':memory:');
+  db.exec(createMoneyGoalsTableSql('money_goals'));
+  assert.doesNotThrow(() =>
+    insertLegacyGoal(db, { ...datedGoal, id: 'goal-open', target_amount: 0 })
+  );
+});
+
+test('migration enables zero-target pots while preserving existing rows', () => {
+  const db = createLegacyDb();
+  insertLegacyGoal(db, datedGoal);
+  assert.throws(
+    () => insertLegacyGoal(db, { ...datedGoal, id: 'goal-open', target_amount: 0 }),
+    /CHECK constraint failed/
+  );
+
+  db.exec(buildGoalTableRebuildSql());
+
+  insertLegacyGoal(db, { ...datedGoal, id: 'goal-open', target_amount: 0 });
+  const goals = plain<GoalRecord>(db.prepare('SELECT * FROM money_goals ORDER BY id').all());
+  assert.equal(goals.length, 2);
+  assert.equal(goals.find((goal) => goal.id === 'goal-open')?.target_amount, 0);
+  assert.equal(goalTargetNeedsOptionalMigration(tableSql(db)), false);
+});
+
 test('a failure during the migration transaction rolls back and preserves every row', () => {
   const db = createLegacyDb();
   insertLegacyGoal(db, datedGoal);
@@ -187,7 +232,7 @@ test('a failure during the migration transaction rolls back and preserves every 
   // Mirrors expo-sqlite's withTransactionAsync (BEGIN / callback / COMMIT | ROLLBACK).
   db.exec('BEGIN;');
   try {
-    db.exec(buildGoalDeadlineRebuildSql());
+    db.exec(buildGoalTableRebuildSql());
     db.exec('THIS STATEMENT IS INVALID;');
   } catch {
     db.exec('ROLLBACK;');

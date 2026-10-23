@@ -45,6 +45,12 @@
       "expo-sqlite",
       "expo-sharing",
       [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow CashTrack to use Face ID to unlock the app."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "Allow CashTrack to access your location for local weather updates."

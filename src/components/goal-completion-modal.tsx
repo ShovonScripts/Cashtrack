@@ -42,10 +42,12 @@ export function GoalCompletionModal({
           </View>
 
           <Card style={styles.statCard}>
-            <View style={styles.statRow}>
-              <ThemedText type="small" themeColor="textSecondary">Target Amount</ThemedText>
-              <ThemedText type="defaultBold">{formatAmount(goal.targetAmount)}</ThemedText>
-            </View>
+            {goal.targetAmount > 0 ? (
+              <View style={styles.statRow}>
+                <ThemedText type="small" themeColor="textSecondary">Target Amount</ThemedText>
+                <ThemedText type="defaultBold">{formatAmount(goal.targetAmount)}</ThemedText>
+              </View>
+            ) : null}
             <View style={styles.statRow}>
               <ThemedText type="small" themeColor="textSecondary">Total Saved</ThemedText>
               <ThemedText type="defaultBold" style={{ color: theme.success }}>{formatAmount(goal.contributedAmount)}</ThemedText>

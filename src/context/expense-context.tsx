@@ -18,6 +18,7 @@ import { mergeExpenseChanges } from '@/utils/expense-draft';
 import { DEFAULT_PREFERENCES, type UserPreferences, type UserProfile } from '@/types/preferences';
 import { backupUnreadableExpenses, loadExpenses, saveExpenses } from '@/storage/expense-storage';
 import { backupUnreadablePreferences, loadPreferences, savePreferences } from '@/storage/preferences-storage';
+import { loadAppLockFlag, saveAppLockFlag } from '@/storage/app-lock-storage';
 import { StorageParseError } from '@/storage/storage-errors';
 import { ThemeModeContext } from '@/context/theme-context';
 import { nextThemeMode } from '@/utils/theme-mode';
@@ -28,6 +29,12 @@ import { clearRecurringSkips, loadRecurringSkips, skipRecurringPeriod } from '@/
 import { checkAndTriggerBudgetNotifications } from '@/utils/notifications';
 import { deleteLocalReceipt } from '@/utils/receipt';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
+import { resolveInitialAppLockEnabled } from '@/utils/app-lock';
+import {
+  applyCategoryOrder,
+  moveCategoryInOrder,
+  type CategoryMoveDirection,
+} from '@/utils/category-order';
 import { ResetRegistry } from '../utils/reset-registry.ts';
 
 let NotificationsModule: any = null;
@@ -101,6 +108,7 @@ type ExpenseContextValue = {
   addCategory: (name: string, icon?: string) => boolean;
   renameCategory: (from: string, to: string) => boolean;
   deleteCategory: (name: string) => DeleteCategoryResult;
+  moveCategory: (name: string, direction: CategoryMoveDirection) => boolean;
   setCategoryLimit: (category: string, limit: number | null) => void;
   setCategoryIcon: (category: string, icon: string) => void;
   hasCompletedOnboarding: boolean;
@@ -120,6 +128,8 @@ type ExpenseContextValue = {
   setEnableDailyReminder: (enabled: boolean) => void;
   enableDailyQuotes: boolean;
   setEnableDailyQuotes: (enabled: boolean) => void;
+  appLockEnabled: boolean;
+  setAppLockEnabled: (enabled: boolean) => void;
   resetAllData: () => Promise<void>;
 };
 
@@ -158,7 +168,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       let expenseRecovered = false;
       let prefRecovered = false;
 
-      const [savedExpenses, savedPreferences] = await Promise.all([
+      const [savedExpenses, savedPreferences, storedAppLock] = await Promise.all([
         loadExpenses().catch(async (err) => {
           if (err instanceof StorageParseError && (await backupUnreadableExpenses())) {
             expenseRecovered = true;
@@ -179,6 +189,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
           console.error('[cashtrack] Failed to load preferences', err);
           return null;
         }),
+        loadAppLockFlag().catch((err) => {
+          console.error('[cashtrack] Failed to load the App Lock setting', err);
+          return undefined;
+        }),
       ]);
 
       const skippedPeriods = await loadRecurringSkips('expense').catch(() => ({}));
@@ -192,6 +206,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       const rawInitial = expenseFailed ? [] : (savedExpenses ?? (__DEV__ ? createSeedExpenses() : []));
       const initialExpenses = processRecurringExpenses(rawInitial, skippedPeriods);
       const basePreferences = prefFailed || !savedPreferences ? DEFAULT_PREFERENCES : savedPreferences;
+      const appLockEnabled = resolveInitialAppLockEnabled(
+        storedAppLock,
+        savedPreferences?.appLockEnabled ?? false,
+        prefFailed,
+      );
 
       // Prune notifiedDebts older than 30 days without mutating DEFAULT_PREFERENCES
       const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
@@ -206,8 +225,15 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
       const initialPreferences: UserPreferences = {
         ...basePreferences,
+        appLockEnabled,
         notifiedDebts: prunedNotifiedDebts,
       };
+
+      if ((storedAppLock === null || storedAppLock === undefined) && !prefFailed) {
+        void saveAppLockFlag(appLockEnabled).catch((error) => {
+          console.error('[cashtrack] Failed to migrate the App Lock setting', error);
+        });
+      }
 
       dispatch({ type: 'HYDRATE', expenses: initialExpenses });
       setPreferences(initialPreferences);
@@ -344,7 +370,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     [country.currencyCode]
   );
 
-  const categories = useMemo(() => [
+  const defaultCategories = useMemo(() => [
     ...new Set<ExpenseCategory>([
       ...EXPENSE_CATEGORIES,
       ...preferences.customCategories,
@@ -352,12 +378,18 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     ]),
   ], [expenses, preferences.customCategories]);
 
+  const categories = useMemo(
+    () => applyCategoryOrder(defaultCategories, preferences.categoryOrder),
+    [defaultCategories, preferences.categoryOrder],
+  );
+
   const addCategory = useCallback((rawName: string, icon?: string): boolean => {
     const name = rawName.trim().slice(0, 28);
     if (!name || categories.some((category) => category.toLowerCase() === name.toLowerCase())) return false;
     setPreferences((current) => ({
       ...current,
       customCategories: [...current.customCategories, name],
+      categoryOrder: [...categories, name],
       categoryIcons: icon ? { ...current.categoryIcons, [name]: icon } : current.categoryIcons,
     }));
     return true;
@@ -383,6 +415,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       return {
         ...current,
         customCategories: current.customCategories.map((category) => category === from ? to : category),
+        categoryOrder: categories.map((category) => category === from ? to : category),
         categoryLimits: nextLimits,
         categoryIcons: nextIcons,
       };
@@ -401,12 +434,20 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       return {
         ...current,
         customCategories: current.customCategories.filter((category) => category !== name),
+        categoryOrder: categories.filter((category) => category !== name),
         categoryLimits,
         categoryIcons,
       };
     });
     return 'deleted';
-  }, [expenses, preferences.customCategories]);
+  }, [categories, expenses, preferences.customCategories]);
+
+  const moveCategory = useCallback((name: string, direction: CategoryMoveDirection): boolean => {
+    const next = moveCategoryInOrder(categories, name as ExpenseCategory, direction);
+    if (next === categories) return false;
+    setPreferences((current) => ({ ...current, categoryOrder: next }));
+    return true;
+  }, [categories]);
 
   const setCategoryLimit = useCallback((category: string, limit: number | null) => {
     setPreferences((current) => {
@@ -466,16 +507,16 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, enableDailyQuotes: enabled }));
   }, []);
 
+  const setAppLockEnabled = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, appLockEnabled: enabled }));
+  }, []);
+
   const resetAllData = useCallback(async () => {
     // a. Snapshot receiptUris
     const receiptUris = expensesRef.current.filter((e) => e.receiptUri).map((e) => e.receiptUri!);
 
-    // b. Await clearRelationalData and queue writes; throw if any fails
-    const expRes = await expenseSaveQueue.current.enqueue(() => saveExpenses([]));
-    if (!expRes) throw new Error('Failed to save empty expenses during reset');
-    const prefRes = await preferencesSaveQueue.current.enqueue(() => savePreferences(DEFAULT_PREFERENCES));
-    if (!prefRes) throw new Error('Failed to save default preferences during reset');
-
+    // b. Clear every store first. Writing empty expenses/preferences earlier
+    // would destroy data even if a later clear failed.
     await clearRelationalData();
     await clearAuxiliaryData();
 
@@ -488,7 +529,18 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     // c. Await registry.runAll()
     await resetRegistryRef.current.runAll();
 
-    // d. Reset expense/preference memory, clear loadFailed refs and dataLoadError, set lastSaved refs
+    // d. Persist the empty state only after all clears succeed.
+    const expRes = await expenseSaveQueue.current.enqueue(() => saveExpenses([]));
+    if (!expRes) throw new Error('Failed to save empty expenses during reset');
+    const prefRes = await preferencesSaveQueue.current.enqueue(() => savePreferences(DEFAULT_PREFERENCES));
+    if (!prefRes) throw new Error('Failed to save default preferences during reset');
+    try {
+      await saveAppLockFlag(false);
+    } catch (error) {
+      console.error('[cashtrack] Failed to clear the App Lock setting during reset', error);
+    }
+
+    // e. Reset expense/preference memory, clear loadFailed refs and dataLoadError, set lastSaved refs
     expenseLoadFailedRef.current = false;
     preferencesLoadFailedRef.current = false;
     setDataLoadError(false);
@@ -499,7 +551,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     lastSavedExpensesRef.current = JSON.stringify([]);
     lastSavedPreferencesRef.current = JSON.stringify(DEFAULT_PREFERENCES);
 
-    // e. Delete snapshotted receipt files and cancel notifications
+    // f. Delete snapshotted receipt files and cancel notifications
     for (const uri of receiptUris) {
       try {
         await deleteLocalReceipt(uri);
@@ -549,6 +601,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableDailyReminder,
     enableDailyQuotes: preferences.enableDailyQuotes ?? false,
     setEnableDailyQuotes,
+    appLockEnabled: preferences.appLockEnabled ?? false,
+    setAppLockEnabled,
     resetAllData,
     addExpense,
     updateExpense,
@@ -559,6 +613,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     addCategory,
     renameCategory,
     deleteCategory,
+    moveCategory,
     setCategoryLimit,
     setCategoryIcon,
   }), [
@@ -579,6 +634,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     addCategory,
     renameCategory,
     deleteCategory,
+    moveCategory,
     setCategoryLimit,
     setCategoryIcon,
     setHasCompletedOnboarding,
@@ -591,6 +647,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableBudgetAlerts,
     setEnableDailyReminder,
     setEnableDailyQuotes,
+    setAppLockEnabled,
     resetAllData,
     updateNotifiedDebts,
     registerResetHandler,

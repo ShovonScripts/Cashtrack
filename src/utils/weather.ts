@@ -200,12 +200,21 @@ export const DEFAULT_WEATHER_DATA: WeatherData = {
 
 /**
  * Fetches live weather data from Open-Meteo API with location reverse geocoding.
+ *
+ * Permission is only requested when the caller says the request came from a
+ * deliberate user action. Automatic screen mounts read an existing grant and
+ * fall back to sample data instead of prompting on launch.
  */
-export async function fetchLiveWeatherData(): Promise<WeatherData | null> {
+export async function fetchLiveWeatherData(options: { requestPermission?: boolean } = {}): Promise<WeatherData | null> {
   try {
     const Location = await import('expo-location');
 
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    const existing = await Location.getForegroundPermissionsAsync();
+    let status = existing.status;
+    if (status !== 'granted' && options.requestPermission) {
+      const requested = await Location.requestForegroundPermissionsAsync();
+      status = requested.status;
+    }
     if (status !== 'granted') {
       return null;
     }

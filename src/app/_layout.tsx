@@ -1,10 +1,12 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { AppLockGate } from '@/components/app-lock/app-lock-gate';
 import { LoadingScreen } from '@/components/loading-screen';
+import { AppLockProvider } from '@/context/app-lock-context';
 import { ThemedText } from '@/components/themed-text';
 import { ExpenseProvider, useExpenses } from '@/context/expense-context';
 import { DebtProvider, useDebts } from '@/context/debt-context';
@@ -156,6 +158,7 @@ function Navigation() {
         <Stack.Screen name="bills/add" options={{ title: 'Add Bill / Reminder', presentation: 'modal' }} />
         <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />
         <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
+        <Stack.Screen name="app-lock" options={{ title: 'App Lock' }} />
         <Stack.Screen name="country" options={{ title: 'Country & currency' }} />
         <Stack.Screen name="categories" options={{ title: 'Manage categories' }} />
         <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
@@ -222,6 +225,20 @@ function useSqliteCrudTest() {
   }, []);
 }
 
+function AppLockHost({ children }: { children: ReactNode }) {
+  const { isLoading } = useExpenses();
+
+  if (isLoading) {
+    return <>{children}</>;
+  }
+
+  return (
+    <AppLockProvider>
+      <AppLockGate>{children}</AppLockGate>
+    </AppLockProvider>
+  );
+}
+
 function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useTheme();
   const isDark = theme.text === '#ffffff';
@@ -245,7 +262,9 @@ export default function RootLayout() {
               <FinancialRemindersProvider>
                 <StopwatchProvider>
                   <AnimatedSplashOverlay />
-                  <Navigation />
+                  <AppLockHost>
+                    <Navigation />
+                  </AppLockHost>
                 </StopwatchProvider>
               </FinancialRemindersProvider>
             </GoalProvider>

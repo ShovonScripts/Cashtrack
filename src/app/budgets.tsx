@@ -14,6 +14,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { sumAmounts } from '@/utils/expense';
 import { getBudgetInsights } from '@/utils/advisor';
+import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -25,7 +26,7 @@ function triggerHaptic() {
 
 export default function BudgetsScreen() {
   const theme = useTheme();
-  const { expenses, categories, categoryLimits, setCategoryLimit, formatAmount, country, categoryIcons } = useExpenses();
+  const { expenses, categories, categoryLimits, setCategoryLimit, formatAmount, country, categoryIcons, enableBudgetAlerts } = useExpenses();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const now = useNow(60_000);
@@ -54,6 +55,7 @@ export default function BudgetsScreen() {
       return;
     }
     setCategoryLimit(category, amount);
+    if (enableBudgetAlerts) void registerForBudgetNotificationsAsync();
     setDrafts((current) => ({ ...current, [category]: String(amount) }));
     setMessage(`${category} limit saved for ${monthLabel}.`);
   };

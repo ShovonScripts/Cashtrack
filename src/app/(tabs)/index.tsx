@@ -528,6 +528,11 @@ export default function DashboardScreen() {
     router.push({ pathname: '/period-report', params: { period } } as any);
   };
 
+  const addExpenseForPeriod = (period: SummaryPeriod = 'daily') => {
+    triggerHaptic();
+    router.push({ pathname: '/add-expense', params: { date: getAddExpenseDate(period, now) } });
+  };
+
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(now);
 
@@ -617,10 +622,7 @@ export default function DashboardScreen() {
           formatAmount={formatAmount}
           categoryIcons={categoryIcons}
           onOpenReport={openCostReport}
-          onAddExpense={() => {
-            triggerHaptic();
-            router.push('/add-expense');
-          }}
+          onAddExpense={addExpenseForPeriod}
         />
 
         {/* Tier 2: Actionable Alerts & Secondary Swipeable Carousel (Cash Flow ⇄ Money Overview) */}

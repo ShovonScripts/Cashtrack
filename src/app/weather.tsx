@@ -22,7 +22,7 @@ export default function WeatherScreen() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    const data = await fetchLiveWeatherData();
+    const data = await fetchLiveWeatherData({ requestPermission: true });
     if (data) {
       setWeather(data);
       setIsOffline(false);
@@ -119,7 +119,7 @@ export default function WeatherScreen() {
         <Card style={[styles.offlineBanner, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
           <Ionicons name="cloud-offline-outline" size={16} color={theme.textSecondary} />
           <ThemedText type="caption" themeColor="textSecondary" style={styles.offlineBannerText}>
-            Live weather unavailable. Showing sample data — pull down to retry.
+             Live weather unavailable. Showing sample data — pull down to retry with location access.
           </ThemedText>
         </Card>
       )}

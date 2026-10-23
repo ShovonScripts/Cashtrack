@@ -19,6 +19,8 @@ export function GoalProgressCard({
 }) {
   const theme = useTheme();
   const isFlexible = goal.allocationType === 'flexible';
+  const hasTarget = goal.targetAmount > 0;
+  const isOpenEnded = isFlexible || !hasTarget;
   const isAhead = goal.aheadBehindAmount >= 0;
 
   const potIcon = goal.potType === 'children' ? 'baby-face-outline' : goal.potType === 'emergency' ? 'shield-check-outline' : goal.potType === 'dream' ? 'star-shooting-outline' : 'piggy-bank';
@@ -27,7 +29,11 @@ export function GoalProgressCard({
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${goal.title}, ${formatAmount(goal.contributedAmount)} saved of ${formatAmount(goal.targetAmount)}, ${Math.round(goal.progressPercent)} percent${goal.isCompleted ? ', completed' : ''}`}
+      accessibilityLabel={
+        hasTarget
+          ? `${goal.title}, ${formatAmount(goal.contributedAmount)} saved of ${formatAmount(goal.targetAmount)}, ${Math.round(goal.progressPercent)} percent${goal.isCompleted ? ', completed' : ''}`
+          : `${goal.title}, ${formatAmount(goal.contributedAmount)} saved, open-ended pot`
+      }
       accessibilityHint="Opens pot details"
       style={({ pressed }) => [pressed && styles.pressed]}>
       <Card style={styles.card}>
@@ -51,36 +57,43 @@ export function GoalProgressCard({
               ) : null}
             </View>
             <ThemedText type="caption" themeColor="textSecondary" style={{ textTransform: 'capitalize' }}>
-              {isFlexible ? 'Open-ended savings stash' : `${goal.frequency} target · ${goal.isCompleted ? 'Completed' : isAhead ? 'On track / Ahead' : 'Behind target'}`}
+              {isOpenEnded ? 'Open-ended savings stash' : `${goal.frequency} target · ${goal.isCompleted ? 'Completed' : isAhead ? 'On track / Ahead' : 'Behind target'}`}
             </ThemedText>
           </View>
         </View>
 
-        <View
-          style={[styles.track, { backgroundColor: theme.backgroundElement }]}
-          accessible
-          accessibilityRole="progressbar"
-          accessibilityValue={{ min: 0, max: 100, now: Math.round(goal.progressPercent) }}
-          accessibilityLabel={`Goal progress: ${Math.round(goal.progressPercent)} percent completed`}>
+        {hasTarget ? (
           <View
-            style={[
-              styles.fill,
-              {
-                width: `${Math.min(100, goal.progressPercent)}%`,
-                backgroundColor: goal.isCompleted ? theme.success : theme.accent,
-              },
-            ]}
-          />
-        </View>
+            style={[styles.track, { backgroundColor: theme.backgroundElement }]}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 0, max: 100, now: Math.round(goal.progressPercent) }}
+            accessibilityLabel={`Goal progress: ${Math.round(goal.progressPercent)} percent completed`}>
+            <View
+              style={[
+                styles.fill,
+                {
+                  width: `${Math.min(100, goal.progressPercent)}%`,
+                  backgroundColor: goal.isCompleted ? theme.success : theme.accent,
+                },
+              ]}
+            />
+          </View>
+        ) : null}
 
         <View style={styles.footerRow}>
           <ThemedText type="smallBold">
-            {formatAmount(goal.contributedAmount)} <ThemedText type="caption" themeColor="textSecondary">/ {formatAmount(goal.targetAmount)}</ThemedText>
+            {formatAmount(goal.contributedAmount)}{' '}
+            {hasTarget ? (
+              <ThemedText type="caption" themeColor="textSecondary">/ {formatAmount(goal.targetAmount)}</ThemedText>
+            ) : (
+              <ThemedText type="caption" themeColor="textSecondary">· No target</ThemedText>
+            )}
           </ThemedText>
           <ThemedText type="caption" themeColor={goal.isCompleted ? 'accent' : 'textSecondary'}>
             {goal.isCompleted
               ? 'Goal achieved'
-              : isFlexible
+              : isOpenEnded
                 ? 'Stashed safely'
                 : isAhead
                   ? `+${formatAmount(goal.aheadBehindAmount)} ahead`

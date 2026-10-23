@@ -21,12 +21,13 @@ function triggerHaptic() {
 
 export default function CategoriesScreen() {
   const theme = useTheme();
-  const { expenses, categories, customCategories, categoryIcons, addCategory, renameCategory, deleteCategory } = useExpenses();
+  const { expenses, categories, customCategories, categoryIcons, addCategory, renameCategory, deleteCategory, moveCategory } = useExpenses();
   const [newName, setNewName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('tag.fill');
   const [editing, setEditing] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [message, setMessage] = useState('');
+  const [reordering, setReordering] = useState(false);
 
   const builtInCount = categories.length - customCategories.length;
 
@@ -56,6 +57,17 @@ export default function CategoriesScreen() {
     } else if (result === 'deleted') {
       setMessage(`Category "${category}" removed.`);
     }
+  };
+
+  const toggleReordering = () => {
+    triggerHaptic();
+    if (!reordering) setEditing(null);
+    setReordering((current) => !current);
+  };
+
+  const move = (category: string, direction: 'up' | 'down') => {
+    triggerHaptic();
+    moveCategory(category, direction);
   };
 
   return (
@@ -192,8 +204,36 @@ export default function CategoriesScreen() {
         {/* Categories List */}
         <View style={styles.listHeading}>
           <ThemedText type="defaultBold">All Categories</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">{categories.length} categories</ThemedText>
+          <View style={styles.listHeadingRight}>
+            <ThemedText type="caption" themeColor="textSecondary">{categories.length} categories</ThemedText>
+            {categories.length > 1 ? (
+              <Pressable
+                onPress={toggleReordering}
+                accessibilityRole="button"
+                accessibilityLabel={reordering ? 'Finish reordering categories' : 'Reorder categories'}
+                style={({ pressed }) => [
+                  styles.reorderToggle,
+                  { backgroundColor: reordering ? theme.accentMuted : theme.cardMuted, borderColor: theme.border },
+                  pressed && styles.pressed,
+                ]}>
+                <MaterialCommunityIcons
+                  name={reordering ? 'check' : 'swap-vertical'}
+                  size={14}
+                  color={reordering ? theme.accent : theme.textSecondary}
+                />
+                <ThemedText type="caption" style={{ color: reordering ? theme.accent : theme.textSecondary, fontWeight: '700' }}>
+                  {reordering ? 'Done' : 'Reorder'}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
+
+        {reordering ? (
+          <ThemedText type="caption" themeColor="textSecondary" style={styles.reorderHint}>
+            Use the arrows to change where categories appear in forms and reports.
+          </ThemedText>
+        ) : null}
 
         <Card padded={false}>
           {categories.map((category, index) => {
@@ -236,7 +276,30 @@ export default function CategoriesScreen() {
                     </View>
                   </View>
 
-                  {isCustom && (
+                  {reordering ? (
+                    <View style={styles.rowActions}>
+                      <Pressable
+                        disabled={index === 0}
+                        onPress={() => move(category, 'up')}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Move ${category} up`}
+                        accessibilityState={{ disabled: index === 0 }}
+                        style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
+                        <MaterialCommunityIcons name="chevron-up" size={22} color={index === 0 ? theme.border : theme.accent} />
+                      </Pressable>
+                      <Pressable
+                        disabled={index === categories.length - 1}
+                        onPress={() => move(category, 'down')}
+                        hitSlop={8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Move ${category} down`}
+                        accessibilityState={{ disabled: index === categories.length - 1 }}
+                        style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}>
+                        <MaterialCommunityIcons name="chevron-down" size={22} color={index === categories.length - 1 ? theme.border : theme.accent} />
+                      </Pressable>
+                    </View>
+                  ) : isCustom && (
                     isEditing ? (
                       <View style={styles.rowActions}>
                         <Pressable
@@ -353,7 +416,18 @@ const styles = StyleSheet.create({
   iconPackGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   iconChoice: { width: 40, height: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   disabled: { opacity: 0.45 },
-  listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.one },
+  listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.one },
+  listHeadingRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  reorderToggle: {
+    minHeight: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  reorderHint: { paddingHorizontal: Spacing.one },
   categoryRow: { minHeight: 72, flexDirection: 'row', alignItems: 'center', gap: Spacing.two, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
   categoryInfo: { flex: 1, minWidth: 0, gap: 4 },
   badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

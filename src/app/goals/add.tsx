@@ -119,14 +119,15 @@ export default function AddGoalScreen() {
     if (isSubmitting) return;
     triggerHaptic();
     const trimmedTitle = title.trim();
-    const parsedTarget = Number(targetAmount);
+    const trimmedTarget = targetAmount.trim();
+    const parsedTarget = trimmedTarget ? Number(trimmedTarget) : 0;
 
     if (!trimmedTitle) {
       setMessage('Please enter a goal or pot title.');
       return;
     }
-    if (!Number.isFinite(parsedTarget) || parsedTarget <= 0) {
-      setMessage('Please enter a valid target amount greater than zero.');
+    if (trimmedTarget && (!Number.isFinite(parsedTarget) || parsedTarget <= 0)) {
+      setMessage('Please enter a valid target amount greater than zero, or leave it blank.');
       return;
     }
 
@@ -244,16 +245,21 @@ export default function AddGoalScreen() {
           </View>
 
           <View style={styles.field}>
-            <ThemedText type="smallBold">Target Amount</ThemedText>
+            <ThemedText type="smallBold">
+              Target Amount <ThemedText type="caption" themeColor="textSecondary">(optional)</ThemedText>
+            </ThemedText>
             <TextInput
               value={targetAmount}
               onChangeText={(val) => { setTargetAmount(val.replace(/[^0-9.]/g, '')); setMessage(''); }}
-              placeholder="0.00"
+              placeholder="Leave blank for no fixed target"
               placeholderTextColor={theme.textSecondary}
               keyboardType="decimal-pad"
-              accessibilityLabel="Target amount"
+              accessibilityLabel="Target amount, optional"
               style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
             />
+            <ThemedText type="caption" themeColor="textSecondary">
+              Leave blank to create an open-ended pot without a goal amount.
+            </ThemedText>
           </View>
 
           {/* Savings Allocation Rule Cards (No Tick / Checkmark) */}

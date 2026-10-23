@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { DEBTS_BACKUP_KEY } from './debt-storage';
-import { EXPENSES_BACKUP_KEY } from './expense-storage';
-import { clearNotes } from './notes-storage';
+const APP_STORAGE_PREFIXES = ['@cashtrack', '@spendly'];
 
 export async function clearAuxiliaryData(): Promise<void> {
-  await clearNotes();
-  await AsyncStorage.multiRemove([EXPENSES_BACKUP_KEY, DEBTS_BACKUP_KEY]);
+  const keys = await AsyncStorage.getAllKeys();
+  const removable = keys.filter((key) => APP_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix)));
+  if (removable.length > 0) {
+    await AsyncStorage.multiRemove(removable);
+  }
 }
 
 export async function clearRelationalData(): Promise<void> {

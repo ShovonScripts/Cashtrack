@@ -28,7 +28,7 @@ function mapGoalRow(row: GoalRow): MoneyGoal {
   return {
     id: row.id,
     title: row.title,
-    targetAmount: row.target_amount,
+    targetAmount: row.target_amount ?? 0,
     startDate: row.start_date,
     deadlineDate: row.deadline_date ?? null,
     frequency: row.frequency as GoalFrequency,

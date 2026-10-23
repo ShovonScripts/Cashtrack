@@ -80,11 +80,12 @@ export function calculateGoalProgress({
       : Math.max(0, totalDays - elapsedDays);
 
   const timeFraction = !hasDeadline ? 0 : Math.min(1, Math.max(0, elapsedDays / totalDays));
-  const expectedProgress = targetAmount * timeFraction;
+  const hasTarget = targetAmount > 0;
+  const expectedProgress = hasTarget ? targetAmount * timeFraction : 0;
   const actualProgress = Math.max(0, currentAmount);
-  const remainingAmount = Math.max(0, targetAmount - actualProgress);
-  const aheadBehindAmount = hasDeadline ? actualProgress - expectedProgress : 0;
-  const isCompleted = actualProgress >= targetAmount;
+  const remainingAmount = hasTarget ? Math.max(0, targetAmount - actualProgress) : 0;
+  const aheadBehindAmount = hasTarget && hasDeadline ? actualProgress - expectedProgress : 0;
+  const isCompleted = hasTarget && actualProgress >= targetAmount;
 
   const totalPeriods = getFrequencyPeriods(frequency, start, deadline, totalDays);
   const elapsedPeriods = today <= start ? 0 : Math.min(totalPeriods, getFrequencyPeriods(frequency, start, today, elapsedDays));

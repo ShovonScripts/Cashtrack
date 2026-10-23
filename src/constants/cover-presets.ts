@@ -1,4 +1,4 @@
-import { Image, ImageSourcePropType } from 'react-native';
+import type { ImageSourcePropType } from 'react-native';
 
 export interface CoverPreset {
   id: string;
@@ -7,16 +7,12 @@ export interface CoverPreset {
   description: string;
 }
 
-export const DEFAULT_COVER_SOURCE: ImageSourcePropType = require('@/assets/images/cover/default-cover.jpg');
+/** Legacy key saved by older versions; now resolves to the Cyber Dusk banner. */
 export const DEFAULT_COVER_KEY = 'default-cover';
+export const DEFAULT_COVER_URI = 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=1200&q=80';
+export const DEFAULT_COVER_SOURCE: ImageSourcePropType = { uri: DEFAULT_COVER_URI };
 
 export const COVER_PRESETS: CoverPreset[] = [
-  {
-    id: DEFAULT_COVER_KEY,
-    name: 'Default Banner',
-    uri: DEFAULT_COVER_KEY,
-    description: 'CashTrack default brand cover banner',
-  },
   {
     id: 'emerald-wealth',
     name: 'Emerald Wealth',
@@ -38,7 +34,7 @@ export const COVER_PRESETS: CoverPreset[] = [
   {
     id: 'cyber-dusk',
     name: 'Cyber Dusk',
-    uri: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=1200&q=80',
+    uri: DEFAULT_COVER_URI,
     description: 'Vibrant dusk purple & magenta horizon',
   },
   {
@@ -65,14 +61,5 @@ export function getCoverUri(uri?: string): string {
   if (uri && uri.trim().length > 0 && uri !== DEFAULT_COVER_KEY) {
     return uri;
   }
-  try {
-    const resolve = Image.resolveAssetSource || (Image as any).default?.resolveAssetSource;
-    if (typeof resolve === 'function') {
-      const resolved = resolve(DEFAULT_COVER_SOURCE);
-      if (resolved?.uri) return resolved.uri;
-    }
-  } catch {
-    // SSR fallback
-  }
-  return DEFAULT_COVER_KEY;
+  return DEFAULT_COVER_URI;
 }

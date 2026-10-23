@@ -174,6 +174,26 @@ test('goal calculator - open-ended pots have no fake timeline or expected amount
   assert.strictEqual(result.frequencyRequired, 0);
 });
 
+test('goal calculator - pot without a target never completes and needs nothing', () => {
+  const result = calculateGoalProgress({
+    targetAmount: 0,
+    startDate: '2026-01-01T00:00:00.000Z',
+    deadlineDate: '2026-12-31T00:00:00.000Z',
+    currentAmount: 2500,
+    frequency: 'monthly',
+    today: new Date('2026-06-01T00:00:00.000Z'),
+  });
+
+  assert.strictEqual(result.isCompleted, false);
+  assert.strictEqual(result.remainingAmount, 0);
+  assert.strictEqual(result.expectedProgress, 0);
+  assert.strictEqual(result.aheadBehindAmount, 0);
+  assert.strictEqual(result.dailyRequired, 0);
+  assert.strictEqual(result.weeklyRequired, 0);
+  assert.strictEqual(result.monthlyRequired, 0);
+  assert.strictEqual(result.frequencyRequired, 0);
+});
+
 test('goal calculator - scenario 10: recovery contribution and overdue goals', () => {
   const recovery = calculateGoalProgress({
     targetAmount: 60000,

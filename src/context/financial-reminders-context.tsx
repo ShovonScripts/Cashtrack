@@ -198,7 +198,9 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     await insertReminder(reminder);
     setRawReminders((current) => [reminder, ...current]);
     if (enableBillReminders) {
-      void scheduleReminderNotificationsAsync(reminder, safeFormat);
+      // Adding a bill is an explicit user action, so it is safe to ask for
+      // notification permission here instead of on app launch.
+      void scheduleReminderNotificationsAsync(reminder, safeFormat, { requestPermission: true });
     }
     return reminder;
   }, [safeFormat, enableBillReminders]);

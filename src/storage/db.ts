@@ -1,9 +1,10 @@
 import * as SQLite from 'expo-sqlite';
 
 import {
-  buildGoalDeadlineRebuildSql,
+  buildGoalTableRebuildSql,
   createMoneyGoalsTableSql,
   goalDeadlineNeedsNullableMigration,
+  goalTargetNeedsOptionalMigration,
   type SqliteTableInfoColumn,
 } from '@/storage/goal-migration';
 
@@ -145,6 +146,10 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   // savings pots. Rebuild the table in place (data-preserving) when detected.
   await migrateGoalDeadlineNullable(db);
 
+  // Older databases rejected `target_amount = 0`, which blocks pots with no
+  // fixed target. Rebuild again only if the live table still carries that CHECK.
+  await migrateGoalTargetOptional(db);
+
   return db;
 }
 
@@ -161,7 +166,25 @@ async function migrateGoalDeadlineNullable(db: SQLite.SQLiteDatabase): Promise<v
   }
 
   await db.withTransactionAsync(async () => {
-    await db.execAsync(buildGoalDeadlineRebuildSql());
+    await db.execAsync(buildGoalTableRebuildSql());
+  });
+}
+
+/**
+ * Allows `target_amount = 0` (a pot without a fixed target) on databases created
+ * before optional targets. Idempotent: the rebuild only runs while the live
+ * table still declares `CHECK (target_amount > 0)`.
+ */
+async function migrateGoalTargetOptional(db: SQLite.SQLiteDatabase): Promise<void> {
+  const row = await db.getFirstAsync<{ sql: string }>(
+    "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'money_goals';"
+  );
+  if (!goalTargetNeedsOptionalMigration(row?.sql)) {
+    return;
+  }
+
+  await db.withTransactionAsync(async () => {
+    await db.execAsync(buildGoalTableRebuildSql());
   });
 }
 

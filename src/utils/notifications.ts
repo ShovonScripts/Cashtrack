@@ -38,6 +38,20 @@ export async function registerForBudgetNotificationsAsync(): Promise<boolean> {
   }
 }
 
+/**
+ * Read-only permission check for automatic background checks. Permission must
+ * come from an explicit in-app action, never from app startup.
+ */
+export async function hasNotificationPermissionAsync(): Promise<boolean> {
+  if (Platform.OS === 'web' || !NotificationsModule) return false;
+  try {
+    const { status } = await NotificationsModule.getPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
+}
+
 export async function checkAndTriggerBudgetNotifications({
   expenses,
   limits,
@@ -50,20 +64,24 @@ export async function checkAndTriggerBudgetNotifications({
   onThresholdNotified: (key: string, level: string) => void;
 }) {
   if (Platform.OS === 'web' || !NotificationsModule) return;
-  const hasPermission = await registerForBudgetNotificationsAsync();
+
+  const activeLimits = Object.entries(limits).filter(([, limit]) => limit > 0);
+  if (activeLimits.length === 0) return;
+
+  const hasPermission = await hasNotificationPermissionAsync();
   if (!hasPermission) return;
 
   const now = new Date();
+  const nowTime = now.getTime();
   const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-  for (const [category, limit] of Object.entries(limits)) {
-    if (limit <= 0) continue;
-
+  for (const [category, limit] of activeLimits) {
     const spent = sumAmounts(
       expenses.filter((expense) => {
         const d = new Date(expense.date);
         return (
           expense.category === category &&
+          d.getTime() <= nowTime &&
           d.getMonth() === now.getMonth() &&
           d.getFullYear() === now.getFullYear()
         );
@@ -88,7 +106,13 @@ export async function checkAndTriggerBudgetNotifications({
       message = `${category} budget is at ${Math.round(ratio * 100)}%.`;
     }
 
-    if (level && currentNotified !== level) {
+    const levelRank = { '80': 1, '100': 2, over: 3 } as const;
+    const currentRank = currentNotified
+      ? levelRank[currentNotified as keyof typeof levelRank] ?? 0
+      : 0;
+
+    // Only escalate. Editing or deleting an expense must not fire a lower alert.
+    if (level && levelRank[level] > currentRank) {
       await NotificationsModule.scheduleNotificationAsync({
         content: {
           title: 'Budget Alert 💡',
@@ -115,15 +139,17 @@ export async function checkAndTriggerDebtNotifications({
   formatAmount?: (amount: number) => string;
 }) {
   if (Platform.OS === 'web' || !NotificationsModule) return;
-  const hasPermission = await registerForBudgetNotificationsAsync();
+
+  const activeDebts = debts.filter((debt) => debt.status === 'active' && debt.dueDate);
+  if (activeDebts.length === 0) return;
+
+  const hasPermission = await hasNotificationPermissionAsync();
   if (!hasPermission) return;
 
   const now = new Date();
   const yearMonthDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-  for (const debt of debts) {
-    if (debt.status !== 'active' || !debt.dueDate) continue;
-
+  for (const debt of activeDebts) {
     const dueDate = new Date(debt.dueDate);
     if (Number.isNaN(dueDate.getTime())) continue;
 
@@ -171,7 +197,9 @@ export async function checkAndTriggerGoalNotifications({
   formatAmount?: (amount: number) => string;
 }) {
   if (Platform.OS === 'web' || !NotificationsModule) return;
-  const hasPermission = await registerForBudgetNotificationsAsync();
+  if (goals.length === 0) return;
+
+  const hasPermission = await hasNotificationPermissionAsync();
   if (!hasPermission) return;
 
   const now = new Date();

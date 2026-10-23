@@ -33,6 +33,12 @@ function sanitizePreferences(value: unknown): UserPreferences {
         .map((category) => category.trim().slice(0, 28))
         .filter((category) => category.length > 0 && !builtIns.has(category.toLowerCase())))]
     : [];
+  const categoryOrder = Array.isArray(candidate.categoryOrder)
+    ? [...new Set(candidate.categoryOrder
+        .filter((category): category is string => typeof category === 'string')
+        .map((category) => category.trim().slice(0, 28))
+        .filter((category) => category.length > 0))]
+    : [];
   const categoryLimits: Record<string, number> = {};
   if (candidate.categoryLimits && typeof candidate.categoryLimits === 'object') {
     for (const [category, limit] of Object.entries(candidate.categoryLimits)) {
@@ -80,6 +86,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
   const enableBudgetAlerts = typeof candidate.enableBudgetAlerts === 'boolean' ? candidate.enableBudgetAlerts : true;
   const enableDailyReminder = typeof candidate.enableDailyReminder === 'boolean' ? candidate.enableDailyReminder : false;
   const enableDailyQuotes = typeof candidate.enableDailyQuotes === 'boolean' ? candidate.enableDailyQuotes : false;
+  const appLockEnabled = typeof candidate.appLockEnabled === 'boolean' ? candidate.appLockEnabled : false;
 
   return {
     profile: {
@@ -92,6 +99,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
     },
     countryCode,
     customCategories,
+    categoryOrder,
     categoryLimits,
     categoryIcons,
     notifiedThresholds,
@@ -104,6 +112,7 @@ function sanitizePreferences(value: unknown): UserPreferences {
     enableBudgetAlerts,
     enableDailyReminder,
     enableDailyQuotes,
+    appLockEnabled,
   };
 }
 

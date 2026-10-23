@@ -16,7 +16,7 @@ type CostSummaryCarouselProps = {
   formatAmount: (amount: number) => string;
   categoryIcons?: Record<string, string>;
   onOpenReport: (period: SummaryPeriod) => void;
-  onAddExpense?: () => void;
+  onAddExpense?: (period?: SummaryPeriod) => void;
 };
 
 export function CostSummaryCarousel({

@@ -1,25 +1,21 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { initDatabase } from './db.ts';
-import { DEBTS_BACKUP_KEY, DEBTS_CORRUPT_BACKUP_KEY } from './debt-storage';
-import { EXPENSES_BACKUP_KEY, EXPENSES_CORRUPT_BACKUP_KEY } from './expense-storage';
-import { PREFERENCES_CORRUPT_BACKUP_KEY } from './preferences-storage';
-import { clearNotes } from './notes-storage';
+
+const APP_STORAGE_PREFIXES = ['@cashtrack', '@spendly'];
 
 /**
- * Clears stores that live outside the relational database: notes and the raw
- * backups written when unreadable rows were dropped. Both hold user data, so a
- * full reset must remove them too.
+ * Removes every key this app owns, including quick tools, cached exchange
+ * rates, clock choices, corrupt-data backups and the App Lock flag. AsyncStorage
+ * is app-scoped, but the explicit prefixes avoid touching keys owned by other
+ * libraries.
  */
 export async function clearAuxiliaryData(): Promise<void> {
-  await clearNotes();
-  await AsyncStorage.multiRemove([
-    EXPENSES_BACKUP_KEY,
-    DEBTS_BACKUP_KEY,
-    EXPENSES_CORRUPT_BACKUP_KEY,
-    DEBTS_CORRUPT_BACKUP_KEY,
-    PREFERENCES_CORRUPT_BACKUP_KEY,
-  ]);
+  const keys = await AsyncStorage.getAllKeys();
+  const removable = keys.filter((key) => APP_STORAGE_PREFIXES.some((prefix) => key.startsWith(prefix)));
+  if (removable.length > 0) {
+    await AsyncStorage.multiRemove(removable);
+  }
 }
 
 export async function clearRelationalData(): Promise<void> {

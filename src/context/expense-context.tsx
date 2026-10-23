@@ -16,8 +16,9 @@ import { getCountry, type CountryCode, type CountryOption } from '@/constants/co
 import { formatCurrency } from '@/utils/expense';
 import { mergeExpenseChanges } from '@/utils/expense-draft';
 import { DEFAULT_PREFERENCES, type UserPreferences, type UserProfile } from '@/types/preferences';
-import { loadExpenses, saveExpenses } from '@/storage/expense-storage';
-import { loadPreferences, savePreferences } from '@/storage/preferences-storage';
+import { backupUnreadableExpenses, loadExpenses, saveExpenses } from '@/storage/expense-storage';
+import { backupUnreadablePreferences, loadPreferences, savePreferences } from '@/storage/preferences-storage';
+import { StorageParseError } from '@/storage/storage-errors';
 import { ThemeModeContext } from '@/context/theme-context';
 import { nextThemeMode } from '@/utils/theme-mode';
 import { clearAuxiliaryData, clearRelationalData } from '@/storage/reset-repository';
@@ -80,6 +81,7 @@ type ExpenseContextValue = {
   expenses: Expense[];
   isLoading: boolean;
   dataLoadError: boolean;
+  dataRecovered: boolean;
   profile: UserProfile;
   country: CountryOption;
   formatAmount: (amount: number) => string;
@@ -128,6 +130,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoadError, setDataLoadError] = useState(false);
+  const [dataRecovered, setDataRecovered] = useState(false);
 
   const expenseLoadFailedRef = useRef(false);
   const preferencesLoadFailedRef = useRef(false);
@@ -152,14 +155,26 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     async function hydrate() {
       let expenseFailed = false;
       let prefFailed = false;
+      let expenseRecovered = false;
+      let prefRecovered = false;
 
       const [savedExpenses, savedPreferences] = await Promise.all([
-        loadExpenses().catch((err) => {
+        loadExpenses().catch(async (err) => {
+          if (err instanceof StorageParseError && (await backupUnreadableExpenses())) {
+            expenseRecovered = true;
+            console.warn('[cashtrack] Expenses were unreadable; original payload backed up');
+            return null;
+          }
           expenseFailed = true;
           console.error('[cashtrack] Failed to load expenses', err);
           return null;
         }),
-        loadPreferences().catch((err) => {
+        loadPreferences().catch(async (err) => {
+          if (err instanceof StorageParseError && (await backupUnreadablePreferences())) {
+            prefRecovered = true;
+            console.warn('[cashtrack] Preferences were unreadable; original payload backed up');
+            return null;
+          }
           prefFailed = true;
           console.error('[cashtrack] Failed to load preferences', err);
           return null;
@@ -172,6 +187,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       expenseLoadFailedRef.current = expenseFailed;
       preferencesLoadFailedRef.current = prefFailed;
       setDataLoadError(expenseFailed || prefFailed);
+      setDataRecovered(expenseRecovered || prefRecovered);
 
       const rawInitial = expenseFailed ? [] : (savedExpenses ?? (__DEV__ ? createSeedExpenses() : []));
       const initialExpenses = processRecurringExpenses(rawInitial, skippedPeriods);
@@ -476,6 +492,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     expenseLoadFailedRef.current = false;
     preferencesLoadFailedRef.current = false;
     setDataLoadError(false);
+    setDataRecovered(false);
 
     dispatch({ type: 'HYDRATE', expenses: [] });
     setPreferences(DEFAULT_PREFERENCES);
@@ -504,6 +521,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     expenses,
     isLoading,
     dataLoadError,
+    dataRecovered,
     profile: preferences.profile,
     country,
     formatAmount,
@@ -547,6 +565,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     expenses,
     isLoading,
     dataLoadError,
+    dataRecovered,
     preferences,
     categories,
     addExpense,

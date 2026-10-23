@@ -31,7 +31,12 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <View style={styles.backdrop}>
-        <Pressable style={styles.backdropPressable} onPress={handleClose} />
+        <Pressable
+          style={styles.backdropPressable}
+          onPress={handleClose}
+          accessibilityRole="button"
+          accessibilityLabel="Close quick tools"
+        />
 
         <View style={[styles.container, { backgroundColor: theme.card, borderColor: theme.border }]}>
           <View style={styles.dragHandleBar} />
@@ -39,7 +44,12 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               {activeTool && (
-                <Pressable onPress={() => setActiveTool(null)} style={[styles.backButton, { backgroundColor: theme.cardMuted }]}>
+                <Pressable
+                  onPress={() => setActiveTool(null)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back to tools"
+                  hitSlop={6}
+                  style={[styles.backButton, { backgroundColor: theme.cardMuted }]}>
                   <Ionicons name="arrow-back" size={18} color={theme.text} />
                 </Pressable>
               )}
@@ -62,7 +72,12 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                 </ThemedText>
               </View>
             </View>
-            <Pressable onPress={handleClose} style={[styles.closeButton, { backgroundColor: theme.cardMuted }]}>
+            <Pressable
+              onPress={handleClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close quick tools"
+              hitSlop={6}
+              style={[styles.closeButton, { backgroundColor: theme.cardMuted }]}>
               <Ionicons name="close" size={18} color={theme.text} />
             </Pressable>
           </View>
@@ -72,6 +87,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
               <View style={styles.grid}>
                 <Pressable
                   onPress={() => setActiveTool('calculator')}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -88,6 +104,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
 
                 <Pressable
                   onPress={() => setActiveTool('currency')}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -104,6 +121,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
 
                 <Pressable
                   onPress={() => setActiveTool('notes')}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -120,6 +138,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
 
                 <Pressable
                   onPress={() => setActiveTool('stopwatch')}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -136,6 +155,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
 
                 <Pressable
                   onPress={() => setActiveTool('calendar')}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -155,6 +175,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     handleClose();
                     router.push('/add-expense');
                   }}
+                  accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
@@ -180,7 +201,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                 ) : activeTool === 'currency' ? (
                   <CurrencyTool />
                 ) : (
-                  <CalendarTool />
+                  <CalendarTool onNavigate={handleClose} />
                 )}
               </ScrollView>
             )}

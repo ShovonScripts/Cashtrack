@@ -201,13 +201,13 @@ export const DEFAULT_WEATHER_DATA: WeatherData = {
 /**
  * Fetches live weather data from Open-Meteo API with location reverse geocoding.
  */
-export async function fetchLiveWeatherData(): Promise<WeatherData> {
+export async function fetchLiveWeatherData(): Promise<WeatherData | null> {
   try {
     const Location = await import('expo-location');
 
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      return DEFAULT_WEATHER_DATA;
+      return null;
     }
 
     const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -238,7 +238,7 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
     };
 
     if (!data.current_weather) {
-      return DEFAULT_WEATHER_DATA;
+      return null;
     }
 
     const tempC = Math.round(data.current_weather.temperature);
@@ -313,7 +313,9 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
     if (data.daily?.time && data.daily.time.length > 0) {
       for (let i = 0; i < Math.min(5, data.daily.time.length); i++) {
         const rawDate = data.daily.time[i];
-        const dateObj = new Date(rawDate);
+        // Date-only strings parse as UTC midnight; anchor at local noon so the
+        // weekday label is correct west of UTC.
+        const dateObj = new Date(`${rawDate}T12:00:00`);
         const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Intl.DateTimeFormat('en', { weekday: 'short' }).format(dateObj);
         const code = data.daily.weathercode?.[i] ?? 0;
         const details = getWeatherConditionDetails(code, false);
@@ -380,6 +382,6 @@ export async function fetchLiveWeatherData(): Promise<WeatherData> {
       dailyForecast: dailyForecast.length > 0 ? dailyForecast : DEFAULT_WEATHER_DATA.dailyForecast,
     };
   } catch {
-    return DEFAULT_WEATHER_DATA;
+    return null;
   }
 }

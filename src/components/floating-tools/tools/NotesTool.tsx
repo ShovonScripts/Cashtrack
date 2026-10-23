@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,37 +14,72 @@ const STORAGE_KEY = '@cashtrack_quick_notes';
 export function NotesTool() {
   const theme = useTheme();
   const [note, setNote] = useState<string>('');
+  const [isHydrated, setIsHydrated] = useState(false);
   const [savedStatus, setSavedStatus] = useState<string>('');
   const [actionFeedback, setActionFeedback] = useState<string>('');
 
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((val) => {
-      if (val) setNote(val);
-    });
+    let mounted = true;
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((val) => {
+        if (mounted && val) setNote(val);
+      })
+      .catch(() => {
+        if (mounted) setSavedStatus('Could not load note');
+      })
+      .finally(() => {
+        if (mounted) setIsHydrated(true);
+      });
+    return () => {
+      mounted = false;
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    };
   }, []);
 
-  const handleSave = async (text: string) => {
-    setNote(text);
-    await AsyncStorage.setItem(STORAGE_KEY, text);
-    setSavedStatus('Synced');
-    setTimeout(() => setSavedStatus(''), 2000);
-  };
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      AsyncStorage.setItem(STORAGE_KEY, note)
+        .then(() => {
+          setSavedStatus('Synced');
+          if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
+          savedStatusTimerRef.current = setTimeout(() => setSavedStatus(''), 2000);
+        })
+        .catch(() => setSavedStatus('Save failed'));
+    }, 400);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [note, isHydrated]);
 
   const handleCopy = async () => {
     if (!note.trim()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     await Clipboard.setStringAsync(note);
     setActionFeedback('Copied!');
-    setTimeout(() => setActionFeedback(''), 2000);
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setActionFeedback(''), 2000);
   };
 
   const handleClear = async () => {
     if (!note) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
     setNote('');
-    await AsyncStorage.removeItem(STORAGE_KEY);
-    setActionFeedback('Cleared');
-    setTimeout(() => setActionFeedback(''), 2000);
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      setActionFeedback('Cleared');
+    } catch {
+      setActionFeedback('Clear failed');
+    }
+    if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+    feedbackTimerRef.current = setTimeout(() => setActionFeedback(''), 2000);
   };
 
   const handleShare = async () => {
@@ -77,6 +112,9 @@ export function NotesTool() {
           <Pressable
             onPress={handleCopy}
             disabled={!note.trim()}
+            accessibilityRole="button"
+            accessibilityLabel="Copy note"
+            hitSlop={6}
             style={({ pressed }) => [
               styles.toolBtn,
               { backgroundColor: theme.card, borderColor: theme.border },
@@ -89,6 +127,9 @@ export function NotesTool() {
           <Pressable
             onPress={handleShare}
             disabled={!note.trim()}
+            accessibilityRole="button"
+            accessibilityLabel="Share note"
+            hitSlop={6}
             style={({ pressed }) => [
               styles.toolBtn,
               { backgroundColor: theme.card, borderColor: theme.border },
@@ -101,6 +142,9 @@ export function NotesTool() {
           <Pressable
             onPress={handleClear}
             disabled={!note}
+            accessibilityRole="button"
+            accessibilityLabel="Clear note"
+            hitSlop={6}
             style={({ pressed }) => [
               styles.toolBtn,
               { backgroundColor: theme.card, borderColor: theme.border },
@@ -115,10 +159,12 @@ export function NotesTool() {
       {/* Note Input */}
       <TextInput
         value={note}
-        onChangeText={handleSave}
+        onChangeText={setNote}
+        editable={isHydrated}
         placeholder="Jot down quick thoughts, budget ideas, or shopping lists..."
         placeholderTextColor={theme.textSecondary}
         multiline
+        accessibilityLabel="Quick notes"
         style={[
           styles.input,
           { backgroundColor: theme.cardMuted, borderColor: theme.border, color: theme.text },

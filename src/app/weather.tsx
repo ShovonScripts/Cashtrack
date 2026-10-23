@@ -16,21 +16,31 @@ export default function WeatherScreen() {
   const { temperatureUnit } = useExpenses();
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
   const [refreshing, setRefreshing] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
 
   const isDark = theme.text === '#ffffff';
 
   const handleRefresh = async () => {
     setRefreshing(true);
     const data = await fetchLiveWeatherData();
-    setWeather(data);
+    if (data) {
+      setWeather(data);
+      setIsOffline(false);
+    } else {
+      setIsOffline(true);
+    }
     setRefreshing(false);
   };
 
   useEffect(() => {
     let isMounted = true;
     void fetchLiveWeatherData().then((data) => {
-      if (isMounted) {
+      if (!isMounted) return;
+      if (data) {
         setWeather(data);
+        setIsOffline(false);
+      } else {
+        setIsOffline(true);
       }
     });
     return () => {
@@ -104,6 +114,15 @@ export default function WeatherScreen() {
           </View>
         </View>
       </View>
+
+      {isOffline && (
+        <Card style={[styles.offlineBanner, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
+          <Ionicons name="cloud-offline-outline" size={16} color={theme.textSecondary} />
+          <ThemedText type="caption" themeColor="textSecondary" style={styles.offlineBannerText}>
+            Live weather unavailable. Showing sample data — pull down to retry.
+          </ThemedText>
+        </Card>
+      )}
 
       {/* SMART MONEY INSIGHT — ATTACHED TO THE WEATHER COVER */}
       <Card style={[styles.insightCard, { backgroundColor: insightCardBg, borderColor: insightBorderColor }]}>
@@ -645,5 +664,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     textAlign: 'left',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+  },
+  offlineBannerText: {
+    flex: 1,
   },
 });

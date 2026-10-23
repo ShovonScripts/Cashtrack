@@ -37,8 +37,20 @@ type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof MaterialCommunityIcons.glyphMap }[] = [
   { label: 'Woman', value: 'woman', icon: 'human-female' },
   { label: 'Man', value: 'man', icon: 'human-male' },
-  { label: 'Other', value: '', icon: 'account-outline' },
+  { label: 'Other', value: 'other', icon: 'account-outline' },
 ];
+
+async function persistPickedImage(uri: string, prefix: string): Promise<string> {
+  if (Platform.OS === 'web') return uri;
+  try {
+    const extension = uri.split('?')[0].split('.').pop() || 'jpg';
+    const target = new File(Paths.document, `${prefix}-${Date.now()}.${extension}`);
+    new File(uri).copy(target);
+    return target.uri;
+  } catch {
+    return uri;
+  }
+}
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -117,7 +129,7 @@ export default function ProfileScreen() {
         quality: 0.85,
       });
       if (!result.canceled && result.assets[0]?.uri) {
-        setCoverPhotoUri(result.assets[0].uri);
+        setCoverPhotoUri(await persistPickedImage(result.assets[0].uri, 'cover'));
         setIsDirty(true);
         triggerHaptic();
       }
@@ -141,7 +153,7 @@ export default function ProfileScreen() {
         quality: 0.85,
       });
       if (!result.canceled && result.assets[0]?.uri) {
-        setProfilePhotoUri(result.assets[0].uri);
+        setProfilePhotoUri(await persistPickedImage(result.assets[0].uri, 'avatar'));
         setIsDirty(true);
         triggerHaptic();
       }
@@ -1174,7 +1186,7 @@ const styles = StyleSheet.create({
   choiceGridHorizontal: { flexDirection: 'row', gap: 6 },
   choiceBtnCompact: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     flexDirection: 'row',
@@ -1220,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   segmentedBtnCompact: {
     paddingHorizontal: 10,
-    minHeight: 32,
+    minHeight: 44,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: Radius.small - 1,
@@ -1247,7 +1259,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    minHeight: 40,
+    minHeight: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
   },

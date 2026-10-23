@@ -51,6 +51,8 @@ export default function ToolsScreen() {
                 <Pressable
                   key={tab.key}
                   onPress={() => setActiveTab(tab.key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   style={[
                     styles.tabButton,
                     active && { backgroundColor: theme.card, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },

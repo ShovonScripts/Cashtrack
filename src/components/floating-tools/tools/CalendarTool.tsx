@@ -12,7 +12,7 @@ import { useTheme } from '@/hooks/use-theme';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-export function CalendarTool() {
+export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
   const theme = useTheme();
   const { reminders } = useFinancialReminders();
   const { formatAmount } = useExpenses();
@@ -56,12 +56,18 @@ export function CalendarTool() {
       <Card style={styles.monthCard}>
         <Pressable
           onPress={() => changeMonth(-1)}
+          accessibilityRole="button"
+          accessibilityLabel="Previous month"
+          hitSlop={8}
           style={[styles.arrowBtn, { backgroundColor: theme.cardMuted }]}>
           <Ionicons name="chevron-back" size={18} color={theme.text} />
         </Pressable>
         <ThemedText type="defaultBold">{monthLabel}</ThemedText>
         <Pressable
           onPress={() => changeMonth(1)}
+          accessibilityRole="button"
+          accessibilityLabel="Next month"
+          hitSlop={8}
           style={[styles.arrowBtn, { backgroundColor: theme.cardMuted }]}>
           <Ionicons name="chevron-forward" size={18} color={theme.text} />
         </Pressable>
@@ -94,6 +100,9 @@ export function CalendarTool() {
               <Pressable
                 key={`day-${dayNum}`}
                 onPress={() => setSelectedDay(dayNum)}
+                accessibilityRole="button"
+                accessibilityLabel={`${dayNum}${hasBills ? `, ${dayRems.length} bill${dayRems.length === 1 ? '' : 's'}` : ''}`}
+                accessibilityState={{ selected: isSelected }}
                 style={[
                   styles.dayCell,
                   {
@@ -149,8 +158,11 @@ export function CalendarTool() {
       {/* Open Full Calendar Button */}
       <Pressable
         onPress={() => {
+          onNavigate?.();
           router.push('/bills/calendar');
         }}
+        accessibilityRole="button"
+        accessibilityLabel="Open full renewal calendar"
         style={[styles.fullCalendarBtn, { backgroundColor: theme.cardMuted }]}>
         <MaterialCommunityIcons name="calendar-month" size={16} color={theme.accent} />
         <ThemedText type="smallBold" style={{ color: theme.accent }}>Open Full Renewal Calendar →</ThemedText>

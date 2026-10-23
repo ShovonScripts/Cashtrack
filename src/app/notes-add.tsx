@@ -58,6 +58,8 @@ export default function AddNoteScreen() {
           headerRight: () => (
             <Pressable
               onPress={handleSave}
+              accessibilityRole="button"
+              accessibilityLabel="Save note"
               style={[styles.saveHeaderBtn, { backgroundColor: theme.accentFill }]}>
               <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Save</ThemedText>
             </Pressable>
@@ -79,6 +81,10 @@ export default function AddNoteScreen() {
               <Pressable
                 key={c.key}
                 onPress={() => setColor(c.key)}
+                accessibilityRole="button"
+                accessibilityLabel={`Note color ${c.key}`}
+                accessibilityState={{ selected }}
+                hitSlop={4}
                 style={[
                   styles.colorCircle,
                   { backgroundColor: isDark ? c.darkHex : c.hex },
@@ -94,6 +100,7 @@ export default function AddNoteScreen() {
           onChangeText={setTitle}
           placeholder="Title"
           placeholderTextColor={theme.textSecondary}
+          accessibilityLabel="Note title"
           style={[styles.titleInput, { color: theme.text }]}
         />
 
@@ -102,6 +109,7 @@ export default function AddNoteScreen() {
           onChangeText={setContent}
           placeholder="Note content..."
           placeholderTextColor={theme.textSecondary}
+          accessibilityLabel="Note content"
           multiline
           style={[styles.contentInput, { color: theme.text }]}
         />

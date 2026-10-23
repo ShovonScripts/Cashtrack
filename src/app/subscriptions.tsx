@@ -11,6 +11,20 @@ import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
 
+function toMonthlyAmount(amount: number | null, repeatType: string): number {
+  if (amount === null) return 0;
+  switch (repeatType) {
+    case 'weekly':
+      return (amount * 52) / 12;
+    case 'yearly':
+      return amount / 12;
+    case 'monthly':
+      return amount;
+    default:
+      return 0;
+  }
+}
+
 function getCategoryIcon(category: string): keyof typeof MaterialCommunityIcons.glyphMap {
   switch (category) {
     case 'Subscription':
@@ -44,7 +58,10 @@ export default function SubscriptionsHubScreen() {
     (r) => r.derivedStatus !== 'paid' && r.derivedStatus !== 'skipped'
   );
 
-  const totalMonthlyOutflow = activeRecurring.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  const totalMonthlyOutflow = activeRecurring.reduce(
+    (sum, r) => sum + toMonthlyAmount(r.amount, r.repeatType),
+    0,
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

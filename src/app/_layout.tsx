@@ -29,8 +29,8 @@ SplashScreen.preventAutoHideAsync();
 function Navigation() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLoading, dataLoadError, resetAllData, enableDailyReminder, enableDailyQuotes } = useExpenses();
-  const { debtLoadError } = useDebts();
+  const { isLoading, dataLoadError, dataRecovered, resetAllData, enableDailyReminder, enableDailyQuotes } = useExpenses();
+  const { debtLoadError, debtRecovered } = useDebts();
 
   const reminderQueueRef = useRef<Promise<void>>(Promise.resolve());
 
@@ -63,7 +63,9 @@ function Navigation() {
     return <LoadingScreen />;
   }
 
-  const showLoadErrorBanner = dataLoadError || debtLoadError;
+  const unrecoveredLoadError = dataLoadError || debtLoadError;
+  const recoveredData = !unrecoveredLoadError && (dataRecovered || debtRecovered);
+  const showLoadErrorBanner = unrecoveredLoadError || recoveredData;
 
   const handleStartFresh = async () => {
     try {
@@ -115,17 +117,21 @@ function Navigation() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1, backgroundColor: theme.background }}>
       {showLoadErrorBanner && (
-        <View style={{ backgroundColor: theme.dangerFill, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
+        <View style={{ backgroundColor: recoveredData ? theme.accentFill : theme.dangerFill, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
           <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
-            Saved data could not be read. New changes will NOT be saved.
+            {recoveredData
+              ? 'Some saved data was unreadable. The original was backed up and new changes will save.'
+              : 'Saved data could not be read. New changes will NOT be saved.'}
           </ThemedText>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Start fresh and reset data"
-            onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
-            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
-            <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
-          </Pressable>
+          {!recoveredData && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Start fresh and reset data"
+              onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
+              style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+              <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
+            </Pressable>
+          )}
         </View>
       )}
       <Stack

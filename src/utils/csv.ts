@@ -20,9 +20,12 @@ export function generateCsvReport({
   return [headers.join(','), ...rows].join('\n');
 }
 
+const FORMULA_PREFIX = /^[=+\-@\t\r]/;
+
 function escapeCsv(field: string): string {
-  if (field.includes(',') || field.includes('"') || field.includes('\n') || field.includes('\r')) {
-    return `"${field.replace(/"/g, '""')}"`;
+  const safe = FORMULA_PREFIX.test(field) ? `'${field}` : field;
+  if (safe.includes(',') || safe.includes('"') || safe.includes('\n') || safe.includes('\r')) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return field;
+  return safe;
 }

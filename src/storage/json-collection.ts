@@ -68,9 +68,15 @@ export async function writeJsonArray<T>(
   await storage.setItem(key, JSON.stringify(rows));
 }
 
+const keyQueues = new Map<string, Promise<unknown>>();
+
 /**
  * Read-modify-write for a single key. Because the read throws on corrupt data,
  * a failed read can never be followed by a destructive write.
+ *
+ * Writes to the same key are serialized so two concurrent mutations cannot read
+ * the same snapshot and clobber each other (which could lose a record or
+ * resurrect a deleted one).
  */
 export async function mutateJsonArray<T>(
   storage: KeyValueStorage,
@@ -79,10 +85,22 @@ export async function mutateJsonArray<T>(
   mapRow: (row: unknown, index: number) => T,
   mutate: (rows: T[]) => T[]
 ): Promise<T[]> {
-  const current = await readJsonArray(storage, key, label, mapRow);
-  const next = mutate(current);
-  await writeJsonArray(storage, key, next);
-  return next;
+  const previous = keyQueues.get(key) ?? Promise.resolve();
+  const run = previous.catch(() => undefined).then(async () => {
+    const current = await readJsonArray(storage, key, label, mapRow);
+    const next = mutate(current);
+    await writeJsonArray(storage, key, next);
+    return next;
+  });
+
+  keyQueues.set(key, run);
+  try {
+    return await run;
+  } finally {
+    if (keyQueues.get(key) === run) {
+      keyQueues.delete(key);
+    }
+  }
 }
 
 /**

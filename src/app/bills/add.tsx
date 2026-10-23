@@ -225,6 +225,7 @@ export default function AddBillScreen() {
               <Switch
                 value={isAlarm}
                 onValueChange={setIsAlarm}
+                accessibilityLabel="High-priority alarm mode"
                 trackColor={{ false: theme.border, true: theme.accent }}
               />
             </View>
@@ -236,6 +237,7 @@ export default function AddBillScreen() {
                   onChangeText={setAlarmTime}
                   placeholder="09:00"
                   placeholderTextColor={theme.textSecondary}
+                  accessibilityLabel="Exact alarm time"
                   style={[styles.input, styles.alarmTimeInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
                 />
               </View>

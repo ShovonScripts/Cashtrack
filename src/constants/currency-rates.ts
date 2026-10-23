@@ -44,14 +44,18 @@ export const CURRENCIES: Currency[] = [
 export function convertCurrency(
   amount: number,
   fromCode: string,
-  toCode: string
+  toCode: string,
+  liveRates?: Record<string, number>
 ): number {
   const fromCurr = CURRENCIES.find((c) => c.code === fromCode) || CURRENCIES[0];
   const toCurr = CURRENCIES.find((c) => c.code === toCode) || CURRENCIES[1];
 
+  const fromRate = liveRates?.[fromCode] ?? fromCurr.rateToUSD;
+  const toRate = liveRates?.[toCode] ?? toCurr.rateToUSD;
+
   // Convert to USD first, then to target currency
-  const amountInUSD = amount / fromCurr.rateToUSD;
-  const converted = amountInUSD * toCurr.rateToUSD;
+  const amountInUSD = amount / fromRate;
+  const converted = amountInUSD * toRate;
 
   return Number(converted.toFixed(4));
 }

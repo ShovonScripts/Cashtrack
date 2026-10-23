@@ -143,6 +143,8 @@ export function WorldClockTool() {
             if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             setModalVisible(true);
           }}
+          accessibilityRole="button"
+          accessibilityLabel="Add a world clock city"
           style={({ pressed }) => [
             styles.addBtn,
             { backgroundColor: theme.accentFill },
@@ -183,6 +185,8 @@ export function WorldClockTool() {
                   <Pressable
                     onPress={() => handleRemoveCity(city.id)}
                     hitSlop={12}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${city.cityName} clock`}
                     style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.5 }]}>
                     <Ionicons name="close-circle-outline" size={20} color={theme.textSecondary} />
                   </Pressable>
@@ -225,7 +229,12 @@ export function WorldClockTool() {
       {/* Add City Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.backdrop}>
-          <Pressable style={styles.backdropPressable} onPress={() => setModalVisible(false)} />
+          <Pressable
+            style={styles.backdropPressable}
+            onPress={() => setModalVisible(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Close add city modal"
+          />
           <View style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.modalHeader}>
               <ThemedText type="subtitle">Add World Clock</ThemedText>
@@ -250,7 +259,11 @@ export function WorldClockTool() {
                 accessibilityLabel="Search city or country"
               />
               {searchQuery.length > 0 && (
-                <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
+                <Pressable
+                  onPress={() => setSearchQuery('')}
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Clear search">
                   <Ionicons name="close-circle" size={16} color={theme.textSecondary} />
                 </Pressable>
               )}
@@ -266,6 +279,9 @@ export function WorldClockTool() {
                     key={city.id}
                     onPress={() => handleAddCity(city)}
                     disabled={added}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${added ? 'Already added' : 'Add'} ${city.cityName}, ${city.countryName}`}
+                    accessibilityState={{ disabled: added }}
                     style={[
                       styles.modalCityRow,
                       {
@@ -454,8 +470,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

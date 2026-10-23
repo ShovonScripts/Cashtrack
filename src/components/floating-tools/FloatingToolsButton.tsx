@@ -32,7 +32,7 @@ function FloatingToolsButtonInner() {
   const [isInteracting, setIsInteracting] = useState<boolean>(false);
 
   const currentWidth = isRunning ? RUNNING_WIDTH : BUTTON_SIZE;
-  const currentHeight = isRunning ? 38 : BUTTON_SIZE;
+  const currentHeight = BUTTON_SIZE;
 
   const defaultX = EDGE_GAP;
   const defaultY = height - insets.bottom - TAB_BAR_CLEARANCE - currentHeight;
@@ -105,6 +105,8 @@ function FloatingToolsButtonInner() {
               if (!modalVisible) setIsInteracting(false);
             }}
             onPress={handlePress}
+            accessibilityRole="button"
+            accessibilityLabel={isRunning ? `Stopwatch running, ${formatTime(seconds)}. Open stopwatch.` : 'Open quick tools'}
             style={({ pressed }) => [
               styles.button,
               isRunning && styles.runningPill,
@@ -160,8 +162,8 @@ const styles = StyleSheet.create({
   },
   runningPill: {
     width: 100,
-    height: 38,
-    borderRadius: 19,
+    height: 44,
+    borderRadius: 22,
     flexDirection: 'row',
     paddingHorizontal: 10,
     justifyContent: 'space-between',

@@ -163,12 +163,19 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
         animationType="fade"
         onRequestClose={closePicker}>
         <View style={styles.backdrop}>
-          <Pressable style={styles.backdropPressable} onPress={closePicker} />
+          <Pressable
+            style={styles.backdropPressable}
+            onPress={closePicker}
+            accessibilityRole="button"
+            accessibilityLabel="Close city picker"
+          />
           <View style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
             <View style={styles.modalHeader}>
               <ThemedText type="subtitle">Select Clock {activeSlot} Pin</ThemedText>
               <Pressable
                 onPress={closePicker}
+                accessibilityRole="button"
+                accessibilityLabel="Close city picker"
                 style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
                 <Ionicons name="close" size={18} color={theme.text} />
               </Pressable>
@@ -182,6 +189,9 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
                   <Pressable
                     key={city.id}
                     onPress={() => handleSelectCity(city)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Set clock ${activeSlot} to ${city.cityName}, ${city.countryName}`}
+                    accessibilityState={{ selected }}
                     style={[
                       styles.cityRow,
                       {
@@ -309,8 +319,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

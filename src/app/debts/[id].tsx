@@ -228,6 +228,7 @@ export default function DebtDetailsScreen() {
                   onChangeText={setPaymentAmount}
                   placeholder="Amount"
                   placeholderTextColor={theme.textSecondary}
+                  accessibilityLabel="Payment amount"
                   keyboardType="decimal-pad"
                   style={[styles.input, { flex: 1, borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
                 />
@@ -236,12 +237,14 @@ export default function DebtDetailsScreen() {
                   onChangeText={setPaymentNote}
                   placeholder="Note (opt.)"
                   placeholderTextColor={theme.textSecondary}
+                  accessibilityLabel="Payment note"
                   style={[styles.input, { flex: 2, borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
                 />
                 <Pressable
                   onPress={handleAddPayment}
                   accessibilityRole="button"
                   accessibilityLabel="Add payment"
+                  hitSlop={6}
                   style={[styles.addPayBtn, { backgroundColor: theme.accentFill }]}>
                   <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
                 </Pressable>

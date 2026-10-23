@@ -131,11 +131,16 @@ export default function EditNoteScreen() {
             <View style={styles.headerActions}>
               <Pressable
                 onPress={handleDelete}
+                accessibilityRole="button"
+                accessibilityLabel="Delete note"
+                hitSlop={6}
                 style={[styles.iconBtn, { backgroundColor: `${theme.danger}15` }]}>
                 <Ionicons name="trash-outline" size={18} color={theme.danger} />
               </Pressable>
               <Pressable
                 onPress={handleSave}
+                accessibilityRole="button"
+                accessibilityLabel="Save changes"
                 style={[styles.saveHeaderBtn, { backgroundColor: theme.accentFill }]}>
                 <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Save</ThemedText>
               </Pressable>
@@ -158,6 +163,10 @@ export default function EditNoteScreen() {
               <Pressable
                 key={c.key}
                 onPress={() => setColor(c.key)}
+                accessibilityRole="button"
+                accessibilityLabel={`Note color ${c.key}`}
+                accessibilityState={{ selected }}
+                hitSlop={4}
                 style={[
                   styles.colorCircle,
                   { backgroundColor: isDark ? c.darkHex : c.hex },
@@ -173,6 +182,7 @@ export default function EditNoteScreen() {
           onChangeText={setTitle}
           placeholder="Title"
           placeholderTextColor={theme.textSecondary}
+          accessibilityLabel="Note title"
           style={[styles.titleInput, { color: theme.text }]}
         />
 
@@ -181,6 +191,7 @@ export default function EditNoteScreen() {
           onChangeText={setContent}
           placeholder="Note content..."
           placeholderTextColor={theme.textSecondary}
+          accessibilityLabel="Note content"
           multiline
           style={[styles.contentInput, { color: theme.text }]}
         />

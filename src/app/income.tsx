@@ -13,6 +13,7 @@ import { useExpenses } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
+import { confirmAction } from '@/utils/confirm';
 import { formatDate } from '@/utils/expense';
 import type { IncomeRecord } from '@/types/income';
 import type { RecurringFrequency } from '@/types/expense';
@@ -98,6 +99,24 @@ export default function IncomeScreen() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDelete = (item: IncomeRecord) => {
+    confirmAction(
+      'Delete income record?',
+      `This will permanently remove "${item.note?.trim() || 'this income record'}".`,
+      async () => {
+        try {
+          await deleteIncome(item.id);
+          if (editingId === item.id) {
+            handleCancelEdit();
+          }
+          setMessage('Income deleted.');
+        } catch {
+          setMessage('Could not delete this income record. Please try again.');
+        }
+      },
+    );
   };
 
   const totalAllTime = incomeList.reduce((sum, item) => sum + item.amount, 0);
@@ -276,7 +295,7 @@ export default function IncomeScreen() {
                 isEditing={editingId === item.id}
                 formatAmount={formatAmount}
                 onEdit={() => handleStartEdit(item)}
-                onDelete={() => deleteIncome(item.id)}
+                onDelete={() => handleDelete(item)}
               />
             ))}
           </View>

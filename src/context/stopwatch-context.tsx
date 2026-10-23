@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
 type StopwatchContextType = {
@@ -56,25 +56,31 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const [seconds, setSeconds] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [laps, setLaps] = useState<string[]>([]);
+  const elapsedBeforeStartRef = useRef<number>(0);
+  const startedAtRef = useRef<number>(0);
 
   useEffect(() => {
-    let interval: any = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
     if (isRunning) {
       interval = setInterval(() => {
         setSeconds((curr) => {
-          const next = curr + 1;
-          if (next % 5 === 0) {
+          // Recompute from the wall clock so timers blocked in the background
+          // or throttled by the OS do not lose elapsed time.
+          const next = Math.floor((Date.now() - startedAtRef.current) / 1000);
+          if (next !== curr && next > 0 && next % 5 === 0) {
             void updateNotification(next, true);
           }
           return next;
         });
-      }, 1000);
+      }, 250);
       void updateNotification(0, true);
     } else {
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
       void updateNotification(0, false);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isRunning]);
 
   const formatTime = (totalSecs: number) => {
@@ -86,14 +92,20 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   };
 
   const startTimer = () => {
+    startedAtRef.current = Date.now() - elapsedBeforeStartRef.current * 1000;
     setIsRunning(true);
   };
 
   const pauseTimer = () => {
+    const elapsed = Math.floor((Date.now() - startedAtRef.current) / 1000);
+    elapsedBeforeStartRef.current = elapsed;
+    setSeconds(elapsed);
     setIsRunning(false);
   };
 
   const resetTimer = () => {
+    elapsedBeforeStartRef.current = 0;
+    startedAtRef.current = Date.now();
     setIsRunning(false);
     setSeconds(0);
     setLaps([]);

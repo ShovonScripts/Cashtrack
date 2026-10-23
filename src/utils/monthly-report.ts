@@ -4,15 +4,7 @@ import type { IncomeRecord } from '@/types/income';
 import { getMonthExpenses, getSmartFinancialIntelligence } from '@/utils/advisor';
 import { getMonthIncome, calculateMonthlyCashFlow } from '@/utils/income';
 import { formatDate } from '@/utils/expense';
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+import { escapeHtml } from '@/utils/html';
 
 export function buildMonthlyReportHtml({
   month,

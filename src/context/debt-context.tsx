@@ -11,7 +11,8 @@ import {
 } from 'react';
 
 import type { DebtRecord, DebtDraft, DebtPayment } from '@/types/debt';
-import { loadDebts, saveDebts } from '@/storage/debt-storage';
+import { backupUnreadableDebts, loadDebts, saveDebts } from '@/storage/debt-storage';
+import { StorageParseError } from '@/storage/storage-errors';
 import { checkAndTriggerDebtNotifications } from '@/utils/notifications';
 import { useExpenses } from '@/context/expense-context';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
@@ -28,6 +29,7 @@ type DebtContextValue = {
   debts: DebtRecord[];
   isLoading: boolean;
   debtLoadError: boolean;
+  debtRecovered: boolean;
   addDebt: (draft: DebtDraft) => DebtRecord;
   updateDebt: (id: string, changes: DebtDraft) => void;
   deleteDebt: (id: string) => void;
@@ -43,6 +45,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
   const [debts, dispatch] = useReducer(debtReducer, []);
   const [isLoading, setIsLoading] = useState(true);
   const [debtLoadError, setDebtLoadError] = useState(false);
+  const [debtRecovered, setDebtRecovered] = useState(false);
   const loadFailedRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const lastSavedDebtsRef = useRef<string>('');
@@ -53,7 +56,13 @@ export function DebtProvider({ children }: { children: ReactNode }) {
 
     async function hydrate() {
       let failed = false;
-      const savedDebts = await loadDebts().catch((err) => {
+      let recovered = false;
+      const savedDebts = await loadDebts().catch(async (err) => {
+        if (err instanceof StorageParseError && (await backupUnreadableDebts())) {
+          recovered = true;
+          console.warn('[cashtrack] Debts were unreadable; original payload backed up');
+          return null;
+        }
         failed = true;
         console.error('[cashtrack] Failed to load debts', err);
         return null;
@@ -62,6 +71,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
 
       loadFailedRef.current = failed;
       setDebtLoadError(failed);
+      setDebtRecovered(recovered);
       const initialDebts = failed ? [] : (savedDebts ?? []);
       dispatch({ type: 'HYDRATE', debts: initialDebts });
       lastSavedDebtsRef.current = JSON.stringify(savedDebts ?? []);
@@ -81,6 +91,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     return registerResetHandler(async () => {
       loadFailedRef.current = false;
       setDebtLoadError(false);
+      setDebtRecovered(false);
       dispatch({ type: 'HYDRATE', debts: [] });
       lastSavedDebtsRef.current = '[]';
       const success = await saveQueueRef.current.enqueue(() => saveDebts([]));
@@ -165,6 +176,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       debts,
       isLoading,
       debtLoadError,
+      debtRecovered,
       addDebt,
       updateDebt,
       deleteDebt,
@@ -173,7 +185,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       deleteDebtPayment,
       getDebt,
     }),
-    [debts, isLoading, debtLoadError, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt]
+    [debts, isLoading, debtLoadError, debtRecovered, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt]
   );
 
   return <DebtContext.Provider value={value}>{children}</DebtContext.Provider>;

@@ -1,6 +1,6 @@
 import type { CountryCode } from '@/constants/countries';
 
-export type GenderOption = 'woman' | 'man' | '';
+export type GenderOption = 'woman' | 'man' | 'other' | '';
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type FirstDayOfWeek = 'monday' | 'sunday';
 

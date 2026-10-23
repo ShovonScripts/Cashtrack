@@ -10,6 +10,9 @@ import { useTheme } from '@/hooks/use-theme';
 import { CURRENCIES, convertCurrency } from '@/constants/currency-rates';
 
 const POPULAR_CODES = ['USD', 'EUR', 'GBP', 'INR', 'BDT', 'JPY', 'CAD', 'AUD'];
+const RATES_STORAGE_KEY = '@cashtrack_currency_rates';
+
+type UsdRates = Record<string, number>;
 
 export function CurrencyTool() {
   const theme = useTheme();
@@ -19,13 +22,33 @@ export function CurrencyTool() {
   const [showFromPicker, setShowFromPicker] = useState<boolean>(false);
   const [showToPicker, setShowToPicker] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const [lastUpdated, setLastUpdated] = useState<string>('Just now');
+  const [lastUpdated, setLastUpdated] = useState<string>('Tap to update');
+  const [rates, setRates] = useState<UsdRates | null>(null);
 
   useEffect(() => {
-    AsyncStorage.multiGet(['@spendly_currency_from', '@spendly_currency_to']).then((res) => {
+    AsyncStorage.multiGet([
+      '@spendly_currency_from',
+      '@spendly_currency_to',
+      RATES_STORAGE_KEY,
+    ]).then((res) => {
       if (res[0][1]) setFromCode(res[0][1]);
       if (res[1][1]) setToCode(res[1][1]);
-    });
+      if (res[2][1]) {
+        try {
+          const cached = JSON.parse(res[2][1]) as { rates?: UsdRates; fetchedAt?: string };
+          if (cached.rates) {
+            setRates(cached.rates);
+            if (cached.fetchedAt) {
+              setLastUpdated(
+                new Date(cached.fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              );
+            }
+          }
+        } catch {
+          // Ignore a corrupt rates cache; the offline table still works.
+        }
+      }
+    }).catch(() => {});
   }, []);
 
   const handleRefreshRates = async () => {
@@ -33,25 +56,30 @@ export function CurrencyTool() {
     setIsUpdating(true);
     try {
       const response = await fetch('https://open.er-api.com/v6/latest/USD');
-      const data = await response.json();
-      if (data && data.rates) {
-        setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-      }
+      if (!response.ok) throw new Error(`Rates request failed (${response.status})`);
+      const data = (await response.json()) as { rates?: UsdRates };
+      if (!data?.rates) throw new Error('Rates payload was empty');
+      setRates(data.rates);
+      const fetchedAt = new Date().toISOString();
+      setLastUpdated(
+        new Date(fetchedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      );
+      await AsyncStorage.setItem(RATES_STORAGE_KEY, JSON.stringify({ rates: data.rates, fetchedAt }));
     } catch {
-      setLastUpdated(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setLastUpdated((current) => (rates ? current : 'Offline rates'));
     } finally {
       setIsUpdating(false);
     }
   };
 
   const numericFrom = parseFloat(fromAmount) || 0;
-  const convertedAmount = convertCurrency(numericFrom, fromCode, toCode);
+  const convertedAmount = convertCurrency(numericFrom, fromCode, toCode, rates ?? undefined);
 
   const fromCurr = CURRENCIES.find((c) => c.code === fromCode) || CURRENCIES[0];
   const toCurr = CURRENCIES.find((c) => c.code === toCode) || CURRENCIES[1];
 
-  const singleRate = convertCurrency(1, fromCode, toCode);
-  const inverseRate = convertCurrency(1, toCode, fromCode);
+  const singleRate = convertCurrency(1, fromCode, toCode, rates ?? undefined);
+  const inverseRate = convertCurrency(1, toCode, fromCode, rates ?? undefined);
 
   const handleSwap = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -84,6 +112,9 @@ export function CurrencyTool() {
                   AsyncStorage.setItem('@spendly_currency_from', code);
                   setShowFromPicker(false);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Set source currency to ${code}`}
+                accessibilityState={{ selected: active }}
                 style={[
                   styles.popularChip,
                   {
@@ -114,6 +145,8 @@ export function CurrencyTool() {
               setShowFromPicker(!showFromPicker);
               setShowToPicker(false);
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`Change source currency, currently ${fromCurr.code}`}
             style={({ pressed }) => [
               styles.currencySelector,
               { backgroundColor: theme.card, borderColor: theme.border },
@@ -137,6 +170,9 @@ export function CurrencyTool() {
                     AsyncStorage.setItem('@spendly_currency_from', c.code);
                     setShowFromPicker(false);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Set source currency to ${c.code}`}
+                  accessibilityState={{ selected: c.code === fromCode }}
                   style={[styles.pickerItem, { borderBottomColor: theme.border }, c.code === fromCode && { backgroundColor: `${theme.accent}12` }]}>
                   <ThemedText type="defaultBold" style={c.code === fromCode ? { color: theme.accent } : undefined}>{c.code}</ThemedText>
                   <ThemedText type="caption" themeColor="textSecondary">{c.name} ({c.symbol})</ThemedText>
@@ -152,6 +188,7 @@ export function CurrencyTool() {
             value={fromAmount}
             onChangeText={setFromAmount}
             keyboardType="numeric"
+            accessibilityLabel={`Amount in ${fromCurr.code}`}
             placeholder="0"
             placeholderTextColor={theme.textSecondary}
             style={[styles.input, { color: theme.text }]}
@@ -166,6 +203,8 @@ export function CurrencyTool() {
       <View style={styles.swapButtonWrapper}>
         <Pressable
           onPress={handleSwap}
+          accessibilityRole="button"
+          accessibilityLabel="Swap currencies"
           style={({ pressed }) => [
             styles.swapButton,
             { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.accent },
@@ -187,6 +226,8 @@ export function CurrencyTool() {
               setShowToPicker(!showToPicker);
               setShowFromPicker(false);
             }}
+            accessibilityRole="button"
+            accessibilityLabel={`Change target currency, currently ${toCurr.code}`}
             style={({ pressed }) => [
               styles.currencySelector,
               { backgroundColor: theme.card, borderColor: theme.border },
@@ -210,6 +251,9 @@ export function CurrencyTool() {
                     AsyncStorage.setItem('@spendly_currency_to', c.code);
                     setShowToPicker(false);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Set target currency to ${c.code}`}
+                  accessibilityState={{ selected: c.code === toCode }}
                   style={[styles.pickerItem, { borderBottomColor: theme.border }, c.code === toCode && { backgroundColor: `${theme.success}12` }]}>
                   <ThemedText type="defaultBold" style={c.code === toCode ? { color: theme.success } : undefined}>{c.code}</ThemedText>
                   <ThemedText type="caption" themeColor="textSecondary">{c.name} ({c.symbol})</ThemedText>
@@ -234,12 +278,18 @@ export function CurrencyTool() {
       <View style={[styles.rateCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
         <View style={styles.rateHeaderRow}>
           <View style={styles.liveBadgeRow}>
-            <View style={styles.greenDot} />
-            <ThemedText type="smallBold" style={{ color: theme.success, fontSize: 10 }}>
-              LIVE MID-MARKET RATES
+            <View style={[styles.greenDot, rates ? undefined : { backgroundColor: theme.textSecondary }]} />
+            <ThemedText type="smallBold" style={{ color: rates ? theme.success : theme.textSecondary, fontSize: 10 }}>
+              {rates ? 'LIVE MID-MARKET RATES' : 'OFFLINE REFERENCE RATES'}
             </ThemedText>
           </View>
-          <Pressable onPress={handleRefreshRates} disabled={isUpdating} style={styles.refreshBtn} hitSlop={8}>
+          <Pressable
+            onPress={handleRefreshRates}
+            disabled={isUpdating}
+            accessibilityRole="button"
+            accessibilityLabel="Refresh exchange rates"
+            style={styles.refreshBtn}
+            hitSlop={8}>
             <Ionicons name="refresh" size={13} color={theme.accent} style={isUpdating ? { transform: [{ rotate: '180deg' }] } : undefined} />
             <ThemedText type="caption" style={{ color: theme.accent, fontSize: 11, fontWeight: '700' }}>
               {isUpdating ? 'Updating...' : lastUpdated}
@@ -364,8 +414,8 @@ const styles = StyleSheet.create({
     zIndex: 20,
   },
   swapButton: {
-    width: 36,
-    height: 36,
+    width: 44,
+    height: 44,
     borderRadius: Radius.pill,
     borderWidth: 1.5,
     alignItems: 'center',

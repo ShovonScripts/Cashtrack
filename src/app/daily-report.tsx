@@ -15,6 +15,7 @@ import { useExpenses } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate, sumAmounts } from '@/utils/expense';
+import { escapeHtml } from '@/utils/html';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -97,7 +98,7 @@ export default function DailyReportScreen() {
         ? categories
             .map(([cat, amt]) => {
               const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
-              return `<tr><td><strong>${cat}</strong></td><td class="numeric">${formatAmount(amt)}</td><td class="numeric">${pct}%</td></tr>`;
+              return `<tr><td><strong>${escapeHtml(cat)}</strong></td><td class="numeric">${escapeHtml(formatAmount(amt))}</td><td class="numeric">${pct}%</td></tr>`;
             })
             .join('')
         : '<tr><td colspan="3" class="empty">No expenses recorded on this day.</td></tr>';
@@ -106,7 +107,7 @@ export default function DailyReportScreen() {
         ? dayExpenses
             .map(
               (e) =>
-                `<tr><td>${formatDate(e.date)}</td><td><strong>${e.category}</strong></td><td>${e.note || '—'}</td><td class="numeric">${formatAmount(e.amount)}</td></tr>`
+                `<tr><td>${escapeHtml(formatDate(e.date))}</td><td><strong>${escapeHtml(e.category)}</strong></td><td>${escapeHtml(e.note || '—')}</td><td class="numeric">${escapeHtml(formatAmount(e.amount))}</td></tr>`
             )
             .join('')
         : '<tr><td colspan="4" class="empty">No transactions.</td></tr>';
@@ -166,7 +167,7 @@ export default function DailyReportScreen() {
     </div>
     <div class="stat">
       <div class="stat-lbl">Top Category</div>
-      <div class="stat-val">${topCategory ? topCategory[0] : 'None'}</div>
+      <div class="stat-val">${topCategory ? escapeHtml(topCategory[0]) : 'None'}</div>
     </div>
   </div>
 
@@ -410,6 +411,9 @@ export default function DailyReportScreen() {
         <Pressable
           onPress={exportDailyPdf}
           disabled={isGenerating}
+          accessibilityRole="button"
+          accessibilityLabel="Download daily report as PDF"
+          accessibilityState={{ disabled: isGenerating, busy: isGenerating }}
           style={({ pressed }) => [styles.exportButton, pressed && styles.pressed, isGenerating && styles.disabled]}>
           <MaterialCommunityIcons name="file-pdf-box" size={22} color="#FFFFFF" />
           <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
@@ -434,7 +438,7 @@ const styles = StyleSheet.create({
   headerCopy: { flex: 1, gap: 1 },
   eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
   dateSelectorCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.two },
-  arrowButton: { width: 42, height: 42, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  arrowButton: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   dateLabelBlock: { flex: 1, alignItems: 'center', gap: 2 },
   dateLabelText: { fontSize: 15, fontWeight: '800' },
   heroGlassCard: {

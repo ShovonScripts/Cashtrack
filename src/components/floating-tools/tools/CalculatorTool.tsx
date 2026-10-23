@@ -130,6 +130,8 @@ export function CalculatorTool() {
                 <Pressable
                   key={btn}
                   onPress={() => handlePress(btn)}
+                  accessibilityRole="button"
+                  accessibilityLabel={btn}
                   style={({ pressed }) => [
                     styles.button,
                     isZero && styles.buttonWide,
@@ -156,7 +158,7 @@ export function CalculatorTool() {
             </ThemedText>
           </View>
           {history.length > 0 && (
-            <Pressable onPress={handleClearHistory} hitSlop={8}>
+            <Pressable onPress={handleClearHistory} hitSlop={8} accessibilityRole="button">
               <ThemedText type="caption" style={{ color: theme.danger, fontSize: 11 }}>Clear</ThemedText>
             </Pressable>
           )}
@@ -176,6 +178,8 @@ export function CalculatorTool() {
                   setExpression(item.expression);
                   setResult(item.result);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Reuse calculation ${item.expression} equals ${item.result}`}
                 style={[styles.historyItem, { borderBottomColor: theme.border }, idx === history.length - 1 && { borderBottomWidth: 0 }]}>
                 <ThemedText type="caption" style={{ color: theme.textSecondary, fontSize: 13 }}>{item.expression} =</ThemedText>
                 <ThemedText type="defaultBold" style={{ fontSize: 14 }}>{item.result}</ThemedText>

@@ -242,6 +242,9 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const markAsPaid = useCallback(async (id: string, paidAmount: number, paidDate: string, recordAsExpense: boolean, note?: string) => {
     const target = rawReminders.find((r) => r.id === id);
     if (!target) return;
+    if (target.repeatType === 'one-time' && target.status === 'paid') {
+      throw new Error('This bill is already marked as paid.');
+    }
 
     let expenseId: string | null = null;
     if (recordAsExpense) {
@@ -264,8 +267,13 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       createdAt: new Date().toISOString(),
     };
 
+    // Only a full payment should roll the bill forward. A part-payment is
+    // recorded, but the current cycle stays due until the remainder is covered.
+    const coversFullAmount =
+      target.isVariableAmount || target.amount === null || paidAmount + 0.005 >= target.amount;
+
     let updated: FinancialReminder;
-    if (target.repeatType !== 'one-time') {
+    if (target.repeatType !== 'one-time' && coversFullAmount) {
       const nextDueDate = calculateNextDueDate(target.dueDate, target.repeatType, target.originalDueDate);
       const isEmi = target.category === 'EMI' && target.totalInstallments && target.totalInstallments > 0;
       const nextPaidInstallments = isEmi ? Math.min((target.paidInstallments ?? 0) + 1, target.totalInstallments!) : (target.paidInstallments ?? 0);
@@ -287,10 +295,15 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
           updatedAt: new Date().toISOString(),
         };
       }
-    } else {
+    } else if (target.repeatType === 'one-time') {
       updated = {
         ...target,
         status: 'paid',
+        updatedAt: new Date().toISOString(),
+      };
+    } else {
+      updated = {
+        ...target,
         updatedAt: new Date().toISOString(),
       };
     }

@@ -63,6 +63,8 @@ export function StopwatchTool() {
       <View style={styles.buttonRow}>
         <Pressable
           onPress={handleStartPause}
+          accessibilityRole="button"
+          accessibilityLabel={isRunning ? 'Pause stopwatch' : 'Start stopwatch'}
           style={({ pressed }) => [
             styles.actionButton,
             { backgroundColor: isRunning ? theme.dangerFill : theme.accentFill },
@@ -76,6 +78,8 @@ export function StopwatchTool() {
 
         <Pressable
           onPress={handleLapOrReset}
+          accessibilityRole="button"
+          accessibilityLabel={isRunning ? 'Record lap' : 'Reset stopwatch'}
           style={({ pressed }) => [
             styles.actionButton,
             { backgroundColor: theme.cardMuted, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border },
@@ -103,6 +107,8 @@ export function StopwatchTool() {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
                 clearLaps();
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Clear lap times"
               hitSlop={8}>
               <ThemedText type="caption" style={{ color: theme.danger, fontSize: 11 }}>Clear</ThemedText>
             </Pressable>

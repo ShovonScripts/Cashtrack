@@ -6,10 +6,11 @@ import { DEFAULT_PREFERENCES, type GenderOption, type ThemeMode, type UserPrefer
 import { StorageParseError } from '@/storage/storage-errors';
 
 export const PREFERENCES_STORAGE_KEY = '@cashtrack/preferences';
+export const PREFERENCES_CORRUPT_BACKUP_KEY = '@cashtrack/preferences.corrupt-backup';
 
 export { StorageParseError };
 
-const GENDER_OPTIONS: GenderOption[] = ['woman', 'man', ''];
+const GENDER_OPTIONS: GenderOption[] = ['woman', 'man', 'other', ''];
 
 function sanitizePreferences(value: unknown): UserPreferences {
   if (typeof value !== 'object' || value === null) {
@@ -118,4 +119,23 @@ export async function loadPreferences(): Promise<UserPreferences> {
 
 export async function savePreferences(preferences: UserPreferences): Promise<void> {
   await AsyncStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(preferences));
+}
+
+/**
+ * Preserves unreadable preferences before defaults overwrite them. Only call
+ * after a parse failure (not an IO failure).
+ */
+export async function backupUnreadablePreferences(): Promise<boolean> {
+  try {
+    const raw = await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY);
+    if (raw === null) return false;
+    const existing = await AsyncStorage.getItem(PREFERENCES_CORRUPT_BACKUP_KEY);
+    if (existing === null) {
+      await AsyncStorage.setItem(PREFERENCES_CORRUPT_BACKUP_KEY, raw);
+    }
+    return true;
+  } catch (error) {
+    console.error('[cashtrack] Failed to back up unreadable preferences', error);
+    return false;
+  }
 }

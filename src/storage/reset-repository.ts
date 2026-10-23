@@ -1,8 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { initDatabase } from './db.ts';
-import { DEBTS_BACKUP_KEY } from './debt-storage';
-import { EXPENSES_BACKUP_KEY } from './expense-storage';
+import { DEBTS_BACKUP_KEY, DEBTS_CORRUPT_BACKUP_KEY } from './debt-storage';
+import { EXPENSES_BACKUP_KEY, EXPENSES_CORRUPT_BACKUP_KEY } from './expense-storage';
+import { PREFERENCES_CORRUPT_BACKUP_KEY } from './preferences-storage';
 import { clearNotes } from './notes-storage';
 
 /**
@@ -12,7 +13,13 @@ import { clearNotes } from './notes-storage';
  */
 export async function clearAuxiliaryData(): Promise<void> {
   await clearNotes();
-  await AsyncStorage.multiRemove([EXPENSES_BACKUP_KEY, DEBTS_BACKUP_KEY]);
+  await AsyncStorage.multiRemove([
+    EXPENSES_BACKUP_KEY,
+    DEBTS_BACKUP_KEY,
+    EXPENSES_CORRUPT_BACKUP_KEY,
+    DEBTS_CORRUPT_BACKUP_KEY,
+    PREFERENCES_CORRUPT_BACKUP_KEY,
+  ]);
 }
 
 export async function clearRelationalData(): Promise<void> {

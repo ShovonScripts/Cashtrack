@@ -62,6 +62,9 @@ export default function NotesIndexScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.back();
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={8}
               style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Ionicons name="arrow-back" size={18} color={theme.text} />
             </Pressable>
@@ -78,6 +81,9 @@ export default function NotesIndexScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setIsGrid(!isGrid);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={isGrid ? 'Switch to list view' : 'Switch to grid view'}
+              hitSlop={8}
               style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Ionicons name={isGrid ? 'list-outline' : 'grid-outline'} size={18} color={theme.text} />
             </Pressable>
@@ -96,10 +102,15 @@ export default function NotesIndexScreen() {
             onChangeText={setSearch}
             placeholder="Search notes..."
             placeholderTextColor={theme.textSecondary}
+            accessibilityLabel="Search notes"
             style={[styles.searchInput, { color: theme.text }]}
           />
           {search.length > 0 && (
-            <Pressable onPress={() => setSearch('')} hitSlop={8}>
+            <Pressable
+              onPress={() => setSearch('')}
+              accessibilityRole="button"
+              accessibilityLabel="Clear search"
+              hitSlop={8}>
               <Ionicons name="close-circle" size={16} color={theme.textSecondary} />
             </Pressable>
           )}
@@ -133,6 +144,8 @@ export default function NotesIndexScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.push(`/notes-edit?id=${item.id}` as any);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={item.title ? `Edit note: ${item.title}` : 'Edit note'}
               style={({ pressed }) => [
                 styles.noteCardWrapper,
                 !isGrid && styles.fullWidthWrapper,
@@ -169,6 +182,8 @@ export default function NotesIndexScreen() {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
           router.push('/notes-add' as any);
         }}
+        accessibilityRole="button"
+        accessibilityLabel="Add note"
         style={({ pressed }) => [
           styles.fab,
           { backgroundColor: theme.accentFill, shadowColor: theme.accent },

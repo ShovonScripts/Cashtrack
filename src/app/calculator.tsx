@@ -30,6 +30,9 @@ export default function CalculatorScreen() {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 router.back();
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
+              hitSlop={8}
               style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
               <Ionicons name="arrow-back" size={18} color={theme.text} />
             </Pressable>

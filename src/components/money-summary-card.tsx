@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.pill,
-    minHeight: 36,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,

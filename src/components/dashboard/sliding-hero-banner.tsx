@@ -50,7 +50,7 @@ export function SlidingHeroBanner({
   useEffect(() => {
     async function loadWeather() {
       const data = await fetchLiveWeatherData();
-      setWeather(data);
+      setWeather(data ?? DEFAULT_WEATHER_DATA);
     }
     void loadWeather();
   }, []);
@@ -262,9 +262,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatarContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
     overflow: 'hidden',
     justifyContent: 'center',

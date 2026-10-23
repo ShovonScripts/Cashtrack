@@ -1,26 +1,27 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { useFinancialReminders } from '@/context/financial-reminders-context';
+import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function PayBillScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
-  const { getReminder, markAsPaid } = useFinancialReminders();
+  const { getReminder, markAsPaid, isLoading } = useFinancialReminders();
 
   const reminder = getReminder(id);
 
-  const [amountText, setAmountText] = useState(() => (reminder?.amount !== null && reminder?.amount !== undefined ? String(reminder.amount) : ''));
-  const [paidDate, setPaidDate] = useState(() => new Date());
-  const [recordAsExpense, setRecordAsExpense] = useState(true);
-  const [note, setNote] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  if (isLoading) {
+    return (
+      <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   if (!reminder) {
     return (
@@ -37,11 +38,34 @@ export default function PayBillScreen() {
     );
   }
 
+  return <PayBillForm key={reminder.id} reminder={reminder} onPay={markAsPaid} />;
+}
+
+type PayBillFormProps = {
+  reminder: ReminderWithDerivedStatus;
+  onPay: (id: string, amount: number, date: string, recordAsExpense: boolean, note?: string) => Promise<void>;
+};
+
+function PayBillForm({ reminder, onPay }: PayBillFormProps) {
+  const theme = useTheme();
+  const [amountText, setAmountText] = useState(() =>
+    reminder.isVariableAmount || reminder.amount === null ? '' : String(reminder.amount),
+  );
+  const [paidDate, setPaidDate] = useState(() => new Date());
+  const [recordAsExpense, setRecordAsExpense] = useState(true);
+  const [note, setNote] = useState('');
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
   const isValid = !Number.isNaN(parsedAmount) && Number.isFinite(parsedAmount) && parsedAmount > 0;
 
   const handlePay = async () => {
     if (isSubmitting) return;
+    if (reminder.repeatType === 'one-time' && reminder.status === 'paid') {
+      setError('This bill is already marked as paid.');
+      return;
+    }
     if (!isValid) {
       setError('Please enter a valid payment amount greater than zero.');
       return;
@@ -50,11 +74,11 @@ export default function PayBillScreen() {
     setIsSubmitting(true);
     setError('');
     try {
-      await markAsPaid(reminder.id, parsedAmount, paidDate.toISOString(), recordAsExpense, note);
+      await onPay(reminder.id, parsedAmount, paidDate.toISOString(), recordAsExpense, note);
       router.back();
     } catch (err) {
       console.error('[cashtrack] Failed to mark bill as paid', err);
-      setError('Could not save this payment. Please try again.');
+      setError(err instanceof Error && err.message ? err.message : 'Could not save this payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

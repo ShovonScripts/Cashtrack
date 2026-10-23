@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { FinancialReminder, ReminderPaymentRecord } from '@/types/reminder';
-import { mutateJsonArray, objectRows, readJsonArray, writeJsonArray } from '@/storage/json-collection';
+import { mutateJsonArray, objectRows, readJsonArray } from '@/storage/json-collection';
 
 const REMINDERS_KEY = '@cashtrack/financial-reminders';
 const PAYMENTS_KEY = '@cashtrack/reminder-payments';
@@ -31,17 +31,22 @@ export async function updateReminder(reminder: FinancialReminder): Promise<void>
 }
 
 export async function deleteReminderRepo(id: string): Promise<void> {
-  const reminders = await readJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows);
-  const payments = await readJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows);
-  await writeJsonArray(AsyncStorage, REMINDERS_KEY, reminders.filter((r) => r.id !== id));
-  await writeJsonArray(AsyncStorage, PAYMENTS_KEY, payments.filter((p) => p.reminderId !== id));
+  await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) =>
+    reminders.filter((r) => r.id !== id)
+  );
+  await mutateJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows, (payments) =>
+    payments.filter((p) => p.reminderId !== id)
+  );
 }
 
 export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord, reminder: FinancialReminder): Promise<void> {
-  const payments = await readJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows);
-  const reminders = await readJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows);
-  await writeJsonArray(AsyncStorage, PAYMENTS_KEY, [payment, ...payments.filter((p) => p.id !== payment.id)]);
-  await writeJsonArray(AsyncStorage, REMINDERS_KEY, reminders.map((r) => (r.id === reminder.id ? reminder : r)));
+  await mutateJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows, (payments) => [
+    payment,
+    ...payments.filter((p) => p.id !== payment.id),
+  ]);
+  await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) =>
+    reminders.map((r) => (r.id === reminder.id ? reminder : r))
+  );
 }
 
 export async function getAllPayments(): Promise<ReminderPaymentRecord[]> {

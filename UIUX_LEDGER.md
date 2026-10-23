@@ -173,10 +173,20 @@ This ledger is append-only. Rows are never deleted or renumbered. Statuses chang
 | F-166 | `src/components/onboarding-modal.tsx:122` | Onboarding/advisor copy | Claimed encrypted storage and an AI advisor that does not exist | High | Fixed | Copy now says "Insights & Reports"/"Spending Advisor", describes rule-based insights, and discloses local-only storage; menu/advisor labels aligned. |
 | F-167 | `src/utils/quote-notifications.ts:52` | Daily quote notifications | Quotes were scheduled on launch and requested permission without consent, with no way to disable | High | Fixed | Scheduling only checks existing permission (never prompts on launch); new `enableDailyQuotes` preference (default false) plus Profile toggle requesting permission on opt-in; disabling cancels pending quotes. |
 | F-168 | `src/app/goals/index.tsx:101` | Goals / Income / Bills lists | Failed loads only logged to console and rendered the empty state, looking like data loss | High | Fixed | Contexts expose `goalLoadError`/`incomeLoadError`/`remindersLoadError` + retry (clears error, reloads); lists show `LoadErrorState` with a retry button instead of the empty state. |
+| F-169 | `src/app/(tabs)/index.tsx:661` | Money snapshot carousel dots | Pagination dots were plain `View`s: not tappable, not focusable, no selected state | Medium | Fixed | Dots are now `Pressable` buttons with `accessibilityRole`, "Go to … slide" labels, `accessibilityState.selected`, and `goToSummarySlide` scrolling. |
+| F-170 | `src/app/(tabs)/index.tsx:568` | Money snapshot carousel | Card width changes on rotation/resize left the carousel between slides | Medium | Fixed | Added `cashFlowScrollRef` plus an effect that re-snaps to the active index when `snapInterval` changes. |
+| F-171 | `src/components/dashboard/summary-hero-card.tsx:99` | Cash flow card | Slide 1 only made its button pressable; slides 2/3 made the card body pressable, and the gap above the CTA was a dead zone | Medium | Fixed | Extracted `SummaryHeroCard`: the whole card body is one labelled press target with `flexGrow: 1`, consistent across all three slides. |
+| F-172 | `src/components/dashboard/money-summary-card.tsx:40` | Cash flow CTA | "＋ Manage money in" looked like an add action but opened a management page | Medium | Fixed | Renamed to "Add income" (the income page opens with its add form at the top). |
+| F-173 | `src/components/dashboard/money-summary-card.tsx:29` | Cash flow card | No month was shown; "Net Balance" did not identify the period | Medium | Fixed | The pill now shows the current month ("Oct 2026") and the a11y label names it. |
+| F-174 | `src/components/dashboard/summary-hero-card.tsx:78` | Cash flow / Lend & Borrow values | Negative amounts rendered as `$-1,200` and used the same white styling as positive amounts | Medium | Fixed | Signed values now render `-$1,200` before the symbol and use `theme.dangerOnBrand` when negative; zero no longer shows a stray sign. |
+| F-175 | `src/app/(tabs)/index.tsx:153` | Money Plan & Pots card | The pot target was only in the a11y label, never visible | Low | Fixed | Added an "of $target" chip alongside the active-pot count. |
+| F-176 | `src/components/dashboard/summary-hero-card.tsx:231` | Cash flow chips | "In"/"Out" chips could overflow on small screens or large amounts | Medium | Fixed | Chips now use `flexShrink`, `numberOfLines={1}` and `adjustsFontSizeToFit`; all three slides share the same chip implementation. |
+| F-177 | `src/components/dashboard/summary-hero-card.tsx:146` | Money snapshot cards | Hard-coded 215px height plus `overflow: hidden` clipped content at large font sizes | Low | Fixed | Changed to `minHeight: 215` so cards grow with accessibility text; the action button is capped at 400px on tablets. |
+| F-178 | `src/app/(tabs)/index.tsx:632` | Money snapshot section | Two adjacent carousels were stacked with no heading or swipe affordance on the second | Low | Fixed | Added a "Money snapshot / Cash flow, lending and pots" header with a "Swipe →" hint. |
 
 ### Current Ledger Counts:
 - **Open**: 3
-- **Fixed**: 154
+- **Fixed**: 164
 - **Deferred**: 1
 - **Removed**: 2
 - **Not reproducible**: 8

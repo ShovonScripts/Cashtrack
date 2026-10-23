@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -7,10 +7,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
-import { MoneySummaryCard } from '@/components/money-summary-card';
+import { MoneySummaryCard } from '@/components/dashboard/money-summary-card';
+import { SummaryHeroCard } from '@/components/dashboard/summary-hero-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
 import { useIncome } from '@/context/income-context';
@@ -139,67 +140,24 @@ function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number)
   const totalSaved = goals.reduce((sum, g) => sum + g.contributedAmount, 0);
   const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
   const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
+  const potCountLabel = `${activeGoals.length} active ${activeGoals.length === 1 ? 'pot' : 'pots'}`;
 
   return (
-    <View style={styles.heroCardSummary}>
-      {/* Spendly Brand Ambient Background Orbs */}
-      <View pointerEvents="none" style={styles.heroOrbLarge} />
-      <View pointerEvents="none" style={styles.heroOrbSmall} />
-
-      <View style={styles.heroContent}>
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/goals');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={`Money plan and pots. ${formatAmount(totalSaved)} saved of ${formatAmount(totalTarget)}. ${activeGoals.length} active ${activeGoals.length === 1 ? 'pot' : 'pots'}. ${overallProgress}% saved.`}
-          accessibilityHint="Opens the savings goals and pots page"
-          style={({ pressed }) => [styles.cardPressArea, pressed && styles.cardPressed]}>
-          {/* Topline: Label & Pill */}
-          <View style={styles.heroTopline}>
-            <ThemedText type="caption" style={styles.heroLabel}>
-              MONEY PLAN & POTS
-            </ThemedText>
-            <View style={styles.monthPill}>
-              <ThemedText type="caption" style={styles.monthPillText}>{overallProgress}% saved</ThemedText>
-            </View>
-          </View>
-
-          {/* Main Hero Value - Pure White like Daily Cost card */}
-          <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-            {formatAmount(totalSaved)}
-          </ThemedText>
-
-          {/* Footer Metrics Row with Clean White Style */}
-          <View style={styles.footerRow}>
-            <View style={styles.metricsPillsRow}>
-              <View style={styles.whiteChip}>
-                <View style={styles.cyanDot} />
-                <ThemedText type="small" style={styles.chipText}>
-                  {activeGoals.length} {activeGoals.length === 1 ? 'active pot' : 'active pots'}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-        </Pressable>
-
-        {/* Solid White Action Button like Daily Cost card */}
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/goals/add');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Create pot"
-          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-            <ThemedText type="defaultBold" style={styles.addButtonText}>Add pot</ThemedText>
-          </View>
-        </Pressable>
-      </View>
-    </View>
+    <SummaryHeroCard
+      title="MONEY PLAN & POTS"
+      pill={`${overallProgress}% saved`}
+      amount={totalSaved}
+      formatAmount={formatAmount}
+      chips={[
+        { label: potCountLabel, tone: 'info' },
+        { label: `of ${formatAmount(totalTarget)}`, tone: 'info' },
+      ]}
+      onPress={() => router.push('/goals')}
+      accessibilityLabel={`Money plan and pots. ${formatAmount(totalSaved)} saved of ${formatAmount(totalTarget)}. ${potCountLabel}. ${overallProgress}% saved.`}
+      accessibilityHint="Opens the savings goals and pots page"
+      actionLabel="Add pot"
+      onActionPress={() => router.push('/goals/add')}
+    />
   );
 }
 
@@ -402,81 +360,30 @@ function MoneyOverview({ formatAmount }: { formatAmount: (amount: number) => str
   const { debts } = useDebts();
   const { youAreOwed, youOwe, net } = summarizeDebts(debts);
   const openDebtCount = debts.filter((debt) => getRemainingBalance(debt) > 0).length;
+  const netDescription =
+    net > 0
+      ? `Net owed to you ${formatAmount(net)}`
+      : net < 0
+        ? `Net you owe ${formatAmount(Math.abs(net))}`
+        : `Net ${formatAmount(0)}`;
 
   return (
-    <View style={styles.heroCardSummary}>
-      {/* Spendly Brand Ambient Background Orbs */}
-      <View pointerEvents="none" style={styles.heroOrbLarge} />
-      <View pointerEvents="none" style={styles.heroOrbSmall} />
-
-      <View style={styles.heroContent}>
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/debts');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={`Lend and borrow. Net ${formatAmount(net)}. Owed to you ${formatAmount(youAreOwed)}. You owe ${formatAmount(youOwe)}. ${openDebtCount} open.`}
-          accessibilityHint="Opens the debts and IOUs page"
-          style={({ pressed }) => [styles.cardPressArea, pressed && styles.cardPressed]}>
-          {/* Header Topline */}
-          <View style={styles.heroTopline}>
-            <ThemedText type="caption" style={styles.heroLabel}>
-              LEND & BORROW
-            </ThemedText>
-            <View style={styles.monthPill}>
-              <ThemedText type="caption" style={styles.monthPillText}>{openDebtCount} open</ThemedText>
-            </View>
-          </View>
-
-          {/* Hero Net Value - Pure White like Daily Cost card */}
-          <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-            {net === 0 ? formatAmount(0) : net > 0 ? `+${formatAmount(net)}` : formatAmount(net)}
-          </ThemedText>
-
-          {/* Footer Metrics Row with Clean White Style */}
-          <View style={styles.footerRow}>
-            <View style={styles.metricsPillsRow}>
-              <View style={[styles.whiteChip, styles.shrinkChip]}>
-                <View style={styles.greenDot} />
-                <ThemedText
-                  type="small"
-                  style={styles.chipText}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit>
-                  Owed: {formatAmount(youAreOwed)}
-                </ThemedText>
-              </View>
-              <View style={[styles.whiteChip, styles.shrinkChip]}>
-                <View style={styles.redDot} />
-                <ThemedText
-                  type="small"
-                  style={styles.chipText}
-                  numberOfLines={1}
-                  adjustsFontSizeToFit>
-                  Owe: {formatAmount(youOwe)}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-        </Pressable>
-
-        {/* Solid White Action Button like Daily Cost card */}
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/debts/add');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Add debt"
-          style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-            <ThemedText type="defaultBold" style={styles.addButtonText}>Add debt</ThemedText>
-          </View>
-        </Pressable>
-      </View>
-    </View>
+    <SummaryHeroCard
+      title="LEND & BORROW"
+      pill={`${openDebtCount} open`}
+      amount={net}
+      formatAmount={formatAmount}
+      signed
+      chips={[
+        { label: `Owed: ${formatAmount(youAreOwed)}`, tone: 'positive' },
+        { label: `Owe: ${formatAmount(youOwe)}`, tone: 'negative' },
+      ]}
+      onPress={() => router.push('/debts')}
+      accessibilityLabel={`Lend and borrow. ${netDescription}. Owed to you ${formatAmount(youAreOwed)}. You owe ${formatAmount(youOwe)}. ${openDebtCount} open.`}
+      accessibilityHint="Opens the debts and IOUs page"
+      actionLabel="Add debt"
+      onActionPress={() => router.push('/debts/add')}
+    />
   );
 }
 
@@ -622,10 +529,72 @@ export default function DashboardScreen() {
   };
 
   const cashFlow = calculateMonthlyCashFlow({ incomeList, expenses, month: now });
+  const monthLabel = new Intl.DateTimeFormat('en', { month: 'short', year: 'numeric' }).format(now);
+
+  const summarySlides = [
+    {
+      key: 'cash-flow',
+      label: 'monthly cash flow',
+      content: (
+        <MoneySummaryCard
+          moneyIn={cashFlow.moneyIn}
+          moneyOut={cashFlow.moneyOut}
+          net={cashFlow.net}
+          formatAmount={formatAmount}
+          monthLabel={monthLabel}
+        />
+      ),
+    },
+    {
+      key: 'lend-borrow',
+      label: 'lend and borrow',
+      content: <MoneyOverview formatAmount={formatAmount} />,
+    },
+    {
+      key: 'money-plan',
+      label: 'money plan and pots',
+      content: <MoneyPlanSummaryCard formatAmount={formatAmount} />,
+    },
+  ];
+
   const [cashFlowCardIndex, setCashFlowCardIndex] = useState(0);
+  const cashFlowIndexRef = useRef(0);
+  const cashFlowScrollRef = useRef<ScrollView>(null);
   const screenWidth = useWindowDimensions().width;
   const containerPadding = Spacing.four * 2;
   const cardWidth = Math.min(screenWidth - containerPadding, MaxContentWidth - containerPadding);
+  const snapInterval = cardWidth + Spacing.three;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      cashFlowScrollRef.current?.scrollTo({
+        x: snapInterval * cashFlowIndexRef.current,
+        y: 0,
+        animated: false,
+      });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [snapInterval]);
+
+  const goToSummarySlide = (index: number) => {
+    cashFlowIndexRef.current = index;
+    setCashFlowCardIndex(index);
+    triggerHaptic();
+    cashFlowScrollRef.current?.scrollTo({ x: snapInterval * index, y: 0, animated: true });
+  };
+
+  const handleSummaryScroll = (offsetX: number) => {
+    const nextIndex = Math.round(offsetX / snapInterval);
+    if (
+      nextIndex >= 0
+      && nextIndex < summarySlides.length
+      && nextIndex !== cashFlowIndexRef.current
+    ) {
+      cashFlowIndexRef.current = nextIndex;
+      setCashFlowCardIndex(nextIndex);
+      triggerHaptic();
+    }
+  };
 
   return (
     <ScrollView
@@ -658,59 +627,57 @@ export default function DashboardScreen() {
         <UpcomingBillsWidget formatAmount={formatAmount} />
         <SpendingAdvisor expenses={expenses} limits={categoryLimits} formatAmount={formatAmount} now={now} />
 
+        <View style={styles.sectionHeader}>
+          <View>
+            <ThemedText type="defaultBold">Money snapshot</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Cash flow, lending and pots
+            </ThemedText>
+          </View>
+          <ThemedText type="caption" themeColor="textSecondary">
+            Swipe →
+          </ThemedText>
+        </View>
+
         <View style={styles.carouselWrapper}>
           <ScrollView
+            ref={cashFlowScrollRef}
             horizontal
-            pagingEnabled
             showsHorizontalScrollIndicator={false}
-            snapToInterval={cardWidth + Spacing.three}
+            snapToInterval={snapInterval}
             decelerationRate="fast"
-            onScroll={(e) => {
-              const offsetX = e.nativeEvent.contentOffset.x;
-              const newIndex = Math.round(offsetX / (cardWidth + Spacing.three));
-              if (newIndex !== cashFlowCardIndex && newIndex >= 0 && newIndex <= 2) {
-                setCashFlowCardIndex(newIndex);
-                triggerHaptic();
-              }
-            }}
+            onScroll={(event) => handleSummaryScroll(event.nativeEvent.contentOffset.x)}
             scrollEventThrottle={16}
             contentContainerStyle={styles.carouselContent}>
 
-            {/* Card A: Monthly Cash Flow */}
-            <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <MoneySummaryCard
-                moneyIn={cashFlow.moneyIn}
-                moneyOut={cashFlow.moneyOut}
-                net={cashFlow.net}
-                formatAmount={formatAmount}
-              />
-            </View>
-
-            {/* Card B: Money Overview (Debts) */}
-            <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <MoneyOverview formatAmount={formatAmount} />
-            </View>
-
-            {/* Card C: Money Plan & Pots */}
-            <View style={[styles.carouselCard, { width: cardWidth }]}>
-              <MoneyPlanSummaryCard formatAmount={formatAmount} />
-            </View>
+            {summarySlides.map((slide) => (
+              <View key={slide.key} style={[styles.carouselCard, { width: cardWidth }]}>
+                {slide.content}
+              </View>
+            ))}
 
           </ScrollView>
 
-          {/* Pagination Dots (3 dots) */}
           <View style={styles.paginationDots}>
-            {[0, 1, 2].map((i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  {
-                    backgroundColor: cashFlowCardIndex === i ? theme.accent : theme.border,
-                    width: cashFlowCardIndex === i ? 22 : 6,
-                  },
-                ]}
-              />
+            {summarySlides.map((slide, index) => (
+              <Pressable
+                key={slide.key}
+                onPress={() => goToSummarySlide(index)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel={`Go to ${slide.label} slide`}
+                accessibilityState={{ selected: cashFlowCardIndex === index }}
+                style={styles.dotButton}>
+                <View
+                  style={[
+                    styles.dot,
+                    {
+                      backgroundColor: cashFlowCardIndex === index ? theme.accent : theme.border,
+                      width: cashFlowCardIndex === index ? 22 : 6,
+                    },
+                  ]}
+                />
+              </Pressable>
             ))}
           </View>
         </View>
@@ -846,72 +813,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroContent: {
-    flex: 1,
-    justifyContent: 'space-between',
-    zIndex: 1,
-  },
-  cardPressArea: {
-    gap: Spacing.three,
-  },
-  cardPressed: {
-    opacity: 0.9,
-  },
-  heroTopline: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  heroLabel: {
-    color: 'rgba(255,255,255,0.7)',
-    letterSpacing: 1,
-  },
-  monthPill: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-  },
-  monthPillText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  heroValue: {
-    color: '#FFFFFF',
-    fontSize: 38,
-    lineHeight: 46,
-    fontVariant: ['tabular-nums'],
-  },
-  addButton: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.pill,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-    marginTop: Spacing.one,
-  },
-  addButtonText: {
-    color: Brand.deep,
-  },
-  heroOrbLarge: {
-    position: 'absolute',
-    width: 230,
-    height: 230,
-    borderRadius: 115,
-    right: -90,
-    top: -100,
-    backgroundColor: 'rgba(139,123,255,0.2)',
-  },
-  heroOrbSmall: {
-    position: 'absolute',
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    right: 14,
-    bottom: -90,
-    backgroundColor: 'rgba(176,76,252,0.2)',
-  },
   planCard: { gap: 0, padding: Spacing.three },
   planHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   planCopy: { flex: 1, gap: 2 },
@@ -987,17 +888,6 @@ const styles = StyleSheet.create({
   titleCopy: {
     gap: 2,
   },
-  heroCardSummary: {
-    height: 215,
-    backgroundColor: Brand.deep, // Signature Spendly Deep Navy Blue (#00109D)
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    position: 'relative',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-  },
   whitePillBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1006,18 +896,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: 6,
     borderRadius: Radius.pill,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.two,
-  },
-  metricsPillsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
   },
   moneyInBadge: {
     flexDirection: 'row',
@@ -1071,41 +949,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.15)',
     zIndex: 2,
   },
-  greenDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#34D399',
-  },
-  redDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#F87171',
-  },
-  cyanDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#38BDF8',
-  },
-  whiteChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    paddingHorizontal: Spacing.two,
-    paddingVertical: 5,
-    borderRadius: Radius.small,
-  },
-  shrinkChip: {
-    flexShrink: 1,
-  },
-  chipText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 12,
-  },
   overviewHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1150,6 +993,10 @@ const styles = StyleSheet.create({
   dot: {
     height: 6,
     borderRadius: 3,
+  },
+  dotButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionHeader: {
     flexDirection: 'row',

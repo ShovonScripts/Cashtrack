@@ -13,6 +13,59 @@ import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/wo
 const CLOCK_1_KEY = '@cashtrack_banner_clock_1';
 const CLOCK_2_KEY = '@cashtrack_banner_clock_2';
 
+type ClockPreferences = { city1Id: string; city2Id: string };
+
+let clockPreferences: ClockPreferences = { city1Id: 'local', city2Id: 'london' };
+let clockPreferencesHydrated = false;
+const clockPreferenceListeners = new Set<() => void>();
+
+function emitClockPreferenceChange() {
+  clockPreferenceListeners.forEach((listener) => listener());
+}
+
+async function hydrateClockPreferences() {
+  if (clockPreferencesHydrated) return;
+  clockPreferencesHydrated = true;
+  try {
+    const [savedCity1, savedCity2] = await Promise.all([
+      AsyncStorage.getItem(CLOCK_1_KEY),
+      AsyncStorage.getItem(CLOCK_2_KEY),
+    ]);
+    if (!savedCity1 && !savedCity2) return;
+    clockPreferences = {
+      city1Id: savedCity1 ?? clockPreferences.city1Id,
+      city2Id: savedCity2 ?? clockPreferences.city2Id,
+    };
+    emitClockPreferenceChange();
+  } catch {}
+}
+
+async function saveClockCity(slot: 1 | 2, cityId: string) {
+  clockPreferences =
+    slot === 1
+      ? { ...clockPreferences, city1Id: cityId }
+      : { ...clockPreferences, city2Id: cityId };
+  emitClockPreferenceChange();
+  try {
+    await AsyncStorage.setItem(slot === 1 ? CLOCK_1_KEY : CLOCK_2_KEY, cityId);
+  } catch {}
+}
+
+function useClockPreferences() {
+  const [preferences, setPreferences] = useState(clockPreferences);
+
+  useEffect(() => {
+    const listener = () => setPreferences(clockPreferences);
+    clockPreferenceListeners.add(listener);
+    void hydrateClockPreferences();
+    return () => {
+      clockPreferenceListeners.delete(listener);
+    };
+  }, []);
+
+  return preferences;
+}
+
 type DualClockWidgetProps = {
   variant?: 'default' | 'compact' | 'page';
   readOnly?: boolean;
@@ -24,23 +77,10 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
   const page = variant === 'page';
   const isDark = theme.text === '#ffffff';
 
-  const [city1Id, setCity1Id] = useState<string>('local');
-  const [city2Id, setCity2Id] = useState<string>('london');
+  const { city1Id, city2Id } = useClockPreferences();
   const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);
   const [activeSlot, setActiveSlot] = useState<1 | 2>(1);
   const now = useNow(1000);
-
-  useEffect(() => {
-    async function loadSavedClocks() {
-      try {
-        const val1 = await AsyncStorage.getItem(CLOCK_1_KEY);
-        const val2 = await AsyncStorage.getItem(CLOCK_2_KEY);
-        if (val1) setCity1Id(val1);
-        if (val2) setCity2Id(val2);
-      } catch {}
-    }
-    void loadSavedClocks();
-  }, []);
 
   const openPicker = (slot: 1 | 2) => {
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -56,13 +96,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
     if (Platform.OS !== 'web') {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    if (activeSlot === 1) {
-      setCity1Id(city.id);
-      await AsyncStorage.setItem(CLOCK_1_KEY, city.id);
-    } else {
-      setCity2Id(city.id);
-      await AsyncStorage.setItem(CLOCK_2_KEY, city.id);
-    }
+    await saveClockCity(activeSlot, city.id);
     closePicker();
   };
 

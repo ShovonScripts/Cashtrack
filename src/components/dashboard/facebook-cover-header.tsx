@@ -539,13 +539,13 @@ export function FacebookCoverHeader({
               <View style={styles.clockDivider} />
 
               <View style={styles.clockColumn}>
-                <DualClockWidget variant="compact" readOnly />
+                <DualClockWidget variant="compact" />
               </View>
             </View>
 
             <View style={styles.slideHint}>
-              <Text style={styles.slideHintText}>Tap for details</Text>
-              <Ionicons name="chevron-forward" size={12} color="rgba(255,255,255,0.8)" />
+              <Ionicons name="create-outline" size={11} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.slideHintText}>Tap clock to edit · card for details</Text>
             </View>
           </View>
         </TouchableOpacity>

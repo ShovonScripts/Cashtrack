@@ -89,6 +89,7 @@ type ExpenseContextValue = {
   isLoading: boolean;
   dataLoadError: boolean;
   dataRecovered: boolean;
+  preferences: UserPreferences;
   profile: UserProfile;
   country: CountryOption;
   formatAmount: (amount: number) => string;
@@ -131,6 +132,7 @@ type ExpenseContextValue = {
   appLockEnabled: boolean;
   setAppLockEnabled: (enabled: boolean) => void;
   resetAllData: () => Promise<void>;
+  reloadAllData: () => void;
 };
 
 export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
@@ -141,6 +143,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoadError, setDataLoadError] = useState(false);
   const [dataRecovered, setDataRecovered] = useState(false);
+  const [loadToken, setLoadToken] = useState(0);
 
   const expenseLoadFailedRef = useRef(false);
   const preferencesLoadFailedRef = useRef(false);
@@ -157,6 +160,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
   const registerResetHandler = useCallback((handler: () => Promise<void>) => {
     return resetRegistryRef.current.register(handler);
+  }, []);
+
+  const reloadAllData = useCallback(() => {
+    setLoadToken((token) => token + 1);
   }, []);
 
   useEffect(() => {
@@ -245,7 +252,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
     void hydrate();
     return () => { cancelled = true; };
-  }, []);
+  }, [loadToken]);
 
   useEffect(() => {
     if (!hasLoadedRef.current) return;
@@ -574,6 +581,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     isLoading,
     dataLoadError,
     dataRecovered,
+    preferences,
     profile: preferences.profile,
     country,
     formatAmount,
@@ -604,6 +612,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     appLockEnabled: preferences.appLockEnabled ?? false,
     setAppLockEnabled,
     resetAllData,
+    reloadAllData,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -649,6 +658,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableDailyQuotes,
     setAppLockEnabled,
     resetAllData,
+    reloadAllData,
     updateNotifiedDebts,
     registerResetHandler,
   ]);

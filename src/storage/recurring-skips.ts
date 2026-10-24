@@ -78,6 +78,26 @@ export async function skipRecurringPeriod(
   });
 }
 
+export type RecurringSkipsSnapshot = {
+  expense: Record<string, string[]>;
+  income: Record<string, string[]>;
+};
+
+/** Overwrites every skip for both recurring kinds. Used by backup restore. */
+export async function replaceRecurringSkips(skips: RecurringSkipsSnapshot): Promise<void> {
+  await enqueue(async () => {
+    const next: SkipMap = {};
+    for (const kind of ['expense', 'income'] as const) {
+      for (const [parentId, periods] of Object.entries(skips[kind] ?? {})) {
+        if (periods.length > 0) {
+          next[storageKey(kind, parentId)] = [...new Set(periods)];
+        }
+      }
+    }
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  });
+}
+
 export async function clearRecurringSkips(): Promise<void> {
   await enqueue(() => AsyncStorage.removeItem(STORAGE_KEY));
 }

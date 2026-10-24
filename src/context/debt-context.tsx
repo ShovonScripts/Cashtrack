@@ -37,6 +37,7 @@ type DebtContextValue = {
   addDebtPayment: (debtId: string, amount: number, note?: string) => void;
   deleteDebtPayment: (debtId: string, paymentId: string) => void;
   getDebt: (id: string) => DebtRecord | undefined;
+  reloadDebts: () => void;
 };
 
 const DebtContext = createContext<DebtContextValue | undefined>(undefined);
@@ -46,6 +47,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [debtLoadError, setDebtLoadError] = useState(false);
   const [debtRecovered, setDebtRecovered] = useState(false);
+  const [loadToken, setLoadToken] = useState(0);
   const loadFailedRef = useRef(false);
   const hasLoadedRef = useRef(false);
   const lastSavedDebtsRef = useRef<string>('');
@@ -83,6 +85,10 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
+  }, [loadToken]);
+
+  const reloadDebts = useCallback(() => {
+    setLoadToken((token) => token + 1);
   }, []);
 
   const { notifiedDebts, updateNotifiedDebts, formatAmount, isLoading: expenseIsLoading, registerResetHandler } = useExpenses();
@@ -184,8 +190,9 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       addDebtPayment,
       deleteDebtPayment,
       getDebt,
+      reloadDebts,
     }),
-    [debts, isLoading, debtLoadError, debtRecovered, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt]
+    [debts, isLoading, debtLoadError, debtRecovered, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt, reloadDebts]
   );
 
   return <DebtContext.Provider value={value}>{children}</DebtContext.Provider>;

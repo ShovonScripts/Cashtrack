@@ -38,6 +38,11 @@ export async function deleteNote(id: string): Promise<void> {
   );
 }
 
+/** Overwrites the note collection. Used when restoring a full backup. */
+export async function replaceNotes(notes: Note[]): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+}
+
 /** Removes every note. Used by the full "reset all data" flow. */
 export async function clearNotes(): Promise<void> {
   await AsyncStorage.removeItem(STORAGE_KEY);

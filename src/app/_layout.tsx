@@ -1,7 +1,7 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppLockGate } from '@/components/app-lock/app-lock-gate';
@@ -214,6 +214,66 @@ const styles = StyleSheet.create({
     opacity: 0.78,
     transform: [{ scale: 0.97 }],
   },
+  errorScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  errorCard: {
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    gap: 12,
+    padding: 24,
+    borderRadius: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  errorBadge: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorBadgeText: {
+    fontSize: 26,
+    fontWeight: '800',
+  },
+  errorTitle: {
+    fontSize: 19,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  errorBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+  },
+  errorDetails: {
+    width: '100%',
+    fontSize: 11,
+    lineHeight: 16,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  errorButton: {
+    minHeight: 46,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+    marginTop: 4,
+  },
+  errorButtonPressed: {
+    opacity: 0.8,
+  },
+  errorButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '700',
+  },
 });
 
 function useSqliteCrudTest() {
@@ -247,6 +307,52 @@ function AppThemeProvider({ children }: { children: React.ReactNode }) {
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
       {children}
     </ThemeProvider>
+  );
+}
+
+/** Catches render errors so a broken screen never leaves the app on a blank page. */
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <RootErrorScreen error={error} retry={retry} />;
+}
+
+function RootErrorScreen({ error, retry }: ErrorBoundaryProps) {
+  const isDark = useColorScheme() === 'dark';
+  const palette = isDark
+    ? { background: '#0C0F12', card: '#151A1F', border: '#283038', text: '#F4F7FA', muted: '#9BA6B2', accent: '#159A8C' }
+    : { background: '#F5F6F3', card: '#FFFFFF', border: '#E2E5E0', text: '#11181C', muted: '#5F6B75', accent: '#0E7C70' };
+
+  useEffect(() => {
+    console.error('[cashtrack] Unhandled render error', error);
+  }, [error]);
+
+  return (
+    <View style={[styles.errorScreen, { backgroundColor: palette.background }]}>
+      <View style={[styles.errorCard, { backgroundColor: palette.card, borderColor: palette.border }]}>
+        <View style={[styles.errorBadge, { backgroundColor: `${palette.accent}1E` }]}>
+          <Text style={[styles.errorBadgeText, { color: palette.accent }]}>!</Text>
+        </View>
+        <Text style={[styles.errorTitle, { color: palette.text }]}>Something went wrong</Text>
+        <Text style={[styles.errorBody, { color: palette.muted }]}>
+          This screen hit an unexpected error. Your saved data is safe. Try again, and if it keeps happening, restart the app.
+        </Text>
+        {__DEV__ && (
+          <Text style={[styles.errorDetails, { color: palette.muted, borderColor: palette.border }]}>
+            {error.message}
+          </Text>
+        )}
+        <Pressable
+          onPress={() => void retry()}
+          accessibilityRole="button"
+          accessibilityLabel="Try again"
+          style={({ pressed }) => [
+            styles.errorButton,
+            { backgroundColor: palette.accent },
+            pressed && styles.errorButtonPressed,
+          ]}>
+          <Text style={styles.errorButtonText}>Try Again</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 

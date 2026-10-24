@@ -148,6 +148,9 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
     } finally {
       authenticatingRef.current = false;
       setIsAuthenticating(false);
+      if (backgroundedAtRef.current === null && pendingBackgroundAtRef.current === null) {
+        setIsPrivacyCovered(false);
+      }
     }
 
     if (pendingBackgroundAtRef.current !== null) {

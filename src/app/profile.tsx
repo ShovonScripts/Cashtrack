@@ -24,9 +24,14 @@ import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing, Brand } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
+import { useDebts } from '@/context/debt-context';
 import { useExpenses } from '@/context/expense-context';
+import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useGoals } from '@/context/goal-context';
+import { useIncome } from '@/context/income-context';
 import { useTheme } from '@/hooks/use-theme';
+import { BACKUP_MIME_TYPE, createBackup, pickBackupFile, restoreBackup } from '@/storage/backup-service';
+import { BackupParseError, parseBackup } from '@/utils/backup';
 import type { GenderOption, UserProfile, FirstDayOfWeek } from '@/types/preferences';
 import { generateCsvReport } from '@/utils/csv';
 import { requestQuoteNotificationPermissionsAsync } from '@/utils/quote-notifications';
@@ -65,6 +70,7 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const {
     expenses,
+    preferences,
     profile,
     country,
     customCategories,
@@ -85,9 +91,13 @@ export default function ProfileScreen() {
     setEnableDailyQuotes,
     appLockEnabled,
     resetAllData,
+    reloadAllData,
   } = useExpenses();
 
-  const { goals } = useGoals();
+  const { goals, reloadGoals } = useGoals();
+  const { debts, reloadDebts } = useDebts();
+  const { reloadIncome } = useIncome();
+  const { reloadReminders } = useFinancialReminders();
 
   const [activeTab, setActiveTab] = useState<TabKey>('identity');
   const [name, setName] = useState(profile.name);
@@ -101,6 +111,8 @@ export default function ProfileScreen() {
   const [savedToastVisible, setSavedToastVisible] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
 
   const parsedAge = ageText.trim() === '' ? null : Number(ageText);
@@ -236,6 +248,116 @@ export default function ProfileScreen() {
       notify('Export Error', 'Unable to export transactions right now.');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    triggerHaptic();
+    setBackingUp(true);
+    try {
+      const backup = await createBackup({ expenses, preferences, debts });
+
+      if (Platform.OS === 'web') {
+        const blob = new Blob([backup.json], { type: BACKUP_MIME_TYPE });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', backup.fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        const file = new File(Paths.cache, backup.fileName);
+        file.create({ overwrite: true });
+        file.write(backup.json);
+
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(file.uri, {
+            mimeType: BACKUP_MIME_TYPE,
+            dialogTitle: 'Save CashTrack Backup',
+          });
+        }
+      }
+
+      const skipped = backup.omittedAttachments > 0
+        ? ` ${backup.omittedAttachments} photo(s) could not be included.`
+        : '';
+      notify(
+        'Backup Ready',
+        `All data was saved to ${backup.fileName}.${skipped}`,
+      );
+    } catch (error) {
+      console.error('[cashtrack] Backup failed', error);
+      notify('Backup Failed', 'Could not create a backup file. Please try again.');
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    if (Platform.OS === 'web') {
+      notify('Not Available', 'Restoring a backup is available in the iOS and Android app.');
+      return;
+    }
+
+    triggerHaptic();
+    setRestoring(true);
+    try {
+      const raw = await pickBackupFile();
+      if (raw === null) {
+        setRestoring(false);
+        return;
+      }
+
+      const preview = parseBackup(raw);
+      setRestoring(false);
+
+      const summary = [
+        `${preview.data.expenses.length} expenses`,
+        `${preview.data.income.length} income entries`,
+        `${preview.data.debts.length} debts`,
+        `${preview.data.goals.length} pots/goals`,
+        `${preview.data.reminders.length} bills`,
+        `${preview.data.notes.length} notes`,
+      ].join(', ');
+
+      confirmAction(
+        'Restore From Backup?',
+        `This will REPLACE everything currently on this device with the backup from ${preview.exportedAt.slice(0, 10)} (${summary}). This cannot be undone.`,
+        async () => {
+          setRestoring(true);
+          try {
+            const result = await restoreBackup(raw);
+            reloadAllData();
+            reloadDebts();
+            reloadIncome();
+            reloadGoals();
+            reloadReminders();
+            if (Platform.OS !== 'web') {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            }
+            notify(
+              'Backup Restored',
+              `${result.counts.expenses} expenses, ${result.counts.income} income entries, ${result.counts.goals} pots and ${result.counts.reminders} bills were restored.`,
+            );
+            router.replace('/(tabs)/menu');
+          } catch (error) {
+            console.error('[cashtrack] Restore failed', error);
+            notify('Restore Failed', 'The backup could not be applied. Your previous data may be incomplete.');
+          } finally {
+            setRestoring(false);
+          }
+        },
+        'Replace All Data',
+      );
+    } catch (error) {
+      setRestoring(false);
+      notify(
+        'Restore Failed',
+        error instanceof BackupParseError
+          ? error.message
+          : 'That file could not be read. Choose a CashTrack backup file.',
+      );
     }
   };
 
@@ -880,6 +1002,62 @@ export default function ProfileScreen() {
                     <ThemedText type="caption" themeColor="textSecondary">Full recorded expense ledger</ThemedText>
                   </View>
                   <MaterialCommunityIcons name="export-variant" size={18} color={theme.textSecondary} />
+                </Pressable>
+
+                <Pressable
+                  onPress={handleCreateBackup}
+                  disabled={backingUp || restoring}
+                  accessibilityRole="button"
+                  accessibilityLabel="Back up all data"
+                  accessibilityState={{ disabled: backingUp || restoring }}
+                  style={({ pressed }) => [
+                    styles.settingRowItemCompact,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#159A8C1E' }]}>
+                    {backingUp ? (
+                      <ActivityIndicator size="small" color="#159A8C" />
+                    ) : (
+                      <MaterialCommunityIcons name="database-export-outline" size={17} color="#159A8C" />
+                    )}
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Back Up All Data</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      JSON file with photos & receipts
+                    </ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="export-variant" size={18} color={theme.textSecondary} />
+                </Pressable>
+
+                <Pressable
+                  onPress={handleRestoreBackup}
+                  disabled={backingUp || restoring}
+                  accessibilityRole="button"
+                  accessibilityLabel="Restore from backup"
+                  accessibilityState={{ disabled: backingUp || restoring }}
+                  style={({ pressed }) => [
+                    styles.settingRowItemCompact,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#F2994A1E' }]}>
+                    {restoring ? (
+                      <ActivityIndicator size="small" color="#F2994A" />
+                    ) : (
+                      <MaterialCommunityIcons name="database-import-outline" size={17} color="#F2994A" />
+                    )}
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Restore From Backup</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">
+                      {Platform.OS === 'web'
+                        ? 'Available in the iOS & Android app'
+                        : 'Replace all data on this device'}
+                    </ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </Pressable>
 
                 <Pressable

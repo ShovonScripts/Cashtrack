@@ -171,6 +171,7 @@ function Navigation() {
         <Stack.Screen name="notes" options={{ headerShown: false }} />
         <Stack.Screen name="notes-add" options={{ title: 'New Note', presentation: 'modal' }} />
         <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
+        <Stack.Screen name="user-manual" options={{ title: 'User Manual' }} />
         <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
         <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
         <Stack.Screen name="period-report" options={{ title: 'Spending Report' }} />

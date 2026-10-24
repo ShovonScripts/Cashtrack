@@ -244,6 +244,15 @@ export default function MenuScreen() {
       badge: `${country.currencyCode} (${country.symbol.trim()})`,
     },
     {
+      id: 'manual',
+      title: 'User Manual & Help',
+      subtitle: 'Searchable guide to every feature',
+      icon: 'book-open-page-variant-outline',
+      color: '#0EA5E9',
+      route: '/user-manual',
+      badge: 'Guide',
+    },
+    {
       id: 'about',
       title: 'About CashTrack & Support',
       subtitle: 'Privacy promise & app version',

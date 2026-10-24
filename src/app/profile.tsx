@@ -35,7 +35,10 @@ import { BackupParseError, parseBackup } from '@/utils/backup';
 import type { GenderOption, UserProfile, FirstDayOfWeek } from '@/types/preferences';
 import { generateCsvReport } from '@/utils/csv';
 import { requestQuoteNotificationPermissionsAsync } from '@/utils/quote-notifications';
-import { requestNotificationPermissionsAsync } from '@/utils/reminder-notifications';
+import {
+  requestNotificationPermissionsAsync,
+  scheduleTestAlarmNotificationAsync,
+} from '@/utils/reminder-notifications';
 import { requestSpendingReminderPermissionsAsync } from '@/utils/spending-reminder-notifications';
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 import { confirmAction, notify } from '@/utils/confirm';
@@ -113,6 +116,7 @@ export default function ProfileScreen() {
   const [exporting, setExporting] = useState(false);
   const [backingUp, setBackingUp] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [testingAlarm, setTestingAlarm] = useState(false);
   const [isCoverModalOpen, setIsCoverModalOpen] = useState(false);
 
   const parsedAge = ageText.trim() === '' ? null : Number(ageText);
@@ -358,6 +362,27 @@ export default function ProfileScreen() {
           ? error.message
           : 'That file could not be read. Choose a CashTrack backup file.',
       );
+    }
+  };
+
+  const handleTestAlarm = async () => {
+    triggerHaptic();
+    setTestingAlarm(true);
+    try {
+      const scheduled = await scheduleTestAlarmNotificationAsync();
+      if (scheduled) {
+        notify(
+          'Test Alarm Scheduled',
+          'A test notification will arrive in 5 seconds. Turn off Silent mode to hear it.'
+        );
+      } else {
+        notify(
+          'Notifications are off',
+          'Allow notifications for CashTrack in your device settings to test the alarm sound.'
+        );
+      }
+    } finally {
+      setTestingAlarm(false);
     }
   };
 
@@ -961,6 +986,33 @@ export default function ProfileScreen() {
                 />
               </View>
 
+              <Pressable
+                onPress={handleTestAlarm}
+                disabled={testingAlarm}
+                accessibilityRole="button"
+                accessibilityLabel="Send a test alarm notification"
+                accessibilityState={{ disabled: testingAlarm }}
+                style={({ pressed }) => [
+                  styles.settingRowItemCompact,
+                  { backgroundColor: theme.cardMuted, borderColor: theme.border, marginTop: Spacing.two },
+                  pressed && styles.pressed,
+                ]}>
+                <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#EB57571E' }]}>
+                  {testingAlarm ? (
+                    <ActivityIndicator size="small" color="#EB5757" />
+                  ) : (
+                    <MaterialCommunityIcons name="bell-alert-outline" size={17} color="#EB5757" />
+                  )}
+                </View>
+                <View style={styles.rowCopy}>
+                  <ThemedText type="smallBold">Test Alarm Sound</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">
+                    Sends a notification in 5 seconds
+                  </ThemedText>
+                </View>
+                <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+              </Pressable>
+
               <View style={[styles.infoBannerCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
                 <MaterialCommunityIcons name="shield-lock-outline" size={15} color={theme.accent} />
                 <ThemedText type="caption" themeColor="textSecondary" style={{ flex: 1, fontSize: 11 }}>
@@ -1077,6 +1129,28 @@ export default function ProfileScreen() {
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Replay App Walkthrough</ThemedText>
                     <ThemedText type="caption" themeColor="textSecondary">Onboarding tour & tips</ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    router.push('/user-manual');
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Open the user manual"
+                  style={({ pressed }) => [
+                    styles.settingRowItemCompact,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#0EA5E91E' }]}>
+                    <MaterialCommunityIcons name="book-open-page-variant-outline" size={17} color="#0EA5E9" />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">User Manual</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Searchable guide to every feature</ThemedText>
                   </View>
                   <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </Pressable>

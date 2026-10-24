@@ -45,6 +45,23 @@ export async function hasReminderNotificationPermissionAsync(): Promise<boolean>
   }
 }
 
+const ALARM_CHANNEL_ID = 'reminder-alarms-channel';
+const TEST_ALARM_ID = 'reminder:test-alarm';
+
+export async function ensureAlarmChannelAsync(): Promise<void> {
+  if (Platform.OS !== 'android' || !NotificationsModule?.setNotificationChannelAsync) return;
+  try {
+    await NotificationsModule.setNotificationChannelAsync(ALARM_CHANNEL_ID, {
+      name: 'High Priority Bill Alarms',
+      importance: NotificationsModule.AndroidImportance.MAX,
+      vibrationPattern: [0, 1000, 500, 1000],
+      enableVibration: true,
+      lightColor: '#0152F5',
+      lockscreenVisibility: NotificationsModule.AndroidNotificationVisibility.PUBLIC,
+    });
+  } catch {}
+}
+
 export async function cancelReminderNotificationsAsync(reminderId: string): Promise<void> {
   if (Platform.OS === 'web' || !NotificationsModule) return;
   try {
@@ -75,19 +92,7 @@ export async function scheduleReminderNotificationsAsync(
   const dueDate = new Date(reminder.dueDate);
   if (Number.isNaN(dueDate.getTime())) return;
 
-  if (Platform.OS === 'android' && NotificationsModule.setNotificationChannelAsync) {
-    try {
-      await NotificationsModule.setNotificationChannelAsync('reminder-alarms-channel', {
-        name: 'High Priority Bill Alarms',
-        importance: NotificationsModule.AndroidImportance.MAX,
-        sound: 'default',
-        vibrationPattern: [0, 1000, 500, 1000],
-        enableVibration: true,
-        lightColor: '#0152F5',
-        lockscreenVisibility: NotificationsModule.AndroidNotificationVisibility.PUBLIC,
-      });
-    } catch {}
-  }
+  await ensureAlarmChannelAsync();
 
   const now = new Date();
   const amountStr = reminder.amount !== null && formatAmount ? formatAmount(reminder.amount) : reminder.amount !== null ? `৳${reminder.amount}` : '';
@@ -132,14 +137,51 @@ export async function scheduleReminderNotificationsAsync(
             body: sched.body,
             sound: true,
             priority: sched.isAlarm ? NotificationsModule.AndroidNotificationPriority.MAX : NotificationsModule.AndroidNotificationPriority.DEFAULT,
-            channelId: sched.isAlarm ? 'reminder-alarms-channel' : undefined,
           },
           trigger: {
             type: NotificationsModule.SchedulableTriggerInputTypes.DATE,
             date: sched.triggerDate,
+            ...(sched.isAlarm ? { channelId: ALARM_CHANNEL_ID } : {}),
           },
         });
       } catch {}
     }
+  }
+}
+
+/**
+ * Fires a one-off alarm notification after a few seconds so the user can
+ * confirm that permissions, the high-priority channel and the sound all work.
+ */
+export async function scheduleTestAlarmNotificationAsync(): Promise<boolean> {
+  if (Platform.OS === 'web' || !NotificationsModule) return false;
+
+  const hasPermission = await requestNotificationPermissionsAsync();
+  if (!hasPermission) return false;
+
+  await ensureAlarmChannelAsync();
+
+  try {
+    await NotificationsModule.cancelScheduledNotificationAsync(TEST_ALARM_ID);
+  } catch {}
+
+  try {
+    await NotificationsModule.scheduleNotificationAsync({
+      identifier: TEST_ALARM_ID,
+      content: {
+        title: 'Test Bill Alarm',
+        body: 'If you can hear this, bill alarm sounds are working.',
+        sound: true,
+        priority: NotificationsModule.AndroidNotificationPriority.MAX,
+      },
+      trigger: {
+        type: NotificationsModule.SchedulableTriggerInputTypes.TIME_INTERVAL,
+        seconds: 5,
+        channelId: ALARM_CHANNEL_ID,
+      },
+    });
+    return true;
+  } catch {
+    return false;
   }
 }

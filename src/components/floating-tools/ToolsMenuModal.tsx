@@ -173,7 +173,9 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                 <Pressable
                   onPress={() => {
                     handleClose();
-                    router.push('/add-expense');
+                    setTimeout(() => {
+                      router.push('/add-expense' as any);
+                    }, 100);
                   }}
                   accessibilityRole="button"
                   style={({ pressed }) => [

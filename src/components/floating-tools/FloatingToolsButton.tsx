@@ -19,8 +19,7 @@ const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 80;
 const TAB_BAR_CLEARANCE = TAB_BAR_HEIGHT + 12;
 
 export function FloatingToolsButton() {
-  const { width, height } = useWindowDimensions();
-  return <FloatingToolsButtonInner key={`${Math.round(width)}x${Math.round(height)}`} />;
+  return <FloatingToolsButtonInner />;
 }
 
 function FloatingToolsButtonInner() {

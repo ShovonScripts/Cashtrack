@@ -8,7 +8,7 @@ import { useExpenses } from '@/context/expense-context';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { getReminderRemainingAmount } from '@/utils/reminder-payment';
+import { getReminderRemainingAmount, isOverpayment } from '@/utils/reminder-payment';
 
 export default function PayBillScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -82,6 +82,10 @@ function PayBillForm({ reminder, onPay }: PayBillFormProps) {
     }
     if (!isValid) {
       setError('Please enter a valid payment amount greater than zero.');
+      return;
+    }
+    if (isOverpayment(reminder, parsedAmount)) {
+      setError(`Payment cannot exceed the remaining balance of ${formatAmount(remainingAmount ?? 0)}.`);
       return;
     }
 

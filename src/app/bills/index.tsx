@@ -11,11 +11,11 @@ import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { useExpenses } from '@/context/expense-context';
-import { getReminderRemainingAmount } from '@/utils/reminder-payment';
+import { getReminderRemainingAmount, hasPartialPayment } from '@/utils/reminder-payment';
 import { Brand, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
-import { confirmDelete } from '@/utils/confirm';
+import { confirmAction, confirmDelete, notify } from '@/utils/confirm';
 
 type FilterTab = 'all' | 'due_today' | 'overdue' | 'upcoming' | 'paid';
 
@@ -51,7 +51,7 @@ function getReminderCategoryIcon(category: string): keyof typeof MaterialCommuni
 export default function BillsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { reminders, isLoading, remindersLoadError, reloadReminders } = useFinancialReminders();
+  const { reminders, payments, isLoading, remindersLoadError, reloadReminders } = useFinancialReminders();
   const { formatAmount } = useExpenses();
   const [tab, setTab] = useState<FilterTab>('all');
 
@@ -193,6 +193,33 @@ export default function BillsScreen() {
           <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
         </Pressable>
 
+        {/* Payment history banner button */}
+        <Pressable
+          onPress={() => {
+            triggerHaptic();
+            router.push('/bills/history');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Open bill payment history"
+          style={({ pressed }) => [
+            styles.calendarBannerCard,
+            { backgroundColor: theme.card, borderColor: theme.border },
+            pressed && styles.pressed,
+          ]}>
+          <View style={[styles.calendarBannerIcon, { backgroundColor: theme.cardMuted }]}>
+            <MaterialCommunityIcons name="history" size={22} color={theme.textSecondary} />
+          </View>
+          <View style={styles.calendarBannerCopy}>
+            <ThemedText type="smallBold">Payment History</ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              {payments.length === 0
+                ? 'No bill payments recorded yet'
+                : `${payments.length} ${payments.length === 1 ? 'payment' : 'payments'} recorded`}
+            </ThemedText>
+          </View>
+          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+        </Pressable>
+
         {/* Filter Tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
           {tabs.map((t) => {
@@ -286,9 +313,46 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
   const iconName = getReminderCategoryIcon(reminder.category);
 
   const handleDelete = () => {
-    confirmDelete('Delete reminder?', `Are you sure you want to delete "${reminder.title}"?`, () => {
-      deleteReminder(reminder.id);
+    const message = hasPartialPayment(reminder)
+      ? `"${reminder.title}" has a partial payment this cycle. Deleting it removes its payment history; linked expenses stay in Expenses.`
+      : `Are you sure you want to delete "${reminder.title}"?`;
+    confirmDelete('Delete reminder?', message, async () => {
+      try {
+        await deleteReminder(reminder.id);
+      } catch (error) {
+        console.error('[cashtrack] Failed to delete bill reminder', error);
+        notify('Could not delete bill', 'Something went wrong while deleting this bill. Please try again.');
+      }
     });
+  };
+
+  const handleSkip = () => {
+    if (hasPartialPayment(reminder)) {
+      notify(
+        'Partial payment recorded',
+        'This bill has a payment applied to the current cycle. Pay the remaining balance before skipping.',
+      );
+      return;
+    }
+
+    confirmAction(
+      'Skip this bill?',
+      `"${reminder.title}" will move to the next cycle without recording a payment.`,
+      async () => {
+        try {
+          await skipReminder(reminder.id);
+        } catch (error) {
+          console.error('[cashtrack] Failed to skip bill reminder', error);
+          notify(
+            'Could not skip bill',
+            error instanceof Error && error.message
+              ? error.message
+              : 'Something went wrong while skipping this bill. Please try again.',
+          );
+        }
+      },
+      'Skip',
+    );
   };
 
   return (
@@ -375,12 +439,26 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
             <Pressable
               onPress={() => {
                 triggerHaptic();
-                skipReminder(reminder.id);
+                handleSkip();
               }}
               accessibilityRole="button"
               accessibilityLabel={`Skip ${reminder.title}`}
               style={({ pressed }) => [styles.skipActionBtn, { backgroundColor: theme.cardMuted }, pressed && styles.pressed]}>
               <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700' }}>Skip</ThemedText>
+            </Pressable>
+          )}
+
+          {!isPaid && !isSkipped && (
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push({ pathname: '/bills/edit/[id]', params: { id: reminder.id } });
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={`Edit ${reminder.title}`}
+              style={({ pressed }) => [styles.deleteActionBtn, pressed && styles.pressed]}>
+              <MaterialCommunityIcons name="pencil-outline" size={18} color={theme.textSecondary} />
             </Pressable>
           )}
 

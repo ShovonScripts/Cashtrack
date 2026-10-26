@@ -20,7 +20,7 @@ import {
 } from '@/storage/financial-reminders-repository';
 import { scheduleReminderNotificationsAsync, cancelReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { calculateNextDueDate } from '@/utils/reminder-recurrence';
-import { applyReminderPayment } from '@/utils/reminder-payment';
+import { applyReminderPayment, getReminderRemainingAmount, hasPartialPayment, isOverpayment } from '@/utils/reminder-payment';
 import { useExpenses } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 
@@ -147,30 +147,32 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     const [year, month, day] = todayKey.split('-').map(Number);
     const today = new Date(year, month - 1, day);
 
-    return rawReminders.map((rem) => {
-      const due = new Date(rem.dueDate);
-      due.setHours(0, 0, 0, 0);
+    return rawReminders
+      .map((rem) => {
+        const due = new Date(rem.dueDate);
+        due.setHours(0, 0, 0, 0);
 
-      const diffTime = due.getTime() - today.getTime();
-      const daysUntilDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        const diffTime = due.getTime() - today.getTime();
+        const daysUntilDue = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-      let derivedStatus: ReminderStatus = rem.status;
-      if (rem.status !== 'paid' && rem.status !== 'skipped') {
-        if (daysUntilDue < 0) {
-          derivedStatus = 'overdue';
-        } else if (daysUntilDue === 0) {
-          derivedStatus = 'due_today';
-        } else {
-          derivedStatus = 'upcoming';
+        let derivedStatus: ReminderStatus = rem.status;
+        if (rem.status !== 'paid' && rem.status !== 'skipped') {
+          if (daysUntilDue < 0) {
+            derivedStatus = 'overdue';
+          } else if (daysUntilDue === 0) {
+            derivedStatus = 'due_today';
+          } else {
+            derivedStatus = 'upcoming';
+          }
         }
-      }
 
-      return {
-        ...rem,
-        derivedStatus,
-        daysUntilDue,
-      };
-    });
+        return {
+          ...rem,
+          derivedStatus,
+          daysUntilDue,
+        };
+      })
+      .sort((first, second) => first.dueDate.localeCompare(second.dueDate));
   }, [rawReminders, todayKey]);
 
   const addReminder = useCallback(async (draft: FinancialReminderDraft): Promise<FinancialReminder> => {
@@ -211,6 +213,29 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     const existing = rawReminders.find((r) => r.id === id);
     if (!existing) return;
 
+    const paidThisCycle = Math.max(0, existing.paidAmountCurrentCycle ?? 0);
+    if (
+      !draft.isVariableAmount &&
+      draft.amount !== null &&
+      paidThisCycle > 0 &&
+      draft.amount <= paidThisCycle + 0.005
+    ) {
+      throw new Error('The amount must be greater than what has already been paid this cycle.');
+    }
+
+    const paidInstallments = existing.paidInstallments ?? 0;
+    if (
+      draft.category === 'EMI' &&
+      draft.totalInstallments !== null &&
+      draft.totalInstallments !== undefined &&
+      paidInstallments > 0 &&
+      draft.totalInstallments <= paidInstallments
+    ) {
+      throw new Error(`Installments must be greater than the ${paidInstallments} already paid.`);
+    }
+
+    const dueChanged = draft.dueDate !== existing.dueDate;
+    const repeatChanged = draft.repeatType !== existing.repeatType;
     const updated: FinancialReminder = {
       ...existing,
       title: draft.title.trim(),
@@ -218,7 +243,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       isVariableAmount: draft.isVariableAmount,
       category: draft.category,
       dueDate: draft.dueDate,
-      originalDueDate: existing.originalDueDate ?? draft.dueDate,
+      originalDueDate:
+        dueChanged || repeatChanged ? draft.dueDate : existing.originalDueDate ?? draft.dueDate,
       repeatType: draft.repeatType,
       notes: draft.notes?.trim() ?? '',
       totalAmount: draft.totalAmount ?? null,
@@ -251,6 +277,11 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     }
     if (!Number.isFinite(paidAmount) || paidAmount <= 0) {
       throw new Error('Please enter a valid payment amount greater than zero.');
+    }
+
+    const remainingAmount = getReminderRemainingAmount(target);
+    if (isOverpayment(target, paidAmount)) {
+      throw new Error(`Payment cannot exceed the remaining balance of ${formatAmount(remainingAmount ?? 0)}.`);
     }
 
     let expenseId: string | null = null;
@@ -298,11 +329,16 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     if (updated.status === 'upcoming' && enableBillReminders) {
       void scheduleReminderNotificationsAsync(updated, safeFormat);
     }
-  }, [rawReminders, addExpense, deleteExpense, safeFormat, enableBillReminders]);
+  }, [rawReminders, addExpense, deleteExpense, safeFormat, enableBillReminders, formatAmount]);
 
   const skipReminder = useCallback(async (id: string) => {
     const target = rawReminders.find((r) => r.id === id);
     if (!target) return;
+    if (hasPartialPayment(target)) {
+      throw new Error(
+        'This bill has a partial payment for the current cycle. Pay the remaining balance before skipping.',
+      );
+    }
 
     void cancelReminderNotificationsAsync(id);
 

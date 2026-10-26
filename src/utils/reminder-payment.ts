@@ -14,6 +14,15 @@ export function getReminderRemainingAmount(reminder: FinancialReminder): number 
   return Math.max(0, roundMoney(reminder.amount - paid));
 }
 
+export function hasPartialPayment(reminder: FinancialReminder): boolean {
+  return Math.max(0, reminder.paidAmountCurrentCycle ?? 0) > 0;
+}
+
+export function isOverpayment(reminder: FinancialReminder, paymentAmount: number): boolean {
+  const remaining = getReminderRemainingAmount(reminder);
+  return remaining !== null && paymentAmount - remaining > PAYMENT_EPSILON;
+}
+
 export function applyReminderPayment(
   reminder: FinancialReminder,
   paymentAmount: number,

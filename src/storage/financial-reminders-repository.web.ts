@@ -9,7 +9,8 @@ const reminderRows = objectRows<FinancialReminder>('financial reminders');
 const paymentRows = objectRows<ReminderPaymentRecord>('reminder payments');
 
 export async function getAllReminders(): Promise<FinancialReminder[]> {
-  return readJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows);
+  const reminders = await readJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows);
+  return reminders.sort((first, second) => first.dueDate.localeCompare(second.dueDate));
 }
 
 export async function getReminderById(id: string): Promise<FinancialReminder | undefined> {

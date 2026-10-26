@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { applyReminderPayment, getReminderRemainingAmount } from '../src/utils/reminder-payment.ts';
+import {
+  applyReminderPayment,
+  getReminderRemainingAmount,
+  hasPartialPayment,
+  isOverpayment,
+} from '../src/utils/reminder-payment.ts';
 import type { FinancialReminder } from '../src/types/reminder.ts';
 
 const NOW = '2026-02-01T12:00:00.000Z';
@@ -37,6 +42,22 @@ test('remaining amount accounts for payments already applied this cycle', () => 
   assert.equal(getReminderRemainingAmount(makeReminder({ paidAmountCurrentCycle: 140 })), 0);
   assert.equal(getReminderRemainingAmount(makeReminder({ status: 'paid' })), 0);
   assert.equal(getReminderRemainingAmount(makeReminder({ isVariableAmount: true, amount: null })), null);
+});
+
+test('partial payment detection ignores stale negative credits', () => {
+  assert.equal(hasPartialPayment(makeReminder()), false);
+  assert.equal(hasPartialPayment(makeReminder({ paidAmountCurrentCycle: -5 })), false);
+  assert.equal(hasPartialPayment(makeReminder({ paidAmountCurrentCycle: 0.01 })), true);
+});
+
+test('overpayment is blocked without rejecting the remaining balance or small rounding', () => {
+  assert.equal(isOverpayment(makeReminder(), 100), false);
+  assert.equal(isOverpayment(makeReminder(), 100.01), true);
+  assert.equal(isOverpayment(makeReminder({ paidAmountCurrentCycle: 35 }), 65), false);
+  assert.equal(isOverpayment(makeReminder({ paidAmountCurrentCycle: 35 }), 65.01), true);
+  assert.equal(isOverpayment(makeReminder({ amount: 0.3, paidAmountCurrentCycle: 0.1 }), 0.2), false);
+  assert.equal(isOverpayment(makeReminder({ isVariableAmount: true, amount: null }), 999), false);
+  assert.equal(isOverpayment(makeReminder({ status: 'paid' }), 1), true);
 });
 
 test('a partial payment is accumulated without advancing the due date', () => {

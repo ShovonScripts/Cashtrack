@@ -157,6 +157,8 @@ function Navigation() {
         <Stack.Screen name="bills" options={{ title: 'Bills & Reminders', headerRight: renderAddBillButton }} />
         <Stack.Screen name="bills/add" options={{ title: 'Add Bill / Reminder', presentation: 'modal' }} />
         <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />
+        <Stack.Screen name="bills/edit/[id]" options={{ title: 'Edit Bill', presentation: 'modal' }} />
+        <Stack.Screen name="bills/history" options={{ title: 'Bill Payment History' }} />
         <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
         <Stack.Screen name="app-lock" options={{ title: 'App Lock' }} />
         <Stack.Screen name="country" options={{ title: 'Country & currency' }} />

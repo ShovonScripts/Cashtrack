@@ -9,6 +9,7 @@ import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
+import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 import { triggerHaptic } from '@/utils/motion';
 
 function toMonthlyAmount(amount: number | null, repeatType: string): number {
@@ -146,6 +147,9 @@ export default function SubscriptionsHubScreen() {
                     ? 'Due today'
                     : `Renews in ${rem.daysUntilDue}d`;
                 const iconName = getCategoryIcon(rem.category);
+                const remainingAmount = getReminderRemainingAmount(rem);
+                const isPartiallyPaid =
+                  Math.max(0, rem.paidAmountCurrentCycle ?? 0) > 0 && (remainingAmount ?? 0) > 0;
 
                 return (
                   <View key={rem.id}>
@@ -164,12 +168,12 @@ export default function SubscriptionsHubScreen() {
                       <View style={styles.rowCopy}>
                         <ThemedText type="smallBold" numberOfLines={1}>{rem.title}</ThemedText>
                         <ThemedText type="caption" style={{ color }}>
-                          {statusText} · {rem.category} ({rem.repeatType})
+                          {statusText} · {rem.category} ({rem.repeatType}){isPartiallyPaid ? ' · Part paid' : ''}
                         </ThemedText>
                       </View>
                       <View style={styles.rowRight}>
                         <ThemedText type="smallBold" style={{ color }}>
-                          {rem.amount !== null ? formatAmount(rem.amount) : 'Variable'}
+                          {remainingAmount !== null ? formatAmount(remainingAmount) : 'Variable'}
                         </ThemedText>
                         <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                       </View>

@@ -20,6 +20,7 @@ import {
 } from '@/storage/financial-reminders-repository';
 import { scheduleReminderNotificationsAsync, cancelReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { calculateNextDueDate } from '@/utils/reminder-recurrence';
+import { applyReminderPayment } from '@/utils/reminder-payment';
 import { useExpenses } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 
@@ -189,6 +190,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       installmentAmount: draft.installmentAmount ?? null,
       totalInstallments: draft.totalInstallments ?? null,
       paidInstallments: 0,
+      paidAmountCurrentCycle: 0,
       isAlarm: draft.isAlarm,
       alarmTime: draft.alarmTime ?? null,
       createdAt: now,
@@ -244,8 +246,11 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const markAsPaid = useCallback(async (id: string, paidAmount: number, paidDate: string, recordAsExpense: boolean, note?: string) => {
     const target = rawReminders.find((r) => r.id === id);
     if (!target) return;
-    if (target.repeatType === 'one-time' && target.status === 'paid') {
+    if (target.status === 'paid') {
       throw new Error('This bill is already marked as paid.');
+    }
+    if (!Number.isFinite(paidAmount) || paidAmount <= 0) {
+      throw new Error('Please enter a valid payment amount greater than zero.');
     }
 
     let expenseId: string | null = null;
@@ -269,46 +274,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       createdAt: new Date().toISOString(),
     };
 
-    // Only a full payment should roll the bill forward. A part-payment is
-    // recorded, but the current cycle stays due until the remainder is covered.
-    const coversFullAmount =
-      target.isVariableAmount || target.amount === null || paidAmount + 0.005 >= target.amount;
-
-    let updated: FinancialReminder;
-    if (target.repeatType !== 'one-time' && coversFullAmount) {
-      const nextDueDate = calculateNextDueDate(target.dueDate, target.repeatType, target.originalDueDate);
-      const isEmi = target.category === 'EMI' && target.totalInstallments && target.totalInstallments > 0;
-      const nextPaidInstallments = isEmi ? Math.min((target.paidInstallments ?? 0) + 1, target.totalInstallments!) : (target.paidInstallments ?? 0);
-      const isEmiFinished = isEmi && nextPaidInstallments >= target.totalInstallments!;
-
-      if (isEmiFinished) {
-        updated = {
-          ...target,
-          status: 'paid',
-          paidInstallments: nextPaidInstallments,
-          updatedAt: new Date().toISOString(),
-        };
-      } else {
-        updated = {
-          ...target,
-          dueDate: nextDueDate,
-          status: 'upcoming',
-          paidInstallments: nextPaidInstallments,
-          updatedAt: new Date().toISOString(),
-        };
-      }
-    } else if (target.repeatType === 'one-time') {
-      updated = {
-        ...target,
-        status: 'paid',
-        updatedAt: new Date().toISOString(),
-      };
-    } else {
-      updated = {
-        ...target,
-        updatedAt: new Date().toISOString(),
-      };
-    }
+    const { reminder: updated } = applyReminderPayment(target, paidAmount);
 
     try {
       await markPaymentAndReminderRepo(payment, updated);
@@ -346,6 +312,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         ...target,
         dueDate: nextDueDate,
         status: 'upcoming',
+        paidAmountCurrentCycle: 0,
         updatedAt: new Date().toISOString(),
       };
       await updateReminderRepo(updated);
@@ -357,6 +324,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       const updated: FinancialReminder = {
         ...target,
         status: 'skipped',
+        paidAmountCurrentCycle: 0,
         updatedAt: new Date().toISOString(),
       };
       await updateReminderRepo(updated);

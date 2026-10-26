@@ -11,6 +11,7 @@ import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { useExpenses } from '@/context/expense-context';
+import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 import { Brand, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
@@ -67,7 +68,7 @@ export default function BillsScreen() {
       const d = new Date(r.dueDate);
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && r.derivedStatus !== 'paid';
     })
-    .reduce((sum, r) => sum + (r.amount ?? 0), 0);
+    .reduce((sum, r) => sum + (getReminderRemainingAmount(r) ?? 0), 0);
 
   const filteredReminders = reminders.filter((r) => {
     if (tab === 'due_today') return r.derivedStatus === 'due_today';
@@ -255,6 +256,9 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
   const isDueToday = reminder.derivedStatus === 'due_today';
   const isPaid = reminder.derivedStatus === 'paid';
   const isSkipped = reminder.derivedStatus === 'skipped';
+  const remainingAmount = getReminderRemainingAmount(reminder);
+  const paidThisCycle = Math.max(0, reminder.paidAmountCurrentCycle ?? 0);
+  const isPartiallyPaid = !isPaid && !isSkipped && paidThisCycle > 0 && (remainingAmount ?? 0) > 0;
 
   const statusColor = isOverdue
     ? theme.danger
@@ -314,6 +318,14 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
               </ThemedText>
             </View>
 
+            {isPartiallyPaid && (
+              <View style={[styles.badgePill, { backgroundColor: `${theme.warning}18` }]}>
+                <ThemedText type="caption" style={{ color: theme.warning, fontWeight: '800', fontSize: 10 }}>
+                  Part paid
+                </ThemedText>
+              </View>
+            )}
+
             {reminder.isAlarm && (
               <View style={[styles.badgePill, { backgroundColor: '#0152F518', flexDirection: 'row', alignItems: 'center', gap: 3 }]}>
                 <MaterialCommunityIcons name="alarm" size={11} color="#0152F5" />
@@ -326,7 +338,7 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
         </View>
 
         <ThemedText type="subtitle" style={[styles.amount, { color: isPaid ? theme.textSecondary : theme.text }]}>
-          {formatAmount(reminder.amount)}
+          {formatAmount(isPaid ? reminder.amount : (remainingAmount ?? reminder.amount))}
         </ThemedText>
       </View>
 

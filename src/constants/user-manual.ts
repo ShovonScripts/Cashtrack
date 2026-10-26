@@ -639,7 +639,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       },
       {
         type: 'paragraph',
-        text: 'For a recurring bill, a full payment advances the bill to its next due date. For a one-time bill, marking it paid closes it.',
+        text: 'For a recurring bill, a full payment advances the bill to its next due date. For a one-time bill, marking it paid closes it. You can also record a part-payment; the remaining balance is remembered for the current cycle and prefilled next time.',
       },
       { type: 'heading', text: 'Skip or delete' },
       {

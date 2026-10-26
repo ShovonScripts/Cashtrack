@@ -9,6 +9,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
+import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
@@ -144,14 +145,17 @@ export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
             <ThemedText type="caption" themeColor="textSecondary">No bills due on this day.</ThemedText>
           </Card>
         ) : (
-          selectedDayReminders.map((rem) => (
-            <Card key={rem.id} style={styles.reminderRowCard}>
-              <View style={styles.reminderInfo}>
-                <ThemedText type="smallBold" numberOfLines={1}>{rem.title}</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">{rem.category} · {rem.amount !== null ? formatAmount(rem.amount) : 'Variable'}</ThemedText>
-              </View>
-            </Card>
-          ))
+          selectedDayReminders.map((rem) => {
+            const remainingAmount = getReminderRemainingAmount(rem);
+            return (
+              <Card key={rem.id} style={styles.reminderRowCard}>
+                <View style={styles.reminderInfo}>
+                  <ThemedText type="smallBold" numberOfLines={1}>{rem.title}</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">{rem.category} · {rem.status === 'paid' ? 'Paid' : remainingAmount !== null ? formatAmount(remainingAmount) : 'Variable'}</ThemedText>
+                </View>
+              </Card>
+            );
+          })
         )}
       </View>
 

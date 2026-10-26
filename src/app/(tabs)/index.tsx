@@ -24,6 +24,7 @@ import { calculateMonthlyCashFlow } from '@/utils/income';
 import type { Expense } from '@/types/expense';
 import { getBudgetInsights, type BudgetInsight } from '@/utils/advisor';
 import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
+import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 import { FacebookCoverHeader } from '@/components/dashboard/facebook-cover-header';
 import { CostSummaryCarousel } from '@/components/dashboard/cost-summary-carousel';
 import { buildCategoryBreakdowns, buildCostSummaries, getAddExpenseDate, getWeekDays, type SummaryPeriod } from '@/utils/period-summary';
@@ -192,7 +193,7 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
 
   const upcomingList = activeReminders.slice(0, 3);
   const overdueCount = activeReminders.filter((r) => r.derivedStatus === 'overdue').length;
-  const totalAmountDue = activeReminders.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  const totalAmountDue = activeReminders.reduce((sum, r) => sum + (getReminderRemainingAmount(r) ?? 0), 0);
 
   const safeFormat = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
 
@@ -315,6 +316,9 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
                 ? 'Due today'
                 : `In ${rem.daysUntilDue}d`;
             const iconName = getReminderCategoryIcon(rem.category);
+            const remainingAmount = getReminderRemainingAmount(rem);
+            const isPartiallyPaid =
+              Math.max(0, rem.paidAmountCurrentCycle ?? 0) > 0 && (remainingAmount ?? 0) > 0;
 
             return (
               <Pressable
@@ -338,12 +342,12 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
                     {rem.title}
                   </ThemedText>
                   <ThemedText type="caption" style={{ color }}>
-                    {statusText} · {rem.category}
+                    {statusText} · {rem.category}{isPartiallyPaid ? ' · Part paid' : ''}
                   </ThemedText>
                 </View>
                 <View style={styles.billRightAction}>
                   <ThemedText type="smallBold" style={{ color }}>
-                    {safeFormat(rem.amount)}
+                    {safeFormat(isPartiallyPaid ? remainingAmount : rem.amount)}
                   </ThemedText>
                   <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </View>

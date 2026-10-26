@@ -358,6 +358,7 @@ function parseReminder(raw: unknown, index: number): FinancialReminder {
     repeatType: asOneOf(row.repeatType, REPEAT_TYPES, `${label} repeat type`),
     status: asOneOf(row.status, REMINDER_STATUSES, `${label} status`),
     notes: row.notes === undefined ? '' : asString(row.notes, `${label} notes`),
+    paidAmountCurrentCycle: 0,
     isAlarm: asBoolean(row.isAlarm, `${label} alarm flag`),
     createdAt: asDateString(row.createdAt, `${label} created date`),
     updatedAt: asDateString(row.updatedAt, `${label} updated date`),
@@ -392,6 +393,13 @@ function parseReminder(raw: unknown, index: number): FinancialReminder {
       fail(`${label} paid installments must be a whole number of at least 0.`);
     }
     reminder.paidInstallments = paidInstallments ?? 0;
+  }
+  const paidAmountCurrentCycle = optionalNumberOrNull(row.paidAmountCurrentCycle, `${label} paid amount this cycle`);
+  if (paidAmountCurrentCycle !== undefined) {
+    if (paidAmountCurrentCycle !== null && paidAmountCurrentCycle < 0) {
+      fail(`${label} paid amount this cycle cannot be negative.`);
+    }
+    reminder.paidAmountCurrentCycle = paidAmountCurrentCycle ?? 0;
   }
   const alarmTime = optionalStringOrNull(row.alarmTime, `${label} alarm time`);
   if (alarmTime !== undefined) reminder.alarmTime = alarmTime;

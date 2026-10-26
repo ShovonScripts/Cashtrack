@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import type { FinancialReminder } from '@/types/reminder';
+import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -95,7 +96,8 @@ export async function scheduleReminderNotificationsAsync(
   await ensureAlarmChannelAsync();
 
   const now = new Date();
-  const amountStr = reminder.amount !== null && formatAmount ? formatAmount(reminder.amount) : reminder.amount !== null ? `৳${reminder.amount}` : '';
+  const remainingAmount = getReminderRemainingAmount(reminder);
+  const amountStr = remainingAmount !== null && formatAmount ? formatAmount(remainingAmount) : remainingAmount !== null ? `৳${remainingAmount}` : '';
   const titleText = reminder.title;
 
   // 3 days before

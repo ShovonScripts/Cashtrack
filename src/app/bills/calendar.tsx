@@ -11,6 +11,7 @@ import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context
 import { useExpenses } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
+import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -195,6 +196,9 @@ export default function BillCalendarScreen() {
               const isPaid = rem.derivedStatus === 'paid';
               const isOverdue = rem.derivedStatus === 'overdue';
               const badgeColor = isPaid ? theme.success : isOverdue ? theme.danger : theme.accent;
+              const remainingAmount = getReminderRemainingAmount(rem);
+              const isPartiallyPaid =
+                !isPaid && Math.max(0, rem.paidAmountCurrentCycle ?? 0) > 0 && (remainingAmount ?? 0) > 0;
 
               return (
                 <Pressable
@@ -223,10 +227,10 @@ export default function BillCalendarScreen() {
                   </View>
                   <View style={styles.billRight}>
                     <ThemedText type="smallBold" style={{ color: badgeColor }}>
-                      {rem.amount !== null ? formatAmount(rem.amount) : 'Variable'}
+                      {isPaid ? (rem.amount !== null ? formatAmount(rem.amount) : 'Paid') : remainingAmount !== null ? formatAmount(remainingAmount) : 'Variable'}
                     </ThemedText>
                     <ThemedText type="caption" style={{ color: badgeColor, fontWeight: '700' }}>
-                      {isPaid ? 'Paid' : isOverdue ? 'Overdue' : 'Due'}
+                      {isPaid ? 'Paid' : isPartiallyPaid ? 'Part paid' : isOverdue ? 'Overdue' : 'Due'}
                     </ThemedText>
                   </View>
                 </Pressable>

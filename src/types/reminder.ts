@@ -30,6 +30,7 @@ export type FinancialReminder = {
   installmentAmount?: number | null; // For EMI
   totalInstallments?: number | null; // For EMI
   paidInstallments?: number; // For EMI
+  paidAmountCurrentCycle?: number;
   isAlarm: boolean;
   alarmTime?: string | null;
   createdAt: string;

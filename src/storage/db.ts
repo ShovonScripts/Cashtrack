@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS financial_reminders (
   installment_amount REAL,
   total_installments INTEGER,
   paid_installments INTEGER DEFAULT 0,
+  paid_amount_current_cycle REAL NOT NULL DEFAULT 0,
   is_alarm INTEGER NOT NULL DEFAULT 0,
   alarm_time TEXT,
   created_at TEXT NOT NULL,
@@ -125,6 +126,9 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   } catch {}
   try {
     await db.execAsync('ALTER TABLE financial_reminders ADD COLUMN alarm_time TEXT;');
+  } catch {}
+  try {
+    await db.execAsync('ALTER TABLE financial_reminders ADD COLUMN paid_amount_current_cycle REAL NOT NULL DEFAULT 0;');
   } catch {}
   try {
     await db.execAsync("ALTER TABLE money_goals ADD COLUMN pot_type TEXT NOT NULL DEFAULT 'general';");

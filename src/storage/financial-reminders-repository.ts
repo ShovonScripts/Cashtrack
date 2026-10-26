@@ -16,6 +16,7 @@ interface ReminderRow {
   installment_amount: number | null;
   total_installments: number | null;
   paid_installments: number | null;
+  paid_amount_current_cycle: number | null;
   is_alarm: number;
   alarm_time: string | null;
   created_at: string;
@@ -48,6 +49,7 @@ function mapReminderRow(row: ReminderRow): FinancialReminder {
     installmentAmount: row.installment_amount,
     totalInstallments: row.total_installments,
     paidInstallments: row.paid_installments ?? 0,
+    paidAmountCurrentCycle: row.paid_amount_current_cycle ?? 0,
     isAlarm: Boolean(row.is_alarm),
     alarmTime: row.alarm_time,
     createdAt: row.created_at,
@@ -82,7 +84,7 @@ export async function getReminderById(id: string): Promise<FinancialReminder | u
 export async function insertReminder(reminder: FinancialReminder): Promise<void> {
   const db = await initDatabase();
   await db.runAsync(
-    `INSERT INTO financial_reminders (id, title, amount, is_variable_amount, category, due_date, original_due_date, repeat_type, status, notes, total_amount, installment_amount, total_installments, paid_installments, is_alarm, alarm_time, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO financial_reminders (id, title, amount, is_variable_amount, category, due_date, original_due_date, repeat_type, status, notes, total_amount, installment_amount, total_installments, paid_installments, paid_amount_current_cycle, is_alarm, alarm_time, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     reminder.id,
     reminder.title,
     reminder.amount,
@@ -97,6 +99,7 @@ export async function insertReminder(reminder: FinancialReminder): Promise<void>
     reminder.installmentAmount ?? null,
     reminder.totalInstallments ?? null,
     reminder.paidInstallments ?? 0,
+    reminder.paidAmountCurrentCycle ?? 0,
     reminder.isAlarm ? 1 : 0,
     reminder.alarmTime ?? null,
     reminder.createdAt,
@@ -107,7 +110,7 @@ export async function insertReminder(reminder: FinancialReminder): Promise<void>
 export async function updateReminder(reminder: FinancialReminder): Promise<void> {
   const db = await initDatabase();
   await db.runAsync(
-    `UPDATE financial_reminders SET title = ?, amount = ?, is_variable_amount = ?, category = ?, due_date = ?, original_due_date = ?, repeat_type = ?, status = ?, notes = ?, total_amount = ?, installment_amount = ?, total_installments = ?, paid_installments = ?, is_alarm = ?, alarm_time = ?, updated_at = ? WHERE id = ?`,
+    `UPDATE financial_reminders SET title = ?, amount = ?, is_variable_amount = ?, category = ?, due_date = ?, original_due_date = ?, repeat_type = ?, status = ?, notes = ?, total_amount = ?, installment_amount = ?, total_installments = ?, paid_installments = ?, paid_amount_current_cycle = ?, is_alarm = ?, alarm_time = ?, updated_at = ? WHERE id = ?`,
     reminder.title,
     reminder.amount,
     reminder.isVariableAmount ? 1 : 0,
@@ -121,6 +124,7 @@ export async function updateReminder(reminder: FinancialReminder): Promise<void>
     reminder.installmentAmount ?? null,
     reminder.totalInstallments ?? null,
     reminder.paidInstallments ?? 0,
+    reminder.paidAmountCurrentCycle ?? 0,
     reminder.isAlarm ? 1 : 0,
     reminder.alarmTime ?? null,
     reminder.updatedAt,
@@ -150,7 +154,7 @@ export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord,
       payment.createdAt
     );
     await db.runAsync(
-      `UPDATE financial_reminders SET title = ?, amount = ?, is_variable_amount = ?, category = ?, due_date = ?, original_due_date = ?, repeat_type = ?, status = ?, notes = ?, total_amount = ?, installment_amount = ?, total_installments = ?, paid_installments = ?, is_alarm = ?, alarm_time = ?, updated_at = ? WHERE id = ?`,
+      `UPDATE financial_reminders SET title = ?, amount = ?, is_variable_amount = ?, category = ?, due_date = ?, original_due_date = ?, repeat_type = ?, status = ?, notes = ?, total_amount = ?, installment_amount = ?, total_installments = ?, paid_installments = ?, paid_amount_current_cycle = ?, is_alarm = ?, alarm_time = ?, updated_at = ? WHERE id = ?`,
       reminder.title,
       reminder.amount,
       reminder.isVariableAmount ? 1 : 0,
@@ -164,6 +168,7 @@ export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord,
       reminder.installmentAmount ?? null,
       reminder.totalInstallments ?? null,
       reminder.paidInstallments ?? 0,
+      reminder.paidAmountCurrentCycle ?? 0,
       reminder.isAlarm ? 1 : 0,
       reminder.alarmTime ?? null,
       reminder.updatedAt,

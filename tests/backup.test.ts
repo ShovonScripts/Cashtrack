@@ -102,6 +102,7 @@ function buildData(overrides: Partial<BackupData> = {}): BackupData {
         repeatType: 'monthly',
         status: 'upcoming',
         notes: '',
+        paidAmountCurrentCycle: 125.5,
         isAlarm: false,
         createdAt: '2026-10-01T10:00:00.000Z',
         updatedAt: '2026-10-01T10:00:00.000Z',
@@ -148,8 +149,17 @@ describe('backup round trip', () => {
     assert.equal(parsed.data.goals[0].potType, 'emergency');
     assert.equal(parsed.data.contributions[0].goalId, 'g1');
     assert.equal(parsed.data.reminders[0].category, 'Rent');
+    assert.equal(parsed.data.reminders[0].paidAmountCurrentCycle, 125.5);
     assert.equal(parsed.data.payments[0].reminderId, 'r1');
     assert.deepEqual(parsed.data.recurringSkips, { expense: { e1: ['2026-10'] }, income: {} });
+  });
+
+  it('defaults the current-cycle payment for older reminders', () => {
+    const reminder = { ...buildData().reminders[0] };
+    delete reminder.paidAmountCurrentCycle;
+    const parsed = parseBackup(JSON.stringify(buildFile({ ...buildData(), reminders: [reminder] })));
+
+    assert.equal(parsed.data.reminders[0].paidAmountCurrentCycle, 0);
   });
 
   it('defaults optional collections and fields', () => {
@@ -265,6 +275,12 @@ describe('backup validation', () => {
       reminders: [{ ...buildData().reminders[0], amount: 0 }],
     });
     assert.throws(() => parseBackup(JSON.stringify(zeroReminder)), /greater than zero/i);
+
+    const negativeCyclePayment = buildFile({
+      ...buildData(),
+      reminders: [{ ...buildData().reminders[0], paidAmountCurrentCycle: -1 }],
+    });
+    assert.throws(() => parseBackup(JSON.stringify(negativeCyclePayment)), /cannot be negative/i);
   });
 
   it('ignores prototype-polluting map keys', () => {

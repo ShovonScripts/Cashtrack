@@ -3,14 +3,34 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
-import type { CostSummary, SummaryPeriod } from '@/utils/period-summary';
+import type { CategoryTotal, CostSummary, SummaryPeriod } from '@/utils/period-summary';
 
-const CARD_BACKGROUND: Record<SummaryPeriod, string> = {
-  yesterday: Brand.deep,
-  daily: Brand.primary,
-  weekly: '#0B192C',
-  monthly: Brand.deep,
-  yearly: '#0B192C',
+const CARD_PALETTE: Record<SummaryPeriod, { background: string; orbLarge: string; orbSmall: string }> = {
+  daily: {
+    background: Brand.primary, // #0152F5 (Vibrant Royal Blue)
+    orbLarge: 'rgba(139, 123, 255, 0.25)',
+    orbSmall: 'rgba(20, 231, 253, 0.2)',
+  },
+  yesterday: {
+    background: '#1E3A8A', // Deep Indigo Blue
+    orbLarge: 'rgba(99, 102, 241, 0.25)',
+    orbSmall: 'rgba(56, 189, 248, 0.2)',
+  },
+  weekly: {
+    background: '#064E3B', // Deep Midnight Teal / Emerald
+    orbLarge: 'rgba(52, 211, 153, 0.25)',
+    orbSmall: 'rgba(16, 185, 129, 0.2)',
+  },
+  monthly: {
+    background: '#4C1D95', // Regal Deep Violet
+    orbLarge: 'rgba(168, 85, 247, 0.25)',
+    orbSmall: 'rgba(236, 72, 153, 0.2)',
+  },
+  yearly: {
+    background: '#18181B', // Luxury Obsidian Charcoal
+    orbLarge: 'rgba(245, 158, 11, 0.22)',
+    orbSmall: 'rgba(251, 191, 36, 0.18)',
+  },
 };
 
 type CostSummaryCardProps = {
@@ -19,6 +39,7 @@ type CostSummaryCardProps = {
   formatAmount: (amount: number) => string;
   onPressReport: () => void;
   onAddExpense?: () => void;
+  topCategory?: CategoryTotal;
 };
 
 export function CostSummaryCard({
@@ -27,19 +48,25 @@ export function CostSummaryCard({
   formatAmount,
   onPressReport,
   onAddExpense,
+  topCategory,
 }: CostSummaryCardProps) {
+  const palette = CARD_PALETTE[summary.period];
+
   return (
     <View
       style={[
         styles.card,
-        { width, backgroundColor: CARD_BACKGROUND[summary.period] },
+        { width, backgroundColor: palette.background },
       ]}>
-      <Pressable
-        onPress={onPressReport}
-        accessibilityRole="button"
-        accessibilityLabel={`${summary.title}, ${formatAmount(summary.amount)}, ${summary.detail} Opens the report.`}
-        style={({ pressed }) => [styles.reportPress, pressed && styles.pressed]}>
-        <View style={styles.content}>
+      <View pointerEvents="none" style={[styles.orbLarge, { backgroundColor: palette.orbLarge }]} />
+      <View pointerEvents="none" style={[styles.orbSmall, { backgroundColor: palette.orbSmall }]} />
+
+      <View style={styles.cardContent}>
+        <Pressable
+          onPress={onPressReport}
+          accessibilityRole="button"
+          accessibilityLabel={`${summary.title}, ${formatAmount(summary.amount)}, ${summary.detail} Opens the report.`}
+          style={({ pressed }) => [styles.reportPress, pressed && styles.pressed]}>
           <View style={styles.topline}>
             <ThemedText type="caption" style={styles.label}>
               {summary.title}
@@ -61,48 +88,60 @@ export function CostSummaryCard({
 
           <ThemedText
             type="small"
-            style={[styles.detail, onAddExpense && styles.detailWithAction]}
+            style={styles.detail}
             numberOfLines={2}>
             {summary.detail}
           </ThemedText>
-        </View>
-      </Pressable>
-
-      {onAddExpense && (
-        <Pressable
-          onPress={onAddExpense}
-          hitSlop={6}
-          accessibilityRole="button"
-          accessibilityLabel={`Add expense for ${summary.title.toLowerCase()}`}
-          style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
-          <Ionicons name="add" size={14} color="#FFFFFF" />
-          <ThemedText type="smallBold" style={styles.addButtonText}>
-            Add expense
-          </ThemedText>
         </Pressable>
-      )}
 
-      <View pointerEvents="none" style={styles.orbLarge} />
-      <View pointerEvents="none" style={styles.orbSmall} />
+        {onAddExpense ? (
+          <Pressable
+            onPress={onAddExpense}
+            accessibilityRole="button"
+            accessibilityLabel={`Add expense for ${summary.title.toLowerCase()}`}
+            style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
+            <Ionicons name="add" size={16} color={Brand.deep} />
+            <ThemedText type="defaultBold" style={styles.addButtonText}>
+              Add expense
+            </ThemedText>
+          </Pressable>
+        ) : topCategory && summary.amount > 0 ? (
+          <View style={styles.topCategoryFooter}>
+            <Ionicons name="flash-outline" size={13} color="#FFFFFF" />
+            <ThemedText type="caption" style={styles.topCategoryText} numberOfLines={1}>
+              Top: {topCategory.category} · {formatAmount(topCategory.amount)} ({Math.round(topCategory.percent)}%)
+            </ThemedText>
+          </View>
+        ) : (
+          <View style={styles.addButtonPlaceholder} />
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    minHeight: 195,
     borderRadius: Radius.xlarge,
     overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    justifyContent: 'space-between',
+  },
+  cardContent: {
+    padding: Spacing.three,
+    zIndex: 2,
+    gap: Spacing.two,
+    justifyContent: 'space-between',
+    flex: 1,
   },
   reportPress: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.three,
+    gap: Spacing.one,
   },
   pressed: {
     opacity: 0.9,
-  },
-  content: {
-    gap: Spacing.two,
-    zIndex: 1,
   },
   topline: {
     flexDirection: 'row',
@@ -111,73 +150,90 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   label: {
-    color: 'rgba(255,255,255,0.72)',
-    letterSpacing: 1,
-    fontWeight: '700',
+    color: 'rgba(255,255,255,0.75)',
+    letterSpacing: 0.8,
+    fontWeight: '800',
+    fontSize: 10.5,
   },
   rangePill: {
-    backgroundColor: 'rgba(255,255,255,0.16)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     paddingHorizontal: Spacing.two,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: Radius.pill,
   },
   rangePillText: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontSize: 10.5,
   },
   value: {
     color: '#FFFFFF',
     fontSize: 34,
     lineHeight: 40,
+    fontWeight: '800',
     fontVariant: ['tabular-nums'],
+    marginVertical: 2,
   },
   detail: {
-    color: 'rgba(255,255,255,0.82)',
-  },
-  detailWithAction: {
-    paddingRight: 116,
+    color: 'rgba(255,255,255,0.85)',
     fontSize: 12.5,
     lineHeight: 17,
   },
   addButton: {
-    position: 'absolute',
-    right: Spacing.four,
-    bottom: Spacing.three,
-    zIndex: 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.pill,
+    height: 36,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    paddingHorizontal: Spacing.three,
+    marginTop: 2,
+  },
+  topCategoryFooter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 5,
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: Spacing.three,
+    height: 36,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.38)',
+    marginTop: 2,
+  },
+  topCategoryText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  addButtonPlaceholder: {
+    height: 36,
+    marginTop: 2,
   },
   addButtonPressed: {
-    opacity: 0.72,
-    transform: [{ scale: 0.97 }],
+    opacity: 0.75,
   },
   addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 11.5,
+    color: Brand.deep,
+    fontSize: 13.5,
+    fontWeight: '700',
   },
   orbLarge: {
     position: 'absolute',
-    width: 230,
-    height: 230,
-    borderRadius: 115,
-    right: -90,
-    top: -100,
-    backgroundColor: 'rgba(139,123,255,0.2)',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    right: -70,
+    top: -80,
+    backgroundColor: 'rgba(139,123,255,0.22)',
   },
   orbSmall: {
     position: 'absolute',
     width: 130,
     height: 130,
     borderRadius: 65,
-    right: 14,
-    bottom: -90,
+    left: -40,
+    bottom: -50,
     backgroundColor: 'rgba(20,231,253,0.18)',
   },
 });

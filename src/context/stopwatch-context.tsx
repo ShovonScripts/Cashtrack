@@ -58,20 +58,16 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const [laps, setLaps] = useState<string[]>([]);
   const elapsedBeforeStartRef = useRef<number>(0);
   const startedAtRef = useRef<number>(0);
+  const lastNotificationSecondRef = useRef<number | null>(null);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
     if (isRunning) {
       interval = setInterval(() => {
-        setSeconds((curr) => {
-          // Recompute from the wall clock so timers blocked in the background
-          // or throttled by the OS do not lose elapsed time.
-          const next = Math.floor((Date.now() - startedAtRef.current) / 1000);
-          if (next !== curr && next > 0 && next % 5 === 0) {
-            void updateNotification(next, true);
-          }
-          return next;
-        });
+        // Recompute from the wall clock so timers blocked in the background
+        // or throttled by the OS do not lose elapsed time. Keep this updater
+        // pure: scheduling notifications here would run twice in StrictMode.
+        setSeconds(Math.floor((Date.now() - startedAtRef.current) / 1000));
       }, 250);
       void updateNotification(0, true);
     } else {
@@ -82,6 +78,13 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
       if (interval) clearInterval(interval);
     };
   }, [isRunning]);
+
+  useEffect(() => {
+    if (!isRunning || seconds <= 0 || seconds % 5 !== 0) return;
+    if (lastNotificationSecondRef.current === seconds) return;
+    lastNotificationSecondRef.current = seconds;
+    void updateNotification(seconds, true);
+  }, [isRunning, seconds]);
 
   const formatTime = (totalSecs: number) => {
     const mins = Math.floor(totalSecs / 60);
@@ -106,6 +109,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const resetTimer = () => {
     elapsedBeforeStartRef.current = 0;
     startedAtRef.current = Date.now();
+    lastNotificationSecondRef.current = null;
     setIsRunning(false);
     setSeconds(0);
     setLaps([]);

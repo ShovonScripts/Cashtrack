@@ -1,6 +1,6 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
@@ -9,23 +9,23 @@ import { useDebts } from '@/context/debt-context';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
-import type { DebtType } from '@/types/debt';
+import type { DebtRecord, DebtType } from '@/types/debt';
 
 export default function EditDebtScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getDebt, updateDebt } = useDebts();
+  const { getDebt, isLoading } = useDebts();
   const theme = useTheme();
 
   const debt = getDebt(id);
 
-  const [personName, setPersonName] = useState(() => debt?.personName ?? '');
-  const [amountText, setAmountText] = useState(() => debt?.amount !== undefined ? String(debt.amount) : '');
-  const [type, setType] = useState<DebtType>(() => debt?.type ?? 'lent');
-  const [date, setDate] = useState(() => debt?.date ? new Date(debt.date) : new Date());
-  const [hasDueDate, setHasDueDate] = useState(() => Boolean(debt?.dueDate));
-  const [dueDate, setDueDate] = useState(() => debt?.dueDate ? new Date(debt.dueDate) : new Date());
-  const [note, setNote] = useState(() => debt?.note ?? '');
-  const [error, setError] = useState('');
+  if (!debt && isLoading) {
+    return (
+      <ThemedView style={[styles.notFound, styles.loading]}>
+        <ActivityIndicator color={theme.accent} size="large" />
+        <ThemedText type="small" themeColor="textSecondary">Loading debt…</ThemedText>
+      </ThemedView>
+    );
+  }
 
   if (!debt) {
     return (
@@ -44,6 +44,22 @@ export default function EditDebtScreen() {
       </ThemedView>
     );
   }
+
+  return <EditDebtForm key={debt.id} debt={debt} />;
+}
+
+function EditDebtForm({ debt }: { debt: DebtRecord }) {
+  const { updateDebt } = useDebts();
+  const theme = useTheme();
+
+  const [personName, setPersonName] = useState(() => debt.personName);
+  const [amountText, setAmountText] = useState(() => String(debt.amount));
+  const [type, setType] = useState<DebtType>(() => debt.type);
+  const [date, setDate] = useState(() => new Date(debt.date));
+  const [hasDueDate, setHasDueDate] = useState(() => Boolean(debt.dueDate));
+  const [dueDate, setDueDate] = useState(() => debt.dueDate ? new Date(debt.dueDate) : new Date());
+  const [note, setNote] = useState(() => debt.note ?? '');
+  const [error, setError] = useState('');
 
   const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
   const isValid =
@@ -229,6 +245,7 @@ const styles = StyleSheet.create({
   cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
   pressed: { opacity: 0.7 },
   notFound: { flex: 1, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.two, justifyContent: 'center' },
+  loading: { alignItems: 'center' },
   notFoundText: { textAlign: 'center' },
   primaryButton: { alignSelf: 'center', paddingHorizontal: Spacing.four, paddingVertical: Spacing.two, borderRadius: Radius.medium, backgroundColor: Brand.accent },
 });

@@ -2,7 +2,6 @@ import { Platform } from 'react-native';
 
 import type { Expense } from '@/types/expense';
 import { sumAmounts } from '@/utils/expense';
-import { calculateGoalProgress } from '@/utils/goal-calculator';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -185,66 +184,3 @@ export async function checkAndTriggerDebtNotifications({
   }
 }
 
-export async function checkAndTriggerGoalNotifications({
-  goals,
-  notifiedGoals = {},
-  onGoalNotified,
-  formatAmount,
-}: {
-  goals: any[];
-  notifiedGoals?: Record<string, string>;
-  onGoalNotified: (key: string, stateKey: string) => void;
-  formatAmount?: (amount: number) => string;
-}) {
-  if (Platform.OS === 'web' || !NotificationsModule) return;
-  if (goals.length === 0) return;
-
-  const hasPermission = await hasNotificationPermissionAsync();
-  if (!hasPermission) return;
-
-  const now = new Date();
-  const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-  for (const goal of goals) {
-    const calc = calculateGoalProgress({
-      targetAmount: goal.targetAmount,
-      startDate: goal.startDate,
-      deadlineDate: goal.deadlineDate,
-      currentAmount: goal.contributedAmount,
-      frequency: goal.frequency,
-      today: now,
-    });
-
-    const formattedTarget = formatAmount ? formatAmount(goal.targetAmount) : String(goal.targetAmount);
-
-    let stateKey = '';
-    let title = '';
-    let body = '';
-
-    if (calc.isCompleted) {
-      stateKey = `completed-${goal.id}`;
-      title = 'Goal Achieved!';
-      body = `Congratulations! You successfully achieved your goal "${goal.title}" of ${formattedTarget}.`;
-    } else if (goal.deadlineDate && calc.remainingDays <= 3 && calc.remainingDays >= 0) {
-      stateKey = `deadline-${goal.id}-${dateKey}`;
-      title = 'Deadline Approaching';
-      body = `Your goal "${goal.title}" is due in ${calc.remainingDays} days.`;
-    } else if (goal.deadlineDate && calc.aheadBehindAmount < -5000) {
-      stateKey = `behind-${goal.id}-${dateKey}`;
-      title = 'Money Plan Notice';
-      body = `You are behind on your target for "${goal.title}". Check your required contributions.`;
-    }
-
-    if (stateKey && notifiedGoals[stateKey] !== dateKey) {
-      await NotificationsModule.scheduleNotificationAsync({
-        content: {
-          title,
-          body,
-          sound: true,
-        },
-        trigger: null,
-      });
-      onGoalNotified(stateKey, dateKey);
-    }
-  }
-}

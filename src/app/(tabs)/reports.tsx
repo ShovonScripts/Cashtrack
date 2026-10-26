@@ -280,7 +280,13 @@ export default function ReportsScreen() {
   const diffPercent = prevTotal > 0 ? Math.round((Math.abs(diffAmount) / prevTotal) * 100) : 0;
 
   const totalLimit = Object.values(categoryLimits).reduce((sum, l) => sum + l, 0);
-  const limitPercent = totalLimit > 0 ? Math.round((total / totalLimit) * 100) : null;
+  // Compare only spending in categories that actually have a limit. Counting
+  // unbudgeted categories against the limit total produced false overruns.
+  const budgetedTotal = Object.keys(categoryLimits).reduce(
+    (sum, category) => sum + (categoryTotals.get(category) ?? 0),
+    0,
+  );
+  const limitPercent = totalLimit > 0 ? Math.round((budgetedTotal / totalLimit) * 100) : null;
 
   const changeMonth = (amount: number) => {
     triggerHaptic();

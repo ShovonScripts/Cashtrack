@@ -74,7 +74,7 @@ export default function DebtDetailsScreen() {
     if (isSubmitting) return;
     confirmAction(
       'Mark as settled?',
-      `Confirm that ${debt.personName}'s debt of ${formatAmount(debt.amount)} has been settled.`,
+      `Confirm that ${debt.personName}'s outstanding balance of ${formatAmount(remainingBalance)} has been settled.`,
       async () => {
         setIsSubmitting(true);
         try {
@@ -91,6 +91,10 @@ export default function DebtDetailsScreen() {
     const parsed = Number(paymentAmount);
     if (!Number.isFinite(parsed) || parsed <= 0) {
       notify('Invalid Amount', 'Please enter a valid payment amount.');
+      return;
+    }
+    if (parsed - remainingBalance > 0.005) {
+      notify('Amount Too High', `The remaining balance is ${formatAmount(remainingBalance)}.`);
       return;
     }
     addDebtPayment(debt.id, parsed, paymentNote);

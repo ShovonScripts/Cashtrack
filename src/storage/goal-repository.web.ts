@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { MoneyGoal, GoalContribution, GoalStatus } from '@/types/goal';
 import { mapGoalRow } from '@/storage/goal-rows';
-import { mutateJsonArray, objectRows, readJsonArray, writeJsonArray } from '@/storage/json-collection';
+import { mutateJsonArray, objectRows, readJsonArray } from '@/storage/json-collection';
 
 const GOALS_KEY = '@cashtrack/goals';
 const CONTRIBUTIONS_KEY = '@cashtrack/goal-contributions';
@@ -37,10 +37,43 @@ export async function updateGoalStatus(id: string, status: GoalStatus): Promise<
 }
 
 export async function deleteGoal(id: string): Promise<void> {
-  const goals = await readJsonArray(AsyncStorage, GOALS_KEY, 'goals', mapGoalRow);
-  const contribs = await readJsonArray(AsyncStorage, CONTRIBUTIONS_KEY, 'goal contributions', contributionRows);
-  await writeJsonArray(AsyncStorage, GOALS_KEY, goals.filter((g) => g.id !== id));
-  await writeJsonArray(AsyncStorage, CONTRIBUTIONS_KEY, contribs.filter((c) => c.goalId !== id));
+  let removedContributions: GoalContribution[] = [];
+
+  await mutateJsonArray(
+    AsyncStorage,
+    CONTRIBUTIONS_KEY,
+    'goal contributions',
+    contributionRows,
+    (contribs) => {
+      removedContributions = contribs.filter((c) => c.goalId === id);
+      return contribs.filter((c) => c.goalId !== id);
+    },
+  );
+
+  try {
+    await mutateJsonArray(AsyncStorage, GOALS_KEY, 'goals', mapGoalRow, (goals) =>
+      goals.filter((g) => g.id !== id)
+    );
+  } catch (error) {
+    // AsyncStorage has no cross-key transaction. If the goal write fails, put
+    // the contributions back so an existing goal does not lose its progress.
+    if (removedContributions.length > 0) {
+      const restored = removedContributions;
+      await mutateJsonArray(
+        AsyncStorage,
+        CONTRIBUTIONS_KEY,
+        'goal contributions',
+        contributionRows,
+        (contribs) => {
+          const ids = new Set(contribs.map((c) => c.id));
+          return [...restored.filter((c) => !ids.has(c.id)), ...contribs];
+        },
+      ).catch((rollbackError) => {
+        console.error('[cashtrack] Failed to roll back goal contributions', rollbackError);
+      });
+    }
+    throw error;
+  }
 }
 
 export async function getContributionsForGoal(goalId: string): Promise<GoalContribution[]> {

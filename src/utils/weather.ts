@@ -13,6 +13,22 @@ export interface WeatherConditionInfo {
   type: WeatherConditionType;
 }
 
+const WEATHER_REQUEST_TIMEOUT_MS = 10_000;
+
+async function fetchJson(url: string): Promise<unknown> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), WEATHER_REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`Weather request failed with status ${response.status}`);
+    }
+    return (await response.json()) as unknown;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export interface HourlyForecastItem {
   time: string;
   hourLabel: string;
@@ -223,11 +239,9 @@ export async function fetchLiveWeatherData(options: { requestPermission?: boolea
     const { latitude, longitude } = location.coords;
 
     // Fetch from Open-Meteo API with current_weather and hourly/daily forecast
-    const response = await fetch(
+    const data = (await fetchJson(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,weathercode,windspeed_10m,is_day&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
-    );
-
-    const data = (await response.json()) as {
+    )) as {
       current_weather?: { temperature: number; weathercode: number; windspeed: number; is_day: number; time: string };
       daily?: {
         time?: string[];
@@ -363,10 +377,9 @@ export async function fetchLiveWeatherData(options: { requestPermission?: boolea
 
     if (!cityFound) {
       try {
-        const geoRes = await fetch(
+        const geoData = (await fetchJson(
           `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-        );
-        const geoData = (await geoRes.json()) as { city?: string; locality?: string; principalSubdivision?: string };
+        )) as { city?: string; locality?: string; principalSubdivision?: string };
         const city = geoData.city || geoData.locality || geoData.principalSubdivision;
         if (city) locationName = city;
       } catch {}

@@ -1,10 +1,23 @@
 import { Directory, File, Paths } from 'expo-file-system';
+import { Platform } from 'react-native';
+
+import { isUriWithinDirectory } from '@/utils/safe-path';
 
 /**
  * Receipts are copied into the document directory because the image picker hands back a
  * URI inside a cache folder the OS is free to purge at any time.
  */
 const RECEIPTS_DIRECTORY = 'receipts';
+
+const RESTORED_DIRECTORY = 'backup-restore';
+
+function getReceiptsDirectoryUri(): string {
+  return new Directory(Paths.document, RECEIPTS_DIRECTORY).uri;
+}
+
+function getRestoredDirectoryUri(): string {
+  return new Directory(Paths.document, RESTORED_DIRECTORY).uri;
+}
 
 function getReceiptsDirectory(): Directory {
   const directory = new Directory(Paths.document, RECEIPTS_DIRECTORY);
@@ -39,12 +52,18 @@ export async function saveReceiptLocally(tempUri: string): Promise<string> {
 }
 
 export async function deleteLocalReceipt(uri: string): Promise<void> {
+  if (Platform.OS === 'web' || !uri || !uri.startsWith('file://')) return;
+  if (
+    !isUriWithinDirectory(uri, getReceiptsDirectoryUri())
+    && !isUriWithinDirectory(uri, getRestoredDirectoryUri())
+  ) {
+    console.warn('[cashtrack] Refusing to delete a receipt outside CashTrack image directories');
+    return;
+  }
   try {
-    if (uri && uri.startsWith('file://')) {
-      const file = new File(uri);
-      if (file.exists) {
-        file.delete();
-      }
+    const file = new File(uri);
+    if (file.exists) {
+      file.delete();
     }
   } catch (error) {
     console.error('[cashtrack] Could not delete the stored receipt.', error);

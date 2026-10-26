@@ -31,12 +31,30 @@ export async function updateReminder(reminder: FinancialReminder): Promise<void>
 }
 
 export async function deleteReminderRepo(id: string): Promise<void> {
-  await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) =>
-    reminders.filter((r) => r.id !== id)
-  );
-  await mutateJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows, (payments) =>
-    payments.filter((p) => p.reminderId !== id)
-  );
+  let removedReminder: FinancialReminder | undefined;
+
+  await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) => {
+    removedReminder = reminders.find((r) => r.id === id);
+    return reminders.filter((r) => r.id !== id);
+  });
+
+  try {
+    await mutateJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows, (payments) =>
+      payments.filter((p) => p.reminderId !== id)
+    );
+  } catch (error) {
+    // Restore the reminder if its payment rows could not be removed, otherwise
+    // the remaining payments would be orphaned and invisible in the UI.
+    const reminderToRestore = removedReminder;
+    if (reminderToRestore) {
+      await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) =>
+        reminders.some((r) => r.id === reminderToRestore.id) ? reminders : [reminderToRestore, ...reminders]
+      ).catch((rollbackError) => {
+        console.error('[cashtrack] Failed to roll back reminder deletion', rollbackError);
+      });
+    }
+    throw error;
+  }
 }
 
 export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord, reminder: FinancialReminder): Promise<void> {
@@ -44,9 +62,19 @@ export async function markPaymentAndReminderRepo(payment: ReminderPaymentRecord,
     payment,
     ...payments.filter((p) => p.id !== payment.id),
   ]);
-  await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) =>
-    reminders.map((r) => (r.id === reminder.id ? reminder : r))
-  );
+
+  try {
+    await mutateJsonArray(AsyncStorage, REMINDERS_KEY, 'financial reminders', reminderRows, (reminders) =>
+      reminders.map((r) => (r.id === reminder.id ? reminder : r))
+    );
+  } catch (error) {
+    await mutateJsonArray(AsyncStorage, PAYMENTS_KEY, 'reminder payments', paymentRows, (payments) =>
+      payments.filter((p) => p.id !== payment.id)
+    ).catch((rollbackError) => {
+      console.error('[cashtrack] Failed to roll back a reminder payment', rollbackError);
+    });
+    throw error;
+  }
 }
 
 export async function getAllPayments(): Promise<ReminderPaymentRecord[]> {

@@ -239,6 +239,28 @@ describe('backup validation', () => {
     assert.throws(() => parseBackup(JSON.stringify(file)), /data must be text/i);
   });
 
+  it('rejects backups with too many attachments', () => {
+    const attachments: BackupData['attachments'] = {};
+    for (let index = 0; index < 101; index += 1) {
+      attachments[`file:///receipts/${index}.jpg`] = { mimeType: 'image/jpeg', data: 'AA==' };
+    }
+    const file = buildFile({ ...buildData(), attachments });
+    assert.throws(() => parseBackup(JSON.stringify(file)), /at most 100 attachments/i);
+  });
+
+  it('rejects oversized attachment payloads', () => {
+    const file = buildFile({
+      ...buildData(),
+      attachments: {
+        'file:///receipts/huge.jpg': {
+          mimeType: 'image/jpeg',
+          data: 'a'.repeat(40 * 1024 * 1024 + 1),
+        },
+      },
+    });
+    assert.throws(() => parseBackup(JSON.stringify(file)), /attachments are too large/i);
+  });
+
   it('rejects rows the storage layer would drop', () => {
     const zeroAmount = buildFile({
       ...buildData(),
@@ -370,6 +392,25 @@ describe('attachment helpers', () => {
 
     assert.equal(remapped.expenses[0].receiptUri, 'file:///docs/receipts/restored-1.jpg');
     assert.equal(remapped.preferences.profile.coverPhotoUri, 'file:///docs/restored-cover.jpg');
-    assert.equal(remapped.preferences.profile.profilePhotoUri, 'file:///docs/avatar.jpg');
+    assert.equal(remapped.preferences.profile.profilePhotoUri, undefined);
+  });
+
+  it('drops unregistered local paths but keeps remote references', () => {
+    const data = buildData();
+    data.expenses[0].receiptUri = 'file:///data/user/0/com.shovon.spendly/files/cashtrack.db';
+    data.preferences = {
+      ...preferences,
+      profile: {
+        ...preferences.profile,
+        coverPhotoUri: 'https://example.com/cover.jpg',
+        profilePhotoUri: 'file:///data/user/0/com.shovon.spendly/files/secrets.txt',
+      },
+    };
+
+    const remapped = remapAttachmentUris(data, {});
+
+    assert.equal(remapped.expenses[0].receiptUri, undefined);
+    assert.equal(remapped.preferences.profile.coverPhotoUri, 'https://example.com/cover.jpg');
+    assert.equal(remapped.preferences.profile.profilePhotoUri, undefined);
   });
 });

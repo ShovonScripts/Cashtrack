@@ -42,7 +42,12 @@ function formatSectionHeaderDate(dateString: string, today: Date): string {
   if (d.toDateString() === yesterday.toDateString()) {
     return 'YESTERDAY';
   }
-  return new Intl.DateTimeFormat('en', { weekday: 'short', month: 'short', day: 'numeric' })
+  return new Intl.DateTimeFormat('en', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    ...(d.getFullYear() === today.getFullYear() ? {} : { year: 'numeric' }),
+  })
     .format(d)
     .toUpperCase();
 }

@@ -66,7 +66,12 @@ export default function BillsScreen() {
   const monthDueTotal = reminders
     .filter((r) => {
       const d = new Date(r.dueDate);
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear() && r.derivedStatus !== 'paid';
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear() &&
+        r.derivedStatus !== 'paid' &&
+        r.derivedStatus !== 'skipped'
+      );
     })
     .reduce((sum, r) => sum + (getReminderRemainingAmount(r) ?? 0), 0);
 

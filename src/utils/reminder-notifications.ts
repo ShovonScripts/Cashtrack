@@ -76,6 +76,24 @@ export async function cancelReminderNotificationsAsync(reminderId: string): Prom
   } catch {}
 }
 
+/**
+ * Removes every bill/reminder notification this build has scheduled, including
+ * the test alarm. Used after a restore so reminders that no longer exist cannot
+ * fire on the next launch.
+ */
+export async function cancelAllReminderNotificationsAsync(): Promise<void> {
+  if (Platform.OS === 'web' || !NotificationsModule) return;
+  try {
+    const scheduled = await NotificationsModule.getAllScheduledNotificationsAsync();
+    await Promise.all(
+      scheduled
+        .map((notification: { identifier?: string }) => notification.identifier ?? '')
+        .filter((identifier: string) => identifier.startsWith('reminder:'))
+        .map((identifier: string) => NotificationsModule.cancelScheduledNotificationAsync(identifier)),
+    );
+  } catch {}
+}
+
 export async function scheduleReminderNotificationsAsync(
   reminder: FinancialReminder,
   formatAmount?: (amount: number | null) => string,

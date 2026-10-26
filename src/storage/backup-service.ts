@@ -25,11 +25,13 @@ import type { DebtRecord } from '@/types/debt';
 import type { Expense } from '@/types/expense';
 import type { UserPreferences } from '@/types/preferences';
 import { deleteLocalFile } from '@/utils/local-file';
+import { cancelAllReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { applyRestoreWithRollback, RestoreRollbackError } from '@/utils/restore-rollback';
 import { runWithSaveQueueLock } from '@/utils/save-queue';
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
+  MAX_EMBEDDED_ATTACHMENT_CHARS,
   listAttachmentUris,
   parseBackup,
   remapAttachmentUris,
@@ -41,8 +43,6 @@ import {
 } from '@/utils/backup';
 
 export const BACKUP_MIME_TYPE = 'application/json';
-
-const MAX_EMBEDDED_ATTACHMENT_CHARS = 40 * 1024 * 1024;
 
 const BACKUP_STORAGE_KEYS = [
   EXPENSES_STORAGE_KEY,
@@ -374,6 +374,10 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
       }
       throw error;
     }
+
+    // Old reminders are gone, so their scheduled notifications must not fire.
+    // The reminders provider reschedules the restored active bills afterwards.
+    await cancelAllReminderNotificationsAsync();
 
     return {
       attachmentsRestored: restored,

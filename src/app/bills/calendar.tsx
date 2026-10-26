@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -27,6 +27,14 @@ export default function BillCalendarScreen() {
   const theme = useTheme();
   const { reminders } = useFinancialReminders();
   const { formatAmount } = useExpenses();
+  const { width } = useWindowDimensions();
+
+  // Seven 44dp cells plus container/card padding overflow a 360dp screen.
+  // Size the grid to the space that is actually available, capped at 44dp.
+  const dayCellSize = Math.max(
+    32,
+    Math.min(44, Math.floor((Math.min(width, MaxContentWidth) - Spacing.three * 4) / 7)),
+  );
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
@@ -115,7 +123,7 @@ export default function BillCalendarScreen() {
           {/* Weekday header */}
           <View style={styles.weekdayHeaderRow}>
             {WEEKDAYS.map((wd) => (
-              <View key={wd} style={styles.weekdayCell}>
+              <View key={wd} style={[styles.weekdayCell, { width: dayCellSize }]}>
                 <ThemedText type="caption" style={{ fontWeight: '800', color: theme.textSecondary, fontSize: 11 }}>
                   {wd}
                 </ThemedText>
@@ -126,7 +134,7 @@ export default function BillCalendarScreen() {
           {/* Days grid */}
           <View style={styles.daysGrid}>
             {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-              <View key={`empty-${i}`} style={styles.dayCellEmpty} />
+              <View key={`empty-${i}`} style={[styles.dayCellEmpty, { width: dayCellSize, height: dayCellSize }]} />
             ))}
 
             {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -148,6 +156,8 @@ export default function BillCalendarScreen() {
                   style={[
                     styles.dayCell,
                     {
+                      width: dayCellSize,
+                      height: dayCellSize,
                       backgroundColor: isSelected ? theme.accentMuted : theme.cardMuted,
                       borderColor: isSelected ? theme.accent : theme.border,
                     },
@@ -278,17 +288,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#e4e4ed',
   },
-  weekdayCell: { width: 36, alignItems: 'center' },
+  weekdayCell: { alignItems: 'center' },
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-around',
     paddingTop: 4,
   },
-  dayCellEmpty: { width: 44, height: 44 },
+  dayCellEmpty: {},
   dayCell: {
-    width: 44,
-    height: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',

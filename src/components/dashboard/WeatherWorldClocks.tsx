@@ -125,7 +125,9 @@ export function WeatherWorldClocks() {
                       e.stopPropagation();
                       void handleRemoveCity(city.id);
                     }}
-                    hitSlop={8}>
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove ${city.cityName}`}
+                    hitSlop={12}>
                     <Ionicons name="close-circle" size={14} color={theme.textSecondary} />
                   </Pressable>
                 )}

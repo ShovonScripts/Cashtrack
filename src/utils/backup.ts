@@ -22,6 +22,10 @@ import type {
 export const BACKUP_FORMAT = 'cashtrack-backup';
 export const BACKUP_VERSION = 1;
 
+/** Base64-character ceiling shared by export and import. */
+export const MAX_EMBEDDED_ATTACHMENT_CHARS = 40 * 1024 * 1024;
+const MAX_BACKUP_ATTACHMENTS = 100;
+
 export type BackupAttachment = {
   mimeType: string;
   data: string;
@@ -459,14 +463,25 @@ function parseAttachments(raw: unknown): Record<string, BackupAttachment> {
   if (raw === undefined) return {};
   const row = asRecord(raw, 'Attachments');
   const result: Record<string, BackupAttachment> = {};
+  let embeddedChars = 0;
+  let count = 0;
   for (const [uri, value] of Object.entries(row)) {
     if (isUnsafeKey(uri)) continue;
+    count += 1;
+    if (count > MAX_BACKUP_ATTACHMENTS) {
+      fail(`Backups can include at most ${MAX_BACKUP_ATTACHMENTS} attachments.`);
+    }
     const attachment = asRecord(value, `Attachment ${uri}`);
+    const data = asString(attachment.data, `Attachment ${uri} data`);
+    embeddedChars += data.length;
+    if (embeddedChars > MAX_EMBEDDED_ATTACHMENT_CHARS) {
+      fail('Backup attachments are too large to restore.');
+    }
     result[uri] = {
       mimeType: attachment.mimeType === undefined
         ? 'application/octet-stream'
         : asString(attachment.mimeType, `Attachment ${uri} type`),
-      data: asString(attachment.data, `Attachment ${uri} data`),
+      data,
     };
   }
   return result;
@@ -568,8 +583,14 @@ export function listAttachmentUris(data: BackupData): string[] {
 
 /** Rewrites image URIs after their files have been recreated during a restore. */
 export function remapAttachmentUris(data: BackupData, mapping: Record<string, string>): BackupData {
-  const replace = (uri: unknown): string | undefined =>
-    typeof uri === 'string' && uri.length > 0 ? (mapping[uri] ?? uri) : undefined;
+  const replace = (uri: unknown): string | undefined => {
+    if (typeof uri !== 'string' || uri.length === 0) return undefined;
+    // A local path that the restore did not recreate cannot be trusted: it may
+    // point at any file in the app sandbox and would be deleted later by
+    // deleteLocalFile/deleteLocalReceipt. Remote or bundled references are safe.
+    if (uri.startsWith('file://')) return mapping[uri];
+    return uri;
+  };
 
   const profile = data.preferences.profile;
   const preferences: UserPreferences = {

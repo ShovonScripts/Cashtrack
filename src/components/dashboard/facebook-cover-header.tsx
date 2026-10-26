@@ -544,18 +544,26 @@ export function FacebookCoverHeader({
             </View>
 
             <View style={styles.slideHint}>
-              <Ionicons name="create-outline" size={11} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.slideHintText}>Tap clock to edit · card for details</Text>
+              <Ionicons name="information-circle-outline" size={11} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.slideHintText}>Tap card for details</Text>
             </View>
           </View>
         </TouchableOpacity>
 
         {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
         <View style={[styles.slideCard, styles.quoteCardContainer, { width: screenWidth }]}>
+          <LinearGradient
+            colors={['#000B76', '#00109D', '#0152F5']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
           <View pointerEvents="none" style={styles.quoteBgGlow1} />
           <View pointerEvents="none" style={styles.quoteBgGlow2} />
+          <View pointerEvents="none" style={styles.quoteBgGlow3} />
+          <Text pointerEvents="none" style={styles.backgroundWatermarkQuote}>“</Text>
 
-          {/* Floating Lime-Green Quote Badge overlapping top-left */}
+          {/* Floating Quote Badge overlapping top-left */}
           <View style={[styles.floatingQuoteBadge, { top: topPadding + 16 }]}>
             <Text style={styles.floatingQuoteSymbol}>“</Text>
           </View>
@@ -878,7 +886,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    minHeight: 44,
+    height: 30,
     backgroundColor: 'rgba(8,12,28,0.34)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.24)',
@@ -891,9 +899,9 @@ const styles = StyleSheet.create({
   },
   verticalToggleText: {
     color: '#FFFFFF',
-    fontSize: 11.5,
-    fontWeight: '700',
-    letterSpacing: 0.2,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
   cardInner: {
     flex: 1,
@@ -1003,7 +1011,7 @@ const styles = StyleSheet.create({
   },
   quoteCardContainer: {
     backgroundColor: Brand.deep,
-    overflow: 'visible',
+    overflow: 'hidden',
   },
   quoteBgGlow1: {
     position: 'absolute',
@@ -1022,6 +1030,24 @@ const styles = StyleSheet.create({
     left: -50,
     bottom: -60,
     backgroundColor: 'rgba(20, 231, 253, 0.2)',
+  },
+  quoteBgGlow3: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    right: 30,
+    bottom: -40,
+    backgroundColor: 'rgba(20, 231, 253, 0.15)',
+  },
+  backgroundWatermarkQuote: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    fontSize: 160,
+    fontWeight: '900',
+    color: 'rgba(255, 255, 255, 0.05)',
+    lineHeight: 160,
   },
   floatingQuoteBadge: {
     position: 'absolute',

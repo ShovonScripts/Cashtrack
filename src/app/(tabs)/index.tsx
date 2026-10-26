@@ -59,6 +59,7 @@ function WeeklySpending({ expenses, today, firstDayOfWeek, formatAmount }: { exp
   const maxAmount = Math.max(...days.map((day) => day.amount), 1);
   const weeklyTotal = days.reduce((total, day) => total + day.amount, 0);
   const dailyAvg = Math.round(weeklyTotal / 7);
+  const activeDaysCount = days.filter((day) => day.amount > 0).length;
 
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | null>(null);
   const selectedDay = selectedDayIndex !== null ? days[selectedDayIndex] : null;
@@ -71,7 +72,7 @@ function WeeklySpending({ expenses, today, firstDayOfWeek, formatAmount }: { exp
             {selectedDay ? new Intl.DateTimeFormat('en', { weekday: 'long', month: 'short', day: 'numeric' }).format(selectedDay.date) : 'This week'}
           </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary">
-            {selectedDay ? (selectedDay.amount > 0 ? `Spent ${formatAmount(selectedDay.amount)}` : 'No expenses recorded') : `Daily avg: ${formatAmount(dailyAvg)}`}
+            {selectedDay ? (selectedDay.amount > 0 ? `Spent ${formatAmount(selectedDay.amount)}` : 'No expenses recorded') : `Daily avg: ${formatAmount(dailyAvg)} · ${activeDaysCount}/7 active days`}
           </ThemedText>
         </View>
         <Pressable
@@ -95,7 +96,7 @@ function WeeklySpending({ expenses, today, firstDayOfWeek, formatAmount }: { exp
         {days.map((day, index) => {
           const isToday = day.date.toDateString() === today.toDateString();
           const isSelected = selectedDayIndex === index;
-          const barHeight = day.amount > 0 ? Math.max(8, (day.amount / maxAmount) * 74) : 5;
+          const barHeight = day.amount > 0 ? Math.max(10, (day.amount / maxAmount) * 78) : 6;
           return (
             <Pressable
               key={day.date.toISOString()}
@@ -107,15 +108,14 @@ function WeeklySpending({ expenses, today, firstDayOfWeek, formatAmount }: { exp
               style={styles.chartColumn}
               accessible
               accessibilityLabel={`${new Intl.DateTimeFormat('en', { weekday: 'long' }).format(day.date)}: ${formatAmount(day.amount)}`}>
-              <View style={styles.barTrack}>
+              <View style={[styles.barTrack, { backgroundColor: theme.cardMuted }]}>
                 <View
                   style={[
                     styles.bar,
                     {
                       height: barHeight,
-                      backgroundColor: isSelected ? '#FFFFFF' : isToday ? theme.accent : theme.accentMuted,
-                      borderColor: isSelected ? theme.accent : 'transparent',
-                      borderWidth: isSelected ? 2 : 0,
+                      backgroundColor: isSelected ? theme.text : isToday ? theme.accent : day.amount > 0 ? theme.accent : theme.border,
+                      opacity: day.amount > 0 ? 1 : 0.35,
                     },
                   ]}
                 />
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
-    height: 100,
+    height: 116,
     paddingTop: Spacing.two,
   },
   chartColumn: {
@@ -1105,12 +1105,15 @@ const styles = StyleSheet.create({
   barTrack: {
     flex: 1,
     justifyContent: 'flex-end',
-    width: 20,
+    width: 24,
+    borderRadius: Radius.pill,
     alignItems: 'center',
+    overflow: 'hidden',
+    paddingBottom: 2,
   },
   bar: {
-    width: 14,
-    borderRadius: Radius.small,
+    width: 16,
+    borderRadius: Radius.pill,
   },
   todayLabel: {
     fontWeight: '700',

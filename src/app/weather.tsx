@@ -9,7 +9,7 @@ import { Card } from '@/components/card';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
-import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
+import { WeatherWorldClocks } from '@/components/dashboard/WeatherWorldClocks';
 
 export default function WeatherScreen() {
   const theme = useTheme();
@@ -147,7 +147,7 @@ export default function WeatherScreen() {
           </View>
           <ThemedText style={styles.clockSectionHint}>Tap to edit</ThemedText>
         </View>
-        <DualClockWidget variant="page" />
+        <WeatherWorldClocks />
       </Card>
 
       {/* 24-HOUR HOURLY FORECAST CAROUSEL */}

@@ -48,8 +48,6 @@ export default function MenuScreen() {
     country,
     expenses,
     customCategories,
-    toggleThemeMode,
-    themeMode,
   } = useExpenses();
   const { goals } = useGoals();
   const { debts } = useDebts();
@@ -363,26 +361,6 @@ export default function MenuScreen() {
                 Command center & financial tools
               </ThemedText>
             </View>
-
-            {/* Quick Theme Switcher Button */}
-            <Pressable
-              onPress={() => {
-                triggerHaptic();
-                toggleThemeMode();
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Toggle theme mode"
-              style={({ pressed }) => [
-                styles.themeIconButton,
-                { backgroundColor: theme.card, borderColor: theme.border },
-                pressed && styles.rowPressed,
-              ]}>
-              <MaterialCommunityIcons
-                name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
-                size={20}
-                color={themeMode === 'dark' ? '#F59E0B' : theme.text}
-              />
-            </Pressable>
           </View>
 
           {/* User Masterclass Profile Hero Banner */}

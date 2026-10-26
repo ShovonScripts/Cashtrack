@@ -91,7 +91,7 @@ export function CostSummaryCarousel({
             width={cardWidth}
             formatAmount={formatAmount}
             onPressReport={() => onOpenReport(summary.period)}
-            onAddExpense={summary.period === 'daily' || summary.period === 'yesterday' ? onAddExpense : undefined}
+            onAddExpense={summary.period === 'daily' || summary.period === 'yesterday' ? () => onAddExpense?.(summary.period) : undefined}
             topCategory={breakdowns[summary.period]?.[0]}
           />
         ))}

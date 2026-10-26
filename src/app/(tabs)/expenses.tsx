@@ -65,7 +65,7 @@ function groupExpensesByDate(expensesList: Expense[], today: Date): ExpenseSecti
 }
 
 export default function ExpensesScreen() {
-  const { expenses, categories, formatAmount, toggleThemeMode, themeMode } = useExpenses();
+  const { expenses, categories, formatAmount } = useExpenses();
   const theme = useTheme();
   const now = useNow(60_000);
 
@@ -108,28 +108,6 @@ export default function ExpensesScreen() {
                 <ThemedText type="caption" themeColor="textSecondary">
                   Searchable ledger, filter by tags & date
                 </ThemedText>
-              </View>
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-                {/* Theme Mode Toggle Action */}
-                <Pressable
-                  onPress={() => {
-                    triggerHaptic();
-                    toggleThemeMode();
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Toggle theme"
-                  style={({ pressed }) => [
-                    styles.themeIconButton,
-                    { backgroundColor: theme.card, borderColor: theme.border },
-                    pressed && styles.pressed,
-                  ]}>
-                  <MaterialCommunityIcons
-                    name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
-                    size={20}
-                    color={themeMode === 'dark' ? '#F59E0B' : theme.text}
-                  />
-                </Pressable>
               </View>
             </View>
 

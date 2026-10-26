@@ -243,8 +243,6 @@ export default function ReportsScreen() {
     profile,
     country,
     formatAmount,
-    toggleThemeMode,
-    themeMode,
   } = useExpenses();
   const { incomeList } = useIncome();
   const now = useNow(60_000);
@@ -402,26 +400,6 @@ export default function ReportsScreen() {
               Comprehensive monthly insights, spending patterns, and export tools.
             </ThemedText>
           </View>
-
-          {/* Quick Theme Switcher Action */}
-          <Pressable
-            onPress={() => {
-              triggerHaptic();
-              toggleThemeMode();
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Toggle theme"
-            style={({ pressed }) => [
-              styles.themeIconButton,
-              { backgroundColor: theme.card, borderColor: theme.border },
-              pressed && styles.pressed,
-            ]}>
-            <MaterialCommunityIcons
-              name={themeMode === 'dark' ? 'weather-sunny' : 'weather-night'}
-              size={20}
-              color={themeMode === 'dark' ? '#F59E0B' : theme.text}
-            />
-          </Pressable>
         </View>
 
         {/* 1. Month Selector Card */}

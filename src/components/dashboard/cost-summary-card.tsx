@@ -5,32 +5,12 @@ import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import type { CategoryTotal, CostSummary, SummaryPeriod } from '@/utils/period-summary';
 
-const CARD_PALETTE: Record<SummaryPeriod, { background: string; orbLarge: string; orbSmall: string }> = {
-  daily: {
-    background: Brand.primary, // #0152F5 (Vibrant Royal Blue)
-    orbLarge: 'rgba(139, 123, 255, 0.25)',
-    orbSmall: 'rgba(20, 231, 253, 0.2)',
-  },
-  yesterday: {
-    background: '#1E3A8A', // Deep Indigo Blue
-    orbLarge: 'rgba(99, 102, 241, 0.25)',
-    orbSmall: 'rgba(56, 189, 248, 0.2)',
-  },
-  weekly: {
-    background: '#064E3B', // Deep Midnight Teal / Emerald
-    orbLarge: 'rgba(52, 211, 153, 0.25)',
-    orbSmall: 'rgba(16, 185, 129, 0.2)',
-  },
-  monthly: {
-    background: '#4C1D95', // Regal Deep Violet
-    orbLarge: 'rgba(168, 85, 247, 0.25)',
-    orbSmall: 'rgba(236, 72, 153, 0.2)',
-  },
-  yearly: {
-    background: '#18181B', // Luxury Obsidian Charcoal
-    orbLarge: 'rgba(245, 158, 11, 0.22)',
-    orbSmall: 'rgba(251, 191, 36, 0.18)',
-  },
+const CARD_BACKGROUND: Record<SummaryPeriod, string> = {
+  daily: '#00109D',
+  yesterday: '#0E23B8',
+  weekly: '#0142D6',
+  monthly: Brand.primary,
+  yearly: '#0066FF',
 };
 
 type CostSummaryCardProps = {
@@ -50,16 +30,14 @@ export function CostSummaryCard({
   onAddExpense,
   topCategory,
 }: CostSummaryCardProps) {
-  const palette = CARD_PALETTE[summary.period];
-
   return (
     <View
       style={[
         styles.card,
-        { width, backgroundColor: palette.background },
+        { width, backgroundColor: CARD_BACKGROUND[summary.period] },
       ]}>
-      <View pointerEvents="none" style={[styles.orbLarge, { backgroundColor: palette.orbLarge }]} />
-      <View pointerEvents="none" style={[styles.orbSmall, { backgroundColor: palette.orbSmall }]} />
+      <View pointerEvents="none" style={styles.orbLarge} />
+      <View pointerEvents="none" style={styles.orbSmall} />
 
       <View style={styles.cardContent}>
         <Pressable

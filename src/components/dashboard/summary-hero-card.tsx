@@ -92,7 +92,7 @@ export function SummaryHeroCard({
       <View pointerEvents="none" style={styles.heroOrbLarge} />
       <View pointerEvents="none" style={styles.heroOrbSmall} />
 
-      <View style={styles.heroContent}>
+      <View style={styles.cardContent}>
         <Pressable
           onPress={handlePress}
           accessibilityRole="button"
@@ -132,7 +132,7 @@ export function SummaryHeroCard({
           accessibilityLabel={actionLabel}
           style={({ pressed }) => [styles.actionTouchArea, pressed && styles.actionPressed]}>
           <View style={styles.addButton}>
-            <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
+            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
             <ThemedText type="defaultBold" style={styles.addButtonText}>
               {actionLabel}
             </ThemedText>
@@ -148,14 +148,11 @@ const styles = StyleSheet.create({
     minHeight: 195,
     backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
     overflow: 'hidden',
     position: 'relative',
-    justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
-    gap: Spacing.two,
+    justifyContent: 'space-between',
   },
   heroOrbLarge: {
     position: 'absolute',
@@ -175,12 +172,14 @@ const styles = StyleSheet.create({
     bottom: -50,
     backgroundColor: 'rgba(20, 231, 253, 0.18)',
   },
-  heroContent: {
+  cardContent: {
+    padding: Spacing.three,
     zIndex: 2,
     gap: Spacing.two,
+    justifyContent: 'space-between',
+    flex: 1,
   },
   cardPressArea: {
-    justifyContent: 'space-between',
     gap: Spacing.one,
   },
   cardPressed: {
@@ -262,6 +261,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: Spacing.three,
+    marginTop: 2,
   },
   actionPressed: {
     opacity: 0.75,

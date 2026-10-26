@@ -27,6 +27,7 @@ import { createSeedExpenses } from '@/data/seed-expenses';
 import { getRecurringPeriodKey, processRecurringExpenses } from '@/utils/recurring';
 import { clearRecurringSkips, loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
 import { checkAndTriggerBudgetNotifications } from '@/utils/notifications';
+import { deleteLocalFile } from '@/utils/local-file';
 import { deleteLocalReceipt } from '@/utils/receipt';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
 import { resolveInitialAppLockEnabled } from '@/utils/app-lock';
@@ -104,7 +105,7 @@ type ExpenseContextValue = {
   updateExpense: (id: string, changes: ExpenseDraft) => void;
   deleteExpense: (id: string) => Promise<void>;
   getExpense: (id: string) => Expense | undefined;
-  updateProfile: (profile: UserProfile) => void;
+  updateProfile: (profile: UserProfile) => Promise<boolean>;
   setCountryCode: (countryCode: CountryCode) => void;
   addCategory: (name: string, icon?: string) => boolean;
   renameCategory: (from: string, to: string) => boolean;
@@ -154,9 +155,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const preferencesSaveQueue = useRef(new SaveQueue());
   const resetRegistryRef = useRef(new ResetRegistry());
   const expensesRef = useRef(expenses);
+  const preferencesRef = useRef(preferences);
   useEffect(() => {
     expensesRef.current = expenses;
   }, [expenses]);
+  useEffect(() => {
+    preferencesRef.current = preferences;
+  }, [preferences]);
 
   const registerResetHandler = useCallback((handler: () => Promise<void>) => {
     return resetRegistryRef.current.register(handler);
@@ -363,8 +368,22 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     [expenses]
   );
 
-  const updateProfile = useCallback((profile: UserProfile) => {
-    setPreferences((current) => ({ ...current, profile }));
+  const updateProfile = useCallback(async (profile: UserProfile): Promise<boolean> => {
+    if (!hasLoadedRef.current || preferencesLoadFailedRef.current) return false;
+
+    const nextPreferences = { ...preferencesRef.current, profile };
+    const nextJson = JSON.stringify(nextPreferences);
+    const previousJson = lastSavedPreferencesRef.current;
+
+    preferencesRef.current = nextPreferences;
+    lastSavedPreferencesRef.current = nextJson;
+    setPreferences(nextPreferences);
+
+    const success = await preferencesSaveQueue.current.enqueue(() => savePreferences(nextPreferences));
+    if (!success) {
+      lastSavedPreferencesRef.current = previousJson;
+    }
+    return success;
   }, []);
 
   const setCountryCode = useCallback((countryCode: CountryCode) => {
@@ -519,8 +538,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resetAllData = useCallback(async () => {
-    // a. Snapshot receiptUris
+    // a. Snapshot receiptUris and profile images
     const receiptUris = expensesRef.current.filter((e) => e.receiptUri).map((e) => e.receiptUri!);
+    const profileImageUris = [
+      preferencesRef.current.profile.coverPhotoUri,
+      preferencesRef.current.profile.profilePhotoUri,
+    ].filter((uri): uri is string => Boolean(uri));
 
     // b. Clear every store first. Writing empty expenses/preferences earlier
     // would destroy data even if a later clear failed.
@@ -558,13 +581,16 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     lastSavedExpensesRef.current = JSON.stringify([]);
     lastSavedPreferencesRef.current = JSON.stringify(DEFAULT_PREFERENCES);
 
-    // f. Delete snapshotted receipt files and cancel notifications
+    // f. Delete snapshotted receipt and profile image files and cancel notifications
     for (const uri of receiptUris) {
       try {
         await deleteLocalReceipt(uri);
       } catch (error) {
         console.error('[cashtrack] Failed to delete receipt during reset', error);
       }
+    }
+    for (const uri of profileImageUris) {
+      await deleteLocalFile(uri);
     }
 
     if (NotificationsModule) {

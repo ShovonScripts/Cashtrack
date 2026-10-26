@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,47 +17,106 @@ export function NotesTool() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [savedStatus, setSavedStatus] = useState<string>('');
   const [actionFeedback, setActionFeedback] = useState<string>('');
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savedStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const feedbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const noteRef = useRef('');
+  const hydratedRef = useRef(false);
+  const dirtyRef = useRef(false);
+  const versionRef = useRef(0);
+  const mountedRef = useRef(true);
+  const saveChainRef = useRef<Promise<void>>(Promise.resolve());
 
-  useEffect(() => {
-    let mounted = true;
-    AsyncStorage.getItem(STORAGE_KEY)
-      .then((val) => {
-        if (mounted && val) setNote(val);
-      })
-      .catch(() => {
-        if (mounted) setSavedStatus('Could not load note');
-      })
-      .finally(() => {
-        if (mounted) setIsHydrated(true);
-      });
-    return () => {
-      mounted = false;
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
-      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    };
+  const enqueueWrite = useCallback((operation: () => Promise<void>) => {
+    const next = saveChainRef.current.catch(() => {}).then(operation);
+    saveChainRef.current = next.catch(() => {});
+    return next;
   }, []);
 
   useEffect(() => {
-    if (!isHydrated) return;
+    let cancelled = false;
+
+    AsyncStorage.getItem(STORAGE_KEY)
+      .then((val) => {
+        if (cancelled) return;
+        const next = val ?? '';
+        noteRef.current = next;
+        setNote(next);
+        hydratedRef.current = true;
+        dirtyRef.current = false;
+        setIsHydrated(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError(true);
+        setSavedStatus('Could not load note');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadAttempt]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
+      if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
+
+      if (hydratedRef.current && dirtyRef.current) {
+        const value = noteRef.current;
+        dirtyRef.current = false;
+        void enqueueWrite(() => AsyncStorage.setItem(STORAGE_KEY, value)).catch(() => {});
+      }
+    };
+  }, [enqueueWrite]);
+
+  useEffect(() => {
+    if (!isHydrated || !dirtyRef.current) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    const version = versionRef.current;
+
     saveTimerRef.current = setTimeout(() => {
-      AsyncStorage.setItem(STORAGE_KEY, note)
+      const value = noteRef.current;
+      enqueueWrite(() => AsyncStorage.setItem(STORAGE_KEY, value))
         .then(() => {
+          if (!mountedRef.current) return;
+          if (version === versionRef.current) dirtyRef.current = false;
           setSavedStatus('Synced');
           if (savedStatusTimerRef.current) clearTimeout(savedStatusTimerRef.current);
-          savedStatusTimerRef.current = setTimeout(() => setSavedStatus(''), 2000);
+          savedStatusTimerRef.current = setTimeout(() => {
+            if (mountedRef.current) setSavedStatus('');
+          }, 2000);
         })
-        .catch(() => setSavedStatus('Save failed'));
+        .catch(() => {
+          if (mountedRef.current) setSavedStatus('Save failed');
+        });
     }, 400);
+
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, [note, isHydrated]);
+  }, [note, isHydrated, enqueueWrite]);
+
+  const handleNoteChange = (value: string) => {
+    noteRef.current = value;
+    dirtyRef.current = true;
+    versionRef.current += 1;
+    setNote(value);
+  };
+
+  const retryLoad = () => {
+    setIsHydrated(false);
+    hydratedRef.current = false;
+    setLoadError(false);
+    setSavedStatus('');
+    setLoadAttempt((attempt) => attempt + 1);
+  };
 
   const handleCopy = async () => {
     if (!note.trim()) return;
@@ -71,15 +130,21 @@ export function NotesTool() {
   const handleClear = async () => {
     if (!note) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    versionRef.current += 1;
+    dirtyRef.current = false;
+    noteRef.current = '';
     setNote('');
     try {
-      await AsyncStorage.removeItem(STORAGE_KEY);
-      setActionFeedback('Cleared');
+      await enqueueWrite(() => AsyncStorage.removeItem(STORAGE_KEY));
+      if (mountedRef.current) setActionFeedback('Cleared');
     } catch {
-      setActionFeedback('Clear failed');
+      if (mountedRef.current) setActionFeedback('Clear failed');
     }
     if (feedbackTimerRef.current) clearTimeout(feedbackTimerRef.current);
-    feedbackTimerRef.current = setTimeout(() => setActionFeedback(''), 2000);
+    feedbackTimerRef.current = setTimeout(() => {
+      if (mountedRef.current) setActionFeedback('');
+    }, 2000);
   };
 
   const handleShare = async () => {
@@ -96,16 +161,27 @@ export function NotesTool() {
 
   const wordCount = note.trim() ? note.trim().split(/\s+/).length : 0;
   const charCount = note.length;
+  const statusIsError = loadError || savedStatus === 'Save failed' || actionFeedback === 'Clear failed';
+  const statusColor = statusIsError ? theme.danger : savedStatus ? theme.success : theme.textSecondary;
 
   return (
     <View style={styles.container}>
       {/* Top Status & Toolbar */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Ionicons name="cloud-done-outline" size={15} color={savedStatus ? theme.success : theme.textSecondary} />
-          <ThemedText type="smallBold" style={{ color: savedStatus ? theme.success : theme.textSecondary, fontSize: 12 }}>
+          <Ionicons name="cloud-done-outline" size={15} color={statusColor} />
+          <ThemedText type="smallBold" style={{ color: statusColor, fontSize: 12 }}>
             {actionFeedback || savedStatus || 'Auto-saved locally'}
           </ThemedText>
+          {loadError && (
+            <Pressable
+              onPress={retryLoad}
+              accessibilityRole="button"
+              accessibilityLabel="Retry loading note"
+              hitSlop={8}>
+              <ThemedText type="smallBold" style={{ color: theme.accent, fontSize: 12 }}>Retry</ThemedText>
+            </Pressable>
+          )}
         </View>
 
         <View style={styles.toolbar}>
@@ -159,9 +235,9 @@ export function NotesTool() {
       {/* Note Input */}
       <TextInput
         value={note}
-        onChangeText={setNote}
+        onChangeText={handleNoteChange}
         editable={isHydrated}
-        placeholder="Jot down quick thoughts, budget ideas, or shopping lists..."
+        placeholder={loadError ? 'Note could not be loaded' : 'Jot down quick thoughts, budget ideas, or shopping lists...'}
         placeholderTextColor={theme.textSecondary}
         multiline
         accessibilityLabel="Quick notes"

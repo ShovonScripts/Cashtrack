@@ -1,6 +1,17 @@
 import type { IncomeRecord, IncomeDraft } from '../types/income.ts';
 import type { Expense } from '../types/expense.ts';
 
+export function constrainIncomeEdit(record: IncomeRecord, changes: IncomeDraft): IncomeDraft {
+  if (!record.recurringParentId) return changes;
+  return {
+    ...changes,
+    date: record.date,
+    isRecurring: record.isRecurring,
+    recurringFrequency: record.recurringFrequency,
+    recurringEndDate: record.recurringEndDate,
+  };
+}
+
 /** Merges an edit into an income record. Omitted optional fields keep their stored value. */
 export function applyIncomeUpdate(record: IncomeRecord, changes: IncomeDraft): IncomeRecord {
   return {

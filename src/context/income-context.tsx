@@ -25,7 +25,7 @@ import {
 } from '@/storage/goal-repository';
 import { calculateIncomeAllocations, type AllocationResult } from '@/utils/savings-allocator';
 import { notifyGoalDataChanged } from '@/utils/goal-events';
-import { applyIncomeUpdate } from '@/utils/income';
+import { applyIncomeUpdate, constrainIncomeEdit } from '@/utils/income';
 import { getRecurringPeriodKey } from '@/utils/recurring';
 import { processRecurringIncome } from '@/utils/recurring-income';
 import { loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
@@ -192,8 +192,9 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const updated = applyIncomeUpdate(existing, changes);
-    await updateIncomeRepo(id, changes);
+    const constrainedChanges = constrainIncomeEdit(existing, changes);
+    const updated = applyIncomeUpdate(existing, constrainedChanges);
+    await updateIncomeRepo(id, constrainedChanges);
     const next = processRecurringIncome(
       current.map((item) => (item.id === id ? updated : item)),
       skippedRef.current

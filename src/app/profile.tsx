@@ -42,6 +42,7 @@ import {
 import { requestSpendingReminderPermissionsAsync } from '@/utils/spending-reminder-notifications';
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 import { confirmAction, notify } from '@/utils/confirm';
+import { deleteLocalFile } from '@/utils/local-file';
 
 type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 
@@ -53,13 +54,17 @@ const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof M
 
 async function persistPickedImage(uri: string, prefix: string): Promise<string> {
   if (Platform.OS === 'web') return uri;
+  const extension = uri.split('?')[0].split('.').pop() || 'jpg';
+  const target = new File(Paths.document, `${prefix}-${Date.now()}.${extension}`);
   try {
-    const extension = uri.split('?')[0].split('.').pop() || 'jpg';
-    const target = new File(Paths.document, `${prefix}-${Date.now()}.${extension}`);
-    new File(uri).copy(target);
+    await new File(uri).copy(target);
+    if (!target.exists) {
+      throw new Error('The copied image file is missing.');
+    }
     return target.uri;
-  } catch {
-    return uri;
+  } catch (error) {
+    await deleteLocalFile(target.uri);
+    throw error;
   }
 }
 
@@ -149,12 +154,18 @@ export default function ProfileScreen() {
         quality: 0.85,
       });
       if (!result.canceled && result.assets[0]?.uri) {
-        setCoverPhotoUri(await persistPickedImage(result.assets[0].uri, 'cover'));
+        const previousDraft = coverPhotoUri;
+        const nextUri = await persistPickedImage(result.assets[0].uri, 'cover');
+        if (previousDraft && previousDraft !== profile.coverPhotoUri) {
+          await deleteLocalFile(previousDraft);
+        }
+        setCoverPhotoUri(nextUri);
         setIsDirty(true);
         triggerHaptic();
       }
     } catch (error) {
       console.error('Error picking cover photo:', error);
+      notify('Photo Not Saved', 'Could not save the selected cover photo. Please try again.');
     }
   };
 
@@ -173,17 +184,25 @@ export default function ProfileScreen() {
         quality: 0.85,
       });
       if (!result.canceled && result.assets[0]?.uri) {
-        setProfilePhotoUri(await persistPickedImage(result.assets[0].uri, 'avatar'));
+        const previousDraft = profilePhotoUri;
+        const nextUri = await persistPickedImage(result.assets[0].uri, 'avatar');
+        if (previousDraft && previousDraft !== profile.profilePhotoUri) {
+          await deleteLocalFile(previousDraft);
+        }
+        setProfilePhotoUri(nextUri);
         setIsDirty(true);
         triggerHaptic();
       }
     } catch (error) {
       console.error('Error picking profile photo:', error);
+      notify('Photo Not Saved', 'Could not save the selected profile photo. Please try again.');
     }
   };
 
-  const saveProfileChanges = () => {
+  const saveProfileChanges = async () => {
     if (!ageIsValid) return;
+    const previousCover = profile.coverPhotoUri;
+    const previousAvatar = profile.profilePhotoUri;
     const nextProfile: UserProfile = {
       name: name.trim().slice(0, 50),
       bio: bio.trim().slice(0, 150),
@@ -192,7 +211,20 @@ export default function ProfileScreen() {
       coverPhotoUri,
       profilePhotoUri,
     };
-    updateProfile(nextProfile);
+
+    const saved = await updateProfile(nextProfile);
+    if (!saved) {
+      notify('Save Failed', 'Your profile changes could not be saved. Please try again.');
+      return;
+    }
+
+    if (previousCover !== nextProfile.coverPhotoUri) {
+      await deleteLocalFile(previousCover);
+    }
+    if (previousAvatar !== nextProfile.profilePhotoUri) {
+      await deleteLocalFile(previousAvatar);
+    }
+
     setIsDirty(false);
     setSavedToastVisible(true);
     if (Platform.OS !== 'web') {
@@ -205,6 +237,12 @@ export default function ProfileScreen() {
 
   const resetChanges = () => {
     triggerHaptic();
+    if (coverPhotoUri !== profile.coverPhotoUri) {
+      void deleteLocalFile(coverPhotoUri);
+    }
+    if (profilePhotoUri !== profile.profilePhotoUri) {
+      void deleteLocalFile(profilePhotoUri);
+    }
     setName(profile.name);
     setBio(profile.bio || '');
     setAgeText(profile.age !== null ? String(profile.age) : '');
@@ -398,6 +436,20 @@ export default function ProfileScreen() {
           async () => {
             try {
               await resetAllData();
+              if (coverPhotoUri !== profile.coverPhotoUri) {
+                await deleteLocalFile(coverPhotoUri);
+              }
+              if (profilePhotoUri !== profile.profilePhotoUri) {
+                await deleteLocalFile(profilePhotoUri);
+              }
+              setName('');
+              setBio('');
+              setAgeText('');
+              setGender('');
+              setCoverPhotoUri(undefined);
+              setProfilePhotoUri(undefined);
+              setIsDirty(false);
+              setSavedToastVisible(false);
               if (Platform.OS !== 'web') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
               }
@@ -1286,6 +1338,9 @@ export default function ProfileScreen() {
                         isSelected && { borderWidth: 2 },
                       ]}
                       onPress={() => {
+                        if (coverPhotoUri !== profile.coverPhotoUri) {
+                          void deleteLocalFile(coverPhotoUri);
+                        }
                         setCoverPhotoUri(preset.uri);
                         setIsDirty(true);
                         triggerHaptic();

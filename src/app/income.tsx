@@ -120,6 +120,8 @@ export default function IncomeScreen() {
   };
 
   const totalAllTime = incomeList.reduce((sum, item) => sum + item.amount, 0);
+  const editingItem = editingId ? incomeList.find((item) => item.id === editingId) : undefined;
+  const isEditingGenerated = Boolean(editingItem?.recurringParentId);
 
   return (
     <KeyboardAvoidingView
@@ -200,24 +202,36 @@ export default function IncomeScreen() {
           {/* Date Picker */}
           <View style={styles.field}>
             <ThemedText type="smallBold">Date</ThemedText>
-            <DatePicker value={date} onChange={setDate} label="Income date" />
+            {isEditingGenerated ? (
+              <View style={[styles.readOnlyDate, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
+                <View style={styles.readOnlyDateCopy}>
+                  <ThemedText type="smallBold">{formatDate(date.toISOString())}</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">Date follows the recurring schedule</ThemedText>
+                </View>
+                <MaterialCommunityIcons name="lock-outline" size={16} color={theme.textSecondary} />
+              </View>
+            ) : (
+              <DatePicker value={date} onChange={setDate} label="Income date" />
+            )}
           </View>
 
-          <View style={styles.switchRow}>
-            <View style={styles.switchCopy}>
-              <ThemedText type="smallBold">Recurring Income</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">Repeat automatically each period</ThemedText>
+          {!isEditingGenerated && (
+            <View style={styles.switchRow}>
+              <View style={styles.switchCopy}>
+                <ThemedText type="smallBold">Recurring Income</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">Repeat automatically each period</ThemedText>
+              </View>
+              <Switch
+                value={isRecurring}
+                onValueChange={setIsRecurring}
+                accessibilityLabel="Recurring income"
+                trackColor={{ false: theme.border, true: theme.accent }}
+                thumbColor="#FFFFFF"
+              />
             </View>
-            <Switch
-              value={isRecurring}
-              onValueChange={setIsRecurring}
-              accessibilityLabel="Recurring income"
-              trackColor={{ false: theme.border, true: theme.accent }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
+          )}
 
-          {isRecurring && (
+          {!isEditingGenerated && isRecurring && (
             <View style={styles.field}>
               <ThemedText type="smallBold">Frequency</ThemedText>
               <View style={styles.freqGrid}>
@@ -400,6 +414,8 @@ const styles = StyleSheet.create({
   headerIconBadge: { width: 32, height: 32, borderRadius: Radius.small, justifyContent: 'center', alignItems: 'center' },
   field: { gap: Spacing.one },
   input: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 15 },
+  readOnlyDate: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  readOnlyDateCopy: { flex: 1, gap: 2 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   switchCopy: { flex: 1, gap: 2 },
   freqGrid: { flexDirection: 'row', gap: Spacing.two },

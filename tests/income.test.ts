@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { calculateMonthlyCashFlow, getMonthIncome, applyIncomeUpdate } from '../src/utils/income.ts';
+import { calculateMonthlyCashFlow, getMonthIncome, applyIncomeUpdate, constrainIncomeEdit } from '../src/utils/income.ts';
 import type { IncomeRecord } from '../src/types/income.ts';
 import type { Expense } from '../src/types/expense.ts';
 
@@ -94,6 +94,51 @@ test('editing income without a date keeps the stored date', () => {
   assert.strictEqual(updated.date, '2026-01-20T10:00:00.000Z');
   assert.strictEqual(updated.amount, 6000);
   assert.strictEqual(updated.note, 'Freelance final');
+});
+
+test('generated occurrences keep their recurring date while other fields update', () => {
+  const generated: IncomeRecord = {
+    id: 'income-child',
+    amount: 30000,
+    date: '2026-03-10T10:00:00.000Z',
+    note: 'Salary',
+    isRecurring: false,
+    recurringParentId: 'income-parent',
+  };
+
+  const constrained = constrainIncomeEdit(generated, {
+    amount: 31000,
+    note: 'Salary revised',
+    date: '2026-04-10T10:00:00.000Z',
+    isRecurring: true,
+    recurringFrequency: 'yearly',
+  });
+  const updated = applyIncomeUpdate(generated, constrained);
+
+  assert.strictEqual(constrained.date, '2026-03-10T10:00:00.000Z');
+  assert.strictEqual(constrained.isRecurring, false);
+  assert.strictEqual(constrained.recurringFrequency, undefined);
+  assert.strictEqual(updated.date, '2026-03-10T10:00:00.000Z');
+  assert.strictEqual(updated.amount, 31000);
+  assert.strictEqual(updated.note, 'Salary revised');
+  assert.strictEqual(updated.isRecurring, false);
+});
+
+test('non-generated income can still change its date', () => {
+  const original: IncomeRecord = {
+    id: 'income-parent',
+    amount: 1000,
+    date: '2026-01-01T10:00:00.000Z',
+    note: 'Rent share',
+  };
+
+  const constrained = constrainIncomeEdit(original, {
+    amount: 1000,
+    note: 'Rent share',
+    date: '2026-02-01T10:00:00.000Z',
+  });
+
+  assert.strictEqual(constrained.date, '2026-02-01T10:00:00.000Z');
 });
 
 test('editing income can turn recurrence off', () => {

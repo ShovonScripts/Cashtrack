@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type RecurringKind = 'expense' | 'income';
 
-const STORAGE_KEY = '@cashtrack/recurring-skips';
+export const RECURRING_SKIPS_STORAGE_KEY = '@cashtrack/recurring-skips';
 
 type SkipMap = Record<string, string[]>;
 
@@ -23,7 +23,7 @@ function enqueue(run: () => Promise<void>): Promise<void> {
 }
 
 async function readSkips(): Promise<SkipMap> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const raw = await AsyncStorage.getItem(RECURRING_SKIPS_STORAGE_KEY);
   if (!raw || raw.trim() === '') return {};
 
   try {
@@ -74,7 +74,7 @@ export async function skipRecurringPeriod(
     const periods = new Set(current[key] ?? []);
     periods.add(periodKey);
     current[key] = [...periods];
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    await AsyncStorage.setItem(RECURRING_SKIPS_STORAGE_KEY, JSON.stringify(current));
   });
 }
 
@@ -94,10 +94,10 @@ export async function replaceRecurringSkips(skips: RecurringSkipsSnapshot): Prom
         }
       }
     }
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    await AsyncStorage.setItem(RECURRING_SKIPS_STORAGE_KEY, JSON.stringify(next));
   });
 }
 
 export async function clearRecurringSkips(): Promise<void> {
-  await enqueue(() => AsyncStorage.removeItem(STORAGE_KEY));
+  await enqueue(() => AsyncStorage.removeItem(RECURRING_SKIPS_STORAGE_KEY));
 }

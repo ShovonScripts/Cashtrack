@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SaveQueue, shouldSave } from '../src/utils/save-queue.ts';
+import { runWithSaveQueueLock, SaveQueue, shouldSave } from '../src/utils/save-queue.ts';
 
 test('shouldSave returns false before load or on load failure', () => {
   assert.equal(shouldSave({ hasLoaded: false, loadFailed: false, currentJson: 'a', lastSavedJson: 'b' }), false);
@@ -49,4 +49,80 @@ test('SaveQueue serial execution order with async delay', async () => {
   });
 
   assert.deepEqual(order, [1, 2]);
+});
+
+test('SaveQueue lock waits for in-flight saves and skips stale queued saves', async () => {
+  const queue = new SaveQueue();
+  const order: string[] = [];
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let markStarted = () => {};
+  const started = new Promise<void>((resolve) => {
+    markStarted = resolve;
+  });
+
+  const inFlight = queue.enqueue(async () => {
+    order.push('start');
+    markStarted();
+    await gate;
+    order.push('finish');
+  });
+
+  await started;
+
+  let pendingRan = false;
+  const pending = queue.enqueue(async () => {
+    pendingRan = true;
+    order.push('pending');
+  });
+
+  const restoring = runWithSaveQueueLock(async () => {
+    order.push('restore');
+  });
+
+  release();
+  await inFlight;
+
+  assert.equal(await pending, false);
+  await restoring;
+  assert.deepEqual(order, ['start', 'finish', 'restore']);
+  assert.equal(pendingRan, false);
+});
+
+test('SaveQueue lock skips saves queued while locked and resumes afterwards', async () => {
+  const queue = new SaveQueue();
+  const order: string[] = [];
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let markLocked = () => {};
+  const locked = new Promise<void>((resolve) => {
+    markLocked = resolve;
+  });
+
+  const restoring = runWithSaveQueueLock(async () => {
+    markLocked();
+    await gate;
+    order.push('restore');
+  });
+
+  await locked;
+
+  const during = await queue.enqueue(async () => {
+    order.push('during');
+  });
+
+  release();
+  await restoring;
+
+  const after = await queue.enqueue(async () => {
+    order.push('after');
+  });
+
+  assert.equal(during, false);
+  assert.equal(after, true);
+  assert.deepEqual(order, ['restore', 'after']);
 });

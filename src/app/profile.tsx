@@ -43,6 +43,7 @@ import { requestSpendingReminderPermissionsAsync } from '@/utils/spending-remind
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 import { confirmAction, notify } from '@/utils/confirm';
 import { deleteLocalFile } from '@/utils/local-file';
+import { RestoreRollbackError } from '@/utils/restore-rollback';
 
 type TabKey = 'identity' | 'preferences' | 'notifications' | 'data';
 
@@ -385,7 +386,19 @@ export default function ProfileScreen() {
             router.replace('/(tabs)/menu');
           } catch (error) {
             console.error('[cashtrack] Restore failed', error);
-            notify('Restore Failed', 'The backup could not be applied. Your previous data may be incomplete.');
+            if (!(error instanceof RestoreRollbackError)) {
+              reloadAllData();
+              reloadDebts();
+              reloadIncome();
+              reloadGoals();
+              reloadReminders();
+            }
+            notify(
+              'Restore Failed',
+              error instanceof RestoreRollbackError
+                ? 'The backup could not be applied and your previous data could not be fully recovered. Restart the app before making changes.'
+                : 'The backup could not be applied. Your previous data was kept.',
+            );
           } finally {
             setRestoring(false);
           }

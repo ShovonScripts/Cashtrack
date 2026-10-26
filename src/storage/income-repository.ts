@@ -1,3 +1,5 @@
+import type { SQLiteDatabase } from 'expo-sqlite';
+
 import { initDatabase } from '@/storage/db';
 import type { IncomeRecord, IncomeDraft } from '@/types/income';
 import type { RecurringFrequency } from '@/types/expense';
@@ -27,8 +29,7 @@ function mapIncomeRow(row: IncomeRow): IncomeRecord {
   };
 }
 
-export async function insertIncome(income: IncomeRecord): Promise<void> {
-  const db = await initDatabase();
+export async function insertIncomeWithDb(db: SQLiteDatabase, income: IncomeRecord): Promise<void> {
   await db.runAsync(
     'INSERT INTO income_transactions (id, amount, date, note, is_recurring, recurring_frequency, recurring_end_date, recurring_parent_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     income.id,
@@ -40,6 +41,11 @@ export async function insertIncome(income: IncomeRecord): Promise<void> {
     income.recurringEndDate ?? null,
     income.recurringParentId ?? null
   );
+}
+
+export async function insertIncome(income: IncomeRecord): Promise<void> {
+  const db = await initDatabase();
+  await insertIncomeWithDb(db, income);
 }
 
 /** Newest first */

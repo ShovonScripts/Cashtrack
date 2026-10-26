@@ -1,3 +1,5 @@
+import type { SQLiteDatabase } from 'expo-sqlite';
+
 import { initDatabase } from '@/storage/db';
 import type { MoneyGoal, GoalContribution, GoalFrequency, GoalStatus, PotType, AllocationType } from '@/types/goal';
 
@@ -63,8 +65,7 @@ export async function getGoalById(id: string): Promise<MoneyGoal | undefined> {
   return row ? mapGoalRow(row) : undefined;
 }
 
-export async function insertGoal(goal: MoneyGoal): Promise<void> {
-  const db = await initDatabase();
+export async function insertGoalWithDb(db: SQLiteDatabase, goal: MoneyGoal): Promise<void> {
   await db.runAsync(
     'INSERT INTO money_goals (id, title, target_amount, start_date, deadline_date, frequency, status, pot_type, allocation_type, allocation_percent, icon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     goal.id,
@@ -79,6 +80,11 @@ export async function insertGoal(goal: MoneyGoal): Promise<void> {
     goal.allocationPercent ?? null,
     goal.icon ?? 'piggy-bank'
   );
+}
+
+export async function insertGoal(goal: MoneyGoal): Promise<void> {
+  const db = await initDatabase();
+  await insertGoalWithDb(db, goal);
 }
 
 export async function updateGoal(goal: MoneyGoal): Promise<void> {
@@ -131,20 +137,24 @@ export async function insertContribution(contribution: GoalContribution): Promis
   await insertContributions([contribution]);
 }
 
+export async function insertContributionWithDb(db: SQLiteDatabase, contribution: GoalContribution): Promise<void> {
+  await db.runAsync(
+    'INSERT INTO goal_contributions (id, goal_id, amount, date, note, source_income_id) VALUES (?, ?, ?, ?, ?, ?)',
+    contribution.id,
+    contribution.goalId,
+    contribution.amount,
+    contribution.date,
+    contribution.note,
+    contribution.sourceIncomeId ?? null
+  );
+}
+
 export async function insertContributions(contributions: readonly GoalContribution[]): Promise<void> {
   if (contributions.length === 0) return;
   const db = await initDatabase();
   await db.withTransactionAsync(async () => {
     for (const contribution of contributions) {
-      await db.runAsync(
-        'INSERT INTO goal_contributions (id, goal_id, amount, date, note, source_income_id) VALUES (?, ?, ?, ?, ?, ?)',
-        contribution.id,
-        contribution.goalId,
-        contribution.amount,
-        contribution.date,
-        contribution.note,
-        contribution.sourceIncomeId ?? null
-      );
+      await insertContributionWithDb(db, contribution);
     }
   });
 }

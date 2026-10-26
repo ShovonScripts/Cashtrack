@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Note } from '@/types/note';
 import { mutateJsonArray, objectRows, readJsonArray } from '@/storage/json-collection';
 
-const STORAGE_KEY = '@cashtrack_google_keep_notes';
+export const NOTES_STORAGE_KEY = '@cashtrack_google_keep_notes';
 
 const noteRows = objectRows<Note>('note');
 
@@ -13,7 +13,7 @@ const noteRows = objectRows<Note>('note');
  */
 export async function getNotes(): Promise<Note[]> {
   try {
-    return await readJsonArray(AsyncStorage, STORAGE_KEY, 'notes', noteRows);
+    return await readJsonArray(AsyncStorage, NOTES_STORAGE_KEY, 'notes', noteRows);
   } catch (error) {
     console.error('[cashtrack] Failed to read notes', error);
     return [];
@@ -21,7 +21,7 @@ export async function getNotes(): Promise<Note[]> {
 }
 
 export async function saveNote(note: Note): Promise<void> {
-  await mutateJsonArray(AsyncStorage, STORAGE_KEY, 'notes', noteRows, (notes) => {
+  await mutateJsonArray(AsyncStorage, NOTES_STORAGE_KEY, 'notes', noteRows, (notes) => {
     const index = notes.findIndex((n) => n.id === note.id);
     if (index >= 0) {
       const updated = [...notes];
@@ -33,17 +33,17 @@ export async function saveNote(note: Note): Promise<void> {
 }
 
 export async function deleteNote(id: string): Promise<void> {
-  await mutateJsonArray(AsyncStorage, STORAGE_KEY, 'notes', noteRows, (notes) =>
+  await mutateJsonArray(AsyncStorage, NOTES_STORAGE_KEY, 'notes', noteRows, (notes) =>
     notes.filter((n) => n.id !== id)
   );
 }
 
 /** Overwrites the note collection. Used when restoring a full backup. */
 export async function replaceNotes(notes: Note[]): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
 }
 
 /** Removes every note. Used by the full "reset all data" flow. */
 export async function clearNotes(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  await AsyncStorage.removeItem(NOTES_STORAGE_KEY);
 }

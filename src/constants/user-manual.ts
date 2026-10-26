@@ -1008,7 +1008,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       },
       {
         type: 'note',
-        text: 'Restore replaces everything currently on the device with the backup and cannot be undone. Restore is available in the iOS and Android app only. If a restore fails partway through, your previous data may be incomplete. Keep a recent backup and try again.',
+        text: 'Restore replaces everything currently on the device with the backup and cannot be undone. Restore is available in the iOS and Android app only. If a restore fails, CashTrack tries to put your previous data back automatically. If that rollback also fails, restart the app and restore a known-good backup.',
       },
       { type: 'heading', text: 'Replay the walkthrough' },
       {
@@ -1265,7 +1265,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           '**Period report exports are limited** — daily reports are PDF only, monthly reports are PDF and CSV, and weekly/yearly reports are on-screen only.',
           '**App Lock has no separate PIN** — it relies entirely on the device’s screen lock, Face ID, fingerprint, or passcode.',
           '**Restore is native-only** — restore from backup is not available on the web. Backups can still be created and exported on the web.',
-          '**Restore is not transactional** — if a restore fails partway through, the device may be left with incomplete data.',
+          '**Restore rollback is best-effort** — a failed restore tries to put the previous data back. If the rollback also fails, the device may be left with incomplete data; restart and restore a known-good backup.',
           '**Notification sound is system-controlled** — CashTrack does not include a custom ringtone and cannot loop a notification like a phone alarm.',
           '**Web limitations** — the web version does not support App Lock, restore, or notifications.',
           '**Stopwatch state is not persistent** — the stopwatch resets when the app is reloaded.',

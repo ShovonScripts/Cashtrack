@@ -1,20 +1,32 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Directory, File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
-import { saveAppLockFlag } from '@/storage/app-lock-storage';
-import { loadDebts, saveDebts } from '@/storage/debt-storage';
-import { loadExpenses, saveExpenses } from '@/storage/expense-storage';
-import { getAllPayments, getAllReminders, insertPayment, insertReminder } from '@/storage/financial-reminders-repository';
-import { getAllContributions, getAllGoals, insertContributions, insertGoal } from '@/storage/goal-repository';
-import { getAllIncome, insertIncome } from '@/storage/income-repository';
-import { getNotes, replaceNotes } from '@/storage/notes-storage';
-import { loadPreferences, savePreferences } from '@/storage/preferences-storage';
-import { loadRecurringSkips, replaceRecurringSkips } from '@/storage/recurring-skips';
-import { clearAuxiliaryData, clearRelationalData } from '@/storage/reset-repository';
+import { APP_LOCK_STORAGE_KEY, saveAppLockFlag } from '@/storage/app-lock-storage';
+import {
+  captureRelationalSnapshot,
+  replaceRelationalData,
+  type RelationalSnapshot,
+} from '@/storage/backup-restore-repository';
+import { DEBT_STORAGE_KEY, loadDebts, saveDebts } from '@/storage/debt-storage';
+import { loadExpenses, saveExpenses, STORAGE_KEY as EXPENSES_STORAGE_KEY } from '@/storage/expense-storage';
+import { getAllPayments, getAllReminders } from '@/storage/financial-reminders-repository';
+import { getAllContributions, getAllGoals } from '@/storage/goal-repository';
+import { getAllIncome } from '@/storage/income-repository';
+import { getNotes, NOTES_STORAGE_KEY, replaceNotes } from '@/storage/notes-storage';
+import { loadPreferences, PREFERENCES_STORAGE_KEY, savePreferences } from '@/storage/preferences-storage';
+import {
+  loadRecurringSkips,
+  RECURRING_SKIPS_STORAGE_KEY,
+  replaceRecurringSkips,
+} from '@/storage/recurring-skips';
 import type { DebtRecord } from '@/types/debt';
 import type { Expense } from '@/types/expense';
 import type { UserPreferences } from '@/types/preferences';
+import { deleteLocalFile } from '@/utils/local-file';
+import { applyRestoreWithRollback, RestoreRollbackError } from '@/utils/restore-rollback';
+import { runWithSaveQueueLock } from '@/utils/save-queue';
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
@@ -31,6 +43,22 @@ import {
 export const BACKUP_MIME_TYPE = 'application/json';
 
 const MAX_EMBEDDED_ATTACHMENT_CHARS = 40 * 1024 * 1024;
+
+const BACKUP_STORAGE_KEYS = [
+  EXPENSES_STORAGE_KEY,
+  PREFERENCES_STORAGE_KEY,
+  DEBT_STORAGE_KEY,
+  NOTES_STORAGE_KEY,
+  RECURRING_SKIPS_STORAGE_KEY,
+  APP_LOCK_STORAGE_KEY,
+];
+
+type RawStorageSnapshot = readonly (readonly [string, string | null])[];
+
+type RestoreSnapshot = {
+  storage: RawStorageSnapshot;
+  relational: RelationalSnapshot;
+};
 
 const MIME_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -220,35 +248,91 @@ function getRestoredDirectory(): Directory {
 
 async function restoreAttachments(
   attachments: Record<string, BackupAttachment>,
-): Promise<{ mapping: Record<string, string>; restored: number; omitted: number }> {
+): Promise<{
+  mapping: Record<string, string>;
+  createdUris: string[];
+  restored: number;
+  omitted: number;
+}> {
   const mapping: Record<string, string> = {};
+  const createdUris: string[] = [];
   let restored = 0;
   let omitted = 0;
   const entries = Object.entries(attachments);
-  if (entries.length === 0) return { mapping, restored, omitted };
+  if (entries.length === 0) return { mapping, createdUris, restored, omitted };
 
   const directory = getRestoredDirectory();
   let index = 0;
 
   for (const [originalUri, attachment] of entries) {
+    let target: File | null = null;
     try {
       const extension = extensionFor(attachment, originalUri);
-      const target = new File(
+      target = new File(
         directory,
         `restored-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 7)}.${extension}`,
       );
       target.create({ overwrite: true });
       target.write(attachment.data, { encoding: 'base64' });
       mapping[originalUri] = target.uri;
+      createdUris.push(target.uri);
       restored += 1;
     } catch (error) {
       console.warn('[cashtrack] Could not restore an attachment', error);
+      if (target) {
+        await deleteLocalFile(target.uri);
+      }
       omitted += 1;
     }
     index += 1;
   }
 
-  return { mapping, restored, omitted };
+  return { mapping, createdUris, restored, omitted };
+}
+
+async function captureRestoreSnapshot(): Promise<RestoreSnapshot> {
+  const [storage, relational] = await Promise.all([
+    AsyncStorage.multiGet(BACKUP_STORAGE_KEYS),
+    captureRelationalSnapshot(),
+  ]);
+  return { storage, relational };
+}
+
+async function restoreStorageSnapshot(snapshot: RawStorageSnapshot): Promise<void> {
+  const present: [string, string][] = [];
+  const missing: string[] = [];
+  for (const [key, value] of snapshot) {
+    if (value === null) {
+      missing.push(key);
+    } else {
+      present.push([key, value]);
+    }
+  }
+
+  const tasks: Promise<void>[] = [];
+  if (present.length > 0) {
+    tasks.push(AsyncStorage.multiSet(present));
+  }
+  if (missing.length > 0) {
+    tasks.push(AsyncStorage.multiRemove(missing));
+  }
+
+  const results = await Promise.allSettled(tasks);
+  const failed = results.find((result) => result.status === 'rejected');
+  if (failed?.status === 'rejected') {
+    throw failed.reason;
+  }
+}
+
+async function restorePreviousSnapshot(snapshot: RestoreSnapshot): Promise<void> {
+  const results = await Promise.allSettled([
+    replaceRelationalData(snapshot.relational),
+    restoreStorageSnapshot(snapshot.storage),
+  ]);
+  const failed = results.find((result) => result.status === 'rejected');
+  if (failed?.status === 'rejected') {
+    throw failed.reason;
+  }
 }
 
 /**
@@ -261,47 +345,51 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
   }
 
   const parsed = parseBackup(raw);
-  const { mapping, restored, omitted } = await restoreAttachments(parsed.data.attachments);
-  const data = remapAttachmentUris(parsed.data, mapping);
 
-  await clearRelationalData();
-  await clearAuxiliaryData();
+  return runWithSaveQueueLock(async () => {
+    const snapshot = await captureRestoreSnapshot();
+    const { mapping, createdUris, restored, omitted } = await restoreAttachments(parsed.data.attachments);
+    const data = remapAttachmentUris(parsed.data, mapping);
 
-  await saveExpenses(data.expenses);
-  await savePreferences(data.preferences);
-  await saveDebts(data.debts);
-  await replaceNotes(data.notes);
-  await replaceRecurringSkips(data.recurringSkips);
-  await saveAppLockFlag(data.preferences.appLockEnabled === true);
+    try {
+      await applyRestoreWithRollback(
+        snapshot,
+        async () => {
+          await replaceRelationalData(data);
+          await saveExpenses(data.expenses);
+          await savePreferences(data.preferences);
+          await saveDebts(data.debts);
+          await replaceNotes(data.notes);
+          await replaceRecurringSkips(data.recurringSkips);
+          await saveAppLockFlag(data.preferences.appLockEnabled === true);
+        },
+        async (previous) => {
+          await restorePreviousSnapshot(previous);
+          await Promise.all(createdUris.map((uri) => deleteLocalFile(uri)));
+        },
+      );
+    } catch (error) {
+      if (error instanceof RestoreRollbackError) {
+        console.error('[cashtrack] Restore failed and rollback was incomplete', error.originalError, error.rollbackError);
+      }
+      throw error;
+    }
 
-  for (const goal of data.goals) {
-    await insertGoal(goal);
-  }
-  await insertContributions(data.contributions);
-  for (const reminder of data.reminders) {
-    await insertReminder(reminder);
-  }
-  for (const payment of data.payments) {
-    await insertPayment(payment);
-  }
-  for (const incomeRecord of data.income) {
-    await insertIncome(incomeRecord);
-  }
-
-  return {
-    attachmentsRestored: restored,
-    attachmentsOmitted: omitted,
-    counts: {
-      expenses: data.expenses.length,
-      notes: data.notes.length,
-      debts: data.debts.length,
-      income: data.income.length,
-      goals: data.goals.length,
-      contributions: data.contributions.length,
-      reminders: data.reminders.length,
-      payments: data.payments.length,
-    },
-  };
+    return {
+      attachmentsRestored: restored,
+      attachmentsOmitted: omitted,
+      counts: {
+        expenses: data.expenses.length,
+        notes: data.notes.length,
+        debts: data.debts.length,
+        income: data.income.length,
+        goals: data.goals.length,
+        contributions: data.contributions.length,
+        reminders: data.reminders.length,
+        payments: data.payments.length,
+      },
+    };
+  });
 }
 
 /** Opens the system picker and returns the selected backup's text, or null when canceled. */

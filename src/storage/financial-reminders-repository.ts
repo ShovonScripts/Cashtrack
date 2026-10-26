@@ -1,3 +1,5 @@
+import type { SQLiteDatabase } from 'expo-sqlite';
+
 import { initDatabase } from '@/storage/db';
 import type { FinancialReminder, ReminderPaymentRecord, ReminderCategory, ReminderRepeatType, ReminderStatus } from '@/types/reminder';
 
@@ -81,8 +83,7 @@ export async function getReminderById(id: string): Promise<FinancialReminder | u
   return row ? mapReminderRow(row) : undefined;
 }
 
-export async function insertReminder(reminder: FinancialReminder): Promise<void> {
-  const db = await initDatabase();
+export async function insertReminderWithDb(db: SQLiteDatabase, reminder: FinancialReminder): Promise<void> {
   await db.runAsync(
     `INSERT INTO financial_reminders (id, title, amount, is_variable_amount, category, due_date, original_due_date, repeat_type, status, notes, total_amount, installment_amount, total_installments, paid_installments, paid_amount_current_cycle, is_alarm, alarm_time, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     reminder.id,
@@ -105,6 +106,11 @@ export async function insertReminder(reminder: FinancialReminder): Promise<void>
     reminder.createdAt,
     reminder.updatedAt
   );
+}
+
+export async function insertReminder(reminder: FinancialReminder): Promise<void> {
+  const db = await initDatabase();
+  await insertReminderWithDb(db, reminder);
 }
 
 export async function updateReminder(reminder: FinancialReminder): Promise<void> {
@@ -183,8 +189,7 @@ export async function getAllPayments(): Promise<ReminderPaymentRecord[]> {
   return rows.map(mapPaymentRow);
 }
 
-export async function insertPayment(payment: ReminderPaymentRecord): Promise<void> {
-  const db = await initDatabase();
+export async function insertPaymentWithDb(db: SQLiteDatabase, payment: ReminderPaymentRecord): Promise<void> {
   await db.runAsync(
     `INSERT INTO reminder_payments (id, reminder_id, amount, paid_date, expense_id, notes, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     payment.id,
@@ -195,4 +200,9 @@ export async function insertPayment(payment: ReminderPaymentRecord): Promise<voi
     payment.notes ?? '',
     payment.createdAt
   );
+}
+
+export async function insertPayment(payment: ReminderPaymentRecord): Promise<void> {
+  const db = await initDatabase();
+  await insertPaymentWithDb(db, payment);
 }

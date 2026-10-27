@@ -71,7 +71,6 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
       }, 250);
       void updateNotification(0, true);
     } else {
-      if (interval) clearInterval(interval);
       void updateNotification(0, false);
     }
     return () => {

@@ -195,8 +195,8 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
   }, [setAppLockEnabled]);
 
   const setEnabled = useCallback(async (next: boolean): Promise<AppLockActionResult> => {
+    const currentAvailability = await refreshAvailability();
     if (next) {
-      const currentAvailability = await refreshAvailability();
       if (currentAvailability === 'unsupported') {
         return { ok: false, reason: 'App Lock is only available in the mobile app.' };
       }
@@ -206,19 +206,26 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       if (currentAvailability !== 'available') {
         return { ok: false, reason: 'Set up a screen lock on your device before turning on App Lock.' };
       }
-    } else if (availability !== 'available') {
-      // Device security is missing or could not be checked. Let the user turn
-      // the lock off rather than trapping them behind an impossible prompt.
+    } else {
+      if (currentAvailability === 'unsupported') {
+        return persistEnabled(false);
+      }
+      const result = await runAuthentication('Turn off App Lock');
+      if (!result.success) {
+        if (currentAvailability === 'available') {
+          return { ok: false, reason: result.reason ?? 'Authentication was cancelled.' };
+        }
+      }
       return persistEnabled(false);
     }
 
-    const result = await runAuthentication(next ? 'Turn on App Lock' : 'Turn off App Lock');
+    const result = await runAuthentication('Turn on App Lock');
     if (!result.success) {
       return { ok: false, reason: result.reason ?? 'Authentication was cancelled.' };
     }
 
     return persistEnabled(next);
-  }, [availability, persistEnabled, refreshAvailability, runAuthentication]);
+  }, [persistEnabled, refreshAvailability, runAuthentication]);
 
   const disableForUnavailableDevice = useCallback(
     () => persistEnabled(false),

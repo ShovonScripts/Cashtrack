@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
@@ -11,8 +10,9 @@ import { NotesTool } from './tools/NotesTool';
 import { StopwatchTool } from './tools/StopwatchTool';
 import { CurrencyTool } from './tools/CurrencyTool';
 import { CalendarTool } from './tools/CalendarTool';
+import { TodoTool } from './tools/TodoTool';
 
-type ToolType = 'calculator' | 'notes' | 'stopwatch' | 'currency' | 'calendar' | null;
+type ToolType = 'calculator' | 'notes' | 'stopwatch' | 'currency' | 'calendar' | 'todo' | null;
 
 type ToolsMenuModalProps = {
   visible: boolean;
@@ -68,7 +68,9 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                           ? 'Currency Converter'
                           : activeTool === 'calendar'
                             ? 'Quick Calendar'
-                            : 'Quick Tools'}
+                            : activeTool === 'todo'
+                              ? 'To-Do & Checklist'
+                              : 'Quick Tools'}
                 </ThemedText>
                 <ThemedText type="caption" themeColor="textSecondary">
                   {activeTool ? 'Active utility tool' : 'Select a tool to get started'}
@@ -135,7 +137,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Keep Notes</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">Scratchpad & lists</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Scratchpad & notes</ThemedText>
                   </View>
                 </Pressable>
 
@@ -174,24 +176,19 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                 </Pressable>
 
                 <Pressable
-                  onPress={() => {
-                    handleClose();
-                    setTimeout(() => {
-                      router.push('/add-expense' as any);
-                    }, 100);
-                  }}
+                  onPress={() => setActiveTool('todo')}
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.toolCard,
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressedCard,
                   ]}>
-                  <View style={[styles.iconBox, { backgroundColor: `${theme.info}15` }]}>
-                    <Ionicons name="add-circle-outline" size={24} color={theme.info} />
+                  <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
+                    <Ionicons name="checkbox-outline" size={24} color="#059669" />
                   </View>
                   <View style={styles.cardTextContainer}>
-                    <ThemedText type="defaultBold">Quick Expense</ThemedText>
-                    <ThemedText type="caption" themeColor="textSecondary">Log transaction</ThemedText>
+                    <ThemedText type="defaultBold">To-Do List</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">Task & Checklist</ThemedText>
                   </View>
                 </Pressable>
               </View>
@@ -205,6 +202,8 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                   <StopwatchTool />
                 ) : activeTool === 'currency' ? (
                   <CurrencyTool />
+                ) : activeTool === 'todo' ? (
+                  <TodoTool />
                 ) : (
                   <CalendarTool onNavigate={handleClose} />
                 )}

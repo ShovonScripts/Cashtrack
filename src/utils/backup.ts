@@ -10,6 +10,7 @@ import type {
 } from '@/types/goal';
 import type { IncomeRecord } from '@/types/income';
 import type { Note, NoteColor } from '@/types/note';
+import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
 import type { UserPreferences } from '@/types/preferences';
 import type {
   FinancialReminder,
@@ -40,6 +41,7 @@ export type BackupData = {
   expenses: Expense[];
   preferences: UserPreferences;
   notes: Note[];
+  todos?: TodoItem[];
   debts: DebtRecord[];
   income: IncomeRecord[];
   goals: MoneyGoal[];
@@ -241,6 +243,27 @@ function parseNote(raw: unknown, index: number): Note {
     color: asOneOf(row.color, NOTE_COLORS, `${label} color`),
     updatedAt: asDateString(row.updatedAt, `${label} updated date`),
   };
+}
+
+const TODO_PRIORITIES: readonly TodoPriority[] = ['low', 'medium', 'high'];
+const TODO_CATEGORIES: readonly TodoCategory[] = ['financial', 'bills', 'personal', 'general'];
+
+function parseTodo(raw: unknown, index: number): TodoItem {
+  const label = `Todo ${index + 1}`;
+  const row = asRecord(raw, label);
+  const todo: TodoItem = {
+    id: asNonEmptyString(row.id, `${label} id`),
+    title: asNonEmptyString(row.title, `${label} title`),
+    completed: asBoolean(row.completed, `${label} completed flag`),
+    priority: asOneOf(row.priority, TODO_PRIORITIES, `${label} priority`),
+    category: asOneOf(row.category, TODO_CATEGORIES, `${label} category`),
+    createdAt: asDateString(row.createdAt, `${label} created date`),
+  };
+  const dueDate = optionalDateStringOrNull(row.dueDate, `${label} due date`);
+  if (dueDate !== undefined && dueDate !== null) todo.dueDate = dueDate;
+  const completedAt = optionalDateStringOrNull(row.completedAt, `${label} completed date`);
+  if (completedAt !== undefined && completedAt !== null) todo.completedAt = completedAt;
+  return todo;
 }
 
 function parseDebtPayment(raw: unknown, debtLabel: string, index: number): DebtPayment {
@@ -520,6 +543,7 @@ export function parseBackup(raw: string): BackupFile {
   const data = asRecord(root.data, 'Backup data');
   const expenses = asArray(data.expenses, 'Expenses').map(parseExpense);
   const notes = asArray(data.notes, 'Notes').map(parseNote);
+  const todos = data.todos === undefined ? [] : asArray(data.todos, 'Todos').map(parseTodo);
   const debts = asArray(data.debts, 'Debts').map(parseDebt);
   const income = asArray(data.income, 'Income').map(parseIncome);
   const goals = asArray(data.goals, 'Goals').map(parseGoal);
@@ -528,6 +552,7 @@ export function parseBackup(raw: string): BackupFile {
   const payments = asArray(data.payments, 'Reminder payments').map(parsePayment);
 
   assertUniqueIds(expenses, 'Expenses');
+  assertUniqueIds(todos, 'Todos');
   assertUniqueIds(notes, 'Notes');
   assertUniqueIds(debts, 'Debts');
   assertUniqueIds(income, 'Income');

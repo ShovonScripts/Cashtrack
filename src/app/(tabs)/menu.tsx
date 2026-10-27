@@ -111,6 +111,15 @@ export default function MenuScreen() {
       badge: 'Tool',
     },
     {
+      id: 'todo',
+      title: 'To-Do List & Tasks',
+      subtitle: 'Task checklist & financial reminders',
+      icon: 'checkbox-marked-circle-outline',
+      color: '#059669',
+      route: '/todo',
+      badge: 'New',
+    },
+    {
       id: 'stopwatch',
       title: 'Stopwatch & Timer',
       subtitle: 'Track elapsed time and durations',

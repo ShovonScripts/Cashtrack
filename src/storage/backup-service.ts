@@ -15,6 +15,7 @@ import { getAllPayments, getAllReminders } from '@/storage/financial-reminders-r
 import { getAllContributions, getAllGoals } from '@/storage/goal-repository';
 import { getAllIncome } from '@/storage/income-repository';
 import { getNotes, NOTES_STORAGE_KEY, replaceNotes } from '@/storage/notes-storage';
+import { getTodos, replaceTodos, TODOS_STORAGE_KEY } from '@/storage/todo-storage';
 import { loadPreferences, PREFERENCES_STORAGE_KEY, savePreferences } from '@/storage/preferences-storage';
 import {
   loadRecurringSkips,
@@ -49,6 +50,7 @@ const BACKUP_STORAGE_KEYS = [
   PREFERENCES_STORAGE_KEY,
   DEBT_STORAGE_KEY,
   NOTES_STORAGE_KEY,
+  TODOS_STORAGE_KEY,
   RECURRING_SKIPS_STORAGE_KEY,
   APP_LOCK_STORAGE_KEY,
 ];
@@ -175,6 +177,7 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
     storedExpenses,
     storedPreferences,
     notes,
+    todos,
     storedDebts,
     income,
     goals,
@@ -187,6 +190,7 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
     snapshot.expenses === undefined ? loadExpenses() : Promise.resolve(null),
     snapshot.preferences === undefined ? loadPreferences() : Promise.resolve(null),
     getNotes(),
+    getTodos(),
     snapshot.debts === undefined ? loadDebts() : Promise.resolve(null),
     getAllIncome(),
     getAllGoals(),
@@ -206,6 +210,7 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
     expenses: snapshot.expenses ?? storedExpenses ?? [],
     preferences,
     notes,
+    todos,
     debts: snapshot.debts ?? storedDebts ?? [],
     income,
     goals,
@@ -360,6 +365,7 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
           await savePreferences(data.preferences);
           await saveDebts(data.debts);
           await replaceNotes(data.notes);
+          await replaceTodos(data.todos ?? []);
           await replaceRecurringSkips(data.recurringSkips);
           await saveAppLockFlag(data.preferences.appLockEnabled === true);
         },

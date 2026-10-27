@@ -46,7 +46,7 @@ export default function AddNoteScreen() {
   };
 
   const selectedColorObj = COLORS.find((c) => c.key === color) || COLORS[0];
-  const isDark = theme.text === '#ffffff';
+  const isDark = theme.background !== '#ffffff';
   const dynamicBg = isDark ? selectedColorObj.darkHex : selectedColorObj.hex;
 
   return (

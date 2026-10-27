@@ -127,18 +127,18 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
   headerCopy: {
-    flex: 1,
+    flexShrink: 1,
     gap: 2,
   },
   eyebrow: {
-    letterSpacing: 1,
+    letterSpacing: 0.8,
     fontWeight: '800',
-    fontSize: 10,
+    fontSize: 10.5,
   },
   periodPill: {
     flexShrink: 0,

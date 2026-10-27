@@ -48,7 +48,7 @@ async function saveWeatherClocks(ids: string[]) {
 
 export function WeatherWorldClocks() {
   const theme = useTheme();
-  const isDark = theme.text === '#ffffff';
+  const isDark = theme.background !== '#ffffff';
 
   const [cityIds, setCityIds] = useState<string[]>(cachedWeatherClocks);
   const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);

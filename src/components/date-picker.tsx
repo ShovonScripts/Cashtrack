@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   calendarBody: { flex: 1, borderWidth: 1, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignContent: 'center', gap: 1 },
   calendarDot: { width: 3, height: 3, borderRadius: Radius.pill },
   dateCopy: { flex: 1, gap: 0 },
-  scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: Spacing.four },
+  scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: Spacing.two },
   dialog: { width: '100%', maxWidth: 360, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.xlarge, padding: Spacing.three, gap: Spacing.three, elevation: 12 },
   dialogHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   monthCopy: { gap: Spacing.one },

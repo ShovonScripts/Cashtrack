@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -183,6 +183,33 @@ function getReminderCategoryIcon(category: string): keyof typeof MaterialCommuni
   }
 }
 
+function getReminderCategoryColor(
+  category: string,
+  isOverdue: boolean,
+  isDueToday: boolean,
+  theme: ReturnType<typeof useTheme>
+): string {
+  if (isOverdue) return '#E11D48';
+  if (isDueToday) return '#D97706';
+  switch (category) {
+    case 'Rent':
+      return '#2563EB';
+    case 'Bills':
+    case 'Utilities':
+      return '#0284C7';
+    case 'EMI':
+    case 'Loan':
+    case 'Credit Card':
+      return '#7C3AED';
+    case 'Subscription':
+      return '#059669';
+    case 'Insurance':
+      return '#0891B2';
+    default:
+      return theme.accent;
+  }
+}
+
 function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { reminders } = useFinancialReminders();
   const theme = useTheme();
@@ -194,169 +221,198 @@ function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: number) 
   const upcomingList = activeReminders.slice(0, 3);
   const overdueCount = activeReminders.filter((r) => r.derivedStatus === 'overdue').length;
   const totalAmountDue = activeReminders.reduce((sum, r) => sum + (getReminderRemainingAmount(r) ?? 0), 0);
+  const nextReminder = activeReminders[0];
 
   const safeFormat = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
 
   return (
-    <Card style={styles.billsWidgetCard}>
-      {/* Header */}
-      <View style={styles.sectionTitleRow}>
-        <View style={styles.sectionTitleCopy}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <MaterialCommunityIcons name="calendar-clock" size={20} color={theme.accent} />
-            <ThemedText type="defaultBold">Bills & Reminders</ThemedText>
+    <View style={styles.billsWidgetContainer}>
+      {/* SECTION 1: GLASSMOURPHIC SUMMARY HERO BANNER (TOP) */}
+      <View style={[styles.billsHeroCard, overdueCount > 0 && styles.billsHeroCardAlert]}>
+        <View pointerEvents="none" style={styles.heroOrbLarge} />
+        <View pointerEvents="none" style={styles.heroOrbSmall} />
+        {overdueCount > 0 && <View pointerEvents="none" style={styles.heroOrbRedAlert} />}
+
+        <View style={styles.billsHeroContent}>
+          {/* Top Eyebrow & View All Link */}
+          <View style={styles.billsHeroHeader}>
+            <View style={styles.billsHeroTitleGroup}>
+              <MaterialCommunityIcons name="calendar-clock" size={18} color="#14E7FD" />
+              <Text style={styles.billsHeroEyebrow}>BILLS & REMINDERS</Text>
+            </View>
+
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/bills');
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="View all bills and reminders"
+              hitSlop={8}
+              style={({ pressed }) => [styles.viewAllGlassLink, pressed && styles.pressed]}>
+              <Text style={styles.viewAllGlassText}>View all →</Text>
+            </Pressable>
           </View>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Upcoming payments & utility alerts
-          </ThemedText>
+
+          {/* Hero Total Due & Overdue Alert Row */}
+          <View style={styles.billsHeroMetrics}>
+            <View style={styles.heroTotalRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroTotalLabel}>TOTAL AMOUNT DUE</Text>
+                <Text style={styles.heroTotalValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
+                  {formatAmount(totalAmountDue)}
+                </Text>
+              </View>
+              {overdueCount > 0 && (
+                <View style={styles.overdueGlassPill}>
+                  <Text style={styles.overdueGlassText}>🚨 {overdueCount} OVERDUE</Text>
+                </View>
+              )}
+            </View>
+
+            {nextReminder ? (
+              <View style={styles.nextDueRow}>
+                <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.85)" />
+                <Text style={styles.nextDueText} numberOfLines={1}>
+                  Next: <Text style={{ fontWeight: '800', color: '#FFFFFF' }}>{nextReminder.title}</Text> · {
+                    nextReminder.daysUntilDue < 0
+                      ? `🚨 ${Math.abs(nextReminder.daysUntilDue)}d overdue`
+                      : nextReminder.daysUntilDue === 0
+                        ? 'Due today'
+                        : `In ${nextReminder.daysUntilDue} day${nextReminder.daysUntilDue === 1 ? '' : 's'}`
+                  }
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.nextDueRow}>
+                <Ionicons name="checkmark-circle-outline" size={14} color="#34D399" />
+                <Text style={styles.nextDueText}>All upcoming bills caught up!</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Subscriptions Hub Glass Bar */}
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/subscriptions');
+            }}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.subHubGlassBar, pressed && styles.pressed]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialCommunityIcons name="repeat" size={16} color="#14E7FD" />
+              <Text style={styles.subHubGlassText}>Subscriptions & Recurring Hub</Text>
+            </View>
+            <MaterialCommunityIcons name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
+          </Pressable>
         </View>
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/bills');
-          }}
-          accessibilityRole="button"
-          hitSlop={8}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>
-            View all →
-          </ThemedText>
-        </Pressable>
       </View>
 
-      {/* Summary KPI Bar */}
-      {activeReminders.length > 0 && (
-        <View style={[styles.billsKpiBar, { backgroundColor: theme.cardMuted }]}>
-          <View style={styles.kpiItem}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              PENDING
-            </ThemedText>
-            <ThemedText type="smallBold">
-              {activeReminders.length} {activeReminders.length === 1 ? 'bill' : 'bills'}
-            </ThemedText>
-          </View>
+      {/* SECTION 2: INTERACTIVE CATEGORIZED PAYMENT FEED (BOTTOM) */}
+      <View style={styles.billsFeedSection}>
+        <View style={styles.feedHeaderRow}>
+          <ThemedText type="caption" themeColor="textSecondary" style={styles.feedTitle}>
+            UPCOMING PAYMENTS ({activeReminders.length})
+          </ThemedText>
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              router.push('/bills/add');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Add new bill"
+            hitSlop={8}
+            style={({ pressed }) => [styles.quickAddPill, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
+            <Ionicons name="add" size={14} color={theme.accent} />
+            <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>Add bill</ThemedText>
+          </Pressable>
+        </View>
 
-          <View style={[styles.kpiDivider, { backgroundColor: theme.border }]} />
-
-          <View style={styles.kpiItem}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              TOTAL DUE
-            </ThemedText>
-            <ThemedText type="smallBold">
-              {formatAmount(totalAmountDue)}
-            </ThemedText>
-          </View>
-
-          {overdueCount > 0 && (
-            <>
-              <View style={[styles.kpiDivider, { backgroundColor: theme.border }]} />
-              <View style={styles.kpiItem}>
-                <ThemedText type="caption" style={{ color: theme.danger }}>
-                  OVERDUE
+        {activeReminders.length === 0 ? (
+          <Card style={styles.emptyFeedCard}>
+            <Pressable
+              onPress={() => {
+                triggerHaptic();
+                router.push('/bills/add');
+              }}
+              accessibilityRole="button"
+              style={({ pressed }) => [styles.emptyFeedButton, pressed && styles.pressed]}>
+              <MaterialCommunityIcons name="calendar-plus" size={32} color={theme.accent} />
+              <View style={{ gap: 2, alignItems: 'center' }}>
+                <ThemedText type="smallBold" style={{ color: theme.accent }}>
+                  No upcoming bills due
                 </ThemedText>
-                <ThemedText type="smallBold" style={{ color: theme.danger }}>
-                  {overdueCount} {overdueCount === 1 ? 'bill' : 'bills'}
+                <ThemedText type="caption" themeColor="textSecondary" style={{ textAlign: 'center' }}>
+                  Tap to set up rent, utilities, or subscription reminders.
                 </ThemedText>
               </View>
-            </>
-          )}
-        </View>
-      )}
+            </Pressable>
+          </Card>
+        ) : (
+          <View style={styles.feedList}>
+            {upcomingList.map((rem) => {
+              const isOverdue = rem.derivedStatus === 'overdue';
+              const isDueToday = rem.derivedStatus === 'due_today';
+              const accentColor = getReminderCategoryColor(rem.category, isOverdue, isDueToday, theme);
+              const iconName = getReminderCategoryIcon(rem.category);
+              const remainingAmount = getReminderRemainingAmount(rem);
+              const isPartiallyPaid =
+                Math.max(0, rem.paidAmountCurrentCycle ?? 0) > 0 && (remainingAmount ?? 0) > 0;
 
-      {/* Subscriptions Hub Quick Link */}
-      <Pressable
-        onPress={() => {
-          triggerHaptic();
-          router.push('/subscriptions');
-        }}
-        accessibilityRole="button"
-        style={({ pressed }) => [
-          styles.subHubLinkRow,
-          { backgroundColor: theme.cardMuted },
-          pressed && styles.pressed,
-        ]}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <MaterialCommunityIcons name="repeat" size={16} color={theme.accent} />
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>Subscriptions & Recurring Hub</ThemedText>
-        </View>
-        <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
-      </Pressable>
+              const statusText = isOverdue
+                ? `${Math.abs(rem.daysUntilDue)}d overdue`
+                : isDueToday
+                  ? 'Due today'
+                  : `In ${rem.daysUntilDue}d`;
 
-      {/* Reminders List or Empty State */}
-      {activeReminders.length === 0 ? (
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/bills/add');
-          }}
-          accessibilityRole="button"
-          style={({ pressed }) => [
-            styles.budgetEmpty,
-            { backgroundColor: theme.cardMuted },
-            pressed && styles.pressed,
-          ]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <MaterialCommunityIcons name="plus" size={16} color={theme.accent} />
-            <ThemedText type="smallBold" style={{ color: theme.accent }}>
-              Add your first bill or reminder
-            </ThemedText>
+              return (
+                <Card key={rem.id} style={styles.feedItemCard} padded={false}>
+                  <Pressable
+                    onPress={() => {
+                      triggerHaptic();
+                      router.push({ pathname: '/bills/pay/[id]', params: { id: rem.id } });
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Pay ${rem.title}, ${safeFormat(isPartiallyPaid ? remainingAmount : rem.amount)}`}
+                    style={({ pressed }) => [styles.feedItemRow, pressed && styles.pressed]}>
+                    <View style={[styles.categoryBadge, { backgroundColor: `${accentColor}1C` }]}>
+                      <MaterialCommunityIcons name={iconName} size={20} color={accentColor} />
+                    </View>
+
+                    <View style={styles.feedItemCopy}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <ThemedText type="smallBold" numberOfLines={1} style={{ flexShrink: 1 }}>
+                          {rem.title}
+                        </ThemedText>
+                        {isOverdue && (
+                          <View style={styles.alertPillTag}>
+                            <Text style={styles.alertPillText}>OVERDUE</Text>
+                          </View>
+                        )}
+                      </View>
+                      <ThemedText type="caption" style={{ color: isOverdue ? theme.danger : theme.textSecondary, fontSize: 11 }}>
+                        <Text style={{ fontWeight: '700', color: accentColor }}>{statusText}</Text> · {rem.category}
+                        {isPartiallyPaid ? ' · Part paid' : ''}
+                      </ThemedText>
+                    </View>
+
+                    <View style={styles.feedRightCol}>
+                      <ThemedText type="smallBold" style={[styles.feedAmount, { color: isOverdue ? theme.danger : theme.text }]}>
+                        {safeFormat(isPartiallyPaid ? remainingAmount : rem.amount)}
+                      </ThemedText>
+                      <View style={[styles.payNowBtn, { backgroundColor: `${accentColor}18` }]}>
+                        <MaterialCommunityIcons name="check-circle-outline" size={12} color={accentColor} />
+                        <Text style={[styles.payNowText, { color: accentColor }]}>Pay</Text>
+                      </View>
+                    </View>
+                  </Pressable>
+                </Card>
+              );
+            })}
           </View>
-          <ThemedText type="caption" themeColor="textSecondary">
-            Never miss rent, utility bills, or subscription renewals.
-          </ThemedText>
-        </Pressable>
-      ) : (
-        <View style={styles.billsList}>
-          {upcomingList.map((rem) => {
-            const isOverdue = rem.derivedStatus === 'overdue';
-            const isDueToday = rem.derivedStatus === 'due_today';
-            const color = isOverdue ? theme.danger : isDueToday ? '#BD7119' : theme.accent;
-            const statusText = isOverdue
-              ? `${Math.abs(rem.daysUntilDue)}d overdue`
-              : isDueToday
-                ? 'Due today'
-                : `In ${rem.daysUntilDue}d`;
-            const iconName = getReminderCategoryIcon(rem.category);
-            const remainingAmount = getReminderRemainingAmount(rem);
-            const isPartiallyPaid =
-              Math.max(0, rem.paidAmountCurrentCycle ?? 0) > 0 && (remainingAmount ?? 0) > 0;
-
-            return (
-              <Pressable
-                key={rem.id}
-                onPress={() => {
-                  triggerHaptic();
-                  router.push({ pathname: '/bills/pay/[id]', params: { id: rem.id } });
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={`Pay ${rem.title}`}
-                style={({ pressed }) => [
-                  styles.billWidgetRow,
-                  { backgroundColor: theme.cardMuted },
-                  pressed && styles.pressed,
-                ]}>
-                <View style={[styles.billIconBadge, { backgroundColor: `${color}1E` }]}>
-                  <MaterialCommunityIcons name={iconName} size={18} color={color} />
-                </View>
-                <View style={styles.billWidgetCopy}>
-                  <ThemedText type="smallBold" numberOfLines={1}>
-                    {rem.title}
-                  </ThemedText>
-                  <ThemedText type="caption" style={{ color }}>
-                    {statusText} · {rem.category}{isPartiallyPaid ? ' · Part paid' : ''}
-                  </ThemedText>
-                </View>
-                <View style={styles.billRightAction}>
-                  <ThemedText type="smallBold" style={{ color }}>
-                    {safeFormat(isPartiallyPaid ? remainingAmount : rem.amount)}
-                  </ThemedText>
-                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
-    </Card>
+        )}
+      </View>
+    </View>
   );
 }
 
@@ -1028,50 +1084,244 @@ const styles = StyleSheet.create({
   weekCard: {
     gap: Spacing.three,
   },
-  billsWidgetCard: {
-    gap: Spacing.two,
+  billsWidgetContainer: {
+    gap: Spacing.three,
   },
-  billsKpiBar: {
+  billsHeroCard: {
+    backgroundColor: '#00109D',
+    borderRadius: Radius.xlarge,
+    padding: Spacing.four,
+    position: 'relative',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#00109D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  billsHeroCardAlert: {
+    borderColor: 'rgba(225, 29, 72, 0.45)',
+  },
+  heroOrbLarge: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    right: -70,
+    top: -80,
+    backgroundColor: 'rgba(139, 123, 255, 0.22)',
+  },
+  heroOrbSmall: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    left: -40,
+    bottom: -50,
+    backgroundColor: 'rgba(20, 231, 253, 0.2)',
+  },
+  heroOrbRedAlert: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    right: 10,
+    top: -40,
+    backgroundColor: 'rgba(225, 29, 72, 0.25)',
+  },
+  billsHeroContent: {
+    gap: Spacing.three,
+    zIndex: 2,
+  },
+  billsHeroHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingVertical: Spacing.two,
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  billsHeroTitleGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  billsHeroEyebrow: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  billsHeroHeaderRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  overdueGlassPill: {
+    backgroundColor: 'rgba(225, 29, 72, 0.25)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(225, 29, 72, 0.5)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  overdueGlassText: {
+    color: '#FFD1D1',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  viewAllGlassLink: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+  },
+  viewAllGlassText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  billsHeroMetrics: {
+    gap: Spacing.one,
+  },
+  heroTotalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  heroTotalLabel: {
+    color: 'rgba(255, 255, 255, 0.72)',
+    fontSize: 10.5,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  heroTotalValue: {
+    color: '#FFFFFF',
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: '800',
+    fontVariant: ['tabular-nums'],
+    marginVertical: 2,
+  },
+  nextDueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.medium,
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+  },
+  nextDueText: {
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 12,
+    fontWeight: '600',
+    flexShrink: 1,
+  },
+  subHubGlassBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: Spacing.three,
-    borderRadius: Radius.medium,
+    height: 38,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
-  kpiItem: {
-    alignItems: 'center',
-    gap: 2,
+  subHubGlassText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '700',
   },
-  kpiDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 24,
-  },
-  billsList: {
+  billsFeedSection: {
     gap: Spacing.two,
   },
-  billWidgetRow: {
+  feedHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.two,
-    padding: Spacing.two,
-    borderRadius: Radius.medium,
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
-  billIconBadge: {
-    width: 32,
-    height: 32,
+  feedTitle: {
+    letterSpacing: 0.8,
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  quickAddPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  emptyFeedCard: {
+    padding: Spacing.four,
+  },
+  emptyFeedButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+  },
+  feedList: {
+    gap: Spacing.two,
+  },
+  feedItemCard: {
+    borderRadius: Radius.large,
+    overflow: 'hidden',
+  },
+  feedItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.three,
+  },
+  categoryBadge: {
+    width: 42,
+    height: 42,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  billWidgetCopy: {
+  feedItemCopy: {
     flex: 1,
     gap: 2,
   },
-  billRightAction: {
+  alertPillTag: {
+    backgroundColor: '#E11D481C',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: Radius.small,
+  },
+  alertPillText: {
+    color: '#E11D48',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  feedRightCol: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  feedAmount: {
+    fontSize: 15,
+    fontVariant: ['tabular-nums'],
+  },
+  payNowBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.pill,
+  },
+  payNowText: {
+    fontSize: 11,
+    fontWeight: '800',
   },
   weekTotalBadge: {
     paddingHorizontal: Spacing.three,

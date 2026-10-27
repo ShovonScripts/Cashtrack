@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,7 +29,7 @@ export default function NotesIndexScreen() {
   const [search, setSearch] = useState<string>('');
   const [isGrid, setIsGrid] = useState<boolean>(true);
 
-  const isDark = theme.text === '#ffffff';
+  const isDark = theme.background !== '#ffffff';
 
   const loadNotes = async () => {
     const data = await getNotes();
@@ -50,6 +50,9 @@ export default function NotesIndexScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.container}>
       <View
         style={[
           styles.headerContainer,
@@ -186,11 +189,12 @@ export default function NotesIndexScreen() {
         accessibilityLabel="Add note"
         style={({ pressed }) => [
           styles.fab,
-          { backgroundColor: theme.accentFill, shadowColor: theme.accent },
+          { backgroundColor: theme.accentFill, shadowColor: theme.accent, bottom: Math.max(Spacing.four, insets.bottom + 16) },
           pressed && { transform: [{ scale: 0.93 }] },
         ]}>
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </Pressable>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }

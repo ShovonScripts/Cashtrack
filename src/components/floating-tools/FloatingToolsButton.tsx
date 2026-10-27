@@ -33,8 +33,8 @@ function FloatingToolsButtonInner() {
   const currentWidth = isRunning ? RUNNING_WIDTH : BUTTON_SIZE;
   const currentHeight = BUTTON_SIZE;
 
-  const defaultX = EDGE_GAP;
-  const defaultY = height - insets.bottom - TAB_BAR_CLEARANCE - currentHeight;
+  const defaultX = width > 0 ? width - currentWidth - EDGE_GAP : 280;
+  const defaultY = height > 0 ? height - insets.bottom - TAB_BAR_CLEARANCE - currentHeight : 500;
 
   const translateX = useSharedValue<number>(defaultX);
   const translateY = useSharedValue<number>(defaultY);

@@ -605,7 +605,7 @@ const styles = StyleSheet.create({
   amount: { fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] },
   cardFooter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.two },
   footerInfo: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
-  actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: 6, marginLeft: 'auto', flexShrink: 1, maxWidth: '100%' },
+  actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: 6, flexShrink: 0 },
   payActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.pill },
   skipActionBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: Radius.pill },
   deleteActionBtn: { padding: 4 },

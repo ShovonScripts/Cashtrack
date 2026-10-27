@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { EXPENSE_CATEGORIES, type Expense, type ExpenseCategory, type ExpenseDraft } from '@/types/expense';
 import { getCountry, type CountryCode, type CountryOption } from '@/constants/countries';
@@ -156,12 +156,26 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const resetRegistryRef = useRef(new ResetRegistry());
   const expensesRef = useRef(expenses);
   const preferencesRef = useRef(preferences);
+  const skippedPeriodsRef = useRef<Record<string, ReadonlySet<string>>>({});
   useEffect(() => {
     expensesRef.current = expenses;
   }, [expenses]);
   useEffect(() => {
     preferencesRef.current = preferences;
   }, [preferences]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && hasLoadedRef.current) {
+        const current = expensesRef.current;
+        const processed = processRecurringExpenses(current, skippedPeriodsRef.current);
+        if (processed.length !== current.length) {
+          dispatch({ type: 'HYDRATE', expenses: processed });
+        }
+      }
+    });
+    return () => subscription.remove();
+  }, []);
 
   const registerResetHandler = useCallback((handler: () => Promise<void>) => {
     return resetRegistryRef.current.register(handler);
@@ -209,6 +223,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
       const skippedPeriods = await loadRecurringSkips('expense').catch(() => ({}));
       if (cancelled) return;
+      skippedPeriodsRef.current = skippedPeriods;
 
       expenseLoadFailedRef.current = expenseFailed;
       preferencesLoadFailedRef.current = prefFailed;
@@ -324,7 +339,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       recurringFrequency: draft.recurringFrequency,
       recurringEndDate: draft.recurringEndDate,
     };
-    dispatch({ type: 'ADD_EXPENSE', expense });
+    const current = expensesRef.current;
+    const nextList = [expense, ...current];
+    const processed = processRecurringExpenses(nextList, skippedPeriodsRef.current);
+    dispatch({ type: 'HYDRATE', expenses: processed });
     return expense;
   }, []);
 

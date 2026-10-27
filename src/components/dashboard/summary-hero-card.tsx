@@ -115,7 +115,7 @@ export function SummaryHeroCard({
             style={[styles.heroValue, { color: valueColor }]}
             numberOfLines={1}
             adjustsFontSizeToFit
-            minimumFontScale={0.6}>
+            minimumFontScale={0.5}>
             {formatHeroValue(amount, signed, formatAmount)}
           </ThemedText>
 

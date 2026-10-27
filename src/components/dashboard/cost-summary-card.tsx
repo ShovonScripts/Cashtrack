@@ -60,7 +60,8 @@ export function CostSummaryCard({
             type="hero"
             style={styles.value}
             numberOfLines={1}
-            adjustsFontSizeToFit>
+            adjustsFontSizeToFit
+            minimumFontScale={0.5}>
             {formatAmount(summary.amount)}
           </ThemedText>
 
@@ -183,6 +184,8 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
     fontSize: 12,
+    flexShrink: 1,
+    flex: 1,
   },
   addButtonPlaceholder: {
     height: 36,

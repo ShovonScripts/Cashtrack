@@ -64,14 +64,14 @@ export default function DebtsScreen() {
             <View style={styles.heroSummaryRow}>
               <View style={styles.heroStat}>
                 <ThemedText type="caption" style={styles.heroStatLabel}>YOU ARE OWED</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
+                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
                   {formatAmount(youAreOwed)}
                 </ThemedText>
               </View>
               <View style={styles.heroDivider} />
               <View style={styles.heroStat}>
                 <ThemedText type="caption" style={styles.heroStatLabel}>YOU OWE</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
+                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
                   {formatAmount(youOwe)}
                 </ThemedText>
               </View>

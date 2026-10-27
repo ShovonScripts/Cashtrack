@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, useColorScheme } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useColorScheme, AppState } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppLockGate } from '@/components/app-lock/app-lock-gate';
@@ -60,6 +60,25 @@ function Navigation() {
         console.error('[cashtrack] Failed to update daily reminder notifications', error);
       });
   }, [enableDailyReminder]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        if (enableDailyQuotes) {
+          void scheduleDailyQuoteNotificationsAsync().catch(() => {});
+        }
+        if (enableDailyReminder) {
+          reminderQueueRef.current = reminderQueueRef.current
+            .catch(() => {})
+            .then(async () => {
+              await scheduleDailySpendingReminderNotificationsAsync();
+            })
+            .catch(() => {});
+        }
+      }
+    });
+    return () => subscription.remove();
+  }, [enableDailyQuotes, enableDailyReminder]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -304,7 +323,7 @@ function AppLockHost({ children }: { children: ReactNode }) {
 
 function AppThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useTheme();
-  const isDark = theme.text === '#ffffff';
+  const isDark = theme.background !== '#ffffff';
 
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>

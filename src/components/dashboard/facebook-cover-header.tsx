@@ -416,7 +416,8 @@ export function FacebookCoverHeader({
                     <Text
                       style={[styles.balanceValue, totalBalance < 0 && styles.balanceValueNegative]}
                       numberOfLines={1}
-                      adjustsFontSizeToFit>
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.5}>
                       {formatAmount(totalBalance)}
                     </Text>
 
@@ -430,7 +431,8 @@ export function FacebookCoverHeader({
                         <Text
                           style={styles.panelStatValue}
                           numberOfLines={1}
-                          adjustsFontSizeToFit>
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.5}>
                           {formatAmount(monthlySpent)}
                         </Text>
                       </View>
@@ -442,7 +444,8 @@ export function FacebookCoverHeader({
                         <Text
                           style={styles.panelStatValue}
                           numberOfLines={1}
-                          adjustsFontSizeToFit>
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.5}>
                           {formatAmount(dailyAverage)}
                         </Text>
                       </View>

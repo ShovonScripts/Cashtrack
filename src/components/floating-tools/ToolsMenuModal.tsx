@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
@@ -30,7 +30,10 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
-      <View style={styles.backdrop}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.keyboardView}>
+        <View style={styles.backdrop}>
         <Pressable
           style={styles.backdropPressable}
           onPress={handleClose}
@@ -210,11 +213,15 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
           </View>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.55)',
@@ -277,7 +284,9 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.four,
   },
   toolCard: {
-    width: '47%',
+    flex: 1,
+    minWidth: 125,
+    maxWidth: '48%',
     height: 110,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.large,

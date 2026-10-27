@@ -18,7 +18,7 @@ export default function WeatherScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
 
-  const isDark = theme.text === '#ffffff';
+  const isDark = theme.background !== '#ffffff';
 
   const handleRefresh = async () => {
     setRefreshing(true);

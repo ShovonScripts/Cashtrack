@@ -75,7 +75,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
   const theme = useTheme();
   const compact = variant === 'compact';
   const page = variant === 'page';
-  const isDark = theme.text === '#ffffff';
+  const isDark = theme.background !== '#ffffff';
 
   const { city1Id, city2Id } = useClockPreferences();
   const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);

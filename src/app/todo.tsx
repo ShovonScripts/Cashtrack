@@ -54,7 +54,7 @@ export default function TodoScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <View style={styles.wrapper}>
-          <TodoTool />
+          <TodoTool variant="full" />
         </View>
       </ScrollView>
     </ThemedView>

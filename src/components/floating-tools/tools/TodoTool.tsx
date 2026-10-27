@@ -17,7 +17,7 @@ import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
 
 const PRIORITY_OPTIONS: { key: TodoPriority; label: string; color: string; icon: string }[] = [
   { key: 'high', label: 'High', color: '#E11D48', icon: 'alert-circle-outline' },
-  { key: 'medium', label: 'Medium', color: '#D97706', icon: 'clock-outline' },
+  { key: 'medium', label: 'Medium', color: '#D97706', icon: 'time-outline' },
   { key: 'low', label: 'Low', color: '#0284C7', icon: 'arrow-down-circle-outline' },
 ];
 
@@ -25,7 +25,7 @@ const CATEGORY_OPTIONS: { key: TodoCategory; label: string; icon: string }[] = [
   { key: 'financial', label: 'Financial', icon: 'wallet-outline' },
   { key: 'bills', label: 'Bills', icon: 'flash-outline' },
   { key: 'personal', label: 'Personal', icon: 'person-outline' },
-  { key: 'general', label: 'General', icon: 'checkbox-marked-circle-outline' },
+  { key: 'general', label: 'General', icon: 'checkmark-done-circle-outline' },
 ];
 
 type FilterType = 'all' | 'pending' | 'completed';
@@ -382,6 +382,7 @@ const styles = StyleSheet.create({
   },
   pillsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
   },
   pill: {
@@ -445,6 +446,7 @@ const styles = StyleSheet.create({
   },
   badgeGroup: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     gap: 6,
   },

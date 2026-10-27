@@ -114,7 +114,7 @@ export default function MenuScreen() {
       id: 'todo',
       title: 'To-Do List & Tasks',
       subtitle: 'Task checklist & financial reminders',
-      icon: 'checkbox-marked-circle-outline',
+      icon: 'check-circle-outline',
       color: '#059669',
       route: '/todo',
       badge: 'New',

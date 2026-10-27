@@ -190,6 +190,7 @@ function Navigation() {
         <Stack.Screen name="stopwatch" options={{ headerShown: false }} />
         <Stack.Screen name="currency" options={{ headerShown: false }} />
         <Stack.Screen name="notes" options={{ headerShown: false }} />
+        <Stack.Screen name="todo" options={{ headerShown: false }} />
         <Stack.Screen name="notes-add" options={{ title: 'New Note', presentation: 'modal' }} />
         <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
         <Stack.Screen name="user-manual" options={{ title: 'User Manual' }} />

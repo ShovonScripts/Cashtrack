@@ -19,8 +19,8 @@ pipeline involved in normal use.
 - Expo SDK 57 with Expo Router
 - React Native 0.86 and React 19
 - TypeScript in strict mode
-- AsyncStorage for local persistence
-- expo-sqlite for native database-backed storage
+- AsyncStorage for expenses, preferences, debts, notes and to-dos
+- expo-sqlite for income, goals and bill reminders (AsyncStorage on web)
 - expo-notifications for local reminders
 - expo-print, expo-sharing, and expo-file-system for reports and exports
 

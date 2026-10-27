@@ -4,7 +4,7 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollVie
 
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -50,7 +50,7 @@ type PayBillFormProps = {
 
 function PayBillForm({ reminder, onPay }: PayBillFormProps) {
   const theme = useTheme();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const remainingAmount = getReminderRemainingAmount(reminder);
   const paidThisCycle = Math.max(0, reminder.paidAmountCurrentCycle ?? 0);
   const isFullyCovered = remainingAmount !== null && remainingAmount <= 0;

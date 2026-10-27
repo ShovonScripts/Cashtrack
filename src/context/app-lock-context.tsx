@@ -2,7 +2,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, Keyboard, Platform } from 'react-native';
 
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { saveAppLockFlag } from '@/storage/app-lock-storage';
 import {
   appLockErrorNeedsDeviceSetup,
@@ -34,7 +34,7 @@ const AppLockContext = createContext<AppLockContextValue | undefined>(undefined)
 type AuthenticationOutcome = { success: boolean; reason: string | null };
 
 export function AppLockProvider({ children }: { children: ReactNode }) {
-  const { appLockEnabled, setAppLockEnabled } = useExpenses();
+  const { appLockEnabled, setAppLockEnabled } = usePreferences();
   const native = Platform.OS !== 'web';
   const enabled = appLockEnabled && native;
   const [isLocked, setIsLocked] = useState(appLockEnabled && native);

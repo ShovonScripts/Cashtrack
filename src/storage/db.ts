@@ -18,20 +18,6 @@ export const DATABASE_NAME = 'cashtrack.db';
 const SCHEMA_SQL = `
 PRAGMA journal_mode = WAL;
 
-CREATE TABLE IF NOT EXISTS expenses (
-  id TEXT PRIMARY KEY NOT NULL,
-  amount REAL NOT NULL CHECK (amount > 0),
-  category TEXT NOT NULL,
-  date TEXT NOT NULL,
-  note TEXT NOT NULL DEFAULT ''
-);
-
-CREATE INDEX IF NOT EXISTS idx_expenses_date
-ON expenses (date DESC);
-
-CREATE INDEX IF NOT EXISTS idx_expenses_category
-ON expenses (category);
-
 CREATE TABLE IF NOT EXISTS income_transactions (
   id TEXT PRIMARY KEY NOT NULL,
   amount REAL NOT NULL CHECK (amount > 0),

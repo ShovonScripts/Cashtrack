@@ -15,7 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
@@ -41,7 +41,7 @@ export function SlidingHeroBanner({
   onPressProfile,
 }: SlidingHeroBannerProps) {
   const theme = useTheme();
-  const { temperatureUnit } = useExpenses();
+  const { temperatureUnit } = usePreferences();
   const [activeIndex, setActiveIndex] = useState(0);
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
 

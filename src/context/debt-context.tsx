@@ -14,7 +14,7 @@ import type { DebtRecord, DebtDraft, DebtPayment } from '@/types/debt';
 import { backupUnreadableDebts, loadDebts, saveDebts } from '@/storage/debt-storage';
 import { StorageParseError } from '@/storage/storage-errors';
 import { checkAndTriggerDebtNotifications } from '@/utils/notifications';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
 import { debtReducer } from '@/utils/debt-reducer';
 
@@ -91,7 +91,8 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     setLoadToken((token) => token + 1);
   }, []);
 
-  const { notifiedDebts, updateNotifiedDebts, formatAmount, isLoading: expenseIsLoading, registerResetHandler } = useExpenses();
+  const { isLoading: expenseIsLoading, registerResetHandler } = useExpenses();
+  const { notifiedDebts, updateNotifiedDebts, formatAmount } = usePreferences();
 
   useEffect(() => {
     return registerResetHandler(async () => {

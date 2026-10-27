@@ -11,7 +11,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate, sumAmounts } from '@/utils/expense';
@@ -35,7 +35,8 @@ function isSameDay(a: Date, b: Date): boolean {
 
 export default function DailyReportScreen() {
   const theme = useTheme();
-  const { expenses, categoryIcons, formatAmount } = useExpenses();
+  const { expenses } = useExpenses();
+  const { categoryIcons, formatAmount } = usePreferences();
   const { date: dateParam } = useLocalSearchParams<{ date?: string }>();
   const now = useNow(60_000);
 

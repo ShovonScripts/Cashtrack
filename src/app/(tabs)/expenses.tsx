@@ -10,7 +10,7 @@ import { CategoryChips, type CategoryFilter } from '@/components/category-chips'
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
 import { ThemedText } from '@/components/themed-text';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
@@ -70,7 +70,8 @@ function groupExpensesByDate(expensesList: Expense[], today: Date): ExpenseSecti
 }
 
 export default function ExpensesScreen() {
-  const { expenses, categories, formatAmount } = useExpenses();
+  const { expenses } = useExpenses();
+  const { categories, formatAmount } = usePreferences();
   const theme = useTheme();
   const now = useNow(60_000);
 

@@ -5,7 +5,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategoryColor } from '@/constants/categories';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { Radius, Spacing } from '@/constants/theme';
 import type { Expense } from '@/types/expense';
 import { formatDate } from '@/utils/expense';
@@ -19,7 +19,7 @@ type ExpenseListItemProps = {
 };
 
 export function ExpenseListItem({ expense, onPress, index = 0 }: ExpenseListItemProps) {
-  const { formatAmount, categoryIcons } = useExpenses();
+  const { formatAmount, categoryIcons } = usePreferences();
   const handlePress = () => {
     triggerHaptic();
     if (onPress) {

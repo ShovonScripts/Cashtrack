@@ -5,7 +5,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { getCategoryColor } from '@/constants/categories';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import type { ExpenseCategory } from '@/types/expense';
 
 type ExpenseCategoryGridProps = {
@@ -16,7 +16,7 @@ type ExpenseCategoryGridProps = {
 
 export function ExpenseCategoryGrid({ categories, value, onChange }: ExpenseCategoryGridProps) {
   const theme = useTheme();
-  const { categoryIcons } = useExpenses();
+  const { categoryIcons } = usePreferences();
 
   return (
     <View style={styles.grid}>

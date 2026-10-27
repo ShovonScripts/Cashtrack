@@ -34,7 +34,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { Brand, Radius } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
@@ -69,7 +69,8 @@ export function FacebookCoverHeader({
   const theme = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const { temperatureUnit, formatAmount, firstDayOfWeek, expenses } = useExpenses();
+  const { expenses } = useExpenses();
+  const { temperatureUnit, formatAmount, firstDayOfWeek } = usePreferences();
   const [activeIndex, setActiveIndex] = useState(0);
   const [verticalPage, setVerticalPage] = useState(0);
   const [autoSlideKey, setAutoSlideKey] = useState(0);

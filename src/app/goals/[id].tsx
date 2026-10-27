@@ -9,7 +9,7 @@ import { GoalCompletionModal } from '@/components/goal-completion-modal';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
@@ -33,7 +33,7 @@ export default function GoalDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
   const { goals, addContribution, deleteContribution, deleteGoal, isLoading } = useGoals();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const now = useNow(60_000);
 
   const goal = goals.find((g) => g.id === id);

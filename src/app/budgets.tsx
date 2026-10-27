@@ -8,7 +8,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
@@ -26,7 +26,16 @@ function triggerHaptic() {
 
 export default function BudgetsScreen() {
   const theme = useTheme();
-  const { expenses, categories, categoryLimits, setCategoryLimit, formatAmount, country, categoryIcons, enableBudgetAlerts } = useExpenses();
+  const { expenses } = useExpenses();
+  const {
+    categories,
+    categoryLimits,
+    setCategoryLimit,
+    formatAmount,
+    country,
+    categoryIcons,
+    enableBudgetAlerts,
+  } = usePreferences();
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
   const now = useNow(60_000);

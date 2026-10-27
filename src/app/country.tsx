@@ -6,13 +6,13 @@ import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { COUNTRIES } from '@/constants/countries';
 import { Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import type { CountryOption } from '@/constants/countries';
 
 export default function CountryScreen() {
   const theme = useTheme();
-  const { country, setCountryCode } = useExpenses();
+  const { country, setCountryCode } = usePreferences();
   const [query, setQuery] = useState('');
   const filteredCountries = useMemo(() => {
     const needle = query.trim().toLowerCase();

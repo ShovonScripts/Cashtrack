@@ -25,7 +25,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing, Brand } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
 import { useDebts } from '@/context/debt-context';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useGoals } from '@/context/goal-context';
 import { useIncome } from '@/context/income-context';
@@ -77,8 +77,8 @@ function triggerHaptic() {
 
 export default function ProfileScreen() {
   const theme = useTheme();
+  const { expenses, resetAllData, reloadAllData } = useExpenses();
   const {
-    expenses,
     preferences,
     profile,
     country,
@@ -99,9 +99,7 @@ export default function ProfileScreen() {
     enableDailyQuotes,
     setEnableDailyQuotes,
     appLockEnabled,
-    resetAllData,
-    reloadAllData,
-  } = useExpenses();
+  } = usePreferences();
 
   const { goals, reloadGoals } = useGoals();
   const { debts, reloadDebts } = useDebts();

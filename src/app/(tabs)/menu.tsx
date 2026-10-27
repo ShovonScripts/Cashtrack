@@ -18,7 +18,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Radius, Spacing, Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useGoals } from '@/context/goal-context';
 import { useDebts } from '@/context/debt-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
@@ -43,12 +43,8 @@ type MenuItem = {
 export default function MenuScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const {
-    profile,
-    country,
-    expenses,
-    customCategories,
-  } = useExpenses();
+  const { expenses } = useExpenses();
+  const { profile, country, customCategories } = usePreferences();
   const { goals } = useGoals();
   const { debts } = useDebts();
   const { reminders } = useFinancialReminders();

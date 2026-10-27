@@ -6,7 +6,7 @@ import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDraft } from '@/types/expense';
 import { sumAmounts } from '@/utils/expense';
 
@@ -35,7 +35,8 @@ export function ExpenseForm({
   footerNote,
 }: ExpenseFormProps) {
   const theme = useTheme();
-  const { expenses, categories, categoryLimits, country, formatAmount } = useExpenses();
+  const { expenses } = useExpenses();
+  const { categories, categoryLimits, country, formatAmount } = usePreferences();
 
   const [amountText, setAmountText] = useState(initialValues?.amount === undefined ? '' : String(initialValues.amount));
   const [date, setDate] = useState(() => initialValues?.date ? new Date(initialValues.date) : new Date());

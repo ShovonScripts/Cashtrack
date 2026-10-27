@@ -21,7 +21,7 @@ import {
 import { scheduleReminderNotificationsAsync, cancelReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { calculateNextDueDate } from '@/utils/reminder-recurrence';
 import { applyReminderPayment, getReminderRemainingAmount, hasPartialPayment, isOverpayment } from '@/utils/reminder-payment';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 
 let idCounter = 0;
@@ -64,7 +64,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [remindersLoadError, setRemindersLoadError] = useState(false);
   const [loadToken, setLoadToken] = useState(0);
   const now = useNow(60_000);
-  const { addExpense, deleteExpense, formatAmount, registerResetHandler, enableBillReminders } = useExpenses();
+  const { addExpense, deleteExpense, registerResetHandler } = useExpenses();
+  const { formatAmount, enableBillReminders } = usePreferences();
 
   const enableBillRemindersRef = useRef(enableBillReminders);
   useEffect(() => {

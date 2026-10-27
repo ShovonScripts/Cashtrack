@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/card';
 import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
@@ -13,7 +13,7 @@ import { WeatherWorldClocks } from '@/components/dashboard/WeatherWorldClocks';
 
 export default function WeatherScreen() {
   const theme = useTheme();
-  const { temperatureUnit } = useExpenses();
+  const { temperatureUnit } = usePreferences();
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);

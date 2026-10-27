@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategoryColor } from '@/constants/categories';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { confirmDelete } from '@/utils/confirm';
@@ -35,7 +35,8 @@ function DetailRow({ label, value, wrap = false }: RowProps) {
 
 export default function ExpenseDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getExpense, deleteExpense, formatAmount, categoryIcons } = useExpenses();
+  const { getExpense, deleteExpense } = useExpenses();
+  const { formatAmount, categoryIcons } = usePreferences();
   const theme = useTheme();
 
   const expense = getExpense(id);

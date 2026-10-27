@@ -5,7 +5,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { EXPENSE_CATEGORIES, type ExpenseCategory } from '@/types/expense';
 
 export type CategoryFilter = ExpenseCategory | 'All';
@@ -34,7 +34,7 @@ export function CategoryChips({
   horizontal = showAll,
 }: CategoryChipsProps) {
   const theme = useTheme();
-  const { categoryIcons } = useExpenses();
+  const { categoryIcons } = usePreferences();
   const options: CategoryFilter[] = showAll ? ['All', ...categories] : categories;
 
   const renderChips = () =>

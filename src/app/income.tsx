@@ -9,7 +9,7 @@ import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { DatePicker } from '@/components/date-picker';
 import { useIncome } from '@/context/income-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
@@ -27,7 +27,7 @@ const FREQUENCIES: { label: string; value: RecurringFrequency }[] = [
 export default function IncomeScreen() {
   const theme = useTheme();
   const { incomeList, isLoading, incomeLoadError, reloadIncome, addIncome, updateIncome, deleteIncome } = useIncome();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');

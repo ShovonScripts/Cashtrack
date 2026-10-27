@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 import { triggerHaptic } from '@/utils/motion';
@@ -48,7 +48,7 @@ function getCategoryIcon(category: string): keyof typeof MaterialCommunityIcons.
 export default function SubscriptionsHubScreen() {
   const theme = useTheme();
   const { reminders } = useFinancialReminders();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
 
   // Filter for recurring bills or subscriptions
   const recurringReminders = reminders.filter(

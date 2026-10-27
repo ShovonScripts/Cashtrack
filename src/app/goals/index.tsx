@@ -9,7 +9,7 @@ import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 
 type FilterTab = 'active' | 'completed' | 'all';
@@ -17,7 +17,7 @@ type FilterTab = 'active' | 'completed' | 'all';
 export default function GoalsOverviewScreen() {
   const theme = useTheme();
   const { goals, isLoading, goalLoadError, reloadGoals } = useGoals();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const [tab, setTab] = useState<FilterTab>('active');
 
   const activeGoals = goals.filter((g) => !g.isCompleted);

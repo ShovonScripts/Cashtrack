@@ -8,7 +8,7 @@ import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
@@ -26,7 +26,7 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function BillCalendarScreen() {
   const theme = useTheme();
   const { reminders } = useFinancialReminders();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const { width } = useWindowDimensions();
 
   // Seven 44dp cells plus container/card padding overflow a 360dp screen.

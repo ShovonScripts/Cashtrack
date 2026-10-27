@@ -6,7 +6,7 @@ import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -15,7 +15,7 @@ import { formatDate } from '@/utils/expense';
 export default function BillPaymentHistoryScreen() {
   const theme = useTheme();
   const { payments, reminders, isLoading, remindersLoadError, reloadReminders } = useFinancialReminders();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
 
   const reminderTitles = new Map(reminders.map((reminder) => [reminder.id, reminder.title]));
   const sortedPayments = [...payments].sort((first, second) => second.paidDate.localeCompare(first.paidDate));

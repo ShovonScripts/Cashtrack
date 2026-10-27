@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { SpendlyLogo } from '@/components/spendly-logo';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 
 type OnboardingModalProps = {
@@ -17,7 +17,7 @@ type OnboardingModalProps = {
 
 export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
   const theme = useTheme();
-  const { country } = useExpenses();
+  const { country } = usePreferences();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slides = [

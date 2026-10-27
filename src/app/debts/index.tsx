@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { useDebts } from '@/context/debt-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
@@ -20,7 +20,7 @@ type FilterType = 'Active' | 'All' | 'Settled' | 'Lent' | 'Borrowed';
 export default function DebtsScreen() {
   const theme = useTheme();
   const { debts } = useDebts();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const [filter, setFilter] = useState<FilterType>('Active');
 
   // Summary calculations (open debts, by remaining balance)

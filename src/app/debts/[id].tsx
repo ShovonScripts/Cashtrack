@@ -7,7 +7,7 @@ import { Card, CardDivider } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useDebts } from '@/context/debt-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { withAlpha } from '@/utils/color';
 import { getRemainingBalance, getTotalPaid } from '@/utils/debt';
@@ -39,7 +39,7 @@ function DetailRow({ icon, label, value, wrap = false }: RowProps) {
 export default function DebtDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getDebt, settleDebt, deleteDebt, addDebtPayment, deleteDebtPayment } = useDebts();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const theme = useTheme();
   const debt = getDebt(id);
   const [isSubmitting, setIsSubmitting] = useState(false);

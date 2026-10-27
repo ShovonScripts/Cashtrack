@@ -8,13 +8,12 @@ import { AppLockGate } from '@/components/app-lock/app-lock-gate';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AppLockProvider } from '@/context/app-lock-context';
 import { ThemedText } from '@/components/themed-text';
-import { ExpenseProvider, useExpenses } from '@/context/expense-context';
+import { ExpenseProvider, useExpenses, usePreferences } from '@/context/expense-context';
 import { DebtProvider, useDebts } from '@/context/debt-context';
 import { IncomeProvider } from '@/context/income-context';
 import { GoalProvider } from '@/context/goal-context';
 import { FinancialRemindersProvider } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
-import { runSqliteCrudTest } from '@/storage/sqlite-crud-test';
 import { confirmDelete, notify } from '@/utils/confirm';
 import { cancelQuoteNotificationsAsync, scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
 import {
@@ -31,7 +30,8 @@ SplashScreen.preventAutoHideAsync();
 function Navigation() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLoading, dataLoadError, dataRecovered, resetAllData, enableDailyReminder, enableDailyQuotes } = useExpenses();
+  const { isLoading, dataLoadError, dataRecovered, resetAllData } = useExpenses();
+  const { enableDailyReminder, enableDailyQuotes } = usePreferences();
   const { debtLoadError, debtRecovered } = useDebts();
 
   const reminderQueueRef = useRef<Promise<void>>(Promise.resolve());
@@ -299,15 +299,6 @@ const styles = StyleSheet.create({
   },
 });
 
-function useSqliteCrudTest() {
-  useEffect(() => {
-    if (!__DEV__) {
-      return;
-    }
-    void runSqliteCrudTest();
-  }, []);
-}
-
 function AppLockHost({ children }: { children: ReactNode }) {
   const { isLoading } = useExpenses();
 
@@ -380,8 +371,6 @@ function RootErrorScreen({ error, retry }: ErrorBoundaryProps) {
 }
 
 export default function RootLayout() {
-  useSqliteCrudTest();
-
   return (
     <ExpenseProvider>
       <AppThemeProvider>

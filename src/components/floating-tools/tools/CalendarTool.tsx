@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 
@@ -16,7 +16,7 @@ const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
   const theme = useTheme();
   const { reminders } = useFinancialReminders();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const year = currentDate.getFullYear();

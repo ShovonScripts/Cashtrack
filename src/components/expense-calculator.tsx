@@ -6,7 +6,7 @@ import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDraft, type RecurringFrequency } from '@/types/expense';
 import { sumAmounts } from '@/utils/expense';
 import { evaluateExpression } from '@/utils/expression';
@@ -38,7 +38,8 @@ export function ExpenseCalculator({
   footerNote,
 }: ExpenseCalculatorProps) {
   const theme = useTheme();
-  const { expenses, categories, categoryLimits, country, formatAmount } = useExpenses();
+  const { expenses } = useExpenses();
+  const { categories, categoryLimits, country, formatAmount } = usePreferences();
 
   const [expression, setExpression] = useState<string>(
     initialValues?.amount !== undefined ? String(initialValues.amount) : '0'

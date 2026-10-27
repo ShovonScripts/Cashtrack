@@ -8,7 +8,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
@@ -26,7 +26,8 @@ function triggerHaptic() {
 
 export default function AdvisorScreen() {
   const theme = useTheme();
-  const { expenses, categoryLimits, categories, categoryIcons, formatAmount } = useExpenses();
+  const { expenses } = useExpenses();
+  const { categoryLimits, categories, categoryIcons, formatAmount } = usePreferences();
   const { incomeList } = useIncome();
   const now = useNow(60_000);
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(now);

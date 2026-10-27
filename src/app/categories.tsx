@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { Card, CardDivider } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { CategoryIcon } from '@/components/category-icon';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { getCategoryColor, ICON_PACK } from '@/constants/categories';
 import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -21,7 +21,16 @@ function triggerHaptic() {
 
 export default function CategoriesScreen() {
   const theme = useTheme();
-  const { expenses, categories, customCategories, categoryIcons, addCategory, renameCategory, deleteCategory, moveCategory } = useExpenses();
+  const { expenses } = useExpenses();
+  const {
+    categories,
+    customCategories,
+    categoryIcons,
+    addCategory,
+    renameCategory,
+    deleteCategory,
+    moveCategory,
+  } = usePreferences();
   const [newName, setNewName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('tag.fill');
   const [editing, setEditing] = useState<string | null>(null);

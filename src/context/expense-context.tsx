@@ -85,11 +85,27 @@ function createId(): string {
 
 export type DeleteCategoryResult = 'deleted' | 'in-use' | 'not-custom';
 
+/**
+ * Expense data and lifecycle only. Kept separate from preferences so changing a
+ * setting (theme, currency, reminder toggle) does not re-render every screen that
+ * merely reads the expense ledger.
+ */
 type ExpenseContextValue = {
   expenses: Expense[];
   isLoading: boolean;
   dataLoadError: boolean;
   dataRecovered: boolean;
+  registerResetHandler: (handler: () => Promise<void>) => () => void;
+  addExpense: (draft: ExpenseDraft) => Expense;
+  updateExpense: (id: string, changes: ExpenseDraft) => void;
+  deleteExpense: (id: string) => Promise<void>;
+  getExpense: (id: string) => Expense | undefined;
+  resetAllData: () => Promise<void>;
+  reloadAllData: () => void;
+};
+
+/** User preferences, profile, categories and settings. */
+type PreferencesContextValue = {
   preferences: UserPreferences;
   profile: UserProfile;
   country: CountryOption;
@@ -100,11 +116,6 @@ type ExpenseContextValue = {
   categoryIcons: Record<string, string>;
   notifiedDebts: Record<string, string>;
   updateNotifiedDebts: (updater: (current: Record<string, string>) => Record<string, string>) => void;
-  registerResetHandler: (handler: () => Promise<void>) => () => void;
-  addExpense: (draft: ExpenseDraft) => Expense;
-  updateExpense: (id: string, changes: ExpenseDraft) => void;
-  deleteExpense: (id: string) => Promise<void>;
-  getExpense: (id: string) => Expense | undefined;
   updateProfile: (profile: UserProfile) => Promise<boolean>;
   setCountryCode: (countryCode: CountryCode) => void;
   addCategory: (name: string, icon?: string) => boolean;
@@ -132,11 +143,10 @@ type ExpenseContextValue = {
   setEnableDailyQuotes: (enabled: boolean) => void;
   appLockEnabled: boolean;
   setAppLockEnabled: (enabled: boolean) => void;
-  resetAllData: () => Promise<void>;
-  reloadAllData: () => void;
 };
 
 export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
+export const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
 
 export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [expenses, dispatch] = useReducer(expenseReducer, []);
@@ -170,6 +180,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         const current = expensesRef.current;
         const processed = processRecurringExpenses(current, skippedPeriodsRef.current);
         if (processed.length !== current.length) {
+          expensesRef.current = processed;
           dispatch({ type: 'HYDRATE', expenses: processed });
         }
       }
@@ -262,6 +273,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
         });
       }
 
+      expensesRef.current = initialExpenses;
+      preferencesRef.current = initialPreferences;
       dispatch({ type: 'HYDRATE', expenses: initialExpenses });
       setPreferences(initialPreferences);
       lastSavedExpensesRef.current = JSON.stringify(savedExpenses ?? []);
@@ -342,11 +355,17 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     const current = expensesRef.current;
     const nextList = [expense, ...current];
     const processed = processRecurringExpenses(nextList, skippedPeriodsRef.current);
+    // Keep the ref in sync immediately so two adds in one tick cannot clobber
+    // each other before the render effect runs.
+    expensesRef.current = processed;
     dispatch({ type: 'HYDRATE', expenses: processed });
     return expense;
   }, []);
 
   const updateExpense = useCallback((id: string, changes: ExpenseDraft) => {
+    expensesRef.current = expensesRef.current.map((expense) => (
+      expense.id === id ? mergeExpenseChanges(expense, changes) : expense
+    ));
     dispatch({ type: 'UPDATE_EXPENSE', id, changes });
   }, []);
 
@@ -372,6 +391,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       (expense) => expense.id === id || expense.recurringParentId === id
     );
 
+    expensesRef.current = current.filter(
+      (expense) => expense.id !== id && expense.recurringParentId !== id
+    );
     dispatch({ type: 'DELETE_EXPENSE', id });
 
     for (const expense of removed) {
@@ -444,6 +466,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     if (!to || from === to || categories.some((category) => category.toLowerCase() === to.toLowerCase())) return false;
     if (!preferences.customCategories.includes(from)) return false;
 
+    expensesRef.current = expensesRef.current.map((expense) => (
+      expense.category === from ? { ...expense, category: to } : expense
+    ));
     dispatch({ type: 'RENAME_CATEGORY', from, to });
     setPreferences((current) => {
       const nextLimits = { ...current.categoryLimits };
@@ -594,6 +619,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setDataLoadError(false);
     setDataRecovered(false);
 
+    expensesRef.current = [];
+    preferencesRef.current = DEFAULT_PREFERENCES;
     dispatch({ type: 'HYDRATE', expenses: [] });
     setPreferences(DEFAULT_PREFERENCES);
     lastSavedExpensesRef.current = JSON.stringify([]);
@@ -620,11 +647,33 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
   const themeMode = preferences.themeMode ?? 'system';
 
-  const value = useMemo(() => ({
+  const expenseValue = useMemo<ExpenseContextValue>(() => ({
     expenses,
     isLoading,
     dataLoadError,
     dataRecovered,
+    registerResetHandler,
+    addExpense,
+    updateExpense,
+    deleteExpense,
+    getExpense,
+    resetAllData,
+    reloadAllData,
+  }), [
+    expenses,
+    isLoading,
+    dataLoadError,
+    dataRecovered,
+    registerResetHandler,
+    addExpense,
+    updateExpense,
+    deleteExpense,
+    getExpense,
+    resetAllData,
+    reloadAllData,
+  ]);
+
+  const preferencesValue = useMemo<PreferencesContextValue>(() => ({
     preferences,
     profile: preferences.profile,
     country,
@@ -635,7 +684,14 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     categoryIcons: preferences.categoryIcons,
     notifiedDebts: preferences.notifiedDebts || {},
     updateNotifiedDebts,
-    registerResetHandler,
+    updateProfile,
+    setCountryCode,
+    addCategory,
+    renameCategory,
+    deleteCategory,
+    moveCategory,
+    setCategoryLimit,
+    setCategoryIcon,
     hasCompletedOnboarding: preferences.hasCompletedOnboarding ?? false,
     setHasCompletedOnboarding,
     themeMode,
@@ -655,35 +711,14 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableDailyQuotes,
     appLockEnabled: preferences.appLockEnabled ?? false,
     setAppLockEnabled,
-    resetAllData,
-    reloadAllData,
-    addExpense,
-    updateExpense,
-    deleteExpense,
-    getExpense,
-    updateProfile,
-    setCountryCode,
-    addCategory,
-    renameCategory,
-    deleteCategory,
-    moveCategory,
-    setCategoryLimit,
-    setCategoryIcon,
   }), [
-    expenses,
-    isLoading,
-    dataLoadError,
-    dataRecovered,
     preferences,
-    categories,
-    addExpense,
-    updateExpense,
-    deleteExpense,
-    getExpense,
-    updateProfile,
-    setCountryCode,
     country,
     formatAmount,
+    categories,
+    updateNotifiedDebts,
+    updateProfile,
+    setCountryCode,
     addCategory,
     renameCategory,
     deleteCategory,
@@ -701,15 +736,13 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableDailyReminder,
     setEnableDailyQuotes,
     setAppLockEnabled,
-    resetAllData,
-    reloadAllData,
-    updateNotifiedDebts,
-    registerResetHandler,
   ]);
 
   return (
-    <ExpenseContext.Provider value={value}>
-      <ThemeModeContext.Provider value={themeMode}>{children}</ThemeModeContext.Provider>
+    <ExpenseContext.Provider value={expenseValue}>
+      <PreferencesContext.Provider value={preferencesValue}>
+        <ThemeModeContext.Provider value={themeMode}>{children}</ThemeModeContext.Provider>
+      </PreferencesContext.Provider>
     </ExpenseContext.Provider>
   );
 }
@@ -717,5 +750,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 export function useExpenses(): ExpenseContextValue {
   const context = useContext(ExpenseContext);
   if (!context) throw new Error('useExpenses must be used inside an <ExpenseProvider>');
+  return context;
+}
+
+export function usePreferences(): PreferencesContextValue {
+  const context = useContext(PreferencesContext);
+  if (!context) throw new Error('usePreferences must be used inside an <ExpenseProvider>');
   return context;
 }

@@ -12,7 +12,7 @@ import { SummaryHeroCard } from '@/components/dashboard/summary-hero-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useDebts } from '@/context/debt-context';
 import { useIncome } from '@/context/income-context';
 import { useGoals } from '@/context/goal-context';
@@ -541,7 +541,16 @@ function InsightLine({ insight, formatAmount }: { insight: BudgetInsight; format
 }
 
 export default function DashboardScreen() {
-  const { expenses, profile, categoryLimits, formatAmount, categoryIcons, firstDayOfWeek, hasCompletedOnboarding, setHasCompletedOnboarding, isLoading } = useExpenses();
+  const { expenses, isLoading } = useExpenses();
+  const {
+    profile,
+    categoryLimits,
+    formatAmount,
+    categoryIcons,
+    firstDayOfWeek,
+    hasCompletedOnboarding,
+    setHasCompletedOnboarding,
+  } = usePreferences();
   const { incomeList } = useIncome();
   const theme = useTheme();
   const now = useNow(60_000);

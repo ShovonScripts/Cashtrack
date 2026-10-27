@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/empty-state';
 import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
-import { useExpenses } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { getReminderRemainingAmount, hasPartialPayment } from '@/utils/reminder-payment';
 import { Brand, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -52,7 +52,7 @@ export default function BillsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { reminders, payments, isLoading, remindersLoadError, reloadReminders } = useFinancialReminders();
-  const { formatAmount } = useExpenses();
+  const { formatAmount } = usePreferences();
   const [tab, setTab] = useState<FilterTab>('all');
 
   const now = new Date();

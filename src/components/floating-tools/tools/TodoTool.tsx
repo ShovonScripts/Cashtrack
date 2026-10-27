@@ -99,15 +99,19 @@ export function TodoTool() {
 
   return (
     <View style={styles.container}>
-      {/* Progress & Header Bar */}
+      {/* Progress & Header Card */}
       <View style={[styles.progressCard, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <View style={styles.progressHeader}>
           <View style={styles.progressTextGroup}>
-            <ThemedText type="smallBold">Task Completion</ThemedText>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Ionicons name="checkbox-outline" size={16} color={theme.accent} />
+              <ThemedText type="smallBold">Task Overview</ThemedText>
+            </View>
             <ThemedText type="caption" themeColor="textSecondary">
               {completedCount} of {todos.length} completed ({progressPercent}%)
             </ThemedText>
           </View>
+
           {completedCount > 0 && (
             <Pressable
               onPress={handleClearDone}
@@ -133,111 +137,105 @@ export function TodoTool() {
         </View>
       </View>
 
-      {/* Task Creation Input Card */}
+      {/* Compact Task Creation Card */}
       <View style={[styles.createCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <TextInput
-          value={title}
-          onChangeText={setTitle}
-          placeholder="Add a new task or checklist item..."
-          placeholderTextColor={theme.textSecondary}
-          accessibilityLabel="Task title"
-          style={[styles.input, { color: theme.text, backgroundColor: theme.cardMuted, borderColor: theme.border }]}
-        />
-
-        {/* Options Row: Priority & Category Selectors */}
-        <View style={styles.optionsRow}>
-          {/* Priorities */}
-          <View style={styles.optionGroup}>
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.optionLabel}>PRIORITY</ThemedText>
-            <View style={styles.pillsRow}>
-              {PRIORITY_OPTIONS.map((p) => {
-                const selected = priority === p.key;
-                return (
-                  <Pressable
-                    key={p.key}
-                    onPress={() => setPriority(p.key)}
-                    accessibilityRole="button"
-                    style={[
-                      styles.pill,
-                      {
-                        backgroundColor: selected ? `${p.color}22` : theme.cardMuted,
-                        borderColor: selected ? p.color : theme.border,
-                      },
-                    ]}>
-                    <Ionicons name={p.icon as any} size={12} color={selected ? p.color : theme.textSecondary} />
-                    <ThemedText type="caption" style={{ color: selected ? p.color : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
-                      {p.label}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Categories */}
-          <View style={styles.optionGroup}>
-            <ThemedText type="caption" themeColor="textSecondary" style={styles.optionLabel}>CATEGORY</ThemedText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
-              {CATEGORY_OPTIONS.map((c) => {
-                const selected = category === c.key;
-                return (
-                  <Pressable
-                    key={c.key}
-                    onPress={() => setCategory(c.key)}
-                    accessibilityRole="button"
-                    style={[
-                      styles.pill,
-                      {
-                        backgroundColor: selected ? theme.accentFill : theme.cardMuted,
-                        borderColor: selected ? theme.accentFill : theme.border,
-                      },
-                    ]}>
-                    <Ionicons name={c.icon as any} size={12} color={selected ? '#FFFFFF' : theme.textSecondary} />
-                    <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
-                      {c.label}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
+        <View style={styles.inputRow}>
+          <TextInput
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Add a task or checklist item..."
+            placeholderTextColor={theme.textSecondary}
+            accessibilityLabel="Task title"
+            returnKeyType="done"
+            onSubmitEditing={handleAddTodo}
+            style={[styles.input, { color: theme.text, backgroundColor: theme.cardMuted, borderColor: theme.border }]}
+          />
+          <Pressable
+            onPress={handleAddTodo}
+            disabled={!title.trim()}
+            accessibilityRole="button"
+            accessibilityLabel="Add task"
+            style={({ pressed }) => [
+              styles.addBtn,
+              { backgroundColor: title.trim() ? theme.accentFill : theme.border },
+              pressed && styles.pressed,
+            ]}>
+            <Ionicons name="add" size={20} color={title.trim() ? '#FFFFFF' : theme.textSecondary} />
+          </Pressable>
         </View>
 
-        <Pressable
-          onPress={handleAddTodo}
-          disabled={!title.trim()}
-          accessibilityRole="button"
-          accessibilityLabel="Add task"
-          style={({ pressed }) => [
-            styles.addBtn,
-            { backgroundColor: title.trim() ? theme.accentFill : theme.border },
-            pressed && styles.pressed,
-          ]}>
-          <Ionicons name="add" size={18} color={title.trim() ? '#FFFFFF' : theme.textSecondary} />
-          <ThemedText type="defaultBold" style={{ color: title.trim() ? '#FFFFFF' : theme.textSecondary, fontSize: 13 }}>
-            Add Task
-          </ThemedText>
-        </Pressable>
+        {/* Priorities & Categories in 1 Horizontal Scroll Row */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillsRow}>
+          {PRIORITY_OPTIONS.map((p) => {
+            const selected = priority === p.key;
+            return (
+              <Pressable
+                key={p.key}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setPriority(p.key);
+                }}
+                accessibilityRole="button"
+                style={[
+                  styles.pill,
+                  {
+                    backgroundColor: selected ? `${p.color}22` : theme.cardMuted,
+                    borderColor: selected ? p.color : theme.border,
+                  },
+                ]}>
+                <Ionicons name={p.icon as any} size={12} color={selected ? p.color : theme.textSecondary} />
+                <ThemedText type="caption" style={{ color: selected ? p.color : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                  {p.label}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+          <View style={[styles.chipDivider, { backgroundColor: theme.border }]} />
+          {CATEGORY_OPTIONS.map((c) => {
+            const selected = category === c.key;
+            return (
+              <Pressable
+                key={c.key}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setCategory(c.key);
+                }}
+                accessibilityRole="button"
+                style={[
+                  styles.pill,
+                  {
+                    backgroundColor: selected ? theme.accentFill : theme.cardMuted,
+                    borderColor: selected ? theme.accentFill : theme.border,
+                  },
+                ]}>
+                <Ionicons name={c.icon as any} size={12} color={selected ? '#FFFFFF' : theme.textSecondary} />
+                <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                  {c.label}
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* Filter Tabs */}
-      <View style={styles.filterRow}>
+      {/* Segmented Filter Control */}
+      <View style={[styles.filterBar, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         {(['all', 'pending', 'completed'] as FilterType[]).map((f) => {
           const selected = filter === f;
           const count = f === 'all' ? todos.length : f === 'pending' ? pendingCount : completedCount;
           return (
             <Pressable
               key={f}
-              onPress={() => setFilter(f)}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setFilter(f);
+              }}
               accessibilityRole="button"
               style={[
                 styles.filterTab,
-                {
-                  backgroundColor: selected ? theme.card : 'transparent',
-                  borderColor: selected ? theme.border : 'transparent',
-                },
+                selected && { backgroundColor: theme.card, borderColor: theme.border, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 2, elevation: 1 },
               ]}>
-              <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '800', textTransform: 'uppercase' }}>
+              <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '800', textTransform: 'uppercase', fontSize: 10 }}>
                 {f} ({count})
               </ThemedText>
             </Pressable>
@@ -248,12 +246,12 @@ export function TodoTool() {
       {/* List Feed */}
       {filteredTodos.length === 0 ? (
         <View style={[styles.emptyBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-          <Ionicons name="checkmark-done-circle-outline" size={36} color={theme.accent} />
+          <Ionicons name="checkmark-done-circle-outline" size={38} color={theme.accent} />
           <ThemedText type="smallBold" style={{ color: theme.text }}>
             {todos.length === 0 ? 'No tasks yet' : 'No items match filter'}
           </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary" style={{ textAlign: 'center' }}>
-            {todos.length === 0 ? 'Add financial reminders or personal checklist items above.' : 'Switch filter to view other tasks.'}
+            {todos.length === 0 ? 'Add financial reminders or personal checklist items above.' : 'Switch filter tab to view other tasks.'}
           </ThemedText>
         </View>
       ) : (
@@ -270,7 +268,7 @@ export function TodoTool() {
                   {
                     backgroundColor: item.completed ? theme.cardMuted : theme.card,
                     borderColor: theme.border,
-                    opacity: item.completed ? 0.75 : 1,
+                    opacity: item.completed ? 0.72 : 1,
                   },
                 ]}>
                 <Pressable
@@ -280,7 +278,7 @@ export function TodoTool() {
                   hitSlop={8}
                   style={styles.checkBtn}>
                   <Ionicons
-                    name={item.completed ? 'checkbox' : 'square-outline'}
+                    name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
                     size={22}
                     color={item.completed ? theme.success : theme.textSecondary}
                   />
@@ -357,33 +355,40 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   createCard: {
-    padding: Spacing.three,
+    padding: Spacing.two,
     borderRadius: Radius.large,
     borderWidth: StyleSheet.hairlineWidth,
     gap: Spacing.two,
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
   input: {
-    minHeight: 44,
+    flex: 1,
+    minHeight: 42,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,
-    fontSize: 14,
+    fontSize: 13.5,
   },
-  optionsRow: {
-    gap: Spacing.two,
-  },
-  optionGroup: {
-    gap: 4,
-  },
-  optionLabel: {
-    fontSize: 9.5,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+  addBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   pillsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: 6,
+  },
+  chipDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 20,
+    marginHorizontal: 2,
   },
   pill: {
     flexDirection: 'row',
@@ -394,25 +399,19 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  addBtn: {
-    height: 42,
-    borderRadius: Radius.medium,
+  filterBar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 2,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    gap: 4,
-    padding: 2,
+    padding: 3,
+    borderRadius: Radius.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    gap: 2,
   },
   filterTab: {
     flex: 1,
     height: 32,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },

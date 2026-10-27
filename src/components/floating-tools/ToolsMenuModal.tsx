@@ -235,9 +235,9 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.two,
-    paddingBottom: 72,
-    maxHeight: '95%',
-    minHeight: 560,
+    paddingBottom: Spacing.three,
+    maxHeight: '90%',
+    minHeight: 500,
     gap: Spacing.three,
   },
   dragHandleBar: {
@@ -307,6 +307,6 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   toolScrollContent: {
-    paddingBottom: Spacing.four,
+    paddingBottom: 64,
   },
 });

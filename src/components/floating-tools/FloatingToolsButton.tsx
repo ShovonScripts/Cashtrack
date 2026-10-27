@@ -5,7 +5,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, usePathname } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
@@ -93,6 +93,29 @@ function FloatingToolsButtonInner() {
       setModalVisible(true);
     }
   };
+
+  const pathname = usePathname();
+  const hideButton = !isRunning && (
+    pathname === '/todo' ||
+    pathname === '/calculator' ||
+    pathname === '/currency' ||
+    pathname === '/stopwatch' ||
+    pathname === '/world-clock' ||
+    pathname.startsWith('/notes') ||
+    pathname === '/app-lock'
+  );
+
+  if (hideButton) {
+    return (
+      <ToolsMenuModal
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          setIsInteracting(false);
+        }}
+      />
+    );
+  }
 
   return (
     <>

@@ -6,7 +6,6 @@ import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Card } from '@/components/card';
 import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { TodoTool } from '@/components/floating-tools/tools/TodoTool';
@@ -50,14 +49,12 @@ export default function TodoScreen() {
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
-          { paddingBottom: 140 + insets.bottom, paddingHorizontal: Spacing.three },
+          { paddingBottom: 120 + insets.bottom, paddingHorizontal: Spacing.three },
         ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled">
         <View style={styles.wrapper}>
-          <Card style={styles.cardContainer}>
-            <TodoTool />
-          </Card>
+          <TodoTool />
         </View>
       </ScrollView>
     </ThemedView>

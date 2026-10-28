@@ -396,59 +396,64 @@ export function FacebookCoverHeader({
                   </TouchableOpacity>
 
                   <View style={styles.balancePanel}>
-                    <View style={styles.panelTopRow}>
-                      <View style={styles.panelLabelGroup}>
-                        <View style={styles.panelDot} />
-                        <Text style={styles.balanceEyebrow}>TOTAL BALANCE</Text>
+                    <View style={styles.splitRow}>
+                      {/* Left Column: Total Balance */}
+                      <View style={styles.leftColumn}>
+                        <View style={styles.panelTopRow}>
+                          <View style={styles.panelLabelGroup}>
+                            <View style={styles.panelDot} />
+                            <Text style={styles.balanceEyebrow}>TOTAL BALANCE</Text>
+                          </View>
+                        </View>
+
+                        <Text
+                          style={[styles.balanceValue, totalBalance < 0 && styles.balanceValueNegative]}
+                          numberOfLines={1}
+                          adjustsFontSizeToFit
+                          minimumFontScale={0.5}>
+                          {formatAmount(totalBalance)}
+                        </Text>
+
+                        {showTrend && (
+                          <View style={[styles.trendPill, { backgroundColor: trendBackground, marginTop: 4, alignSelf: 'flex-start' }]}>
+                            <Text
+                              style={[styles.trendText, { color: trendColor }]}
+                              numberOfLines={1}>
+                              Spent {spendWentUp ? '+' : '−'}
+                              {spendDiffPercent}% vs {lastMonthLabel}
+                            </Text>
+                          </View>
+                        )}
                       </View>
 
-                      {showTrend && (
-                        <View style={[styles.trendPill, { backgroundColor: trendBackground }]}>
+                      {/* Vertical Divider */}
+                      <View style={styles.splitDivider} />
+
+                      {/* Right Column: Two smaller stacked boxes for Spent and Avg */}
+                      <View style={styles.rightColumn}>
+                        <View style={styles.subStatBox}>
+                          <Text style={styles.panelStatLabel} numberOfLines={1}>
+                            SPENT ({progress.monthShortLabel.toUpperCase()})
+                          </Text>
                           <Text
-                            style={[styles.trendText, { color: trendColor }]}
-                            numberOfLines={1}>
-                            Spent {spendWentUp ? '+' : '−'}
-                            {spendDiffPercent}% vs {lastMonthLabel}
+                            style={styles.panelStatValue}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.5}>
+                            {formatAmount(monthlySpent)}
                           </Text>
                         </View>
-                      )}
-                    </View>
 
-                    <Text
-                      style={[styles.balanceValue, totalBalance < 0 && styles.balanceValueNegative]}
-                      numberOfLines={1}
-                      adjustsFontSizeToFit
-                      minimumFontScale={0.5}>
-                      {formatAmount(totalBalance)}
-                    </Text>
-
-                    <View style={styles.panelDivider} />
-
-                    <View style={styles.panelStatsRow}>
-                      <View style={styles.panelStat}>
-                        <Text style={styles.panelStatLabel} numberOfLines={1}>
-                          SPENT IN {progress.monthShortLabel.toUpperCase()}
-                        </Text>
-                        <Text
-                          style={styles.panelStatValue}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.5}>
-                          {formatAmount(monthlySpent)}
-                        </Text>
-                      </View>
-
-                      <View style={styles.panelStatDivider} />
-
-                      <View style={styles.panelStat}>
-                        <Text style={styles.panelStatLabel} numberOfLines={1}>AVG / DAY</Text>
-                        <Text
-                          style={styles.panelStatValue}
-                          numberOfLines={1}
-                          adjustsFontSizeToFit
-                          minimumFontScale={0.5}>
-                          {formatAmount(dailyAverage)}
-                        </Text>
+                        <View style={styles.subStatBox}>
+                          <Text style={styles.panelStatLabel} numberOfLines={1}>AVG / DAY</Text>
+                          <Text
+                            style={styles.panelStatValue}
+                            numberOfLines={1}
+                            adjustsFontSizeToFit
+                            minimumFontScale={0.5}>
+                            {formatAmount(dailyAverage)}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
@@ -780,19 +785,40 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.22)',
   },
   balancePanel: {
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 8,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: 'rgba(6,10,24,0.5)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.2)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.22,
-    shadowRadius: 16,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 4,
     overflow: 'hidden',
+  },
+  splitRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  leftColumn: {
+    flex: 1.1,
+    gap: 1,
+  },
+  rightColumn: {
+    flex: 0.9,
+    gap: 4,
+  },
+  splitDivider: {
+    width: StyleSheet.hairlineWidth,
+    height: 48,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+  },
+  subStatBox: {
+    backgroundColor: 'transparent',
+    gap: 0,
   },
   panelTopRow: {
     flexDirection: 'row',
@@ -803,56 +829,51 @@ const styles = StyleSheet.create({
   panelLabelGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
     flexShrink: 0,
   },
   panelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
     backgroundColor: '#14E7FD',
   },
   balanceEyebrow: {
     color: 'rgba(255,255,255,0.68)',
-    fontSize: 10.5,
+    fontSize: 9.5,
     fontWeight: '800',
-    letterSpacing: 1.3,
+    letterSpacing: 1.1,
   },
   trendPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: Radius.pill,
     flexShrink: 1,
     minWidth: 0,
   },
   trendText: {
-    fontSize: 11,
+    fontSize: 9.5,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     flexShrink: 1,
   },
   balanceValue: {
     color: '#FFFFFF',
-    fontSize: 38,
-    lineHeight: 42,
+    fontSize: 26,
+    lineHeight: 30,
     fontWeight: '800',
     letterSpacing: -0.8,
     fontVariant: ['tabular-nums'],
-    marginTop: 2,
+    marginTop: 1,
     textShadowColor: 'rgba(0,0,0,0.35)',
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    textShadowRadius: 4,
   },
   balanceValueNegative: {
     color: '#FFB4B4',
-  },
-  panelDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.14)',
-    marginVertical: 6,
   },
   panelStatsRow: {
     flexDirection: 'row',
@@ -865,21 +886,16 @@ const styles = StyleSheet.create({
   },
   panelStatLabel: {
     color: 'rgba(255,255,255,0.62)',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
   },
   panelStatValue: {
     color: '#FFFFFF',
-    fontSize: 15,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 16,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
-  },
-  panelStatDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 26,
-    backgroundColor: 'rgba(255,255,255,0.14)',
   },
   verticalToggleWrap: {
     position: 'absolute',

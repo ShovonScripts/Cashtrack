@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { CostCategoryChart } from '@/components/dashboard/cost-category-chart';
@@ -62,11 +62,32 @@ export function CostSummaryCarousel({
     }
   };
 
-  const goToIndex = (index: number) => {
+  const goToIndex = useCallback((index: number) => {
     setActiveIndex(index);
     triggerHaptic();
     scrollRef.current?.scrollTo({ x: snapInterval * index, y: 0, animated: true });
+  }, [snapInterval]);
+
+  const autoReturnTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const clearAutoReturnTimer = () => {
+    if (autoReturnTimerRef.current) {
+      clearTimeout(autoReturnTimerRef.current);
+      autoReturnTimerRef.current = null;
+    }
   };
+
+  useEffect(() => {
+    clearAutoReturnTimer();
+    if (activeIndex !== DAILY_INDEX) {
+      autoReturnTimerRef.current = setTimeout(() => {
+        goToIndex(DAILY_INDEX);
+      }, 30000); // 30 seconds
+    }
+    return () => {
+      clearAutoReturnTimer();
+    };
+  }, [activeIndex, goToIndex]);
 
   const activeSummary = summaries[activeIndex] ?? summaries[0];
 

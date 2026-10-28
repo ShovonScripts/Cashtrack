@@ -167,7 +167,7 @@ export function FacebookCoverHeader({
   // Auto slide every 10 seconds between the horizontal slides only.
   // It pauses while the year progress page is open so the panel is not yanked away.
   useEffect(() => {
-    if (verticalPage === 1) return;
+    if (verticalPage === 1 || reducedMotion) return;
     const timer = setInterval(() => {
       const nextIndex = (activeIndex + 1) % 3;
       programmaticSlideRef.current = nextIndex;
@@ -179,7 +179,7 @@ export function FacebookCoverHeader({
     }, 10000);
 
     return () => clearInterval(timer);
-  }, [activeIndex, autoSlideKey, screenWidth, verticalPage]);
+  }, [activeIndex, autoSlideKey, screenWidth, verticalPage, reducedMotion]);
 
   useEffect(() => {
     async function loadWeather() {

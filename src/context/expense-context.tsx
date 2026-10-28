@@ -37,6 +37,8 @@ import {
   type CategoryMoveDirection,
 } from '@/utils/category-order';
 import { ResetRegistry } from '../utils/reset-registry.ts';
+import { clearRestoreJournal } from '@/storage/restore-journal';
+import { clearStoresInSafeOrder } from '@/utils/reset-stores';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -95,6 +97,8 @@ type ExpenseContextValue = {
   isLoading: boolean;
   dataLoadError: boolean;
   dataRecovered: boolean;
+  saveError: boolean;
+  retrySave: () => void;
   registerResetHandler: (handler: () => Promise<void>) => () => void;
   addExpense: (draft: ExpenseDraft) => Expense;
   updateExpense: (id: string, changes: ExpenseDraft) => void;
@@ -154,6 +158,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoadError, setDataLoadError] = useState(false);
   const [dataRecovered, setDataRecovered] = useState(false);
+  const [expensesSaveError, setExpensesSaveError] = useState(false);
+  const [preferencesSaveError, setPreferencesSaveError] = useState(false);
+  const [saveRetryToken, setSaveRetryToken] = useState(0);
   const [loadToken, setLoadToken] = useState(0);
 
   const expenseLoadFailedRef = useRef(false);
@@ -194,6 +201,11 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
 
   const reloadAllData = useCallback(() => {
     setLoadToken((token) => token + 1);
+  }, []);
+
+  /** Re-attempt any writes that failed while the app stayed open. */
+  const retrySave = useCallback(() => {
+    setSaveRetryToken((token) => token + 1);
   }, []);
 
   useEffect(() => {
@@ -280,6 +292,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       lastSavedExpensesRef.current = JSON.stringify(savedExpenses ?? []);
       lastSavedPreferencesRef.current = JSON.stringify(savedPreferences ?? DEFAULT_PREFERENCES);
       hasLoadedRef.current = true;
+      setExpensesSaveError(false);
+      setPreferencesSaveError(false);
       setIsLoading(false);
     }
 
@@ -291,25 +305,31 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     if (!hasLoadedRef.current) return;
     const currentJson = JSON.stringify(expenses);
     if (shouldSave({ hasLoaded: hasLoadedRef.current, loadFailed: expenseLoadFailedRef.current, currentJson, lastSavedJson: lastSavedExpensesRef.current })) {
-      void expenseSaveQueue.current.enqueue(() => saveExpenses(expenses)).then((success) => {
-        if (success) {
+      void expenseSaveQueue.current.enqueueDetailed(() => saveExpenses(expenses)).then((outcome) => {
+        if (outcome === 'saved') {
           lastSavedExpensesRef.current = currentJson;
+          setExpensesSaveError(false);
+        } else if (outcome === 'failed') {
+          setExpensesSaveError(true);
         }
       });
     }
-  }, [expenses]);
+  }, [expenses, saveRetryToken]);
 
   useEffect(() => {
     if (!hasLoadedRef.current) return;
     const currentJson = JSON.stringify(preferences);
     if (shouldSave({ hasLoaded: hasLoadedRef.current, loadFailed: preferencesLoadFailedRef.current, currentJson, lastSavedJson: lastSavedPreferencesRef.current })) {
-      void preferencesSaveQueue.current.enqueue(() => savePreferences(preferences)).then((success) => {
-        if (success) {
+      void preferencesSaveQueue.current.enqueueDetailed(() => savePreferences(preferences)).then((outcome) => {
+        if (outcome === 'saved') {
           lastSavedPreferencesRef.current = currentJson;
+          setPreferencesSaveError(false);
+        } else if (outcome === 'failed') {
+          setPreferencesSaveError(true);
         }
       });
     }
-  }, [preferences]);
+  }, [preferences, saveRetryToken]);
 
   useEffect(() => {
     if (
@@ -423,6 +443,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     if (!success) {
       lastSavedPreferencesRef.current = previousJson;
     }
+    setPreferencesSaveError(!success);
     return success;
   }, []);
 
@@ -588,19 +609,21 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       preferencesRef.current.profile.profilePhotoUri,
     ].filter((uri): uri is string => Boolean(uri));
 
-    // b. Clear every store first. Writing empty expenses/preferences earlier
-    // would destroy data even if a later clear failed.
-    await clearRelationalData();
-    await clearAuxiliaryData();
+    // a. Drop the pending-restore journal, let providers finish in-flight
+    // writes and reset their memory, then clear every store. Writing empty
+    // expenses/preferences earlier would destroy data even if a clear fails.
+    await clearStoresInSafeOrder({
+      clearRestoreJournal,
+      resetProviders: () => resetRegistryRef.current.runAll(),
+      clearRelationalData,
+      clearAuxiliaryData,
+    });
 
     try {
       await clearRecurringSkips();
     } catch (error) {
       console.error('[cashtrack] Failed to clear recurring skips during reset', error);
     }
-
-    // c. Await registry.runAll()
-    await resetRegistryRef.current.runAll();
 
     // d. Persist the empty state only after all clears succeed.
     const expRes = await expenseSaveQueue.current.enqueue(() => saveExpenses([]));
@@ -618,6 +641,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     preferencesLoadFailedRef.current = false;
     setDataLoadError(false);
     setDataRecovered(false);
+    setExpensesSaveError(false);
+    setPreferencesSaveError(false);
 
     expensesRef.current = [];
     preferencesRef.current = DEFAULT_PREFERENCES;
@@ -652,6 +677,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     isLoading,
     dataLoadError,
     dataRecovered,
+    saveError: expensesSaveError || preferencesSaveError,
+    retrySave,
     registerResetHandler,
     addExpense,
     updateExpense,
@@ -664,6 +691,9 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     isLoading,
     dataLoadError,
     dataRecovered,
+    expensesSaveError,
+    preferencesSaveError,
+    retrySave,
     registerResetHandler,
     addExpense,
     updateExpense,

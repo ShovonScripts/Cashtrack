@@ -14,8 +14,8 @@ import { loadExpenses, saveExpenses, STORAGE_KEY as EXPENSES_STORAGE_KEY } from 
 import { getAllPayments, getAllReminders } from '@/storage/financial-reminders-repository';
 import { getAllContributions, getAllGoals } from '@/storage/goal-repository';
 import { getAllIncome } from '@/storage/income-repository';
-import { getNotes, NOTES_STORAGE_KEY, replaceNotes } from '@/storage/notes-storage';
-import { getTodos, replaceTodos, TODOS_STORAGE_KEY } from '@/storage/todo-storage';
+import { getNotesStrict, NOTES_STORAGE_KEY, replaceNotes } from '@/storage/notes-storage';
+import { getTodosStrict, replaceTodos, TODOS_STORAGE_KEY } from '@/storage/todo-storage';
 import { loadPreferences, PREFERENCES_STORAGE_KEY, savePreferences } from '@/storage/preferences-storage';
 import {
   loadRecurringSkips,
@@ -29,9 +29,11 @@ import { deleteLocalFile } from '@/utils/local-file';
 import { cancelAllReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { applyRestoreWithRollback, RestoreRollbackError } from '@/utils/restore-rollback';
 import { runWithSaveQueueLock } from '@/utils/save-queue';
+import { clearRestoreJournal, readRestoreJournal, writeRestoreJournal } from '@/storage/restore-journal';
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
+  MAX_BACKUP_ATTACHMENTS,
   MAX_EMBEDDED_ATTACHMENT_CHARS,
   listAttachmentUris,
   parseBackup,
@@ -124,9 +126,16 @@ async function collectAttachments(
   }
 
   let embeddedChars = 0;
+  let included = 0;
   let omitted = 0;
 
   for (const uri of uris) {
+    // Keep export within the same ceiling the importer enforces, otherwise a
+    // large library would produce a backup that can never be restored.
+    if (included >= MAX_BACKUP_ATTACHMENTS) {
+      omitted += 1;
+      continue;
+    }
     try {
       if (!uri.startsWith('file://')) {
         omitted += 1;
@@ -144,6 +153,7 @@ async function collectAttachments(
       }
       attachments[uri] = { mimeType: mimeTypeForUri(uri), data: base64 };
       embeddedChars += base64.length;
+      included += 1;
     } catch (error) {
       console.warn('[cashtrack] Skipping an attachment that could not be read', error);
       omitted += 1;
@@ -189,8 +199,8 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
   ] = await Promise.all([
     snapshot.expenses === undefined ? loadExpenses() : Promise.resolve(null),
     snapshot.preferences === undefined ? loadPreferences() : Promise.resolve(null),
-    getNotes(),
-    getTodos(),
+    getNotesStrict(),
+    getTodosStrict(),
     snapshot.debts === undefined ? loadDebts() : Promise.resolve(null),
     getAllIncome(),
     getAllGoals(),
@@ -340,6 +350,17 @@ async function restorePreviousSnapshot(snapshot: RestoreSnapshot): Promise<void>
   }
 }
 
+async function applyRestoreData(data: BackupData): Promise<void> {
+  await replaceRelationalData(data);
+  await saveExpenses(data.expenses);
+  await savePreferences(data.preferences);
+  await saveDebts(data.debts);
+  await replaceNotes(data.notes);
+  await replaceTodos(data.todos ?? []);
+  await replaceRecurringSkips(data.recurringSkips);
+  await saveAppLockFlag(data.preferences.appLockEnabled === true);
+}
+
 /**
  * Replaces every local collection with the contents of a backup file. The file
  * is fully validated before any existing data is removed.
@@ -357,18 +378,18 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
     const data = remapAttachmentUris(parsed.data, mapping);
 
     try {
+      // Persist the intent first so a crash mid-restore can be completed on the
+      // next launch instead of leaving SQLite and AsyncStorage out of sync.
+      await writeRestoreJournal(data);
+    } catch (error) {
+      await Promise.all(createdUris.map((uri) => deleteLocalFile(uri)));
+      throw error;
+    }
+
+    try {
       await applyRestoreWithRollback(
         snapshot,
-        async () => {
-          await replaceRelationalData(data);
-          await saveExpenses(data.expenses);
-          await savePreferences(data.preferences);
-          await saveDebts(data.debts);
-          await replaceNotes(data.notes);
-          await replaceTodos(data.todos ?? []);
-          await replaceRecurringSkips(data.recurringSkips);
-          await saveAppLockFlag(data.preferences.appLockEnabled === true);
-        },
+        () => applyRestoreData(data),
         async (previous) => {
           await restorePreviousSnapshot(previous);
           await Promise.all(createdUris.map((uri) => deleteLocalFile(uri)));
@@ -377,9 +398,14 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
     } catch (error) {
       if (error instanceof RestoreRollbackError) {
         console.error('[cashtrack] Restore failed and rollback was incomplete', error.originalError, error.rollbackError);
+        // Keep the journal: the next launch replays the restore forward.
+      } else {
+        await clearRestoreJournal();
       }
       throw error;
     }
+
+    await clearRestoreJournal();
 
     // Old reminders are gone, so their scheduled notifications must not fire.
     // The reminders provider reschedules the restored active bills afterwards.
@@ -400,6 +426,26 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
       },
     };
   });
+}
+
+/**
+ * Replays an interrupted restore. Called before the providers mount so the
+ * first read sees a consistent data set. Safe to run repeatedly: every
+ * collection is replaced wholesale.
+ */
+export async function recoverPendingRestore(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+
+  const data = await readRestoreJournal();
+  if (!data) return false;
+
+  await runWithSaveQueueLock(async () => {
+    await applyRestoreData(data);
+    await clearRestoreJournal();
+  });
+
+  await cancelAllReminderNotificationsAsync();
+  return true;
 }
 
 /** Opens the system picker and returns the selected backup's text, or null when canceled. */

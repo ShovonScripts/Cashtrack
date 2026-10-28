@@ -555,13 +555,13 @@ export default function DashboardScreen() {
   const theme = useTheme();
   const now = useNow(60_000);
   const monthSpend = totalForMonth(expenses, now);
-  const recent = sortByDateDesc(expenses).slice(0, RECENT_LIMIT);
 
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('All');
   const availableCategories = ['All', ...new Set(expenses.map((e) => e.category))];
-  const filteredRecent = (selectedFilterCategory === 'All'
-    ? recent
-    : expenses.filter((e) => e.category === selectedFilterCategory)
+  const filteredRecent = sortByDateDesc(
+    selectedFilterCategory === 'All'
+      ? expenses
+      : expenses.filter((e) => e.category === selectedFilterCategory)
   ).slice(0, RECENT_LIMIT);
 
   const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);

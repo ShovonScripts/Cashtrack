@@ -210,11 +210,13 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       if (currentAvailability === 'unsupported') {
         return persistEnabled(false);
       }
+      // Turning the lock off must always prove identity. If the device check
+      // itself failed or was cancelled, keep the lock on (fail closed). Users
+      // whose device security was removed can still unlock via the recovery
+      // action on the lock screen.
       const result = await runAuthentication('Turn off App Lock');
       if (!result.success) {
-        if (currentAvailability === 'available') {
-          return { ok: false, reason: result.reason ?? 'Authentication was cancelled.' };
-        }
+        return { ok: false, reason: result.reason ?? 'Authentication was cancelled.' };
       }
       return persistEnabled(false);
     }

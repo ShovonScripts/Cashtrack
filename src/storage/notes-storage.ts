@@ -20,6 +20,14 @@ export async function getNotes(): Promise<Note[]> {
   }
 }
 
+/**
+ * Strict read for backups: a corrupt payload throws instead of looking like an
+ * empty list, so a backup can never silently omit every note.
+ */
+export async function getNotesStrict(): Promise<Note[]> {
+  return readJsonArray(AsyncStorage, NOTES_STORAGE_KEY, 'notes', noteRows);
+}
+
 export async function saveNote(note: Note): Promise<void> {
   await mutateJsonArray(AsyncStorage, NOTES_STORAGE_KEY, 'notes', noteRows, (notes) => {
     const index = notes.findIndex((n) => n.id === note.id);

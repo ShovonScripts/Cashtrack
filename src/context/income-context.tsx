@@ -29,6 +29,7 @@ import { applyIncomeUpdate, constrainIncomeEdit } from '@/utils/income';
 import { getRecurringPeriodKey } from '@/utils/recurring';
 import { processRecurringIncome } from '@/utils/recurring-income';
 import { loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
+import { SerialQueue } from '@/utils/serial-queue';
 import { useExpenses } from '@/context/expense-context';
 
 type IncomeContextValue = {
@@ -70,7 +71,19 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
   const [loadToken, setLoadToken] = useState(0);
   const incomeListRef = useRef<IncomeRecord[]>([]);
   const skippedRef = useRef<Record<string, Set<string>>>({});
+  const mutationQueueRef = useRef(new SerialQueue());
   const { registerResetHandler } = useExpenses();
+
+  /** Runs income mutations one at a time so overlapping writes cannot clobber each other. */
+  const runMutation = useCallback(
+    <T,>(task: () => Promise<T>): Promise<T> => mutationQueueRef.current.run(task),
+    [],
+  );
+
+  const commitIncomeList = useCallback((next: IncomeRecord[]) => {
+    incomeListRef.current = next;
+    setIncomeList(next);
+  }, []);
 
   useEffect(() => {
     incomeListRef.current = incomeList;
@@ -78,10 +91,13 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return registerResetHandler(async () => {
-      skippedRef.current = {};
-      setIncomeList([]);
+      // Wait for in-flight writes so none can repopulate the cleared store.
+      await runMutation(async () => {
+        skippedRef.current = {};
+        commitIncomeList([]);
+      });
     });
-  }, [registerResetHandler]);
+  }, [registerResetHandler, runMutation, commitIncomeList]);
 
   const persistGeneratedIncome = useCallback(
     async (processed: IncomeRecord[], knownIds: Set<string>): Promise<IncomeRecord[]> => {
@@ -125,7 +141,7 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
+    void runMutation(async () => {
       try {
         const rows = await getAllIncome();
         const skipped = await loadRecurringSkips('income').catch(() => ({}));
@@ -135,7 +151,7 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
         const inserted = await persistGeneratedIncome(processed, new Set(rows.map((row) => row.id)));
         await allocateIncomeBatch(inserted);
         if (!cancelled) {
-          setIncomeList(processed);
+          commitIncomeList(processed);
           setIncomeLoadError(false);
         }
       } catch (error) {
@@ -146,19 +162,18 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
           setIsLoading(false);
         }
       }
-    }
-    void load();
+    });
     return () => {
       cancelled = true;
     };
-  }, [persistGeneratedIncome, allocateIncomeBatch, loadToken]);
+  }, [persistGeneratedIncome, allocateIncomeBatch, loadToken, runMutation, commitIncomeList]);
 
   const reloadIncome = useCallback(() => {
     setIsLoading(true);
     setLoadToken((token) => token + 1);
   }, []);
 
-  const addIncome = useCallback(async (draft: IncomeDraft): Promise<IncomeRecord> => {
+  const addIncome = useCallback((draft: IncomeDraft): Promise<IncomeRecord> => runMutation(async () => {
     const record: IncomeRecord = {
       id: createIncomeId(),
       amount: draft.amount,
@@ -180,11 +195,11 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
     // Auto-allocate savings to percentage-based goals/pots.
     await allocateIncomeBatch([record, ...inserted]);
 
-    setIncomeList(next);
+    commitIncomeList(next);
     return record;
-  }, [persistGeneratedIncome, allocateIncomeBatch]);
+  }), [runMutation, commitIncomeList, persistGeneratedIncome, allocateIncomeBatch]);
 
-  const updateIncome = useCallback(async (id: string, changes: IncomeDraft) => {
+  const updateIncome = useCallback((id: string, changes: IncomeDraft) => runMutation(async () => {
     const current = incomeListRef.current;
     const existing = current.find((item) => item.id === id);
     if (!existing) {
@@ -216,10 +231,10 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
       await allocateIncomeBatch([updated, ...inserted]);
     }
 
-    setIncomeList(next);
-  }, [persistGeneratedIncome, allocateIncomeBatch]);
+    commitIncomeList(next);
+  }), [runMutation, commitIncomeList, persistGeneratedIncome, allocateIncomeBatch]);
 
-  const deleteIncome = useCallback(async (id: string) => {
+  const deleteIncome = useCallback((id: string) => runMutation(async () => {
     const current = incomeListRef.current;
     const target = current.find((item) => item.id === id);
     const parent = target?.recurringParentId
@@ -252,8 +267,8 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
       console.error('[cashtrack] Failed to remove auto-allocations for deleted income', error);
     }
 
-    setIncomeList((list) => list.filter((item) => item.id !== id && item.recurringParentId !== id));
-  }, []);
+    commitIncomeList(current.filter((item) => item.id !== id && item.recurringParentId !== id));
+  }), [runMutation, commitIncomeList]);
 
   const getIncome = useCallback(
     (id: string) => incomeList.find((item) => item.id === id),

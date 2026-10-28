@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, type ErrorBoundaryProps } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, useColorScheme, AppState } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pressable, StyleSheet, Text, View, useColorScheme, AppState, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AppLockGate } from '@/components/app-lock/app-lock-gate';
@@ -10,12 +10,13 @@ import { AppLockProvider } from '@/context/app-lock-context';
 import { ThemedText } from '@/components/themed-text';
 import { ExpenseProvider, useExpenses, usePreferences } from '@/context/expense-context';
 import { DebtProvider, useDebts } from '@/context/debt-context';
-import { IncomeProvider } from '@/context/income-context';
-import { GoalProvider } from '@/context/goal-context';
-import { FinancialRemindersProvider } from '@/context/financial-reminders-context';
+import { IncomeProvider, useIncome } from '@/context/income-context';
+import { GoalProvider, useGoals } from '@/context/goal-context';
+import { FinancialRemindersProvider, useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { confirmDelete, notify } from '@/utils/confirm';
 import { cancelQuoteNotificationsAsync, scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
+import { recoverPendingRestore } from '@/storage/backup-service';
 import {
   cancelSpendingReminderNotificationsAsync,
   scheduleDailySpendingReminderNotificationsAsync,
@@ -30,9 +31,18 @@ SplashScreen.preventAutoHideAsync();
 function Navigation() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLoading, dataLoadError, dataRecovered, resetAllData } = useExpenses();
+  const { isLoading, dataLoadError, dataRecovered, resetAllData, saveError, retrySave } = useExpenses();
   const { enableDailyReminder, enableDailyQuotes } = usePreferences();
-  const { debtLoadError, debtRecovered } = useDebts();
+  const {
+    isLoading: debtLoading,
+    debtLoadError,
+    debtRecovered,
+    saveError: debtSaveError,
+    retrySave: retryDebtSave,
+  } = useDebts();
+  const { isLoading: incomeLoading } = useIncome();
+  const { isLoading: goalsLoading } = useGoals();
+  const { isLoading: remindersLoading } = useFinancialReminders();
 
   const reminderQueueRef = useRef<Promise<void>>(Promise.resolve());
 
@@ -80,7 +90,9 @@ function Navigation() {
     return () => subscription.remove();
   }, [enableDailyQuotes, enableDailyReminder]);
 
-  if (isLoading) {
+  // Hold the navigator until every store has hydrated, so the dashboard never
+  // flashes zero balances before income/goals/bills arrive.
+  if (isLoading || debtLoading || incomeLoading || goalsLoading || remindersLoading) {
     return <LoadingScreen />;
   }
 
@@ -155,6 +167,34 @@ function Navigation() {
           )}
         </View>
       )}
+      {!showLoadErrorBanner && (saveError || debtSaveError) && (
+        <View
+          style={{
+            backgroundColor: theme.dangerFill,
+            paddingTop: insets.top + 8,
+            paddingBottom: 12,
+            paddingHorizontal: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            zIndex: 999,
+          }}>
+          <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
+            Changes could not be saved to this device. Keep the app open and retry.
+          </ThemedText>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Retry saving changes"
+            onPress={() => {
+              retrySave();
+              retryDebtSave();
+            }}
+            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+            <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Retry</ThemedText>
+          </Pressable>
+        </View>
+      )}
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: theme.background },
@@ -178,6 +218,9 @@ function Navigation() {
         <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />
         <Stack.Screen name="bills/edit/[id]" options={{ title: 'Edit Bill', presentation: 'modal' }} />
         <Stack.Screen name="bills/history" options={{ title: 'Bill Payment History' }} />
+        <Stack.Screen name="bills/calendar" options={{ title: 'Bills Calendar' }} />
+        <Stack.Screen name="subscriptions" options={{ title: 'Subscriptions' }} />
+        <Stack.Screen name="daily-report" options={{ title: 'Daily Report' }} />
         <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
         <Stack.Screen name="app-lock" options={{ title: 'App Lock' }} />
         <Stack.Screen name="country" options={{ title: 'Country & currency' }} />
@@ -370,25 +413,54 @@ function RootErrorScreen({ error, retry }: ErrorBoundaryProps) {
   );
 }
 
+/**
+ * Finishes a restore that was interrupted by a crash/force-quit before the
+ * providers read any data. Runs before the app tree mounts, so the first read
+ * sees either the old data or the fully restored data, never a mix.
+ */
+function RestoreRecoveryGate({ children }: { children: ReactNode }) {
+  const [ready, setReady] = useState(Platform.OS === 'web');
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let cancelled = false;
+    recoverPendingRestore()
+      .catch((error) => {
+        console.error('[cashtrack] Failed to finish a pending backup restore', error);
+      })
+      .finally(() => {
+        if (!cancelled) setReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!ready) return null;
+  return <>{children}</>;
+}
+
 export default function RootLayout() {
   return (
-    <ExpenseProvider>
-      <AppThemeProvider>
-        <DebtProvider>
-          <IncomeProvider>
-            <GoalProvider>
-              <FinancialRemindersProvider>
-                <StopwatchProvider>
-                  <AnimatedSplashOverlay />
-                  <AppLockHost>
-                    <Navigation />
-                  </AppLockHost>
-                </StopwatchProvider>
-              </FinancialRemindersProvider>
-            </GoalProvider>
-          </IncomeProvider>
-        </DebtProvider>
-      </AppThemeProvider>
-    </ExpenseProvider>
+    <RestoreRecoveryGate>
+      <ExpenseProvider>
+        <AppThemeProvider>
+          <DebtProvider>
+            <IncomeProvider>
+              <GoalProvider>
+                <FinancialRemindersProvider>
+                  <StopwatchProvider>
+                    <AnimatedSplashOverlay />
+                    <AppLockHost>
+                      <Navigation />
+                    </AppLockHost>
+                  </StopwatchProvider>
+                </FinancialRemindersProvider>
+              </GoalProvider>
+            </IncomeProvider>
+          </DebtProvider>
+        </AppThemeProvider>
+      </ExpenseProvider>
+    </RestoreRecoveryGate>
   );
 }

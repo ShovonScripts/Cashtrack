@@ -25,7 +25,7 @@ export const BACKUP_VERSION = 1;
 
 /** Base64-character ceiling shared by export and import. */
 export const MAX_EMBEDDED_ATTACHMENT_CHARS = 40 * 1024 * 1024;
-const MAX_BACKUP_ATTACHMENTS = 100;
+export const MAX_BACKUP_ATTACHMENTS = 100;
 
 export type BackupAttachment = {
   mimeType: string;

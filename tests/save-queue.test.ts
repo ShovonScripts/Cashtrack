@@ -35,6 +35,24 @@ test('SaveQueue executes saves serially in order and returns boolean success sta
   assert.deepEqual(order, [2]);
 });
 
+test('SaveQueue distinguishes saved, failed and intentionally skipped writes', async () => {
+  const queue = new SaveQueue();
+
+  assert.equal(
+    await queue.enqueueDetailed(async () => {
+      throw new Error('fail');
+    }),
+    'failed',
+  );
+  assert.equal(await queue.enqueueDetailed(async () => {}), 'saved');
+
+  await runWithSaveQueueLock(async () => {
+    assert.equal(await queue.enqueueDetailed(async () => {}), 'skipped');
+  });
+
+  assert.equal(await queue.enqueueDetailed(async () => {}), 'saved');
+});
+
 test('SaveQueue serial execution order with async delay', async () => {
   const queue = new SaveQueue();
   const order: number[] = [];

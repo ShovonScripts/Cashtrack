@@ -2,6 +2,13 @@ const activeQueues = new Set<SaveQueue>();
 let lockDepth = 0;
 let lockGeneration = 0;
 
+/**
+ * - `saved`: the write reached storage.
+ * - `skipped`: a restore/queue lock intentionally discarded the stale write.
+ * - `failed`: storage rejected the write.
+ */
+export type SaveOutcome = 'saved' | 'skipped' | 'failed';
+
 export class SaveQueue {
   private queue: Promise<void> = Promise.resolve();
 
@@ -9,23 +16,32 @@ export class SaveQueue {
     activeQueues.add(this);
   }
 
-  async enqueue(saveFn: () => Promise<void>): Promise<boolean> {
-    let success = false;
+  /**
+   * Runs a save and reports why it did or did not reach storage, so callers can
+   * distinguish an intentional skip (during a restore) from a real failure.
+   */
+  async enqueueDetailed(saveFn: () => Promise<void>): Promise<SaveOutcome> {
+    let outcome: SaveOutcome = 'skipped';
     const generation = lockGeneration;
     this.queue = this.queue.then(async () => {
       if (lockDepth > 0 || generation !== lockGeneration) {
+        outcome = 'skipped';
         return;
       }
       try {
         await saveFn();
-        success = true;
+        outcome = 'saved';
       } catch (err) {
         console.error('[cashtrack] Save queue error', err);
-        success = false;
+        outcome = 'failed';
       }
     });
     await this.queue;
-    return success;
+    return outcome;
+  }
+
+  async enqueue(saveFn: () => Promise<void>): Promise<boolean> {
+    return (await this.enqueueDetailed(saveFn)) === 'saved';
   }
 
   async whenIdle(): Promise<void> {

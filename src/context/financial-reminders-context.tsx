@@ -63,6 +63,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
   const [isLoading, setIsLoading] = useState(true);
   const [remindersLoadError, setRemindersLoadError] = useState(false);
   const [loadToken, setLoadToken] = useState(0);
+  const paymentInFlightRef = useRef<Set<string>>(new Set());
   const now = useNow(60_000);
   const { addExpense, deleteExpense, registerResetHandler } = useExpenses();
   const { formatAmount, enableBillReminders } = usePreferences();
@@ -285,50 +286,59 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       throw new Error(`Payment cannot exceed the remaining balance of ${formatAmount(remainingAmount ?? 0)}.`);
     }
 
+    // A fast double tap can start two payments before either one updates
+    // `rawReminders`, duplicating the payment row and its expense.
+    if (paymentInFlightRef.current.has(id)) return;
+    paymentInFlightRef.current.add(id);
+
     let expenseId: string | null = null;
-    if (recordAsExpense) {
-      const exp = addExpense({
-        amount: paidAmount,
-        category: target.category === 'EMI' ? 'EMI' : target.category === 'Rent' ? 'Housing' : 'Bills',
-        date: paidDate,
-        note: note?.trim() || `Payment for ${target.title}`,
-      });
-      expenseId = exp.id;
-    }
-
-    const payment: ReminderPaymentRecord = {
-      id: createPaymentId(),
-      reminderId: id,
-      amount: paidAmount,
-      paidDate,
-      expenseId,
-      notes: note?.trim() ?? '',
-      createdAt: new Date().toISOString(),
-    };
-
-    const { reminder: updated } = applyReminderPayment(target, paidAmount);
-
     try {
-      await markPaymentAndReminderRepo(payment, updated);
-    } catch (error) {
-      // The expense is persisted on its own, so roll it back when the payment
-      // row cannot be written. Otherwise the ledger would record money leaving
-      // without advancing the bill.
-      if (expenseId) {
-        try {
-          await deleteExpense(expenseId);
-        } catch (rollbackError) {
-          console.error('[cashtrack] Failed to roll back expense after payment error', rollbackError);
-        }
+      if (recordAsExpense) {
+        const exp = addExpense({
+          amount: paidAmount,
+          category: target.category === 'EMI' ? 'EMI' : target.category === 'Rent' ? 'Housing' : 'Bills',
+          date: paidDate,
+          note: note?.trim() || `Payment for ${target.title}`,
+        });
+        expenseId = exp.id;
       }
-      throw error;
-    }
 
-    setPayments((current) => [payment, ...current]);
-    setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
-    void cancelReminderNotificationsAsync(id);
-    if (updated.status === 'upcoming' && enableBillReminders) {
-      void scheduleReminderNotificationsAsync(updated, safeFormat);
+      const payment: ReminderPaymentRecord = {
+        id: createPaymentId(),
+        reminderId: id,
+        amount: paidAmount,
+        paidDate,
+        expenseId,
+        notes: note?.trim() ?? '',
+        createdAt: new Date().toISOString(),
+      };
+
+      const { reminder: updated } = applyReminderPayment(target, paidAmount);
+
+      try {
+        await markPaymentAndReminderRepo(payment, updated);
+      } catch (error) {
+        // The expense is persisted on its own, so roll it back when the payment
+        // row cannot be written. Otherwise the ledger would record money leaving
+        // without advancing the bill.
+        if (expenseId) {
+          try {
+            await deleteExpense(expenseId);
+          } catch (rollbackError) {
+            console.error('[cashtrack] Failed to roll back expense after payment error', rollbackError);
+          }
+        }
+        throw error;
+      }
+
+      setPayments((current) => [payment, ...current]);
+      setRawReminders((current) => current.map((r) => (r.id === id ? updated : r)));
+      void cancelReminderNotificationsAsync(id);
+      if (updated.status === 'upcoming' && enableBillReminders) {
+        void scheduleReminderNotificationsAsync(updated, safeFormat);
+      }
+    } finally {
+      paymentInFlightRef.current.delete(id);
     }
   }, [rawReminders, addExpense, deleteExpense, safeFormat, enableBillReminders, formatAmount]);
 

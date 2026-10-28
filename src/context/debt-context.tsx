@@ -30,6 +30,8 @@ type DebtContextValue = {
   isLoading: boolean;
   debtLoadError: boolean;
   debtRecovered: boolean;
+  saveError: boolean;
+  retrySave: () => void;
   addDebt: (draft: DebtDraft) => DebtRecord;
   updateDebt: (id: string, changes: DebtDraft) => void;
   deleteDebt: (id: string) => void;
@@ -47,6 +49,8 @@ export function DebtProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [debtLoadError, setDebtLoadError] = useState(false);
   const [debtRecovered, setDebtRecovered] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [saveRetryToken, setSaveRetryToken] = useState(0);
   const [loadToken, setLoadToken] = useState(0);
   const loadFailedRef = useRef(false);
   const hasLoadedRef = useRef(false);
@@ -78,6 +82,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'HYDRATE', debts: initialDebts });
       lastSavedDebtsRef.current = JSON.stringify(savedDebts ?? []);
       hasLoadedRef.current = true;
+      setSaveError(false);
       setIsLoading(false);
     }
 
@@ -89,6 +94,10 @@ export function DebtProvider({ children }: { children: ReactNode }) {
 
   const reloadDebts = useCallback(() => {
     setLoadToken((token) => token + 1);
+  }, []);
+
+  const retrySave = useCallback(() => {
+    setSaveRetryToken((token) => token + 1);
   }, []);
 
   const { isLoading: expenseIsLoading, registerResetHandler } = useExpenses();
@@ -110,13 +119,16 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     if (!hasLoadedRef.current) return;
     const currentJson = JSON.stringify(debts);
     if (shouldSave({ hasLoaded: hasLoadedRef.current, loadFailed: loadFailedRef.current, currentJson, lastSavedJson: lastSavedDebtsRef.current })) {
-      void saveQueueRef.current.enqueue(() => saveDebts(debts)).then((success) => {
-        if (success) {
+      void saveQueueRef.current.enqueueDetailed(() => saveDebts(debts)).then((outcome) => {
+        if (outcome === 'saved') {
           lastSavedDebtsRef.current = currentJson;
+          setSaveError(false);
+        } else if (outcome === 'failed') {
+          setSaveError(true);
         }
       });
     }
-  }, [debts]);
+  }, [debts, saveRetryToken]);
 
   useEffect(() => {
     if (hasLoadedRef.current && !loadFailedRef.current && !isLoading && !expenseIsLoading) {
@@ -184,6 +196,8 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       isLoading,
       debtLoadError,
       debtRecovered,
+      saveError,
+      retrySave,
       addDebt,
       updateDebt,
       deleteDebt,
@@ -193,7 +207,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
       getDebt,
       reloadDebts,
     }),
-    [debts, isLoading, debtLoadError, debtRecovered, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt, reloadDebts]
+    [debts, isLoading, debtLoadError, debtRecovered, saveError, retrySave, addDebt, updateDebt, deleteDebt, settleDebt, addDebtPayment, deleteDebtPayment, getDebt, reloadDebts]
   );
 
   return <DebtContext.Provider value={value}>{children}</DebtContext.Provider>;

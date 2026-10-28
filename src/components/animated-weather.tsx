@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Animated, {
+  cancelAnimation,
   useSharedValue,
   useAnimatedStyle,
+  useReducedMotion,
   withRepeat,
   withTiming,
   withSequence,
@@ -25,43 +27,57 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
   const cloudOffset = useSharedValue(0);
   const rainOffset = useSharedValue(0);
   const flashOpacity = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
 
   useEffect(() => {
-    // Sun rotation
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 12000, easing: Easing.linear }),
-      -1,
-      false
-    );
+    cancelAnimation(rotation);
+    cancelAnimation(pulse);
+    cancelAnimation(cloudOffset);
+    cancelAnimation(rainOffset);
+    cancelAnimation(flashOpacity);
+    rotation.value = 0;
+    pulse.value = 1;
+    cloudOffset.value = 0;
+    rainOffset.value = 0;
+    flashOpacity.value = 0;
 
-    // Pulse glow
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1.15, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1.0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
+    if (reducedMotion) return;
 
-    // Floating clouds
-    cloudOffset.value = withRepeat(
-      withSequence(
-        withTiming(6, { duration: 2500, easing: Easing.inOut(Easing.quad) }),
-        withTiming(-6, { duration: 2500, easing: Easing.inOut(Easing.quad) })
-      ),
-      -1,
-      true
-    );
+    if (conditionType === 'sunny' || conditionType === 'partly-sunny') {
+      rotation.value = withRepeat(
+        withTiming(360, { duration: 12000, easing: Easing.linear }),
+        -1,
+        false
+      );
+      pulse.value = withRepeat(
+        withSequence(
+          withTiming(1.15, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.0, { duration: 1500, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    }
 
-    // Rain drop translation
-    rainOffset.value = withRepeat(
-      withTiming(1, { duration: 900, easing: Easing.linear }),
-      -1,
-      false
-    );
+    if (conditionType === 'partly-sunny' || conditionType === 'cloudy' || conditionType === 'rainy' || conditionType === 'snow' || conditionType === 'thunderstorm') {
+      cloudOffset.value = withRepeat(
+        withSequence(
+          withTiming(6, { duration: 2500, easing: Easing.inOut(Easing.quad) }),
+          withTiming(-6, { duration: 2500, easing: Easing.inOut(Easing.quad) })
+        ),
+        -1,
+        true
+      );
+    }
 
-    // Lightning flash for thunderstorm
+    if (conditionType === 'rainy') {
+      rainOffset.value = withRepeat(
+        withTiming(1, { duration: 900, easing: Easing.linear }),
+        -1,
+        false
+      );
+    }
+
     if (conditionType === 'thunderstorm') {
       flashOpacity.value = withRepeat(
         withSequence(
@@ -75,7 +91,15 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
         false
       );
     }
-  }, [conditionType, cloudOffset, flashOpacity, pulse, rainOffset, rotation]);
+
+    return () => {
+      cancelAnimation(rotation);
+      cancelAnimation(pulse);
+      cancelAnimation(cloudOffset);
+      cancelAnimation(rainOffset);
+      cancelAnimation(flashOpacity);
+    };
+  }, [conditionType, reducedMotion, cloudOffset, flashOpacity, pulse, rainOffset, rotation]);
 
   const sunAnimatedStyle = useAnimatedStyle(() => {
     return {

@@ -20,6 +20,14 @@ export async function getTodos(): Promise<TodoItem[]> {
   }
 }
 
+/**
+ * Strict read for backups: a corrupt payload throws instead of looking like an
+ * empty list, so a backup can never silently omit every task.
+ */
+export async function getTodosStrict(): Promise<TodoItem[]> {
+  return readJsonArray(AsyncStorage, TODOS_STORAGE_KEY, 'todos', todoRows);
+}
+
 export async function saveTodo(todo: TodoItem): Promise<void> {
   await mutateJsonArray(AsyncStorage, TODOS_STORAGE_KEY, 'todos', todoRows, (todos) => {
     const index = todos.findIndex((t) => t.id === todo.id);

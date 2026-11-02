@@ -606,6 +606,49 @@ export function listAttachmentUris(data: BackupData): string[] {
   return collectAttachmentUris(data);
 }
 
+/**
+ * Local image URIs referenced by the stored expenses and preferences that a
+ * restore is about to replace. Unreadable raw values are ignored so a partial
+ * parse can never cause a still-referenced file to be deleted.
+ */
+export function collectStoredImageUris(
+  rawExpenses: string | null | undefined,
+  rawPreferences: string | null | undefined,
+): Set<string> {
+  const uris = new Set<string>();
+  const add = (value: unknown) => {
+    if (typeof value === 'string' && value.startsWith('file://')) uris.add(value);
+  };
+
+  try {
+    const expenses: unknown = rawExpenses ? JSON.parse(rawExpenses) : null;
+    if (Array.isArray(expenses)) {
+      for (const row of expenses) {
+        if (row && typeof row === 'object') {
+          add((row as { receiptUri?: unknown }).receiptUri);
+        }
+      }
+    }
+  } catch {
+    // Ignore corrupt expense data: erring towards keeping files is safer.
+  }
+
+  try {
+    const preferences: unknown = rawPreferences ? JSON.parse(rawPreferences) : null;
+    if (preferences && typeof preferences === 'object') {
+      const profile = (preferences as { profile?: unknown }).profile;
+      if (profile && typeof profile === 'object') {
+        add((profile as { coverPhotoUri?: unknown }).coverPhotoUri);
+        add((profile as { profilePhotoUri?: unknown }).profilePhotoUri);
+      }
+    }
+  } catch {
+    // Ignore corrupt preference data: erring towards keeping files is safer.
+  }
+
+  return uris;
+}
+
 /** Rewrites image URIs after their files have been recreated during a restore. */
 export function remapAttachmentUris(data: BackupData, mapping: Record<string, string>): BackupData {
   const replace = (uri: unknown): string | undefined => {

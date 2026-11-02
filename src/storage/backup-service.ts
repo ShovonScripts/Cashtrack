@@ -35,6 +35,7 @@ import {
   BACKUP_VERSION,
   MAX_BACKUP_ATTACHMENTS,
   MAX_EMBEDDED_ATTACHMENT_CHARS,
+  collectStoredImageUris,
   listAttachmentUris,
   parseBackup,
   remapAttachmentUris,
@@ -313,6 +314,18 @@ async function captureRestoreSnapshot(): Promise<RestoreSnapshot> {
   return { storage, relational };
 }
 
+/**
+ * Deletes images owned by the replaced data set that the restored data no
+ * longer references. Only runs after a successful restore, and every deletion
+ * still goes through `deleteLocalFile`'s sandbox guard.
+ */
+async function deleteSupersededImages(previous: Set<string>, restored: BackupData): Promise<void> {
+  const retained = new Set(listAttachmentUris(restored));
+  const orphaned = [...previous].filter((uri) => !retained.has(uri));
+  if (orphaned.length === 0) return;
+  await Promise.all(orphaned.map((uri) => deleteLocalFile(uri)));
+}
+
 async function restoreStorageSnapshot(snapshot: RawStorageSnapshot): Promise<void> {
   const present: [string, string][] = [];
   const missing: string[] = [];
@@ -418,6 +431,18 @@ export async function restoreBackup(raw: string): Promise<RestoreSummary> {
     // Old reminders are gone, so their scheduled notifications must not fire.
     // The reminders provider reschedules the restored active bills afterwards.
     await cancelAllReminderNotificationsAsync();
+
+    // The previous data set is gone for good, so its images would otherwise
+    // stay in the sandbox forever.
+    const storedValue = (key: string) =>
+      snapshot.storage.find(([entryKey]) => entryKey === key)?.[1] ?? null;
+    await deleteSupersededImages(
+      collectStoredImageUris(
+        storedValue(EXPENSES_STORAGE_KEY),
+        storedValue(PREFERENCES_STORAGE_KEY),
+      ),
+      data,
+    );
 
     return {
       attachmentsRestored: restored,

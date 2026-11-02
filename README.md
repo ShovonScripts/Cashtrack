@@ -16,19 +16,20 @@ pipeline involved in normal use.
 
 ## Tech stack
 
-- Expo SDK 57 with Expo Router
-- React Native 0.86 and React 19
+- Expo SDK 58 with Expo Router
+- React Native 0.88 and React 19.3
 - TypeScript in strict mode
-- AsyncStorage for expenses, preferences, debts, notes and to-dos
-- expo-sqlite for income, goals and bill reminders (AsyncStorage on web)
+- AsyncStorage for expenses, preferences, debts, notes, to-dos and recurring skips
+- expo-sqlite for income, goals, contributions, reminders and payments
 - expo-notifications for local reminders
-- expo-print, expo-sharing, and expo-file-system for reports and exports
+- expo-print, expo-sharing, and expo-file-system for reports, backups and exports
+- expo-local-authentication for the optional App Lock
 
 ## Requirements
 
-- Node.js with the current LTS version recommended
+- Node.js 20.19 or newer (CI uses Node 24)
 - npm
-- A mobile simulator or Expo Go for local development
+- Expo Go for UI work, or a development build for native modules
 
 ## Getting started
 
@@ -42,13 +43,17 @@ Then either:
 - open the Expo dev server in Expo Go on your phone, or
 - run an emulator with `a` for Android or `i` for iOS
 
-For native features such as SQLite-backed data access, use a development build:
+For native features such as SQLite-backed data access, App Lock biometrics and
+notifications, use a development build:
 
 ```bash
 npx expo run:android
 # or
 npx expo run:ios
 ```
+
+Install Expo packages with `npx expo install <package>` so the version matches
+the SDK instead of adding it with plain npm.
 
 ## Common commands
 
@@ -61,6 +66,9 @@ npx expo run:ios
 | `npm run lint` | Run ESLint |
 | `npm run typecheck` | Run TypeScript checks |
 | `npm test` | Run the test suite |
+| `npx expo-doctor` | Check dependencies and app configuration |
+| `npm run check:contrast` | Verify theme colors meet WCAG AA contrast |
+| `npm run check:a11y` | Scan components for touch-target and label issues |
 
 ## Project structure
 
@@ -74,6 +82,7 @@ src/
   hooks/        reusable custom hooks
   storage/      persistence, validation, and local data access
   utils/        formatting, notifications, exports, and budgeting helpers
+scripts/        verification scripts for contrast and accessibility
 tests/          unit tests for logic-heavy modules
 ```
 
@@ -88,8 +97,8 @@ records remain under your control.
 The project is ready for [Expo EAS Build](https://docs.expo.dev/eas/build/introduction/):
 
 ```bash
-npx eas-cli build --profile development
-npx eas-cli build --profile production
+npx eas-cli@latest build --profile development
+npx eas-cli@latest build --profile production
 ```
 
 ## License

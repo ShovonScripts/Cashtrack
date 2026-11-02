@@ -5,6 +5,7 @@ import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
   BackupParseError,
+  collectStoredImageUris,
   listAttachmentUris,
   parseBackup,
   remapAttachmentUris,
@@ -412,5 +413,45 @@ describe('attachment helpers', () => {
     assert.equal(remapped.expenses[0].receiptUri, undefined);
     assert.equal(remapped.preferences.profile.coverPhotoUri, 'https://example.com/cover.jpg');
     assert.equal(remapped.preferences.profile.profilePhotoUri, undefined);
+  });
+});
+
+describe('collectStoredImageUris', () => {
+  it('collects local receipts and profile images from stored JSON', () => {
+    const expenses = JSON.stringify([
+      { id: '1', receiptUri: 'file:///docs/receipts/receipt-1.jpg' },
+      { id: '2', receiptUri: 'https://example.com/receipt.jpg' },
+      { id: '3' },
+      null,
+      'not-an-object',
+    ]);
+    const storedPreferences = JSON.stringify({
+      profile: {
+        coverPhotoUri: 'file:///docs/cover-1.jpg',
+        profilePhotoUri: 'file:///docs/avatar-2.png',
+      },
+    });
+
+    assert.deepEqual([...collectStoredImageUris(expenses, storedPreferences)].sort(), [
+      'file:///docs/avatar-2.png',
+      'file:///docs/cover-1.jpg',
+      'file:///docs/receipts/receipt-1.jpg',
+    ]);
+  });
+
+  it('ignores missing and non-file values', () => {
+    assert.deepEqual(
+      [...collectStoredImageUris(null, JSON.stringify({ profile: { coverPhotoUri: 'default-cover' } }))],
+      [],
+    );
+    assert.deepEqual([...collectStoredImageUris('[]', undefined)], []);
+  });
+
+  it('never throws on corrupt stored data', () => {
+    assert.deepEqual([...collectStoredImageUris('{oops', '[1,2]')], []);
+    assert.deepEqual(
+      [...collectStoredImageUris('[]', JSON.stringify({ profile: 'unexpected' }))],
+      [],
+    );
   });
 });

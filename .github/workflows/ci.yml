@@ -27,8 +27,17 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      - name: Expo Doctor
+        run: npx expo-doctor
+
       - name: Unit tests
         run: npm test
 
       - name: Lint
         run: npx expo lint
+
+      - name: Contrast check
+        run: npm run check:contrast
+
+      - name: Accessibility scan
+        run: npm run check:a11y

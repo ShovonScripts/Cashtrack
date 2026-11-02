@@ -217,4 +217,5 @@ if (hits.length > 0) {
       Snippet: h.snippet,
     }))
   );
+  process.exitCode = 1;
 }

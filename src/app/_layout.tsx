@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider, router, type ErrorBoundaryProps } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { preventAutoHideAsync } from 'expo-splash-screen';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View, useColorScheme, AppState, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,7 +25,7 @@ import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsBu
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StopwatchProvider } from '@/context/stopwatch-context';
 
-SplashScreen.preventAutoHideAsync();
+preventAutoHideAsync();
 
 /** Holds the navigator back until the saved expenses have been read. */
 function Navigation() {

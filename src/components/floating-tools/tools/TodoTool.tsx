@@ -503,8 +503,9 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                 <Pressable
                   onPress={() => handleToggle(item.id)}
                   accessibilityRole="checkbox"
+                  accessibilityLabel={item.completed ? 'Mark task incomplete' : 'Mark task complete'}
                   accessibilityState={{ checked: item.completed }}
-                  hitSlop={8}
+                  hitSlop={10}
                   style={styles.checkBtn}>
                   <Ionicons
                     name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
@@ -648,8 +649,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   addBtn: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
@@ -711,7 +712,7 @@ const styles = StyleSheet.create({
   },
   filterTab: {
     flex: 1,
-    height: 32,
+    height: 44,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'transparent',

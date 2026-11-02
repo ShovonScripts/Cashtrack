@@ -42,6 +42,7 @@ import {
 import { requestSpendingReminderPermissionsAsync } from '@/utils/spending-reminder-notifications';
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 import { confirmAction, notify } from '@/utils/confirm';
+import { imageFileExtension } from '@/utils/image-file';
 import { deleteLocalFile } from '@/utils/local-file';
 import { RestoreRollbackError } from '@/utils/restore-rollback';
 
@@ -53,9 +54,14 @@ const GENDER_CHOICES: { label: string; value: GenderOption; icon: keyof typeof M
   { label: 'Other', value: 'other', icon: 'account-outline' },
 ];
 
-async function persistPickedImage(uri: string, prefix: string): Promise<string> {
+async function persistPickedImage(
+  uri: string,
+  prefix: string,
+  mimeType?: string | null,
+  fileName?: string | null,
+): Promise<string> {
   if (Platform.OS === 'web') return uri;
-  const extension = uri.split('?')[0].split('.').pop() || 'jpg';
+  const extension = imageFileExtension(uri, mimeType, fileName);
   const target = new File(Paths.document, `${prefix}-${Date.now()}.${extension}`);
   try {
     await new File(uri).copy(target);
@@ -154,7 +160,12 @@ export default function ProfileScreen() {
       });
       if (!result.canceled && result.assets[0]?.uri) {
         const previousDraft = coverPhotoUri;
-        const nextUri = await persistPickedImage(result.assets[0].uri, 'cover');
+        const nextUri = await persistPickedImage(
+          result.assets[0].uri,
+          'cover',
+          result.assets[0].mimeType,
+          result.assets[0].fileName,
+        );
         if (previousDraft && previousDraft !== profile.coverPhotoUri) {
           await deleteLocalFile(previousDraft);
         }
@@ -184,7 +195,12 @@ export default function ProfileScreen() {
       });
       if (!result.canceled && result.assets[0]?.uri) {
         const previousDraft = profilePhotoUri;
-        const nextUri = await persistPickedImage(result.assets[0].uri, 'avatar');
+        const nextUri = await persistPickedImage(
+          result.assets[0].uri,
+          'avatar',
+          result.assets[0].mimeType,
+          result.assets[0].fileName,
+        );
         if (previousDraft && previousDraft !== profile.profilePhotoUri) {
           await deleteLocalFile(previousDraft);
         }

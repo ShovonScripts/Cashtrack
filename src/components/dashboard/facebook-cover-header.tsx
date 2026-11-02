@@ -906,7 +906,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    height: 30,
+    height: 44,
     backgroundColor: 'rgba(8,12,28,0.34)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.24)',

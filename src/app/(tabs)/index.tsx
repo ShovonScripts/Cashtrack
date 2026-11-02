@@ -1236,7 +1236,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: Spacing.three,
-    height: 38,
+    height: 44,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255, 255, 255, 0.18)',

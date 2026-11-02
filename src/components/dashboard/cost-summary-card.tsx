@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.pill,
-    height: 36,
+    height: 44,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',

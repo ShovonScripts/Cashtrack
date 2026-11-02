@@ -39,7 +39,7 @@ export function ReceiptAttachment({ receiptUri, onChange }: ReceiptAttachmentPro
         : await ImagePicker.launchImageLibraryAsync({ quality: 0.8, allowsEditing: true });
 
       if (!result.canceled && result.assets && result.assets[0]?.uri) {
-        const localUri = await saveReceiptLocally(result.assets[0].uri);
+        const localUri = await saveReceiptLocally(result.assets[0].uri, result.assets[0].mimeType);
         onChange(localUri);
       }
     } catch {

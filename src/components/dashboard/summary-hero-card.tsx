@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   actionTouchArea: {
     width: '100%',
-    minHeight: 36,
+    minHeight: 44,
     justifyContent: 'center',
     marginTop: 2,
   },

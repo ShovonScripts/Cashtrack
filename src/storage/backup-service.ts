@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 import { Directory, File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
-import { APP_LOCK_STORAGE_KEY, saveAppLockFlag } from '@/storage/app-lock-storage';
+import { APP_LOCK_STORAGE_KEY, loadAppLockFlag } from '@/storage/app-lock-storage';
 import {
   captureRelationalSnapshot,
   replaceRelationalData,
@@ -351,14 +351,22 @@ async function restorePreviousSnapshot(snapshot: RestoreSnapshot): Promise<void>
 }
 
 async function applyRestoreData(data: BackupData): Promise<void> {
+  // App Lock is device-local security state, not user data. A backup file must
+  // never be able to turn it on or off, otherwise importing a file that was
+  // exported while the lock was off would silently disable protection.
+  const deviceAppLockEnabled = (await loadAppLockFlag().catch(() => null)) ?? false;
+  const preferences: UserPreferences = {
+    ...data.preferences,
+    appLockEnabled: deviceAppLockEnabled,
+  };
+
   await replaceRelationalData(data);
   await saveExpenses(data.expenses);
-  await savePreferences(data.preferences);
+  await savePreferences(preferences);
   await saveDebts(data.debts);
   await replaceNotes(data.notes);
   await replaceTodos(data.todos ?? []);
   await replaceRecurringSkips(data.recurringSkips);
-  await saveAppLockFlag(data.preferences.appLockEnabled === true);
 }
 
 /**

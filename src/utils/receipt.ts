@@ -1,6 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
 
+import { imageFileExtension } from '@/utils/image-file';
 import { isUriWithinDirectory } from '@/utils/safe-path';
 
 /**
@@ -36,9 +37,10 @@ function getReceiptsDirectory(): Directory {
  * points at a cache path, so that receipt can break later — the failure is logged rather
  * than swallowed so it is visible in development.
  */
-export async function saveReceiptLocally(tempUri: string): Promise<string> {
+export async function saveReceiptLocally(tempUri: string, mimeType?: string | null): Promise<string> {
   try {
-    const filename = `receipt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.jpg`;
+    const extension = imageFileExtension(tempUri, mimeType);
+    const filename = `receipt-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${extension}`;
     const destination = new File(getReceiptsDirectory(), filename);
     await new File(tempUri).copy(destination);
     return destination.uri;

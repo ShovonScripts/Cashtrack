@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.one },
   listHeadingRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   reorderToggle: {
-    minHeight: 34,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,

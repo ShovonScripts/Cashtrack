@@ -96,7 +96,7 @@ export function FacebookCoverHeader({
     }
   };
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const programmaticSlideRef = useRef<number | null>(null);
   const translateY = useSharedValue(0);
   const hintScale = useSharedValue(1);

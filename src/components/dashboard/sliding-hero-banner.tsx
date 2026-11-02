@@ -45,7 +45,7 @@ export function SlidingHeroBanner({
   const [activeIndex, setActiveIndex] = useState(0);
   const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   useEffect(() => {
     async function loadWeather() {

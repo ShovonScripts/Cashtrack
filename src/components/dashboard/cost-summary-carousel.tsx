@@ -34,7 +34,7 @@ export function CostSummaryCarousel({
   const snapInterval = cardWidth + Spacing.three;
 
   const [activeIndex, setActiveIndex] = useState(DAILY_INDEX);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const positionedRef = useRef(false);
 
   const scrollToDaily = () => {

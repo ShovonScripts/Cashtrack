@@ -633,7 +633,7 @@ export default function DashboardScreen() {
 
   const [cashFlowCardIndex, setCashFlowCardIndex] = useState(0);
   const cashFlowIndexRef = useRef(0);
-  const cashFlowScrollRef = useRef<ScrollView>(null);
+  const cashFlowScrollRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
   const screenWidth = useWindowDimensions().width;
   const containerPadding = Spacing.four * 2;
   const cardWidth = Math.min(screenWidth - containerPadding, MaxContentWidth - containerPadding);

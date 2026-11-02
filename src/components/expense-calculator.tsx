@@ -53,7 +53,7 @@ export function ExpenseCalculator({
     initialValues?.recurringFrequency ?? 'monthly'
   );
 
-  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollViewRef = useRef<React.ComponentRef<typeof ScrollView>>(null);
 
   const calculatedAmount = evaluateExpression(expression);
   const isValid = Number.isFinite(calculatedAmount) && calculatedAmount > 0;

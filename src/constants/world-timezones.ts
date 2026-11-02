@@ -6,7 +6,7 @@ export type WorldCity = {
   flag: string;
 };
 
-export const WORLD_CITIES: WorldCity[] = [
+const RAW_WORLD_CITIES: WorldCity[] = [
   { id: 'local', cityName: 'Local Time', countryName: 'Current Location', timeZone: '', flag: '📍' },
   { id: 'nyc', cityName: 'New York', countryName: 'United States', timeZone: 'America/New_York', flag: '🇺🇸' },
   { id: 'la', cityName: 'Los Angeles', countryName: 'United States', timeZone: 'America/Los_Angeles', flag: '🇺🇸' },
@@ -114,6 +114,16 @@ export const WORLD_CITIES: WorldCity[] = [
   { id: 'wellington', cityName: 'Wellington', countryName: 'New Zealand', timeZone: 'Pacific/Auckland', flag: '🇳🇿' },
   { id: 'fiji', cityName: 'Suva', countryName: 'Fiji', timeZone: 'Pacific/Fiji', flag: '🇫🇯' },
   { id: 'honolulu', cityName: 'Honolulu', countryName: 'United States', timeZone: 'Pacific/Honolulu', flag: '🇺🇸' },
+];
+
+/**
+ * World cities list, sorted alphabetically by city name (with Local Time pinned at the top).
+ */
+export const WORLD_CITIES: WorldCity[] = [
+  RAW_WORLD_CITIES[0], // Keep Local Time pinned as the top choice
+  ...RAW_WORLD_CITIES.slice(1).sort((a, b) =>
+    a.cityName.localeCompare(b.cityName, undefined, { sensitivity: 'base' })
+  ),
 ];
 
 export function getFormattedTimeForZone(

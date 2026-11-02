@@ -57,7 +57,7 @@ export default function TabLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'view-dashboard' : 'view-dashboard-outline'}
                 size={24}
-                color={color}
+                color={color as any}
               />
             ),
           }}
@@ -74,7 +74,7 @@ export default function TabLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'receipt' : 'receipt-outline'}
                 size={24}
-                color={color}
+                color={color as any}
               />
             ),
           }}
@@ -112,7 +112,7 @@ export default function TabLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'chart-box' : 'chart-donut-variant'}
                 size={24}
-                color={color}
+                color={color as any}
               />
             ),
           }}
@@ -129,7 +129,7 @@ export default function TabLayout() {
               <MaterialCommunityIcons
                 name={focused ? 'grid' : 'grid-large'}
                 size={24}
-                color={color}
+                color={color as any}
               />
             ),
           }}

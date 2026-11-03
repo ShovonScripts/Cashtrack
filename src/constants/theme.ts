@@ -147,3 +147,82 @@ export const Radius = {
   xlarge: 24,
   pill: 999,
 } as const;
+
+/**
+ * Fixed colours that do not change with light or dark mode. Use these for
+ * content drawn over photos, gradients and brand fills, and for the feature
+ * hues used by icon badges. Anything that must adapt to the theme belongs in
+ * `Colors` instead.
+ */
+export const Palette = {
+  white: '#FFFFFF',
+  black: '#000000',
+} as const;
+
+/** Feature hues for icon badges and category accents. */
+export const FeatureColors = {
+  sky: '#0284C7',
+  blue: '#3B82F6',
+  azure: '#2D9CDB',
+  cyan: '#0EA5E9',
+  indigo: '#4F46E5',
+  violet: '#7667F2',
+  orchid: '#BB6BD9',
+  coral: '#FF6B6B',
+  red: '#EB5757',
+  amber: '#F59E0B',
+  gold: '#F2C94C',
+  bronze: '#C17A24',
+  emerald: '#059669',
+  green: '#10B981',
+  leaf: '#27AE60',
+  teal: '#159A8C',
+  slate: '#5077C8',
+  gray: '#828282',
+} as const;
+
+/** Type scale. `ThemedText` types map onto these sizes. */
+export const Typography = {
+  micro: { fontSize: 10, lineHeight: 14 },
+  caption: { fontSize: 12, lineHeight: 16 },
+  small: { fontSize: 14, lineHeight: 20 },
+  body: { fontSize: 16, lineHeight: 24 },
+  subtitle: { fontSize: 18, lineHeight: 24 },
+  title: { fontSize: 22, lineHeight: 28 },
+  hero: { fontSize: 32, lineHeight: 38 },
+} as const;
+
+/** Shadow presets. Android uses `elevation`; iOS and web use the shadow props. */
+export const Elevation = {
+  none: {
+    shadowColor: Palette.black,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0,
+  },
+  low: {
+    shadowColor: Palette.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  medium: {
+    shadowColor: Palette.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  high: {
+    shadowColor: Palette.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+} as const;
+
+/** Minimum touch target in dp (WCAG 2.5.8 and platform guidelines). */
+export const MinTouchTarget = 44;

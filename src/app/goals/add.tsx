@@ -7,7 +7,7 @@ import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { Card } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
@@ -208,9 +208,9 @@ export default function AddGoalScreen() {
                     <MaterialCommunityIcons
                       name={pt.icon}
                       size={24}
-                      color={selected ? '#FFFFFF' : theme.textSecondary}
+                      color={selected ? Palette.white : theme.textSecondary}
                     />
-                    <ThemedText type="caption" numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: selected ? '#FFFFFF' : theme.textSecondary }}>
+                    <ThemedText type="caption" numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: selected ? Palette.white : theme.textSecondary }}>
                       {pt.label}
                     </ThemedText>
                   </Pressable>
@@ -288,7 +288,7 @@ export default function AddGoalScreen() {
                       <MaterialCommunityIcons
                         name={rule.icon}
                         size={20}
-                        color={selected ? '#FFFFFF' : theme.textSecondary}
+                        color={selected ? Palette.white : theme.textSecondary}
                       />
                     </View>
                     <View style={styles.ruleTextGroup}>
@@ -395,7 +395,7 @@ export default function AddGoalScreen() {
             disabled={isSubmitting}
             accessibilityRole="button"
             style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Create Savings Pot</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: Palette.white }}>Create Savings Pot</ThemedText>
           </Pressable>
         </Card>
         </View>

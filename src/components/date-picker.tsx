@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   monthButtonText: { fontSize: 28, lineHeight: 34 },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   dayCell: { width: `${100 / 7}%`, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  selectedDay: { color: '#FFFFFF' },
+  selectedDay: { color: Palette.white },
   todayButton: { minHeight: 44, alignSelf: 'center', paddingHorizontal: Spacing.three, borderRadius: Radius.pill, justifyContent: 'center' },
   pressed: { opacity: 0.72 },
 });

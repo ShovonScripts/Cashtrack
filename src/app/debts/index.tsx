@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import { useDebts } from '@/context/debt-context';
 import { usePreferences } from '@/context/expense-context';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
@@ -79,7 +79,7 @@ export default function DebtsScreen() {
 
             <View style={styles.heroNetRow}>
               <ThemedText type="small" style={styles.heroNetText}>
-                Net Position: <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>{net >= 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}</ThemedText>
+                Net Position: <ThemedText type="smallBold" style={{ color: Palette.white }}>{net >= 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}</ThemedText>
               </ThemedText>
             </View>
           </View>
@@ -104,7 +104,7 @@ export default function DebtsScreen() {
                     borderColor: selected ? theme.accentFill : theme.border,
                   },
                 ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary }}>
+                <ThemedText type="smallBold" style={{ color: selected ? Palette.white : theme.textSecondary }}>
                   {f} ({getCount(f)})
                 </ThemedText>
               </Pressable>
@@ -224,12 +224,12 @@ const styles = StyleSheet.create({
   heroContent: { gap: Spacing.two, zIndex: 1 },
   heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  quickAddButton: { backgroundColor: '#FFFFFF', borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  quickAddButton: { backgroundColor: Palette.white, borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
   quickAddText: { color: Brand.deep },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.one },
   heroStat: { flex: 1, gap: Spacing.half },
   heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: '#FFFFFF', fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'] },
+  heroStatVal: { color: Palette.white, fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'] },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 40, backgroundColor: 'rgba(255,255,255,0.2)' },
   heroNetRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.15)', paddingTop: Spacing.two },
   heroNetText: { color: 'rgba(255,255,255,0.8)' },

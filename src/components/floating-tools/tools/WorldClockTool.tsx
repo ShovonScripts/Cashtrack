@@ -6,7 +6,7 @@ import * as Haptics from 'expo-haptics';
 import { GlassView } from 'expo-glass-effect';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -150,8 +150,8 @@ export function WorldClockTool() {
             { backgroundColor: theme.accentFill },
             pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
           ]}>
-          <Ionicons name="add" size={18} color="#FFFFFF" />
-          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Add City</ThemedText>
+          <Ionicons name="add" size={18} color={Palette.white} />
+          <ThemedText type="smallBold" style={{ color: Palette.white }}>Add City</ThemedText>
         </Pressable>
       </View>
 
@@ -311,7 +311,7 @@ export function WorldClockTool() {
                           styles.addIndicator,
                           { backgroundColor: added ? theme.accentFill : theme.card, borderColor: theme.border },
                         ]}>
-                        <Ionicons name={added ? 'checkmark' : 'add'} size={14} color={added ? '#FFFFFF' : theme.text} />
+                        <Ionicons name={added ? 'checkmark' : 'add'} size={14} color={added ? Palette.white : theme.text} />
                       </View>
                     </View>
                   </Pressable>

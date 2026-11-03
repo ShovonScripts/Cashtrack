@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
@@ -276,11 +276,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: Radius.pill,
   },
-  monthPillText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  monthPillText: { color: Palette.white, fontSize: 11, fontWeight: '700' },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroStat: { flex: 1, gap: 2 },
   heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
-  heroStatVal: { color: '#FFFFFF', fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'], fontWeight: '800' },
+  heroStatVal: { color: Palette.white, fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'], fontWeight: '800' },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
   categoryCard: { gap: Spacing.two },
   categoryHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },

@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
 
@@ -70,8 +70,8 @@ export function StopwatchTool() {
             { backgroundColor: isRunning ? theme.dangerFill : theme.accentFill },
             pressed && styles.pressed,
           ]}>
-          <Ionicons name={isRunning ? 'pause' : 'play'} size={20} color="#FFFFFF" />
-          <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
+          <Ionicons name={isRunning ? 'pause' : 'play'} size={20} color={Palette.white} />
+          <ThemedText type="defaultBold" style={{ color: Palette.white }}>
             {isRunning ? 'Pause' : 'Start'}
           </ThemedText>
         </Pressable>

@@ -6,7 +6,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
@@ -75,13 +75,13 @@ export default function PeriodReportScreen() {
 
           <View style={styles.heroFooter}>
             <View style={styles.heroStatPill}>
-              <MaterialCommunityIcons name="receipt" size={13} color="#FFFFFF" />
+              <MaterialCommunityIcons name="receipt" size={13} color={Palette.white} />
               <ThemedText type="caption" style={styles.heroDetailText}>
                 {count} {count === 1 ? 'transaction' : 'transactions'}
               </ThemedText>
             </View>
             <View style={styles.heroStatPill}>
-              <MaterialCommunityIcons name="tag" size={13} color="#FFFFFF" />
+              <MaterialCommunityIcons name="tag" size={13} color={Palette.white} />
               <ThemedText type="caption" style={styles.heroDetailText}>
                 {categories.length} {categories.length === 1 ? 'category' : 'categories'}
               </ThemedText>
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
   },
   heroPillText: { color: Brand.bright, fontWeight: '700' },
   heroValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 38,
     lineHeight: 46,
     fontVariant: ['tabular-nums'],
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     borderRadius: Radius.pill,
   },
-  heroDetailText: { color: '#FFFFFF', fontWeight: '600', fontSize: 12 },
+  heroDetailText: { color: Palette.white, fontWeight: '600', fontSize: 12 },
   metricsRow: { flexDirection: 'row', gap: Spacing.two },
   metricCard: { flex: 1, gap: Spacing.one, padding: Spacing.three },
   metricValue: { fontSize: 15, fontVariant: ['tabular-nums'] },

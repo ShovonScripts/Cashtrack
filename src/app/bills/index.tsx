@@ -12,7 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { usePreferences } from '@/context/expense-context';
 import { getReminderRemainingAmount, hasPartialPayment } from '@/utils/reminder-payment';
-import { Brand, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
+import { Brand, MaxContentWidth, Palette, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { confirmAction, confirmDelete, notify } from '@/utils/confirm';
@@ -116,7 +116,7 @@ export default function BillsScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Add bill or reminder"
                 style={({ pressed }) => [styles.glassAddBtn, pressed && styles.pressed]}>
-                <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
+                <MaterialCommunityIcons name="plus" size={16} color={Palette.white} />
                 <ThemedText type="smallBold" style={styles.quickAddText}>
                   Add Bill
                 </ThemedText>
@@ -542,11 +542,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.35)',
   },
-  quickAddText: { color: '#FFFFFF' },
+  quickAddText: { color: Palette.white },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroStat: { flex: 1, gap: 2 },
   heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
-  heroStatVal: { color: '#FFFFFF', fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'] },
+  heroStatVal: { color: Palette.white, fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'] },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
   actionPillRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
   overdueGlassPill: {

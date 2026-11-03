@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
 
@@ -75,7 +75,7 @@ export function SummaryHeroCard({
 }: SummaryHeroCardProps) {
   const theme = useTheme();
   const rounded = Math.round(amount * 100) / 100;
-  const valueColor = signed && rounded < 0 ? theme.dangerOnBrand : '#FFFFFF';
+  const valueColor = signed && rounded < 0 ? theme.dangerOnBrand : Palette.white;
 
   const handlePress = () => {
     triggerHaptic();
@@ -206,12 +206,12 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   monthPillText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '700',
     fontSize: 10.5,
   },
   heroValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800',
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 2.5,
   },
   chipText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '700',
     fontSize: 11.5,
     fontVariant: ['tabular-nums'],
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   addButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.white,
     borderRadius: Radius.pill,
     height: 36,
     width: '100%',

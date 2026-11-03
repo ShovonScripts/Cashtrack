@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CURRENCIES, convertCurrency } from '@/constants/currency-rates';
 
@@ -124,7 +124,7 @@ export function CurrencyTool() {
                 ]}>
                 <ThemedText
                   type="caption"
-                  style={{ color: active ? '#FFFFFF' : theme.text, fontWeight: '700', fontSize: 11 }}>
+                  style={{ color: active ? Palette.white : theme.text, fontWeight: '700', fontSize: 11 }}>
                   {code}
                 </ThemedText>
               </Pressable>

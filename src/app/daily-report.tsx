@@ -10,7 +10,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
@@ -302,14 +302,14 @@ export default function DailyReportScreen() {
 
           <View style={styles.heroFooterRow}>
             <View style={styles.heroStatPill}>
-              <MaterialCommunityIcons name="receipt" size={13} color="#FFFFFF" />
+              <MaterialCommunityIcons name="receipt" size={13} color={Palette.white} />
               <ThemedText type="caption" style={styles.heroDetailText}>
                 {transactionCount} {transactionCount === 1 ? 'transaction' : 'transactions'}
               </ThemedText>
             </View>
 
             <View style={styles.heroStatPill}>
-              <MaterialCommunityIcons name="tag" size={13} color="#FFFFFF" />
+              <MaterialCommunityIcons name="tag" size={13} color={Palette.white} />
               <ThemedText type="caption" style={styles.heroDetailText}>
                 {categories.length} {categories.length === 1 ? 'category' : 'categories'}
               </ThemedText>
@@ -416,8 +416,8 @@ export default function DailyReportScreen() {
           accessibilityLabel="Download daily report as PDF"
           accessibilityState={{ disabled: isGenerating, busy: isGenerating }}
           style={({ pressed }) => [styles.exportButton, pressed && styles.pressed, isGenerating && styles.disabled]}>
-          <MaterialCommunityIcons name="file-pdf-box" size={22} color="#FFFFFF" />
-          <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
+          <MaterialCommunityIcons name="file-pdf-box" size={22} color={Palette.white} />
+          <ThemedText type="defaultBold" style={{ color: Palette.white }}>
             {isGenerating ? 'Generating PDF...' : 'Download PDF'}
           </ThemedText>
         </Pressable>
@@ -462,10 +462,10 @@ const styles = StyleSheet.create({
   heroHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 2 },
   heroLabelText: { color: 'rgba(255,255,255,0.75)', letterSpacing: 1, fontSize: 11, fontWeight: '800' },
   reportBadgePill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(20, 231, 253, 0.15)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.pill },
-  heroValueText: { color: '#FFFFFF', fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'], zIndex: 2 },
+  heroValueText: { color: Palette.white, fontSize: 38, lineHeight: 46, fontVariant: ['tabular-nums'], zIndex: 2 },
   heroFooterRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4, zIndex: 2 },
   heroStatPill: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.pill },
-  heroDetailText: { color: '#FFFFFF', fontWeight: '600', fontSize: 12 },
+  heroDetailText: { color: Palette.white, fontWeight: '600', fontSize: 12 },
   metricsRow: { flexDirection: 'row', gap: Spacing.two },
   metricCard: { flex: 1, padding: Spacing.three, gap: 4, minHeight: 80 },
   metricValue: { fontSize: 14, fontVariant: ['tabular-nums'] },

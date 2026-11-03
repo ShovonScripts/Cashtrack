@@ -10,6 +10,7 @@ import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { WeatherWorldClocks } from '@/components/dashboard/WeatherWorldClocks';
+import { Palette } from '@/constants/theme';
 
 export default function WeatherScreen() {
   const theme = useTheme();
@@ -354,7 +355,7 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 12.5,
     fontWeight: '600',
   },
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   giantTemp: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 48,
     fontWeight: '800',
     letterSpacing: -1,

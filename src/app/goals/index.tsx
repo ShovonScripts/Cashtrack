@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/empty-state';
 import { GoalProgressCard } from '@/components/goal-progress-card';
 import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -93,7 +93,7 @@ export default function GoalsOverviewScreen() {
                     borderColor: selected ? theme.accentFill : theme.border,
                   },
                 ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, textTransform: 'capitalize' }}>
+                <ThemedText type="smallBold" style={{ color: selected ? Palette.white : theme.textSecondary, textTransform: 'capitalize' }}>
                   {t} ({t === 'active' ? activeGoals.length : t === 'completed' ? completedGoals.length : goals.length})
                 </ThemedText>
               </Pressable>
@@ -151,12 +151,12 @@ const styles = StyleSheet.create({
   heroContent: { gap: Spacing.two, zIndex: 1 },
   heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  addButton: { backgroundColor: '#FFFFFF', borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
+  addButton: { backgroundColor: Palette.white, borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
   addButtonText: { color: Brand.deep },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.half },
   heroStat: { flex: 1, gap: Spacing.half },
   heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
+  heroStatVal: { color: Palette.white, fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
   heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
   heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },

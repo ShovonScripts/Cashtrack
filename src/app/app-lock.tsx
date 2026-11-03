@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useAppLock } from '@/context/app-lock-context';
 import { useTheme } from '@/hooks/use-theme';
 import { APP_LOCK_BACKGROUND_TIMEOUT_MS } from '@/utils/app-lock';
@@ -116,7 +116,7 @@ export default function AppLockSettingsScreen() {
             }}
             accessibilityLabel="App Lock"
             trackColor={{ false: theme.border, true: theme.accent }}
-            thumbColor="#FFFFFF"
+            thumbColor={Palette.white}
           />
         </View>
 

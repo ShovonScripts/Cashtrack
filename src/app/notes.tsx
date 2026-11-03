@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/card';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getNotes } from '@/storage/notes-storage';
 import { Note, NoteColor } from '@/types/note';
@@ -192,7 +192,7 @@ export default function NotesIndexScreen() {
           { backgroundColor: theme.accentFill, shadowColor: theme.accent, bottom: Math.max(Spacing.four, insets.bottom + 16) },
           pressed && { transform: [{ scale: 0.93 }] },
         ]}>
-        <Ionicons name="add" size={28} color="#FFFFFF" />
+        <Ionicons name="add" size={28} color={Palette.white} />
       </Pressable>
       </KeyboardAvoidingView>
     </ThemedView>

@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   clockLabel: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   timeText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 18,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],

@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { deleteNote, getNotes, saveNote } from '@/storage/notes-storage';
 import { Note, NoteColor } from '@/types/note';
@@ -142,7 +142,7 @@ export default function EditNoteScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Save changes"
                 style={[styles.saveHeaderBtn, { backgroundColor: theme.accentFill }]}>
-                <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Save</ThemedText>
+                <ThemedText type="smallBold" style={{ color: Palette.white }}>Save</ThemedText>
               </Pressable>
             </View>
           ),

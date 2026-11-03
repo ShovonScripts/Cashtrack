@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
@@ -176,7 +176,7 @@ export default function ExpensesScreen() {
                       accessibilityRole="button"
                       hitSlop={8}
                       style={({ pressed }) => [styles.resetChip, pressed && styles.pressed]}>
-                      <ThemedText type="caption" style={{ color: '#FFFFFF', fontWeight: '700' }}>
+                      <ThemedText type="caption" style={{ color: Palette.white, fontWeight: '700' }}>
                         Reset filters ✕
                       </ThemedText>
                     </Pressable>
@@ -189,7 +189,7 @@ export default function ExpensesScreen() {
 
                 <View style={styles.heroStatRow}>
                   <View style={styles.glassStatPill}>
-                    <MaterialCommunityIcons name="receipt" size={13} color="#FFFFFF" />
+                    <MaterialCommunityIcons name="receipt" size={13} color={Palette.white} />
                     <ThemedText type="caption" style={styles.glassStatText}>
                       {visible.length} {visible.length === 1 ? 'expense' : 'expenses'}
                     </ThemedText>
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   heroValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 38,
     lineHeight: 46,
     fontVariant: ['tabular-nums'],
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   glassStatText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '600',
     fontSize: 12,
   },

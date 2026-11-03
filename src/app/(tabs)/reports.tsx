@@ -12,7 +12,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { useNow } from '@/hooks/use-now';
@@ -467,14 +467,14 @@ export default function ReportsScreen() {
 
           <View style={styles.heroFooter}>
             <View style={styles.heroStatPill}>
-              <MaterialCommunityIcons name="receipt" size={13} color="#FFFFFF" />
+              <MaterialCommunityIcons name="receipt" size={13} color={Palette.white} />
               <ThemedText type="caption" style={styles.heroDetailText}>
                 {monthExpenses.length} {monthExpenses.length === 1 ? 'expense' : 'expenses'}
               </ThemedText>
             </View>
 
             <View style={styles.heroStatPill}>
-              <MaterialCommunityIcons name="tag-multiple" size={13} color="#FFFFFF" />
+              <MaterialCommunityIcons name="tag-multiple" size={13} color={Palette.white} />
               <ThemedText type="caption" style={styles.heroDetailText}>
                 {categoriesUsed.length} {categoriesUsed.length === 1 ? 'category' : 'categories'}
               </ThemedText>
@@ -680,21 +680,21 @@ export default function ReportsScreen() {
             isGenerating && styles.disabled,
           ]}>
           {isGenerating ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={Palette.white} />
           ) : (
             <View style={styles.pdfIconBadge}>
-              <MaterialCommunityIcons name="file-pdf-box" size={24} color="#FFFFFF" />
+              <MaterialCommunityIcons name="file-pdf-box" size={24} color={Palette.white} />
             </View>
           )}
           <View style={styles.exportCopy}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
+            <ThemedText type="defaultBold" style={{ color: Palette.white }}>
               {isGenerating ? 'Preparing PDF Document…' : 'Monthly PDF Report'}
             </ThemedText>
             <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>
               {Platform.OS === 'web' ? 'Print dialog · choose Save as PDF' : 'Formatted PDF document with breakdown'}
             </ThemedText>
           </View>
-          {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color="#FFFFFF" />}
+          {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color={Palette.white} />}
         </Pressable>
 
         {/* CSV Export Action Card */}
@@ -713,7 +713,7 @@ export default function ReportsScreen() {
             <MaterialCommunityIcons name="file-excel-box" size={24} color="#34D399" />
           </View>
           <View style={styles.exportCopy}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
+            <ThemedText type="defaultBold" style={{ color: Palette.white }}>
               {isGenerating ? 'Preparing CSV Spreadsheet…' : 'Monthly CSV File'}
             </ThemedText>
             <ThemedText type="caption" style={{ color: 'rgba(255,255,255,0.8)' }}>
@@ -881,7 +881,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   heroValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 38,
     lineHeight: 46,
     fontVariant: ['tabular-nums'],
@@ -904,7 +904,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: Radius.pill,
   },
-  heroDetailText: { color: '#FFFFFF', fontWeight: '600', fontSize: 12 },
+  heroDetailText: { color: Palette.white, fontWeight: '600', fontSize: 12 },
   metricsRow: {
     flexDirection: 'row',
     gap: Spacing.two,

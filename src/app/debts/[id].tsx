@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useDebts } from '@/context/debt-context';
 import { usePreferences } from '@/context/expense-context';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { withAlpha } from '@/utils/color';
 import { getRemainingBalance, getTotalPaid } from '@/utils/debt';
 import { useTheme } from '@/hooks/use-theme';
@@ -250,7 +250,7 @@ export default function DebtDetailsScreen() {
                   accessibilityLabel="Add payment"
                   hitSlop={6}
                   style={[styles.addPayBtn, { backgroundColor: theme.accentFill }]}>
-                  <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+                  <MaterialCommunityIcons name="plus" size={18} color={Palette.white} />
                 </Pressable>
               </View>
             </View>
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   primaryButton: { flex: 1, minWidth: 130, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one, borderRadius: Radius.medium },
   secondaryButton: { flex: 1, minWidth: 130, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
-  onAccent: { color: '#FFFFFF' },
+  onAccent: { color: Palette.white },
   dangerButton: { flex: 1, minWidth: 130, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
   pressed: { opacity: 0.7 },
   notFound: { flex: 1, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.two, justifyContent: 'center' },

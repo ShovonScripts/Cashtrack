@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { SpendlyLogo } from '@/components/spendly-logo';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -276,7 +276,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
                   { backgroundColor: theme.accentFill },
                   pressed && styles.pressed,
                 ]}>
-                <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>
+                <ThemedText type="defaultBold" style={{ color: Palette.white }}>
                   {isLastSlide ? 'Get Started' : 'Next →'}
                 </ThemedText>
               </Pressable>

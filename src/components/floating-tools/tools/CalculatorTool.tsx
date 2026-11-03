@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const HISTORY_KEY = '@spendly_calc_history';
@@ -117,7 +117,7 @@ export function CalculatorTool() {
 
               if (isEquals) {
                 bg = theme.accentFill;
-                textColor = '#FFFFFF';
+                textColor = Palette.white;
               } else if (isOperator) {
                 bg = `${theme.accent}18`;
                 textColor = theme.accent;

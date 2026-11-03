@@ -10,7 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { DatePicker } from '@/components/date-picker';
 import { useIncome } from '@/context/income-context';
 import { usePreferences } from '@/context/expense-context';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { confirmAction } from '@/utils/confirm';
@@ -227,7 +227,7 @@ export default function IncomeScreen() {
                 onValueChange={setIsRecurring}
                 accessibilityLabel="Recurring income"
                 trackColor={{ false: theme.border, true: theme.accent }}
-                thumbColor="#FFFFFF"
+                thumbColor={Palette.white}
               />
             </View>
           )}
@@ -407,8 +407,8 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: Radius.pill,
   },
-  recordBadgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
-  heroVal: { color: '#FFFFFF', fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'], fontWeight: '800' },
+  recordBadgeText: { color: Palette.white, fontSize: 11, fontWeight: '700' },
+  heroVal: { color: Palette.white, fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'], fontWeight: '800' },
   formCard: { gap: Spacing.three },
   formHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },

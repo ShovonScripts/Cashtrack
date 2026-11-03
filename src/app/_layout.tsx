@@ -24,6 +24,7 @@ import {
 import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsButton';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StopwatchProvider } from '@/context/stopwatch-context';
+import { Palette } from '@/constants/theme';
 
 preventAutoHideAsync();
 
@@ -173,7 +174,7 @@ function Navigation() {
       <View style={{ flex: 1, backgroundColor: theme.background }}>
       {showLoadErrorBanner && (
         <View style={{ backgroundColor: recoveredData ? theme.accentFill : theme.dangerFill, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
-          <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
+          <ThemedText style={{ color: Palette.white, flex: 1, fontSize: 13, fontWeight: '600' }}>
             {recoveredData
               ? 'Some saved data was unreadable. The original was backed up and new changes will save.'
               : 'Some saved data could not be read. Retry, or start fresh if it keeps happening.'}
@@ -184,14 +185,14 @@ function Navigation() {
                 accessibilityRole="button"
                 accessibilityLabel="Retry loading saved data"
                 onPress={handleRetryLoad}
-                style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+                style={{ backgroundColor: Palette.white, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
                 <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Retry</ThemedText>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Start fresh and reset data"
                 onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
-                style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+                style={{ backgroundColor: Palette.white, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
                 <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
               </Pressable>
             </View>
@@ -211,7 +212,7 @@ function Navigation() {
             gap: 12,
             zIndex: 999,
           }}>
-          <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
+          <ThemedText style={{ color: Palette.white, flex: 1, fontSize: 13, fontWeight: '600' }}>
             Changes could not be saved to this device. Keep the app open and retry.
           </ThemedText>
           <Pressable
@@ -221,7 +222,7 @@ function Navigation() {
               retrySave();
               retryDebtSave();
             }}
-            style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+            style={{ backgroundColor: Palette.white, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
             <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Retry</ThemedText>
           </Pressable>
         </View>
@@ -299,12 +300,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
   },
   addIconText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 18,
     lineHeight: 22,
   },
   addButtonText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     lineHeight: 20,
   },
   addButtonPressed: {
@@ -367,7 +368,7 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   errorButtonText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 15,
     fontWeight: '700',
   },
@@ -407,7 +408,7 @@ function RootErrorScreen({ error, retry }: ErrorBoundaryProps) {
   const isDark = useColorScheme() === 'dark';
   const palette = isDark
     ? { background: '#0C0F12', card: '#151A1F', border: '#283038', text: '#F4F7FA', muted: '#9BA6B2', accent: '#159A8C' }
-    : { background: '#F5F6F3', card: '#FFFFFF', border: '#E2E5E0', text: '#11181C', muted: '#5F6B75', accent: '#0E7C70' };
+    : { background: '#F5F6F3', card: Palette.white, border: '#E2E5E0', text: '#11181C', muted: '#5F6B75', accent: '#0E7C70' };
 
   useEffect(() => {
     console.error('[cashtrack] Unhandled render error', error);

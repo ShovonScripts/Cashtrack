@@ -33,7 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
-import { Brand, Radius } from '@/constants/theme';
+import { Brand, Palette, Radius } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
@@ -343,7 +343,7 @@ export function FacebookCoverHeader({
                   pageAContentStyle,
                 ]}>
                 <View style={styles.brandChip}>
-                  <MaterialCommunityIcons name="wallet" size={13} color="#FFFFFF" />
+                  <MaterialCommunityIcons name="wallet" size={13} color={Palette.white} />
                   <Text style={styles.brandMark}>CASHTRACK</Text>
                 </View>
 
@@ -478,7 +478,7 @@ export function FacebookCoverHeader({
               style={[styles.verticalToggleWrap, { top: topPadding }, hintStyle]}>
               <Pressable
                 onPress={() => goToVerticalPage(isGreetingPage ? 1 : 0)}
-                hitSlop={10}
+                hitSlop={{ top: 7, bottom: 7, left: 10, right: 10 }}
                 accessibilityRole="button"
                 accessibilityState={{ expanded: !isGreetingPage }}
                 accessibilityLabel={
@@ -490,7 +490,7 @@ export function FacebookCoverHeader({
                 <Ionicons
                   name={isGreetingPage ? 'chevron-up' : 'chevron-down'}
                   size={12}
-                  color="#FFFFFF"
+                  color={Palette.white}
                 />
                 <Text style={styles.verticalToggleText} numberOfLines={1}>
                   {isGreetingPage ? `${progress.yearPercent}% of ${progress.year}` : 'Greeting'}
@@ -626,7 +626,7 @@ export function FacebookCoverHeader({
               style={[
                 styles.dot,
                 {
-                  backgroundColor: activeIndex === index ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                  backgroundColor: activeIndex === index ? Palette.white : 'rgba(255,255,255,0.4)',
                   width: activeIndex === index ? 22 : 6,
                 },
               ]}
@@ -690,7 +690,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.24)',
   },
   brandMark: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.6,
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitial: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 20,
     fontWeight: '700',
   },
@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     textShadowRadius: 4,
   },
   whiteTitle: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 22,
     fontWeight: '800',
     lineHeight: 27,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   balanceValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 26,
     lineHeight: 30,
     fontWeight: '800',
@@ -891,7 +891,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
   },
   panelStatValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 13,
     lineHeight: 16,
     fontWeight: '700',
@@ -905,8 +905,8 @@ const styles = StyleSheet.create({
   verticalToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    height: 44,
+    gap: 6,
+    height: 30,
     backgroundColor: 'rgba(8,12,28,0.34)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.24)',
@@ -918,10 +918,11 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.97 }],
   },
   verticalToggleText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 10,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.6,
+    textTransform: 'uppercase',
   },
   cardInner: {
     flex: 1,
@@ -966,7 +967,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
   },
   metricText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 11.5,
     fontWeight: '600',
   },
@@ -985,7 +986,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   giantTempCompact: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 30,
     fontWeight: '800',
     letterSpacing: -0.8,
@@ -1086,7 +1087,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   floatingQuoteSymbol: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 26,
     fontWeight: '900',
     marginTop: 4,
@@ -1098,7 +1099,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   quoteCardContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.white,
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingTop: 24,

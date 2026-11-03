@@ -4,7 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   clearCompletedTodos,
@@ -175,7 +175,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
           <View style={styles.progressTextGroup}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Ionicons name="checkbox-outline" size={18} color={isFull ? '#14E7FD' : theme.accent} />
-              <ThemedText type="smallBold" style={isFull ? { color: '#FFFFFF', fontSize: 15 } : undefined}>
+              <ThemedText type="smallBold" style={isFull ? { color: Palette.white, fontSize: 15 } : undefined}>
                 Task Overview
               </ThemedText>
             </View>
@@ -239,7 +239,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                 { backgroundColor: title.trim() ? theme.accentFill : theme.border },
                 pressed && styles.pressed,
               ]}>
-              <Ionicons name="add" size={20} color={title.trim() ? '#FFFFFF' : theme.textSecondary} />
+              <Ionicons name="add" size={20} color={title.trim() ? Palette.white : theme.textSecondary} />
             </Pressable>
           )}
         </View>
@@ -304,8 +304,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                           borderColor: selected ? theme.accentFill : theme.border,
                         },
                       ]}>
-                      <Ionicons name={c.icon as any} size={13} color={selected ? '#FFFFFF' : theme.textSecondary} />
-                      <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
+                      <Ionicons name={c.icon as any} size={13} color={selected ? Palette.white : theme.textSecondary} />
+                      <ThemedText type="caption" style={{ color: selected ? Palette.white : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                         {c.label}
                       </ThemedText>
                     </Pressable>
@@ -359,8 +359,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                 { backgroundColor: title.trim() ? theme.accentFill : theme.border },
                 pressed && styles.pressed,
               ]}>
-              <Ionicons name="add" size={20} color={title.trim() ? '#FFFFFF' : theme.textSecondary} />
-              <ThemedText type="defaultBold" style={{ color: title.trim() ? '#FFFFFF' : theme.textSecondary, fontSize: 13.5 }}>
+              <Ionicons name="add" size={20} color={title.trim() ? Palette.white : theme.textSecondary} />
+              <ThemedText type="defaultBold" style={{ color: title.trim() ? Palette.white : theme.textSecondary, fontSize: 13.5 }}>
                 Add Task
               </ThemedText>
             </Pressable>
@@ -410,8 +410,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                       borderColor: selected ? theme.accentFill : theme.border,
                     },
                   ]}>
-                  <Ionicons name={c.icon as any} size={12} color={selected ? '#FFFFFF' : theme.textSecondary} />
-                  <ThemedText type="caption" style={{ color: selected ? '#FFFFFF' : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                  <Ionicons name={c.icon as any} size={12} color={selected ? Palette.white : theme.textSecondary} />
+                  <ThemedText type="caption" style={{ color: selected ? Palette.white : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
                     {c.label}
                   </ThemedText>
                 </Pressable>

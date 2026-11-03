@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import type { CategoryTotal, CostSummary, SummaryPeriod } from '@/utils/period-summary';
 
 const CARD_BACKGROUND: Record<SummaryPeriod, string> = {
@@ -86,7 +86,7 @@ export function CostSummaryCard({
           </Pressable>
         ) : topCategory && summary.amount > 0 ? (
           <View style={styles.topCategoryFooter}>
-            <Ionicons name="flash-outline" size={13} color="#FFFFFF" />
+            <Ionicons name="flash-outline" size={13} color={Palette.white} />
             <ThemedText type="caption" style={styles.topCategoryText} numberOfLines={1}>
               Top: {topCategory.category} · {formatAmount(topCategory.amount)} ({Math.round(topCategory.percent)}%)
             </ThemedText>
@@ -141,12 +141,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   rangePillText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '700',
     fontSize: 10.5,
   },
   value: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
   addButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.white,
     borderRadius: Radius.pill,
     height: 44,
     width: '100%',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   topCategoryText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '700',
     fontSize: 12,
     flexShrink: 1,

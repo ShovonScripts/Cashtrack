@@ -6,7 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useGoals, type GoalWithProgress } from '@/context/goal-context';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
@@ -234,9 +234,9 @@ function EditGoalForm({ goal }: { goal: GoalWithProgress }) {
                     <MaterialCommunityIcons
                       name={pt.icon}
                       size={24}
-                      color={selected ? '#FFFFFF' : theme.textSecondary}
+                      color={selected ? Palette.white : theme.textSecondary}
                     />
-                    <ThemedText type="caption" numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: selected ? '#FFFFFF' : theme.textSecondary }}>
+                    <ThemedText type="caption" numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: selected ? Palette.white : theme.textSecondary }}>
                       {pt.label}
                     </ThemedText>
                   </Pressable>
@@ -341,7 +341,7 @@ function EditGoalForm({ goal }: { goal: GoalWithProgress }) {
                         borderColor: allocationPercent === p ? theme.accentFill : theme.border,
                       },
                     ]}>
-                    <ThemedText type="smallBold" style={{ color: allocationPercent === p ? '#FFFFFF' : theme.text }}>
+                    <ThemedText type="smallBold" style={{ color: allocationPercent === p ? Palette.white : theme.text }}>
                       {p}%
                     </ThemedText>
                   </Pressable>
@@ -413,7 +413,7 @@ function EditGoalForm({ goal }: { goal: GoalWithProgress }) {
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
             style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Save changes</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: Palette.white }}>Save changes</ThemedText>
           </Pressable>
         </Card>
         </View>

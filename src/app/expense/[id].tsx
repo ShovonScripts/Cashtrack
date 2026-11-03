@@ -7,7 +7,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { getCategoryColor } from '@/constants/categories';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
   },
   onAccent: {
-    color: '#FFFFFF',
+    color: Palette.white,
   },
   dangerButton: {
     flex: 1,

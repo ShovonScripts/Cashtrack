@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { YearProgress } from '@/utils/year-progress';
 import { formatDaysLeft } from '@/utils/year-progress';
 
@@ -109,7 +109,7 @@ export function YearProgressPanel({
             const isCurrent = monthNumber === progress.monthNumber;
             const barHeight = spend > 0 ? Math.max(4, (spend / maxSpend) * CHART_HEIGHT) : 2;
             const barColor = isSelected
-              ? '#FFFFFF'
+              ? Palette.white
               : isCurrent
                 ? 'rgba(255,255,255,0.34)'
                 : spend > 0
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   heroValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800',
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
   fill: {
     height: '100%',
     borderRadius: Radius.pill,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.white,
   },
   supportRow: {
     flexDirection: 'row',
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   supportLeft: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   chartSelected: {
     flexShrink: 1,
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   monthLetterSelected: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontWeight: '800',
   },
 });

@@ -23,6 +23,7 @@ import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
+import { Palette } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
@@ -151,7 +152,7 @@ export function SlidingHeroBanner({
           <View style={styles.cardInner}>
             <View style={styles.slideHeader}>
               <View style={styles.locationBadge}>
-                <Ionicons name="location" size={13} color="#FFFFFF" />
+                <Ionicons name="location" size={13} color={Palette.white} />
                 <Text style={styles.whiteSubtext}>{weather.locationName}</Text>
               </View>
               <View style={styles.outlookPill}>
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitial: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 18,
     fontWeight: '700',
   },
@@ -336,7 +337,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   giantTemp: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: -0.5,
@@ -353,7 +354,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   tipContentText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 11.5,
     fontWeight: '500',
     flex: 1,
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   quoteBodyText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 13.5,
     fontWeight: '600',
     fontStyle: 'italic',

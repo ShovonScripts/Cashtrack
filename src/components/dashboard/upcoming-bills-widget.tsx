@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
@@ -121,7 +121,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
               <View style={styles.nextDueRow}>
                 <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.85)" />
                 <Text style={styles.nextDueText} numberOfLines={1}>
-                  Next: <Text style={{ fontWeight: '800', color: '#FFFFFF' }}>{nextReminder.title}</Text> · {
+                  Next: <Text style={{ fontWeight: '800', color: Palette.white }}>{nextReminder.title}</Text> · {
                     nextReminder.daysUntilDue < 0
                       ? `🚨 ${Math.abs(nextReminder.daysUntilDue)}d overdue`
                       : nextReminder.daysUntilDue === 0
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     opacity: 0.75,
   },
   viewAllGlassText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   heroTotalValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 34,
     lineHeight: 40,
     fontWeight: '800',
@@ -412,7 +412,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   subHubGlassText: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 12.5,
     fontWeight: '700',
   },

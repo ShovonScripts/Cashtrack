@@ -13,6 +13,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
 import { ToolsMenuModal } from './ToolsMenuModal';
+import { Palette } from '@/constants/theme';
 
 const BUTTON_SIZE = 48;
 const RUNNING_WIDTH = 104;
@@ -192,7 +193,7 @@ function FloatingToolsButtonInner() {
                 <Ionicons name="timer-outline" size={14} color={theme.accent} />
               </>
             ) : (
-              <Ionicons name="grid" size={22} color="#FFFFFF" />
+              <Ionicons name="grid" size={22} color={Palette.white} />
             )}
           </Pressable>
         </Animated.View>

@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { CategoryIcon } from '@/components/category-icon';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { getCategoryColor, ICON_PACK } from '@/constants/categories';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 function triggerHaptic() {
@@ -167,7 +167,7 @@ export default function CategoriesScreen() {
                   pressed && styles.pressed,
                   !newName.trim() && styles.disabled,
                 ]}>
-                <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
+                <MaterialCommunityIcons name="plus" size={18} color={Palette.white} />
                 <ThemedText type="smallBold" style={styles.addButtonText}>Add</ThemedText>
               </Pressable>
             </View>
@@ -408,11 +408,11 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: Radius.pill,
   },
-  customBadgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+  customBadgeText: { color: Palette.white, fontSize: 11, fontWeight: '700' },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroStat: { flex: 1, gap: 2 },
   heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
-  heroStatVal: { color: '#FFFFFF', fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums'], fontWeight: '800' },
+  heroStatVal: { color: Palette.white, fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums'], fontWeight: '800' },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
   addCard: { gap: Spacing.three },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   addRow: { flexDirection: 'row', gap: Spacing.two },
   input: { flex: 1, minWidth: 0, minHeight: 48, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, paddingHorizontal: Spacing.three, fontSize: 15 },
   addButton: { minWidth: 80, minHeight: 48, borderRadius: Radius.medium, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: Spacing.three },
-  addButtonText: { color: '#FFFFFF' },
+  addButtonText: { color: Palette.white },
   iconPackGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   iconChoice: { width: 40, height: 40, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   disabled: { opacity: 0.45 },

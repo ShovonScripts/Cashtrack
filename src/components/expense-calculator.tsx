@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { ExpenseCategoryGrid } from '@/components/expense-category-grid';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDraft, type RecurringFrequency } from '@/types/expense';
@@ -228,7 +228,7 @@ export function ExpenseCalculator({
                           type={isAction ? 'defaultBold' : 'subtitle'}
                           style={[
                             styles.keyText,
-                            isEquals && { color: '#FFFFFF' },
+                            isEquals && { color: Palette.white },
                             isToday && { color: theme.accent, fontSize: 13 },
                           ]}>
                           {key}
@@ -276,7 +276,7 @@ export function ExpenseCalculator({
                   styles.toggleBadge,
                   { backgroundColor: isRecurring ? theme.accentFill : theme.cardMuted, borderColor: theme.border },
                 ]}>
-                <ThemedText type="smallBold" style={{ color: isRecurring ? '#FFFFFF' : theme.textSecondary }}>
+                <ThemedText type="smallBold" style={{ color: isRecurring ? Palette.white : theme.textSecondary }}>
                   {isRecurring ? 'ON' : 'OFF'}
                 </ThemedText>
               </Pressable>

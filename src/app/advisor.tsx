@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { useNow } from '@/hooks/use-now';
@@ -89,7 +89,7 @@ export default function AdvisorScreen() {
                     ? theme.success
                     : intelligence.financialHealthStatus === 'Overspending'
                       ? theme.danger
-                      : '#FFFFFF',
+                      : Palette.white,
                   fontWeight: '800'
                 }}>
                   {intelligence.financialHealthStatus}
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   intelligenceTip: {
-    color: '#FFFFFF',
+    color: Palette.white,
     lineHeight: 20,
     fontSize: 14,
   },
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   intelMetricValue: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 14,
     fontVariant: ['tabular-nums'],
   },
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
   shortcutGrid: { flexDirection: 'row', gap: Spacing.two },
   shortcutCard: { flex: 1, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center', gap: 6 },
   actionButton: { minHeight: 46, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.three },
-  actionText: { color: '#FFFFFF' },
+  actionText: { color: Palette.white },
   footer: { textAlign: 'center', lineHeight: 18, paddingHorizontal: Spacing.three, marginTop: Spacing.one },
   pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
 });

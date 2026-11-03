@@ -16,7 +16,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing, Brand } from '@/constants/theme';
+import { Brand, FeatureColors, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
+import { Chip, ListRow, Section } from '@/components/ui';
 import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/context/expense-context';
 import { useGoals } from '@/context/goal-context';
@@ -74,7 +75,7 @@ export default function MenuScreen() {
       title: 'World Clocks',
       subtitle: 'World times and timezones',
       icon: 'earth',
-      color: '#0284C7',
+      color: FeatureColors.sky,
       route: '/world-clock',
     },
     {
@@ -82,7 +83,7 @@ export default function MenuScreen() {
       title: 'Stopwatch & Timer',
       subtitle: 'Time yourself and track durations',
       icon: 'timer-outline',
-      color: '#F59E0B',
+      color: FeatureColors.amber,
       route: '/stopwatch',
     },
   ];
@@ -93,7 +94,7 @@ export default function MenuScreen() {
       title: 'Calculator',
       subtitle: 'Math, tips and bill splits',
       icon: 'calculator-variant-outline',
-      color: '#3B82F6',
+      color: FeatureColors.blue,
       route: '/calculator',
     },
     {
@@ -101,7 +102,7 @@ export default function MenuScreen() {
       title: 'Currency Converter',
       subtitle: 'Convert between currencies',
       icon: 'currency-usd',
-      color: '#059669',
+      color: FeatureColors.emerald,
       route: '/currency',
     },
     {
@@ -109,7 +110,7 @@ export default function MenuScreen() {
       title: 'Notes',
       subtitle: 'Quick notes on your device',
       icon: 'note-text-outline',
-      color: '#10B981',
+      color: FeatureColors.green,
       route: '/notes',
     },
     {
@@ -117,7 +118,7 @@ export default function MenuScreen() {
       title: 'To-Do List',
       subtitle: 'Checklist and money reminders',
       icon: 'check-circle-outline',
-      color: '#059669',
+      color: FeatureColors.emerald,
       route: '/todo',
     },
   ];
@@ -128,7 +129,7 @@ export default function MenuScreen() {
       title: 'Income Streams',
       subtitle: 'Recurring salary & cash sources',
       icon: 'wallet-plus-outline',
-      color: '#7667F2',
+      color: FeatureColors.violet,
       route: '/income',
       badge: 'Recurring',
     },
@@ -137,7 +138,7 @@ export default function MenuScreen() {
       title: 'Bills & Reminders',
       subtitle: 'Upcoming payment alerts & EMIs',
       icon: 'calendar-clock',
-      color: overdueRemindersCount > 0 ? '#FF6B6B' : '#EB5757',
+      color: overdueRemindersCount > 0 ? FeatureColors.coral : FeatureColors.red,
       route: '/bills',
       badge:
         overdueRemindersCount > 0
@@ -145,14 +146,14 @@ export default function MenuScreen() {
           : activeReminders.length > 0
             ? `${activeReminders.length} due`
             : undefined,
-      badgeColor: overdueRemindersCount > 0 ? '#FF6B6B' : '#EB5757',
+      badgeColor: overdueRemindersCount > 0 ? FeatureColors.coral : FeatureColors.red,
     },
     {
       id: 'calendar',
       title: 'Bill & Renewal Calendar',
       subtitle: 'Interactive monthly schedule grid',
       icon: 'calendar-month',
-      color: '#4F46E5',
+      color: FeatureColors.indigo,
       route: '/bills/calendar',
       badge: 'Calendar',
     },
@@ -161,7 +162,7 @@ export default function MenuScreen() {
       title: 'Debts & IOUs',
       subtitle: 'Track money lent and borrowed',
       icon: 'account-cash-outline',
-      color: '#2D9CDB',
+      color: FeatureColors.azure,
       route: '/debts',
       badge: activeDebtsCount > 0 ? `${activeDebtsCount} active` : undefined,
     },
@@ -170,7 +171,7 @@ export default function MenuScreen() {
       title: 'Savings Goals & Pots',
       subtitle: 'Target milestone progress',
       icon: 'bullseye-arrow',
-      color: '#27AE60',
+      color: FeatureColors.leaf,
       route: '/goals',
       badge: activeGoalsCount > 0 ? `${activeGoalsCount} pots` : undefined,
     },
@@ -179,7 +180,7 @@ export default function MenuScreen() {
       title: 'Budget Caps & Limits',
       subtitle: 'Category monthly spending limits',
       icon: 'scale-balance',
-      color: '#BB6BD9',
+      color: FeatureColors.orchid,
       route: '/budgets',
     },
   ];
@@ -190,17 +191,17 @@ export default function MenuScreen() {
       title: 'Spending Advisor',
       subtitle: 'Personalized budget check-in',
       icon: 'lightbulb-on-outline',
-      color: '#F2C94C',
+      color: FeatureColors.gold,
       route: '/advisor',
       badge: 'SMART',
-      badgeColor: '#F2C94C',
+      badgeColor: FeatureColors.gold,
     },
     {
       id: 'reports',
       title: 'Analytics & Reports',
       subtitle: 'Monthly PDF & CSV data export',
       icon: 'chart-box-outline',
-      color: '#159A8C',
+      color: FeatureColors.teal,
       route: '/(tabs)/reports',
       badge: 'PDF / CSV',
     },
@@ -209,7 +210,7 @@ export default function MenuScreen() {
       title: 'Categories Manager',
       subtitle: 'Create, rename, or recolor tags',
       icon: 'tag-multiple-outline',
-      color: '#C17A24',
+      color: FeatureColors.bronze,
       route: '/categories',
       badge: customCategories.length > 0 ? `${customCategories.length} custom` : undefined,
     },
@@ -221,7 +222,7 @@ export default function MenuScreen() {
       title: 'Profile & Preferences',
       subtitle: 'Personal details, age & gender',
       icon: 'account-cog-outline',
-      color: '#828282',
+      color: FeatureColors.gray,
       route: '/profile',
     },
     {
@@ -229,7 +230,7 @@ export default function MenuScreen() {
       title: 'Country & Currency',
       subtitle: 'Region and currency settings',
       icon: 'earth',
-      color: '#2D9CDB',
+      color: FeatureColors.azure,
       route: '/country',
       badge: `${country.currencyCode} (${country.symbol.trim()})`,
     },
@@ -238,7 +239,7 @@ export default function MenuScreen() {
       title: 'User Manual & Help',
       subtitle: 'Searchable guide to every feature',
       icon: 'book-open-page-variant-outline',
-      color: '#0EA5E9',
+      color: FeatureColors.cyan,
       route: '/user-manual',
       badge: 'Guide',
     },
@@ -247,7 +248,7 @@ export default function MenuScreen() {
       title: 'About CashTrack & Support',
       subtitle: 'Privacy promise & app version',
       icon: 'information-outline',
-      color: '#5077C8',
+      color: FeatureColors.slate,
       route: '/about',
     },
   ];
@@ -293,42 +294,15 @@ export default function MenuScreen() {
         {items.map((item, index) => (
           <View key={item.id}>
             {index > 0 && <View style={[styles.divider, { backgroundColor: theme.border }]} />}
-            <Pressable
+            <ListRow
+              title={item.title}
+              subtitle={item.subtitle}
+              icon={item.icon}
+              color={item.color}
+              badge={item.badge}
+              badgeColor={item.badgeColor}
               onPress={() => handleNavigate(item.route)}
-              accessibilityRole="button"
-              accessibilityLabel={item.title}
-              style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-              <View style={[styles.iconBadge, { backgroundColor: `${item.color}1E` }]}>
-                <MaterialCommunityIcons name={item.icon} size={20} color={item.color} />
-              </View>
-              <View style={styles.copy}>
-                <View style={styles.rowTitleContainer}>
-                  <ThemedText type="smallBold" numberOfLines={1} style={styles.rowTitleText}>
-                    {item.title}
-                  </ThemedText>
-                  {item.badge && (
-                    <View
-                      style={[
-                        styles.badgeContainer,
-                        {
-                          backgroundColor: `${item.badgeColor || item.color}20`,
-                          borderColor: `${item.badgeColor || item.color}40`,
-                        },
-                      ]}>
-                      <ThemedText
-                        type="caption"
-                        style={[styles.badgeText, { color: item.badgeColor || item.color }]}>
-                        {item.badge}
-                      </ThemedText>
-                    </View>
-                  )}
-                </View>
-                <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-                  {item.subtitle}
-                </ThemedText>
-              </View>
-              <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-            </Pressable>
+            />
           </View>
         ))}
       </Card>
@@ -377,7 +351,7 @@ export default function MenuScreen() {
                     </View>
                   )}
                   <View style={[styles.badgeIconOverlay, { backgroundColor: theme.accentFill }]}>
-                    <MaterialCommunityIcons name="shield-check" size={10} color="#FFFFFF" />
+                    <MaterialCommunityIcons name="shield-check" size={10} color={Palette.white} />
                   </View>
                 </View>
 
@@ -456,36 +430,17 @@ export default function MenuScreen() {
                 { key: 'tools', label: 'Tools' },
                 { key: 'preferences', label: 'Settings' },
               ] as const
-            ).map((chip) => {
-              const active = selectedCategory === chip.key;
-              return (
-                <Pressable
-                  key={chip.key}
-                  onPress={() => {
-                    triggerHaptic();
-                    setSelectedFilterCategory(chip.key);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: active }}
-                  style={({ pressed }) => [
-                    styles.chipBtn,
-                    {
-                      backgroundColor: active ? theme.accentFill : theme.cardMuted,
-                      borderColor: active ? theme.accentFill : theme.border,
-                    },
-                    pressed && styles.rowPressed,
-                  ]}>
-                  <ThemedText
-                    type="caption"
-                    style={{
-                      color: active ? theme.onBrand : theme.textSecondary,
-                      fontWeight: active ? '700' : '600',
-                    }}>
-                    {chip.label}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
+            ).map((chip) => (
+              <Chip
+                key={chip.key}
+                label={chip.label}
+                selected={selectedCategory === chip.key}
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedFilterCategory(chip.key);
+                }}
+              />
+            ))}
           </ScrollView>
 
           {totalResults === 0 ? (
@@ -502,42 +457,30 @@ export default function MenuScreen() {
             <>
               {/* Section 1: Financial Management */}
               {filteredFinancial.length > 0 && (
-                <View style={styles.section}>
-                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    MONEY
-                  </ThemedText>
-                  {renderSectionGroup(filteredFinancial)}
-                </View>
+                <Section title="Money">
+                    {renderSectionGroup(filteredFinancial)}
+                  </Section>
               )}
 
               {/* Section 2: Intelligence & Reports */}
               {filteredIntelligence.length > 0 && (
-                <View style={styles.section}>
-                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    INSIGHTS
-                  </ThemedText>
-                  {renderSectionGroup(filteredIntelligence)}
-                </View>
+                <Section title="Insights">
+                    {renderSectionGroup(filteredIntelligence)}
+                  </Section>
               )}
 
               {/* Section: Utility Tools */}
               {filteredTools.length > 0 && (
-                <View style={styles.section}>
-                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    TOOLS
-                  </ThemedText>
-                  {renderSectionGroup(filteredTools)}
-                </View>
+                <Section title="Tools">
+                    {renderSectionGroup(filteredTools)}
+                  </Section>
               )}
 
               {/* Section 3: System & Preferences */}
               {filteredPreferences.length > 0 && (
-                <View style={styles.section}>
-                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    SETTINGS
-                  </ThemedText>
-                  {renderSectionGroup(filteredPreferences)}
-                </View>
+                <Section title="Settings">
+                    {renderSectionGroup(filteredPreferences)}
+                  </Section>
               )}
             </>
           )}
@@ -570,14 +513,6 @@ const styles = StyleSheet.create({
   },
   headerCopy: {
     gap: 1,
-  },
-  themeIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.medium,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
   },
   userBannerCard: {
     padding: 0,
@@ -614,7 +549,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarInitial: {
-    color: '#FFFFFF',
+    color: Palette.white,
     fontSize: 18,
     fontWeight: '800',
   },
@@ -676,62 +611,8 @@ const styles = StyleSheet.create({
     gap: Spacing.one,
     paddingVertical: 2,
   },
-  chipBtn: {
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  section: {
-    gap: Spacing.one,
-    marginTop: 4,
-  },
-  sectionHeader: {
-    letterSpacing: 0.8,
-    fontWeight: '800',
-    fontSize: 10,
-    paddingLeft: Spacing.one,
-  },
   groupCard: {
     borderRadius: Radius.large,
-  },
-  row: {
-    minHeight: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
-  },
-  iconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  copy: {
-    flex: 1,
-    gap: 1,
-  },
-  rowTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  rowTitleText: {
-    flexShrink: 1,
-    fontSize: 13.5,
-  },
-  badgeContainer: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  badgeText: {
-    fontSize: 9.5,
-    fontWeight: '800',
   },
   divider: {
     height: StyleSheet.hairlineWidth,

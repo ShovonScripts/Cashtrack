@@ -22,7 +22,7 @@ import { File, Paths } from 'expo-file-system';
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing, Brand } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
 import { useDebts } from '@/context/debt-context';
 import { useExpenses, usePreferences } from '@/context/expense-context';
@@ -500,8 +500,8 @@ export default function ProfileScreen() {
       {/* Toast Notification Banner */}
       {savedToastVisible && (
         <View style={[styles.savedToast, { backgroundColor: '#10B981' }]}>
-          <MaterialCommunityIcons name="check-circle" size={18} color="#FFFFFF" />
-          <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>
+          <MaterialCommunityIcons name="check-circle" size={18} color={Palette.white} />
+          <ThemedText type="smallBold" style={{ color: Palette.white }}>
             Profile & Settings updated successfully!
           </ThemedText>
         </View>
@@ -542,7 +542,7 @@ export default function ProfileScreen() {
 
               {/* Edit Cover Button */}
               <View style={styles.coverEditOverlay}>
-                <MaterialCommunityIcons name="image-edit-outline" size={12} color="#FFFFFF" />
+                <MaterialCommunityIcons name="image-edit-outline" size={12} color={Palette.white} />
                 <ThemedText type="caption" style={styles.coverEditText}>
                   Banner
                 </ThemedText>
@@ -560,13 +560,13 @@ export default function ProfileScreen() {
                   <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
                 ) : (
                   <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accentFill }]}>
-                    <ThemedText type="subtitle" style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 24 }}>
+                    <ThemedText type="subtitle" style={{ color: Palette.white, fontWeight: '800', fontSize: 24 }}>
                       {name ? name.charAt(0).toUpperCase() : 'S'}
                     </ThemedText>
                   </View>
                 )}
                 <View style={[styles.avatarCameraBadge, { backgroundColor: theme.accentFill, borderColor: theme.card }]}>
-                  <MaterialCommunityIcons name="camera" size={12} color="#FFFFFF" />
+                  <MaterialCommunityIcons name="camera" size={12} color={Palette.white} />
                 </View>
               </Pressable>
             </View>
@@ -982,7 +982,7 @@ export default function ProfileScreen() {
                   }}
                   accessibilityLabel="Bill payment reminders"
                   trackColor={{ false: theme.border, true: theme.accent }}
-                  thumbColor="#FFFFFF"
+                  thumbColor={Palette.white}
                 />
               </View>
 
@@ -1003,7 +1003,7 @@ export default function ProfileScreen() {
                   }}
                   accessibilityLabel="Budget cap threshold warnings"
                   trackColor={{ false: theme.border, true: theme.accent }}
-                  thumbColor="#FFFFFF"
+                  thumbColor={Palette.white}
                 />
               </View>
 
@@ -1033,7 +1033,7 @@ export default function ProfileScreen() {
                   }}
                   accessibilityLabel="Daily expense log check-in"
                   trackColor={{ false: theme.border, true: theme.accent }}
-                  thumbColor="#FFFFFF"
+                  thumbColor={Palette.white}
                 />
               </View>
 
@@ -1063,7 +1063,7 @@ export default function ProfileScreen() {
                   }}
                   accessibilityLabel="Daily motivation quote notification"
                   trackColor={{ false: theme.border, true: theme.accent }}
-                  thumbColor="#FFFFFF"
+                  thumbColor={Palette.white}
                 />
               </View>
 
@@ -1085,7 +1085,7 @@ export default function ProfileScreen() {
                   }}
                   accessibilityLabel="Show extras: world clocks and stopwatch in the More tab"
                   trackColor={{ false: theme.border, true: theme.accent }}
-                  thumbColor="#FFFFFF"
+                  thumbColor={Palette.white}
                 />
               </View>
 
@@ -1336,7 +1336,7 @@ export default function ProfileScreen() {
                 pressed && styles.pressed,
                 !ageIsValid && styles.disabled,
               ]}>
-              <ThemedText type="smallBold" style={{ color: '#FFFFFF' }}>Save</ThemedText>
+              <ThemedText type="smallBold" style={{ color: Palette.white }}>Save</ThemedText>
             </Pressable>
           </View>
         </View>
@@ -1407,7 +1407,7 @@ export default function ProfileScreen() {
                       </View>
                       {isSelected && (
                         <View style={[styles.selectedCheckBadge, { backgroundColor: theme.accentFill }]}>
-                          <MaterialCommunityIcons name="check" size={12} color="#FFFFFF" />
+                          <MaterialCommunityIcons name="check" size={12} color={Palette.white} />
                         </View>
                       )}
                     </Pressable>
@@ -1426,8 +1426,8 @@ export default function ProfileScreen() {
                 accessibilityLabel="Upload Custom Banner Photo"
                 style={[styles.modalActionBtn, { backgroundColor: Brand.primary }]}
               >
-                <MaterialCommunityIcons name="image-plus" size={16} color="#FFFFFF" />
-                <ThemedText type="smallBold" style={{ color: '#FFFFFF', fontSize: 13 }}>
+                <MaterialCommunityIcons name="image-plus" size={16} color={Palette.white} />
+                <ThemedText type="smallBold" style={{ color: Palette.white, fontSize: 13 }}>
                   Upload Custom Photo
                 </ThemedText>
               </Pressable>
@@ -1487,7 +1487,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.small,
   },
   completionRow: { flexDirection: 'row', alignItems: 'center' },
-  completionText: { color: '#FFFFFF', fontSize: 9.5, fontWeight: '700' },
+  completionText: { color: Palette.white, fontSize: 9.5, fontWeight: '700' },
   completionTrack: { width: 70, height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, overflow: 'hidden' },
   completionFill: { height: '100%', borderRadius: 2 },
   coverEditOverlay: {
@@ -1502,7 +1502,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     gap: 3,
   },
-  coverEditText: { color: '#FFFFFF', fontSize: 10.5, fontWeight: '600' },
+  coverEditText: { color: Palette.white, fontSize: 10.5, fontWeight: '600' },
   avatarRowContainer: {
     paddingHorizontal: Spacing.two,
     marginTop: -34,

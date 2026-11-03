@@ -7,7 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useDebts } from '@/context/debt-context';
 import { useExpenses } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import type { DebtType } from '@/types/debt';
@@ -171,7 +171,7 @@ export default function AddDebtScreen() {
                 accessibilityState={{ checked: affectBalance }}
                 accessibilityLabel="Affect main balance"
                 style={[styles.toggleBadge, { backgroundColor: affectBalance ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
-                <ThemedText type="smallBold" style={{ color: affectBalance ? '#FFFFFF' : theme.textSecondary }}>
+                <ThemedText type="smallBold" style={{ color: affectBalance ? Palette.white : theme.textSecondary }}>
                   {affectBalance ? 'YES' : 'NO'}
                 </ThemedText>
               </Pressable>
@@ -194,7 +194,7 @@ export default function AddDebtScreen() {
                 accessibilityState={{ checked: hasDueDate }}
                 accessibilityLabel="Enable due date"
                 style={[styles.toggleBadge, { backgroundColor: hasDueDate ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
-                <ThemedText type="smallBold" style={{ color: hasDueDate ? '#FFFFFF' : theme.textSecondary }}>
+                <ThemedText type="smallBold" style={{ color: hasDueDate ? Palette.white : theme.textSecondary }}>
                   {hasDueDate ? 'ENABLED' : 'NONE'}
                 </ThemedText>
               </Pressable>

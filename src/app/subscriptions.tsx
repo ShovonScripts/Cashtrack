@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -138,7 +138,7 @@ export default function SubscriptionsHubScreen() {
                 accessibilityRole="button"
                 accessibilityLabel="Add subscription"
                 style={[styles.emptyActionBtn, { backgroundColor: theme.accentFill }]}>
-                <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Add subscription</ThemedText>
+                <ThemedText type="defaultBold" style={{ color: Palette.white }}>Add subscription</ThemedText>
               </Pressable>
             </Card>
           ) : (
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
   addButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.white,
     borderRadius: Radius.medium,
     paddingVertical: Spacing.three,
     alignItems: 'center',
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.half },
   heroStat: { flex: 1, gap: Spacing.half },
   heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: '#FFFFFF', fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
+  heroStatVal: { color: Palette.white, fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
   heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.25)', zIndex: 1 },
   heroOrbSmall: { position: 'absolute', width: 150, height: 150, borderRadius: 75, left: -50, bottom: -60, backgroundColor: 'rgba(20,231,253,0.2)', zIndex: 1 },

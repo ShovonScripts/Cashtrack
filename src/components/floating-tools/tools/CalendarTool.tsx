@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -116,7 +116,7 @@ export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
                   type="caption"
                   style={{
                     fontWeight: isSelected || hasBills ? '700' : '400',
-                    color: isSelected ? '#FFFFFF' : theme.text,
+                    color: isSelected ? Palette.white : theme.text,
                   }}>
                   {dayNum}
                 </ThemedText>
@@ -124,7 +124,7 @@ export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
                   <View
                     style={[
                       styles.dot,
-                      { backgroundColor: isSelected ? '#FFFFFF' : theme.accent },
+                      { backgroundColor: isSelected ? Palette.white : theme.accent },
                     ]}
                   />
                 )}

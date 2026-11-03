@@ -41,3 +41,6 @@ jobs:
 
       - name: Accessibility scan
         run: npm run check:a11y
+
+      - name: Hardcoded colour budget
+        run: npm run check:colors

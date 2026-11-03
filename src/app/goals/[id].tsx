@@ -7,7 +7,7 @@ import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { GoalCompletionModal } from '@/components/goal-completion-modal';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
@@ -326,7 +326,7 @@ export default function GoalDetailScreen() {
             accessibilityRole="button"
             accessibilityState={{ disabled: isSubmitting }}
             style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: '#FFFFFF' }}>Contribute</ThemedText>
+            <ThemedText type="defaultBold" style={{ color: Palette.white }}>Contribute</ThemedText>
           </Pressable>
         </Card>
 
@@ -472,16 +472,16 @@ const styles = StyleSheet.create({
   heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
   statusPill: { paddingHorizontal: Spacing.two, paddingVertical: 3, borderRadius: Radius.pill },
   whitePillBtn: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Palette.white,
     paddingHorizontal: Spacing.three,
     paddingVertical: 4,
     borderRadius: Radius.pill,
   },
-  heroTitle: { color: '#FFFFFF', fontSize: 24, lineHeight: 30 },
+  heroTitle: { color: Palette.white, fontSize: 24, lineHeight: 30 },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.half },
   heroStat: { flex: 1, gap: Spacing.half },
   heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: '#FFFFFF', fontSize: 22, lineHeight: 28, fontVariant: ['tabular-nums'] },
+  heroStatVal: { color: Palette.white, fontSize: 22, lineHeight: 28, fontVariant: ['tabular-nums'] },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 32, backgroundColor: 'rgba(255,255,255,0.2)' },
   heroOrbLarge: { position: 'absolute', width: 220, height: 220, borderRadius: 110, right: -80, top: -90, backgroundColor: 'rgba(139,123,255,0.2)' },
   card: { padding: Spacing.four, gap: Spacing.three },

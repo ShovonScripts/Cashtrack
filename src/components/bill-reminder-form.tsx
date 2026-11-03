@@ -13,7 +13,7 @@ import {
 
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { FinancialReminder, FinancialReminderDraft, ReminderCategory, ReminderRepeatType } from '@/types/reminder';
 
@@ -201,7 +201,7 @@ export function BillReminderForm({ initial, paidThisCycle = 0, submitLabel, onSu
                         borderColor: selected ? theme.accentFill : theme.border,
                       },
                     ]}>
-                    <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : theme.textSecondary }}>
+                    <ThemedText type="smallBold" style={{ color: selected ? Palette.white : theme.textSecondary }}>
                       {cat}
                     </ThemedText>
                   </Pressable>
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   noteInput: { minHeight: 70, textAlignVertical: 'top' },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
   saveButtonDisabled: { opacity: 0.4 },
-  saveText: { color: '#FFFFFF' },
+  saveText: { color: Palette.white },
   cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
   pressed: { opacity: 0.7 },
 });

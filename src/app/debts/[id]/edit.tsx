@@ -6,7 +6,7 @@ import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useDebts } from '@/context/debt-context';
-import { Brand, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import type { DebtRecord, DebtType } from '@/types/debt';
@@ -177,7 +177,7 @@ function EditDebtForm({ debt }: { debt: DebtRecord }) {
                 accessibilityState={{ checked: hasDueDate }}
                 accessibilityLabel="Enable due date"
                 style={[styles.toggleBadge, { backgroundColor: hasDueDate ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
-                <ThemedText type="smallBold" style={{ color: hasDueDate ? '#FFFFFF' : theme.textSecondary }}>
+                <ThemedText type="smallBold" style={{ color: hasDueDate ? Palette.white : theme.textSecondary }}>
                   {hasDueDate ? 'ENABLED' : 'NONE'}
                 </ThemedText>
               </Pressable>

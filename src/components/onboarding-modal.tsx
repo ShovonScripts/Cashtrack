@@ -67,76 +67,31 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
       ),
     },
     {
-      id: 'transactions',
-      icon: 'receipt' as const,
-      title: 'Transactions & Income',
-      subtitle: 'Log expenses effortlessly with built-in math.',
+      id: 'features',
+      icon: 'view-grid-outline' as const,
+      title: 'Everything in one place',
+      subtitle: 'Four things to know, then you are ready.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
             icon="calculator"
-            title="Smart Expression Calculator"
-            description="Type calculations directly like 12.50 + 4.99 = 17.49 when recording receipts."
+            title="Fast expense entry"
+            description="Type sums like 12.50 + 4.99 right in the amount, and pick from your recent categories."
           />
           <FeatureBullet
-            icon="wallet-plus-outline"
-            title="Income Streams"
-            description="Track recurring salary, freelance gigs, and diverse cash inflows."
-          />
-          <FeatureBullet
-            icon="tag-multiple-outline"
-            title="Custom Categories & Tags"
-            description="Organize expenses by intuitive categories or create custom tags with custom icons."
-          />
-        </View>
-      ),
-    },
-    {
-      id: 'liabilities',
-      icon: 'scale-balance' as const,
-      title: 'Budgets, Bills & Debts',
-      subtitle: 'Stay in full control of your financial obligations.',
-      content: (
-        <View style={styles.slideBody}>
-          <FeatureBullet
-            icon="target"
-            title="Monthly Budget Caps"
-            description="Set limits for categories and get automatic alerts at 80% and 100% spend."
-          />
-          <FeatureBullet
-            icon="calendar-clock"
-            title="Bills & Reminders"
-            description="Never miss a payment with upcoming payment alerts and EMIs."
-          />
-          <FeatureBullet
-            icon="account-cash-outline"
-            title="Debts & IOUs Tracker"
-            description="Track money you lent or borrowed, log partial returns, and mark items settled."
-          />
-        </View>
-      ),
-    },
-    {
-      id: 'insights',
-      icon: 'chart-box-outline' as const,
-      title: 'Insights & Reports',
-      subtitle: 'Personalised guidance and exportable data.',
-      content: (
-        <View style={styles.slideBody}>
-          <FeatureBullet
-            icon="lightbulb-on-outline"
-            title="Spending Advisor"
-            description="Get personalised budget check-ins and rule-based insights generated right on your phone."
+            icon="scale-balance"
+            title="Budgets, bills and debts"
+            description="Set category limits with warnings at 80% and 100%, track bills, and note money lent or borrowed."
           />
           <FeatureBullet
             icon="chart-donut-variant"
-            title="Savings Goals & Pots"
-            description="Allocate funds toward specific milestone targets and watch your pots grow."
+            title="Savings pots and insights"
+            description="Save toward goals and get plain-language spending advice."
           />
           <FeatureBullet
             icon="file-document-outline"
-            title="PDF & CSV Data Exports"
-            description="Generate clean monthly PDF reports or CSV spreadsheets whenever needed."
+            title="Reports you can export"
+            description="Monthly PDF and CSV reports are in the Insights tab."
           />
         </View>
       ),
@@ -144,25 +99,39 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
     {
       id: 'privacy',
       icon: 'shield-lock-outline' as const,
-      title: '100% Private & Offline',
-      subtitle: 'Your money data stays exclusively on your device.',
+      title: 'Private by design',
+      subtitle: 'Your money data stays on this device.',
       content: (
         <View style={styles.slideBody}>
           <FeatureBullet
             icon="shield-check-outline"
-            title="No Account Required"
-            description="Your expenses are stored locally on this device. No account or cloud sync required."
-          />
-          <FeatureBullet
-            icon="cancel"
-            title="Zero Ads or Tracking"
-            description="No analytics SDKs, no targeted ads, and no cloud server uploads."
+            title="No account, no cloud"
+            description="Nothing is uploaded. There are no ads and no tracking."
           />
           <FeatureBullet
             icon="grid"
-            title="Unified Menu Hub"
-            description="Access all features, tools, and preferences instantly from one central hub."
+            title="More tab"
+            description="Bills, debts, goals, tools and settings are all under More."
           />
+          <Pressable
+            onPress={() => {
+              onClose();
+              router.push('/add-expense');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Add my first expense"
+            style={({ pressed }) => [
+              styles.changeCountryBtn,
+              { borderColor: theme.accent },
+              pressed && styles.pressed,
+            ]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <MaterialCommunityIcons name="plus-circle-outline" size={16} color={theme.accent} />
+              <ThemedText type="smallBold" style={{ color: theme.accent }}>
+                Add my first expense
+              </ThemedText>
+            </View>
+          </Pressable>
         </View>
       ),
     },

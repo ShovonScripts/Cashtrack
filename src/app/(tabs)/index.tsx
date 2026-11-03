@@ -761,18 +761,6 @@ export default function DashboardScreen() {
             <ThemedText type="defaultBold">Recent activity</ThemedText>
             <ThemedText type="caption" themeColor="textSecondary">Your latest transactions</ThemedText>
           </View>
-          {expenses.length > 0 && (
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => {
-                triggerHaptic();
-                router.push('/(tabs)/expenses');
-              }}
-              hitSlop={10}
-              style={({ pressed }) => [styles.seeAll, pressed && styles.pressed]}>
-              <ThemedText type="smallBold" style={{ color: theme.accent }}>See all →</ThemedText>
-            </Pressable>
-          )}
         </View>
 
         {expenses.length > 0 && (
@@ -812,12 +800,36 @@ export default function DashboardScreen() {
               tone={theme.accent}
             />
           ) : (
-            filteredRecent.map((expense, index) => (
-              <View key={expense.id}>
-                {index > 0 && <CardDivider />}
-                <ExpenseListItem expense={expense} />
-              </View>
-            ))
+            <>
+              {filteredRecent.map((expense, index) => (
+                <View key={expense.id}>
+                  {index > 0 && <CardDivider />}
+                  <ExpenseListItem expense={expense} />
+                </View>
+              ))}
+              {expenses.length > 0 && (
+                <>
+                  <CardDivider />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="See all transactions"
+                    onPress={() => {
+                      triggerHaptic();
+                      router.push('/(tabs)/expenses');
+                    }}
+                    style={({ pressed }) => [
+                      styles.seeAllCardFooter,
+                      { backgroundColor: theme.cardMuted },
+                      pressed && styles.pressed,
+                    ]}>
+                    <ThemedText type="smallBold" style={{ color: theme.accent }}>
+                      See all transactions
+                    </ThemedText>
+                    <Ionicons name="arrow-forward" size={16} color={theme.accent} />
+                  </Pressable>
+                </>
+              )}
+            </>
           )}
         </Card>
 
@@ -1074,8 +1086,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  seeAll: {
-    paddingVertical: 4,
+  seeAllCardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
   },
   footer: {
     textAlign: 'center',

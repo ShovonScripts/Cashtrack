@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
+import { WhatChangedCard } from '@/components/insights/what-changed-card';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
 import { Brand, FeatureColors, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
@@ -21,6 +22,7 @@ import { getBudgetInsights, getMonthExpenses } from '@/utils/advisor';
 import { formatDate, sumAmounts, totalForMonth } from '@/utils/expense';
 import { buildMonthlyReportHtml } from '@/utils/monthly-report';
 import { generateCsvReport } from '@/utils/csv';
+import { compareMonths } from '@/utils/month-comparison';
 import type { Expense } from '@/types/expense';
 
 function triggerHaptic() {
@@ -256,6 +258,10 @@ export default function ReportsScreen() {
   const total = sumAmounts(monthExpenses);
   const monthLabel = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' }).format(month);
   const isCurrentMonth = sameMonth(month, now);
+  const comparison = compareMonths(expenses, month, now);
+  const previousMonthLabel = new Intl.DateTimeFormat('en', { month: 'short' }).format(
+    new Date(month.getFullYear(), month.getMonth() - 1, 1, 12)
+  );
 
   // Category aggregates
   const categoryTotals = new Map<string, number>();
@@ -490,6 +496,14 @@ export default function ReportsScreen() {
             )}
           </View>
         </View>
+
+        {/* 2b. What changed since the previous month */}
+        <WhatChangedCard
+          comparison={comparison}
+          previousLabel={previousMonthLabel}
+          formatAmount={formatAmount}
+          categoryIcons={categoryIcons}
+        />
 
         {/* 3. Executive Metrics Row */}
         <View style={styles.metricsRow}>

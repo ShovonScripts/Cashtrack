@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { Stack, router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/card';
+import { Icon, IconButton } from '@/components/ui';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getNotes } from '@/storage/notes-storage';
@@ -53,53 +53,23 @@ export default function NotesIndexScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.container}>
-      <View
-        style={[
-          styles.headerContainer,
-          { paddingTop: Math.max(insets.top + Spacing.one, Spacing.two), backgroundColor: theme.background },
-        ]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.back();
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              hitSlop={8}
-              style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Ionicons name="arrow-back" size={18} color={theme.text} />
-            </Pressable>
-            <View>
-              <ThemedText type="title">Keep Notes</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary">
-                {notes.length} saved note{notes.length === 1 ? '' : 's'}
-              </ThemedText>
-            </View>
-          </View>
-          <View style={styles.headerActions}>
-            <Pressable
+      <Stack.Screen
+        options={{
+          headerRight: () => (
+            <IconButton
+              icon={isGrid ? 'view-list-outline' : 'view-grid-outline'}
+              label={isGrid ? 'Switch to list view' : 'Switch to grid view'}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 setIsGrid(!isGrid);
               }}
-              accessibilityRole="button"
-              accessibilityLabel={isGrid ? 'Switch to list view' : 'Switch to grid view'}
-              hitSlop={8}
-              style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Ionicons name={isGrid ? 'list-outline' : 'grid-outline'} size={18} color={theme.text} />
-            </Pressable>
-          </View>
-        </View>
-
-        {/* Search Bar */}
-        <View
-          style={[
-            styles.searchContainer,
-            { backgroundColor: theme.card, borderColor: theme.border },
-          ]}>
-          <Ionicons name="search" size={18} color={theme.textSecondary} />
+            />
+          ),
+        }}
+      />
+      <View style={styles.searchBlock}>
+        <View style={[styles.searchContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
+          <Icon name="search" size="md" color={theme.textSecondary} />
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -109,15 +79,12 @@ export default function NotesIndexScreen() {
             style={[styles.searchInput, { color: theme.text }]}
           />
           {search.length > 0 && (
-            <Pressable
-              onPress={() => setSearch('')}
-              accessibilityRole="button"
-              accessibilityLabel="Clear search"
-              hitSlop={8}>
-              <Ionicons name="close-circle" size={16} color={theme.textSecondary} />
-            </Pressable>
+            <IconButton icon="close-circle" label="Clear search" onPress={() => setSearch('')} />
           )}
         </View>
+        <ThemedText type="caption" themeColor="textSecondary">
+          {notes.length} saved note{notes.length === 1 ? '' : 's'}
+        </ThemedText>
       </View>
 
       <FlatList
@@ -129,7 +96,7 @@ export default function NotesIndexScreen() {
         columnWrapperStyle={isGrid ? styles.columnWrapper : undefined}
         ListEmptyComponent={
           <Card style={styles.emptyCard}>
-            <Ionicons name="document-text-outline" size={48} color={theme.accent} />
+            <Icon name="file-document-outline" size="xl" />
             <ThemedText type="defaultBold" style={styles.emptyTitle}>
               No notes found
             </ThemedText>
@@ -192,7 +159,7 @@ export default function NotesIndexScreen() {
           { backgroundColor: theme.accentFill, shadowColor: theme.accent, bottom: Math.max(Spacing.four, insets.bottom + 16) },
           pressed && { transform: [{ scale: 0.93 }] },
         ]}>
-        <Ionicons name="add" size={28} color={Palette.white} />
+        <Icon name="add" size="lg" color={Palette.white} />
       </Pressable>
       </KeyboardAvoidingView>
     </ThemedView>
@@ -200,36 +167,9 @@ export default function NotesIndexScreen() {
 }
 
 const styles = StyleSheet.create({
+  searchBlock: { paddingHorizontal: Spacing.three, paddingBottom: Spacing.two, gap: Spacing.two },
   container: {
     flex: 1,
-  },
-  headerContainer: {
-    paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.two,
-    gap: Spacing.two,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-  },
-  actionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   searchContainer: {
     flexDirection: 'row',

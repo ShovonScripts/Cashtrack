@@ -1,98 +1,10 @@
-import { ScrollView, StyleSheet, View, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 import { WorldClockTool } from '@/components/floating-tools/tools/WorldClockTool';
+import { Screen } from '@/components/ui';
 
 export default function WorldClockScreen() {
-  const theme = useTheme();
-  const insets = useSafeAreaInsets();
-
   return (
-    <ThemedView style={styles.container}>
-      {/* Fixed Header */}
-      <View
-        style={[
-          styles.headerContainer,
-          { paddingTop: Math.max(insets.top + Spacing.two, Spacing.four), backgroundColor: theme.background },
-        ]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerLeft}>
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.back();
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Go back"
-              hitSlop={8}
-              style={[styles.actionBtn, { backgroundColor: theme.card, borderColor: theme.border }]}>
-              <Ionicons name="arrow-back" size={18} color={theme.text} />
-            </Pressable>
-            <View style={{ flex: 1 }}>
-              <ThemedText type="title">World Clocks</ThemedText>
-              <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-                Pinned timezones
-              </ThemedText>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: 140 + insets.bottom, paddingHorizontal: Spacing.three },
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <View style={styles.wrapper}>
-          <WorldClockTool />
-        </View>
-      </ScrollView>
-    </ThemedView>
+    <Screen topInset={false}>
+      <WorldClockTool />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  headerContainer: {
-    paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.three,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    flex: 1,
-  },
-  actionBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.pill,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    alignItems: 'center',
-  },
-  wrapper: {
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    gap: Spacing.three,
-  },
-});

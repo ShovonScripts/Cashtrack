@@ -262,12 +262,12 @@ function Navigation() {
         <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
         <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
         <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
-        <Stack.Screen name="world-clock" options={{ headerShown: false }} />
+        <Stack.Screen name="world-clock" options={{ title: 'World Clocks' }} />
         <Stack.Screen name="calculator" options={{ title: 'Calculator' }} />
         <Stack.Screen name="stopwatch" options={{ title: 'Stopwatch & Timer' }} />
         <Stack.Screen name="currency" options={{ title: 'Currency Converter' }} />
-        <Stack.Screen name="notes" options={{ headerShown: false }} />
-        <Stack.Screen name="todo" options={{ headerShown: false }} />
+        <Stack.Screen name="notes" options={{ title: 'Notes' }} />
+        <Stack.Screen name="todo" options={{ title: 'To-Do List' }} />
         <Stack.Screen name="notes-add" options={{ title: 'New Note', presentation: 'modal' }} />
         <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
         <Stack.Screen name="user-manual" options={{ title: 'User Manual' }} />

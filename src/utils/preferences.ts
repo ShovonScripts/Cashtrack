@@ -88,6 +88,7 @@ export function sanitizePreferences(value: unknown): UserPreferences {
   const enableDailyReminder = typeof candidate.enableDailyReminder === 'boolean' ? candidate.enableDailyReminder : false;
   const enableDailyQuotes = typeof candidate.enableDailyQuotes === 'boolean' ? candidate.enableDailyQuotes : false;
   const appLockEnabled = typeof candidate.appLockEnabled === 'boolean' ? candidate.appLockEnabled : false;
+  const showExtras = typeof candidate.showExtras === 'boolean' ? candidate.showExtras : false;
 
   return {
     profile: {
@@ -114,5 +115,6 @@ export function sanitizePreferences(value: unknown): UserPreferences {
     enableDailyReminder,
     enableDailyQuotes,
     appLockEnabled,
+    showExtras,
   };
 }

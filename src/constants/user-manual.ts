@@ -43,7 +43,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'Build savings pots toward targets.',
           'View daily, weekly, monthly, and yearly spending reports.',
           'Export a PDF or CSV report.',
-          'Use built-in notes, a calculator, a stopwatch, a currency converter, world clocks, and weather.',
+          'Use built-in notes, a calculator, a currency converter, and weather. Turn on **Show extras** in Profile for world clocks, a stopwatch, and floating quick tools.',
         ],
       },
       { type: 'heading', text: 'Local-first by design' },
@@ -101,7 +101,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'steps',
         items: [
-          'During onboarding, tap **Change Country or Currency**, or use **Menu Hub → Country & Currency** later.',
+          'During onboarding, tap **Change Country or Currency**, or use **More → Country & Currency** later.',
           'Search for a country or currency code.',
           'Tap the country.',
           'CashTrack uses that country’s currency symbol and code throughout the app.',
@@ -132,7 +132,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'steps',
         items: [
-          'Open **Menu Hub**.',
+          'Open **More**.',
           'Tap **Budget Caps & Limits**.',
           'Find a category, such as Food.',
           'Enter a monthly amount in **Set monthly cap**.',
@@ -147,7 +147,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'steps',
         items: [
-          'Open **Menu Hub → Bills & Reminders**.',
+          'Open **More → Bills & Reminders**.',
           'Tap **Add Bill**.',
           'Enter the bill name and amount.',
           'Choose a category and due date.',
@@ -190,7 +190,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
   {
     id: 'navigation',
     title: 'Navigating CashTrack',
-    summary: 'Tabs, Quick Record, floating tools, Home, and the Menu Hub.',
+    summary: 'Tabs, Quick Record, floating tools, Home, and the More.',
     icon: 'compass-outline',
     color: '#0284C7',
     blocks: [
@@ -200,10 +200,10 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         headers: ['Tab', 'What it does'],
         rows: [
           ['Home', 'Overview of balance, spending, bills, pots, debts, and recent activity'],
-          ['Expenses', 'Searchable expense ledger with category filters'],
+          ['Transactions', 'Searchable expense ledger with category filters'],
           ['Add', 'Opens the Quick Record menu'],
-          ['Analytics', 'Monthly reports, charts, and exports'],
-          ['Menu', 'All tools, financial screens, and settings'],
+          ['Insights', 'Monthly reports, charts, and exports'],
+          ['More', 'Money screens, tools, and settings'],
         ],
       },
       { type: 'heading', text: 'Quick Record' },
@@ -255,10 +255,10 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           '**Recent activity** shows your latest expenses with category filters and **See all**.',
         ],
       },
-      { type: 'heading', text: 'Menu Hub' },
+      { type: 'heading', text: 'More' },
       {
         type: 'paragraph',
-        text: 'Menu Hub contains a searchable list of every screen and tool. Search for terms such as calculator, notes, stopwatch, or bills. Open **User Manual & Help** for a searchable, in-app version of this guide.',
+        text: 'More contains a searchable list of every screen and tool. Search for terms such as calculator, notes, stopwatch, or bills. Open **User Manual & Help** for a searchable, in-app version of this guide.',
       },
       {
         type: 'bullets',
@@ -346,7 +346,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Manage categories' },
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Categories Manager**. The screen is labeled **EXPENSE CATEGORIES & ICONS** and shows total categories, active categories, built-in categories, and the number of custom categories.',
+        text: 'Open **More → Categories Manager**. The screen is labeled **EXPENSE CATEGORIES & ICONS** and shows total categories, active categories, built-in categories, and the number of custom categories.',
       },
       {
         type: 'bullets',
@@ -370,7 +370,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Budget Caps & Limits**. The main card is labeled **SPENDING CAPS & BUDGETS**.',
+        text: 'Open **More → Budget Caps & Limits**. The main card is labeled **SPENDING CAPS & BUDGETS**.',
       },
       { type: 'heading', text: 'Set a category cap' },
       {
@@ -417,7 +417,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Spending Advisor' },
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Spending Advisor** or use the Home screen card. The advisor checks current-month spending against your caps and highlights categories that are over the limit, close to the limit, or spending faster than a comfortable pace.',
+        text: 'Open **More → Spending Advisor** or use the Home screen card. The advisor checks current-month spending against your caps and highlights categories that are over the limit, close to the limit, or spending faster than a comfortable pace.',
       },
     ],
   },
@@ -430,7 +430,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Income Streams**. The main card shows **TOTAL MONEY IN (ALL TIME)** and the number of income records.',
+        text: 'Open **More → Income Streams**. The main card shows **TOTAL MONEY IN (ALL TIME)** and the number of income records.',
       },
       { type: 'heading', text: 'Add income' },
       {
@@ -475,7 +475,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Savings Goals & Pots**. The top card shows **ACTIVE SAVED** and **ACTIVE TARGETS**. Filter tabs are **active**, **completed**, and **all**, each with a count. Tap **+ New pot** to create a pot.',
+        text: 'Open **More → Savings Goals & Pots**. The top card shows **ACTIVE SAVED** and **ACTIVE TARGETS**. Filter tabs are **active**, **completed**, and **all**, each with a count. Tap **+ New pot** to create a pot.',
       },
       { type: 'heading', text: 'Create a pot' },
       {
@@ -547,7 +547,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Debts & IOUs**. The summary shows **YOU ARE OWED**, **YOU OWE**, and your **Net Position**. Filter tabs are **Active**, **All**, **Settled**, **Lent**, and **Borrowed**.',
+        text: 'Open **More → Debts & IOUs**. The summary shows **YOU ARE OWED**, **YOU OWE**, and your **Net Position**. Filter tabs are **Active**, **All**, **Settled**, **Lent**, and **Borrowed**.',
       },
       { type: 'heading', text: 'Add a debt' },
       {
@@ -604,7 +604,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Bills & Reminders**. The top card shows **TOTAL DUE** for the current month, overdue count, due-today count, and **All Clear** when nothing is outstanding. Filter tabs are **All**, **Due Today**, **Overdue**, **Upcoming**, and **Paid**.',
+        text: 'Open **More → Bills & Reminders**. The top card shows **TOTAL DUE** for the current month, overdue count, due-today count, and **All Clear** when nothing is outstanding. Filter tabs are **All**, **Due Today**, **Overdue**, **Upcoming**, and **Paid**.',
       },
       { type: 'heading', text: 'Add a bill' },
       {
@@ -653,7 +653,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          'Open **Menu Hub → Bill & Renewal Calendar**, or tap the calendar banner on the Bills screen.',
+          'Open **More → Bill & Renewal Calendar**, or tap the calendar banner on the Bills screen.',
           'Use the arrows to change month.',
           'Tap a day to see its bills.',
           'Tap a bill to open its payment screen.',
@@ -666,7 +666,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Subscriptions and recurring hub' },
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Subscriptions & Recurring Hub**, or tap the link on Home. The screen shows **MONTHLY OUTFLOW**, **ACTIVE RENEWALS**, renewal countdowns, and **Add recurring bill**. The monthly outflow converts weekly, monthly, and yearly bills to a monthly estimate.',
+        text: 'Open **More → Subscriptions & Recurring Hub**, or tap the link on Home. The screen shows **MONTHLY OUTFLOW**, **ACTIVE RENEWALS**, renewal countdowns, and **Add recurring bill**. The monthly outflow converts weekly, monthly, and yearly bills to a monthly estimate.',
       },
     ],
   },
@@ -735,7 +735,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          'Open **Menu Hub → Keep Notes** or use the floating tools menu.',
+          'Open **More → Keep Notes** or use the floating tools menu.',
           'The header shows the number of saved notes.',
           'Search notes by title or content.',
           'Switch between grid and list view.',
@@ -792,13 +792,13 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       },
       {
         type: 'note',
-        text: 'Currency conversion does not change your app’s accounting currency. To change the accounting currency, use **Menu Hub → Country & Currency**.',
+        text: 'Currency conversion does not change your app’s accounting currency. To change the accounting currency, use **More → Country & Currency**.',
       },
       { type: 'heading', text: 'Weather & Insights' },
       {
         type: 'bullets',
         items: [
-          'Tap the Weather slide on Home, or open **Menu Hub → Weather & Insights**.',
+          'Tap the Weather slide on Home, or open **More → Weather & Insights**.',
           'Shows current conditions and location.',
           '**Night View** or **Day View**.',
           '**SMART MONEY & WEATHER** or **Today’s insight**.',
@@ -826,7 +826,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **Menu Hub → Profile & Preferences**, or tap your profile on Home. The screen is titled **Profile & settings**.',
+        text: 'Open **More → Profile & Preferences**, or tap your profile on Home. The screen is titled **Profile & settings**.',
       },
       { type: 'heading', text: 'Identity' },
       {
@@ -1294,18 +1294,18 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           ['Add a bill', 'Center + → Add Bill / Reminder'],
           ['Add a debt', 'Center + → Add Debt / Loan'],
           ['Create a pot', 'Center + → New Savings Pot'],
-          ['Set a budget cap', 'Menu Hub → Budget Caps & Limits'],
+          ['Set a budget cap', 'More → Budget Caps & Limits'],
           ['View reports', 'Analytics tab'],
           ['Export monthly PDF/CSV', 'Analytics → Export & Downloads'],
           ['Export all expenses as CSV', 'Profile & settings → Data & Privacy'],
           ['Back up everything', 'Profile & settings → Data & Privacy → Back Up All Data'],
           ['Restore a backup', 'Profile & settings → Data & Privacy → Restore From Backup'],
-          ['Change theme', 'Menu Hub moon/sun button or Profile → Preferences'],
-          ['Change currency', 'Menu Hub → Country & Currency'],
+          ['Change theme', 'More moon/sun button or Profile → Preferences'],
+          ['Change currency', 'More → Country & Currency'],
           ['Enable App Lock', 'Profile → Preferences → App Lock'],
           ['Test notifications', 'Profile → Alerts → Test Alarm Sound'],
           ['Replay onboarding', 'Profile → Data & Privacy → Replay App Walkthrough'],
-          ['Open the user manual', 'Menu Hub → User Manual & Help or Profile → Data & Privacy → User Manual'],
+          ['Open the user manual', 'More → User Manual & Help or Profile → Data & Privacy → User Manual'],
           ['Wipe all data', 'Profile → Data & Privacy → Danger Zone'],
         ],
       },
@@ -1318,22 +1318,22 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           ['Expense ledger', 'Expenses tab'],
           ['Monthly analytics', 'Analytics tab'],
           ['All tools and settings', 'Menu tab'],
-          ['Income', 'Menu Hub → Income Streams'],
-          ['Budgets', 'Menu Hub → Budget Caps & Limits'],
-          ['Spending advisor', 'Menu Hub → Spending Advisor'],
-          ['Pots and goals', 'Menu Hub → Savings Goals & Pots'],
-          ['Debts', 'Menu Hub → Debts & IOUs'],
-          ['Bills', 'Menu Hub → Bills & Reminders'],
-          ['Bill calendar', 'Menu Hub → Bill & Renewal Calendar'],
-          ['Subscriptions', 'Menu Hub → Subscriptions & Recurring Hub'],
-          ['Categories', 'Menu Hub → Categories Manager'],
-          ['Notes', 'Menu Hub → Keep Notes'],
-          ['Calculator', 'Menu Hub → Quick Calculator'],
-          ['Stopwatch', 'Menu Hub → Stopwatch & Timer'],
-          ['Currency converter', 'Menu Hub → Currency Converter'],
-          ['World clocks', 'Menu Hub → World Clocks'],
-          ['Weather', 'Home → Weather slide or Menu Hub → Weather & Insights'],
-          ['Profile and settings', 'Menu Hub → Profile & Preferences'],
+          ['Income', 'More → Income Streams'],
+          ['Budgets', 'More → Budget Caps & Limits'],
+          ['Spending advisor', 'More → Spending Advisor'],
+          ['Pots and goals', 'More → Savings Goals & Pots'],
+          ['Debts', 'More → Debts & IOUs'],
+          ['Bills', 'More → Bills & Reminders'],
+          ['Bill calendar', 'More → Bill & Renewal Calendar'],
+          ['Subscriptions', 'More → Subscriptions & Recurring Hub'],
+          ['Categories', 'More → Categories Manager'],
+          ['Notes', 'More → Keep Notes'],
+          ['Calculator', 'More → Quick Calculator'],
+          ['Stopwatch', 'More → Stopwatch & Timer'],
+          ['Currency converter', 'More → Currency Converter'],
+          ['World clocks', 'More → World Clocks'],
+          ['Weather', 'Home → Weather slide or More → Weather & Insights'],
+          ['Profile and settings', 'More → Profile & Preferences'],
           ['About', 'Profile → Data & Privacy → About CashTrack'],
         ],
       },

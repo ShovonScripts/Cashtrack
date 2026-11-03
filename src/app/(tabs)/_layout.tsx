@@ -69,7 +69,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="expenses"
           options={{
-            title: 'Expenses',
+            title: 'Transactions',
             tabBarIcon: ({ color, focused }) => (
               <MaterialCommunityIcons
                 name={focused ? 'receipt' : 'receipt-outline'}
@@ -107,7 +107,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="reports"
           options={{
-            title: 'Analytics',
+            title: 'Insights',
             tabBarIcon: ({ color, focused }) => (
               <MaterialCommunityIcons
                 name={focused ? 'chart-box' : 'chart-donut-variant'}
@@ -124,7 +124,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="menu"
           options={{
-            title: 'Menu',
+            title: 'More',
             tabBarIcon: ({ color, focused }) => (
               <MaterialCommunityIcons
                 name={focused ? 'grid' : 'grid-large'}

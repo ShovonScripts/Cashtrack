@@ -34,6 +34,8 @@ export type UserPreferences = {
   enableDailyReminder?: boolean;
   enableDailyQuotes?: boolean;
   appLockEnabled?: boolean;
+  /** Shows optional extras (world clocks, stopwatch, floating quick tools). Off by default. */
+  showExtras?: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -54,5 +56,6 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   enableDailyReminder: false,
   enableDailyQuotes: false,
   appLockEnabled: false,
+  showExtras: false,
 };
 

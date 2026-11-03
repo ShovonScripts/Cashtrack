@@ -18,7 +18,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Radius, Spacing, Brand } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { useExpenses, usePreferences } from '@/context/expense-context';
+import { usePreferences } from '@/context/expense-context';
 import { useGoals } from '@/context/goal-context';
 import { useDebts } from '@/context/debt-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
@@ -43,8 +43,7 @@ type MenuItem = {
 export default function MenuScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { expenses } = useExpenses();
-  const { profile, country, customCategories } = usePreferences();
+  const { profile, country, customCategories, showExtras } = usePreferences();
   const { goals } = useGoals();
   const { debts } = useDebts();
   const { reminders } = useFinancialReminders();
@@ -69,73 +68,61 @@ export default function MenuScreen() {
     (r) => r.derivedStatus === 'overdue'
   ).length;
 
-  const UTILITY_TOOLS: MenuItem[] = [
+  const EXTRA_TOOLS: MenuItem[] = [
     {
       id: 'world-clock',
       title: 'World Clocks',
-      subtitle: 'Live world times & timezones',
+      subtitle: 'World times and timezones',
       icon: 'earth',
       color: '#0284C7',
       route: '/world-clock',
-      badge: 'New',
-    },
-    {
-      id: 'calculator',
-      title: 'Quick Calculator',
-      subtitle: 'Compute math, tips & bill splits',
-      icon: 'calculator-variant-outline',
-      color: '#3B82F6',
-      route: '/calculator',
-      badge: 'Tool',
-    },
-    {
-      id: 'currency',
-      title: 'Currency Converter',
-      subtitle: 'Google-style foreign exchange rates',
-      icon: 'currency-usd',
-      color: '#059669',
-      route: '/currency',
-      badge: 'Tool',
-    },
-    {
-      id: 'notes',
-      title: 'Keep Notes',
-      subtitle: 'Fast local scratchpad for notes',
-      icon: 'note-text-outline',
-      color: '#10B981',
-      route: '/notes',
-      badge: 'Tool',
-    },
-    {
-      id: 'todo',
-      title: 'To-Do List & Tasks',
-      subtitle: 'Task checklist & financial reminders',
-      icon: 'check-circle-outline',
-      color: '#059669',
-      route: '/todo',
-      badge: 'New',
     },
     {
       id: 'stopwatch',
       title: 'Stopwatch & Timer',
-      subtitle: 'Track elapsed time and durations',
+      subtitle: 'Time yourself and track durations',
       icon: 'timer-outline',
       color: '#F59E0B',
       route: '/stopwatch',
-      badge: 'Tool',
+    },
+  ];
+
+  const UTILITY_TOOLS: MenuItem[] = [
+    {
+      id: 'calculator',
+      title: 'Calculator',
+      subtitle: 'Math, tips and bill splits',
+      icon: 'calculator-variant-outline',
+      color: '#3B82F6',
+      route: '/calculator',
+    },
+    {
+      id: 'currency',
+      title: 'Currency Converter',
+      subtitle: 'Convert between currencies',
+      icon: 'currency-usd',
+      color: '#059669',
+      route: '/currency',
+    },
+    {
+      id: 'notes',
+      title: 'Notes',
+      subtitle: 'Quick notes on your device',
+      icon: 'note-text-outline',
+      color: '#10B981',
+      route: '/notes',
+    },
+    {
+      id: 'todo',
+      title: 'To-Do List',
+      subtitle: 'Checklist and money reminders',
+      icon: 'check-circle-outline',
+      color: '#059669',
+      route: '/todo',
     },
   ];
 
   const FINANCIAL_MANAGEMENT: MenuItem[] = [
-    {
-      id: 'expenses',
-      title: 'Transactions & Expenses',
-      subtitle: 'Searchable log & category filters',
-      icon: 'receipt',
-      color: '#0152F5',
-      route: '/(tabs)/expenses',
-      badge: `${expenses.length} logged`,
-    },
     {
       id: 'income',
       title: 'Income Streams',
@@ -278,7 +265,7 @@ export default function MenuScreen() {
 
   const filteredTools =
     selectedCategory === 'all' || selectedCategory === 'tools'
-      ? filterItems(UTILITY_TOOLS)
+      ? filterItems(showExtras ? [...UTILITY_TOOLS, ...EXTRA_TOOLS] : UTILITY_TOOLS)
       : [];
   const filteredFinancial =
     selectedCategory === 'all' || selectedCategory === 'finances'
@@ -361,9 +348,9 @@ export default function MenuScreen() {
           {/* Header Row */}
           <View style={styles.headerRow}>
             <View style={styles.headerCopy}>
-              <ThemedText type="title">Menu Hub</ThemedText>
+              <ThemedText type="title">More</ThemedText>
               <ThemedText type="caption" themeColor="textSecondary">
-                Command center & financial tools
+                Money, tools and settings
               </ThemedText>
             </View>
           </View>
@@ -436,7 +423,7 @@ export default function MenuScreen() {
             <MaterialCommunityIcons name="magnify" size={18} color={theme.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: theme.text }]}
-              placeholder="Search features, tools, budgets..."
+              placeholder="Search bills, goals, tools..."
               placeholderTextColor={theme.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -464,10 +451,10 @@ export default function MenuScreen() {
             {(
               [
                 { key: 'all', label: 'All' },
-                { key: 'finances', label: 'Finances' },
-                { key: 'tools', label: 'Utility Tools' },
-                { key: 'reports', label: 'Insights & Analytics' },
-                { key: 'preferences', label: 'Preferences' },
+                { key: 'finances', label: 'Money' },
+                { key: 'reports', label: 'Insights' },
+                { key: 'tools', label: 'Tools' },
+                { key: 'preferences', label: 'Settings' },
               ] as const
             ).map((chip) => {
               const active = selectedCategory === chip.key;
@@ -505,29 +492,19 @@ export default function MenuScreen() {
             <Card style={styles.emptyCard}>
               <MaterialCommunityIcons name="file-search-outline" size={32} color={theme.textSecondary} />
               <ThemedText type="defaultBold" style={styles.emptyTitle}>
-                No matching tools found
+                Nothing matches your search
               </ThemedText>
               <ThemedText type="caption" themeColor="textSecondary" style={styles.emptySubtitle}>
-                Try searching for &apos;calculator&apos;, &apos;notes&apos;, &apos;stopwatch&apos;, or &apos;bills&apos;
+                Try &apos;bills&apos;, &apos;goals&apos;, &apos;calculator&apos; or &apos;budget&apos;
               </ThemedText>
             </Card>
           ) : (
             <>
-              {/* Section: Utility Tools */}
-              {filteredTools.length > 0 && (
-                <View style={styles.section}>
-                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    UTILITY TOOLS
-                  </ThemedText>
-                  {renderSectionGroup(filteredTools)}
-                </View>
-              )}
-
               {/* Section 1: Financial Management */}
               {filteredFinancial.length > 0 && (
                 <View style={styles.section}>
                   <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    FINANCIAL MANAGEMENT
+                    MONEY
                   </ThemedText>
                   {renderSectionGroup(filteredFinancial)}
                 </View>
@@ -537,9 +514,19 @@ export default function MenuScreen() {
               {filteredIntelligence.length > 0 && (
                 <View style={styles.section}>
                   <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    INTELLIGENCE & REPORTS
+                    INSIGHTS
                   </ThemedText>
                   {renderSectionGroup(filteredIntelligence)}
+                </View>
+              )}
+
+              {/* Section: Utility Tools */}
+              {filteredTools.length > 0 && (
+                <View style={styles.section}>
+                  <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
+                    TOOLS
+                  </ThemedText>
+                  {renderSectionGroup(filteredTools)}
                 </View>
               )}
 
@@ -547,7 +534,7 @@ export default function MenuScreen() {
               {filteredPreferences.length > 0 && (
                 <View style={styles.section}>
                   <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionHeader}>
-                    PREFERENCES & SYSTEM
+                    SETTINGS
                   </ThemedText>
                   {renderSectionGroup(filteredPreferences)}
                 </View>

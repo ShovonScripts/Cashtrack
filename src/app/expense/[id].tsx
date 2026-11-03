@@ -1,16 +1,16 @@
-import { useLocalSearchParams, router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
 
 import { Card, CardDivider } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
+import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { Button, IconButton, Screen } from '@/components/ui';
 import { getCategoryColor } from '@/constants/categories';
-import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useDeleteExpenseFlow } from '@/context/undo-delete-context';
-import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { describeRecurrence } from '@/utils/expense-detail';
 
@@ -39,59 +39,41 @@ export default function ExpenseDetailsScreen() {
   const { getExpense } = useExpenses();
   const deleteWithUndo = useDeleteExpenseFlow();
   const { formatAmount, categoryIcons } = usePreferences();
-  const theme = useTheme();
 
   const expense = getExpense(id);
 
   if (!expense) {
     return (
-      <ThemedView style={styles.notFound}>
-        <ThemedText type="subtitle">Not found</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.notFoundText}>
-          This expense no longer exists.
-        </ThemedText>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={styles.primaryButton}>
-          <ThemedText type="defaultBold">Go back</ThemedText>
-        </Pressable>
-      </ThemedView>
+      <Screen topInset={false}>
+        <EmptyState title="Not found" message="This expense no longer exists." icon="receipt-text-outline" actionLabel="Go back" onAction={() => router.back()} />
+      </Screen>
     );
   }
 
   const accent = getCategoryColor(expense.category);
-
-  const handleDelete = () => deleteWithUndo(expense, () => router.back());
   const recurrence = describeRecurrence(expense);
+  const goEdit = () => router.push({ pathname: '/expense/[id]/edit', params: { id: expense.id } });
 
   return (
-    <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        <ThemedView type="card" style={styles.hero}>
+    <>
+      <Stack.Screen
+        options={{ headerRight: () => <IconButton icon="edit" label="Edit expense" onPress={goEdit} /> }}
+      />
+      <Screen topInset={false}>
+        <Card style={styles.hero}>
           <ThemedText type="caption" themeColor="textSecondary">
             AMOUNT
           </ThemedText>
           <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
             {formatAmount(expense.amount)}
           </ThemedText>
-
           <View style={styles.badgeRow}>
-            <CategoryIcon
-              category={expense.category}
-              customIcons={categoryIcons}
-              color={accent}
-              size={15}
-              containerSize={26}
-            />
-            <ThemedText type="smallBold" themeColor="text">
-              {expense.category}
-            </ThemedText>
+            <CategoryIcon category={expense.category} customIcons={categoryIcons} color={accent} size={16} containerSize={32} />
+            <ThemedText type="smallBold">{expense.category}</ThemedText>
           </View>
-        </ThemedView>
+        </Card>
 
-        <Card padded={false} style={styles.detailsCard}>
+        <Card padded={false}>
           <View style={styles.padded}>
             <DetailRow label="Date" value={formatDate(expense.date)} />
           </View>
@@ -99,164 +81,46 @@ export default function ExpenseDetailsScreen() {
           <View style={styles.padded}>
             <DetailRow label="Note" value={expense.note || 'No note added'} wrap />
           </View>
-          {recurrence && (
+          {recurrence ? (
             <>
               <CardDivider />
               <View style={styles.padded}>
                 <DetailRow
                   label="Repeats"
-                  value={
-                    expense.recurringEndDate
-                      ? `${recurrence}, until ${formatDate(expense.recurringEndDate)}`
-                      : recurrence
-                  }
+                  value={expense.recurringEndDate ? `${recurrence}, until ${formatDate(expense.recurringEndDate)}` : recurrence}
                   wrap
                 />
               </View>
             </>
-          )}
-          {expense.receiptUri && (
+          ) : null}
+          {expense.receiptUri ? (
             <>
               <CardDivider />
               <View style={styles.padded}>
                 <ThemedText type="small" themeColor="textSecondary" style={styles.receiptLabel}>
-                  RECEIPT PHOTO
+                  Receipt photo
                 </ThemedText>
                 <Image source={{ uri: expense.receiptUri }} style={styles.receiptImage} contentFit="contain" />
               </View>
             </>
-          )}
+          ) : null}
         </Card>
 
-        <View style={styles.actions}>
-          <Pressable
-            onPress={() => router.push({ pathname: '/expense/[id]/edit', params: { id: expense.id } })}
-            accessibilityRole="button"
-            accessibilityLabel="Edit expense"
-            style={({ pressed }) => [
-              styles.primaryButton,
-              { backgroundColor: theme.accentFill },
-              pressed && styles.pressed,
-            ]}>
-            <ThemedText type="defaultBold" style={styles.onAccent}>
-              Edit
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={handleDelete}
-            accessibilityRole="button"
-            accessibilityLabel="Delete expense"
-            style={({ pressed }) => [styles.dangerButton, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" themeColor="danger">
-              Delete
-            </ThemedText>
-          </Pressable>
-        </View>
-      </View>
-    </ScrollView>
+        <Button label="Delete expense" variant="danger" onPress={() => deleteWithUndo(expense, () => router.back())} />
+      </Screen>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  contentContainer: {
-    flexGrow: 1,
-  },
-  container: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    padding: Spacing.four,
-    gap: Spacing.three,
-  },
-  hero: {
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    gap: Spacing.one,
-  },
-  heroValue: {
-    fontVariant: ['tabular-nums'],
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    marginTop: Spacing.one,
-  },
-  badgeDot: {
-    width: Spacing.two,
-    height: Spacing.two,
-    borderRadius: Radius.pill,
-  },
-  detailsCard: {
-    borderRadius: Radius.large,
-  },
-  padded: {
-    padding: Spacing.three,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: Spacing.three,
-  },
-  rowWrapped: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: Spacing.one,
-  },
-  rowValue: {
-    flexShrink: 1,
-    textAlign: 'right',
-  },
-  valueWrapped: {
-    alignSelf: 'stretch',
-  },
-  receiptLabel: {
-    marginBottom: Spacing.two,
-  },
-  receiptImage: {
-    width: '100%',
-    height: 240,
-    borderRadius: Radius.medium,
-    backgroundColor: '#00000010',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: Spacing.three,
-  },
-  primaryButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.three,
-    borderRadius: Radius.medium,
-  },
-  onAccent: {
-    color: Palette.white,
-  },
-  dangerButton: {
-    flex: 1,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.three,
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  notFound: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    padding: Spacing.four,
-    gap: Spacing.two,
-    justifyContent: 'center',
-  },
-  notFoundText: {
-    textAlign: 'center',
-  },
+  hero: { gap: Spacing.one },
+  heroValue: { fontVariant: ['tabular-nums'] },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: Spacing.one },
+  padded: { padding: Spacing.three },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.three },
+  rowWrapped: { flexDirection: 'column', alignItems: 'flex-start', gap: Spacing.one },
+  rowValue: { flexShrink: 1, textAlign: 'right' },
+  valueWrapped: { alignSelf: 'stretch' },
+  receiptLabel: { marginBottom: Spacing.two },
+  receiptImage: { width: '100%', height: 240, borderRadius: Radius.medium },
 });

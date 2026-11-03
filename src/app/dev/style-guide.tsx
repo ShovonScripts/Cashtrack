@@ -6,17 +6,23 @@ import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ThemedText } from '@/components/themed-text';
 import {
+  AmountField,
   Badge,
   Button,
   Chip,
+  FormField,
   Icon,
   IconButton,
   ListRow,
+  ProgressMeter,
   Screen,
   ScreenHeader,
+  SegmentedControl,
   Section,
+  Sheet,
   SkeletonList,
   StatStrip,
+  SwitchRow,
 } from '@/components/ui';
 import { HeroCard } from '@/components/ui/hero-card';
 import { Icons, type IconConcept } from '@/constants/icons';
@@ -40,6 +46,11 @@ const TEXT_ROLES = [
 export default function StyleGuideScreen() {
   const theme = useTheme();
   const [chip, setChip] = useState('Food');
+  const [name, setName] = useState('');
+  const [amount, setAmount] = useState('');
+  const [repeat, setRepeat] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
+  const [alerts, setAlerts] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (!__DEV__) return <Redirect href="/" />;
 
@@ -136,6 +147,33 @@ export default function StyleGuideScreen() {
           <SkeletonList rows={2} label="Loading example" />
         </Section>
 
+        <Section title="Form fields" subtitle="Label above, helper or error below.">
+          <View style={styles.stack}>
+            <FormField label="Note" value={name} onChangeText={setName} placeholder="What was it for?" helper="Optional" />
+            <AmountField label="Amount" value={amount} onChangeText={setAmount} symbol="৳" error={amount === '0' ? 'Enter more than zero.' : undefined} />
+            <SegmentedControl
+              label="Repeat"
+              value={repeat}
+              onChange={setRepeat}
+              options={[
+                { value: 'weekly', label: 'Weekly' },
+                { value: 'monthly', label: 'Monthly' },
+                { value: 'yearly', label: 'Yearly' },
+              ]}
+            />
+            <Card padded={false}>
+              <SwitchRow label="Budget alerts" description="Warn me at 80% and 100%" value={alerts} onValueChange={setAlerts} />
+            </Card>
+          </View>
+        </Section>
+
+        <Section title="Progress and sheet">
+          <ProgressMeter fill={0.62} color={theme.success} marker={0.8} label="Example" valueText="62 percent">
+            <ThemedText type="caption" themeColor="textSecondary">62% of the way there</ThemedText>
+          </ProgressMeter>
+          <Button label="Open sheet" variant="secondary" onPress={() => setSheetOpen(true)} />
+        </Section>
+
         <Section title="Icon registry" subtitle="One glyph per concept. Outline by default.">
           <Card style={styles.wrap}>
             {(Object.keys(Icons) as IconConcept[]).map((concept) => (
@@ -153,6 +191,12 @@ export default function StyleGuideScreen() {
           This screen exists in development builds only.
         </ThemedText>
       </Screen>
+      <Sheet visible={sheetOpen} onClose={() => setSheetOpen(false)} title="Example sheet">
+        <ThemedText type="small" themeColor="textSecondary">
+          Sheets hold short tasks that do not need a full page.
+        </ThemedText>
+        <Button label="Done" onPress={() => setSheetOpen(false)} />
+      </Sheet>
     </>
   );
 }

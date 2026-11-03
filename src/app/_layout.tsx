@@ -40,7 +40,7 @@ function Navigation() {
     retrySave,
     reloadAllData,
   } = useExpenses();
-  const { enableDailyReminder, enableDailyQuotes, showExtras } = usePreferences();
+  const { enableDailyReminder, enableDailyQuotes } = usePreferences();
   const {
     isLoading: debtLoading,
     debtLoadError,
@@ -274,7 +274,7 @@ function Navigation() {
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
         <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />
       </Stack>
-      {showExtras && <FloatingToolsButton />}
+      <FloatingToolsButton />
     </View>
     </GestureHandlerRootView>
   );

@@ -1074,7 +1074,7 @@ export default function ProfileScreen() {
                 <View style={styles.switchCopy}>
                   <ThemedText type="smallBold">Show extras</ThemedText>
                   <ThemedText type="caption" themeColor="textSecondary">
-                    World clocks, stopwatch and floating quick tools
+                    Show World Clocks and Stopwatch in More → Tools
                   </ThemedText>
                 </View>
                 <Switch
@@ -1083,7 +1083,7 @@ export default function ProfileScreen() {
                     triggerHaptic();
                     setShowExtras(val);
                   }}
-                  accessibilityLabel="Show extras: world clocks, stopwatch and floating quick tools"
+                  accessibilityLabel="Show extras: world clocks and stopwatch in the More tab"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor="#FFFFFF"
                 />

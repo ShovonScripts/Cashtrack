@@ -1,9 +1,11 @@
-import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 import * as Haptics from 'expo-haptics';
 import { router, usePathname } from 'expo-router';
 
@@ -12,11 +14,16 @@ import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
 import { ToolsMenuModal } from './ToolsMenuModal';
 
-const BUTTON_SIZE = 44;
-const RUNNING_WIDTH = 100;
+const BUTTON_SIZE = 48;
+const RUNNING_WIDTH = 104;
 const EDGE_GAP = 16;
-const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 49 : 80;
-const TAB_BAR_CLEARANCE = TAB_BAR_HEIGHT + 12;
+/** Matches the tab bar in (tabs)/_layout.tsx: 62 plus the bottom inset (at least 10). */
+const TAB_BAR_BASE = 62;
+const POSITION_KEY = '@cashtrack_floating_tools_position';
+const SPRING = { damping: 18, stiffness: 220, mass: 0.8 } as const;
+
+type Side = 'left' | 'right';
+type SavedPosition = { side: Side; y: number };
 
 export function FloatingToolsButton() {
   return <FloatingToolsButtonInner />;
@@ -29,48 +36,83 @@ function FloatingToolsButtonInner() {
   const { seconds, isRunning } = useStopwatch();
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [isInteracting, setIsInteracting] = useState<boolean>(false);
+  const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
+  const [side, setSide] = useState<Side>('right');
+  const [savedY, setSavedY] = useState<number | null>(null);
 
   const currentWidth = isRunning ? RUNNING_WIDTH : BUTTON_SIZE;
   const currentHeight = BUTTON_SIZE;
 
-  const defaultX = width > 0 ? width - currentWidth - EDGE_GAP : 280;
-  const defaultY = height > 0 ? height - insets.bottom - TAB_BAR_CLEARANCE - currentHeight : 500;
+  const minY = insets.top + EDGE_GAP;
+  const maxY = Math.max(minY, height - insets.bottom - currentHeight - EDGE_GAP);
+  const defaultY = height - Math.max(insets.bottom, 10) - TAB_BAR_BASE - currentHeight - EDGE_GAP;
+  const targetY = Math.min(Math.max(savedY ?? defaultY, minY), maxY);
+  const targetX = side === 'left' ? EDGE_GAP : Math.max(EDGE_GAP, width - currentWidth - EDGE_GAP);
 
-  const translateX = useSharedValue<number>(defaultX);
-  const translateY = useSharedValue<number>(defaultY);
-
+  const translateX = useSharedValue<number>(targetX);
+  const translateY = useSharedValue<number>(targetY);
   const contextX = useSharedValue<number>(0);
   const contextY = useSharedValue<number>(0);
 
-  const clampX = (value: number) => {
-    'worklet';
-    return Math.min(Math.max(value, EDGE_GAP), width - currentWidth - EDGE_GAP);
-  };
-  const clampY = (value: number) => {
-    'worklet';
-    return Math.min(Math.max(value, insets.top + EDGE_GAP), height - insets.bottom - currentHeight - EDGE_GAP);
-  };
+  // Restore the last position the user dragged the button to.
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem(POSITION_KEY)
+      .then((raw) => {
+        if (!active || !raw) return;
+        const parsed = JSON.parse(raw) as Partial<SavedPosition>;
+        if (parsed.side === 'left' || parsed.side === 'right') setSide(parsed.side);
+        if (typeof parsed.y === 'number' && Number.isFinite(parsed.y)) setSavedY(parsed.y);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Keep the button on its edge when the screen rotates, resizes, or the stopwatch pill grows.
+  useEffect(() => {
+    translateX.set(withSpring(targetX, SPRING));
+    translateY.set(withSpring(targetY, SPRING));
+  }, [targetX, targetY, translateX, translateY]);
+
+  // Never cover the keyboard or the field being typed in.
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+
+  const persistPosition = useCallback((nextSide: Side, nextY: number) => {
+    setSide(nextSide);
+    setSavedY(nextY);
+    AsyncStorage.setItem(POSITION_KEY, JSON.stringify({ side: nextSide, y: nextY })).catch(() => {});
+  }, []);
 
   const panGesture = Gesture.Pan()
+    .minDistance(6)
     .onStart(() => {
-      contextX.value = translateX.value;
-      contextY.value = translateY.value;
+      contextX.set(translateX.get());
+      contextY.set(translateY.get());
     })
     .onUpdate((event) => {
-      translateX.value = clampX(contextX.value + event.translationX);
-      translateY.value = clampY(contextY.value + event.translationY);
+      translateX.set(Math.min(Math.max(contextX.get() + event.translationX, EDGE_GAP), width - currentWidth - EDGE_GAP));
+      translateY.set(Math.min(Math.max(contextY.get() + event.translationY, minY), maxY));
     })
     .onEnd(() => {
-      const middle = width / 2;
-      const targetX = translateX.value + currentWidth / 2 < middle
-        ? EDGE_GAP
-        : width - currentWidth - EDGE_GAP;
-      translateX.value = withSpring(targetX, { damping: 15 });
-      translateY.value = withSpring(clampY(translateY.value), { damping: 15 });
+      const nextSide: Side = translateX.get() + currentWidth / 2 < width / 2 ? 'left' : 'right';
+      const snapX = nextSide === 'left' ? EDGE_GAP : width - currentWidth - EDGE_GAP;
+      const snapY = Math.min(Math.max(translateY.get(), minY), maxY);
+      translateX.set(withSpring(snapX, SPRING));
+      translateY.set(withSpring(snapY, SPRING));
+      scheduleOnRN(persistPosition, nextSide, snapY);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }, { translateY: translateY.value }],
+    transform: [{ translateX: translateX.get() }, { translateY: translateY.get() }],
   }));
 
   const formatTime = (totalSecs: number) => {
@@ -105,7 +147,7 @@ function FloatingToolsButtonInner() {
     pathname === '/app-lock'
   );
 
-  if (hideButton) {
+  if (hideButton || keyboardVisible) {
     return (
       <ToolsMenuModal
         visible={modalVisible}
@@ -129,6 +171,7 @@ function FloatingToolsButtonInner() {
             onPress={handlePress}
             accessibilityRole="button"
             accessibilityLabel={isRunning ? `Stopwatch running, ${formatTime(seconds)}. Open stopwatch.` : 'Open quick tools'}
+            accessibilityHint="Drag to move the button"
             style={({ pressed }) => [
               styles.button,
               isRunning && styles.runningPill,
@@ -149,7 +192,7 @@ function FloatingToolsButtonInner() {
                 <Ionicons name="timer-outline" size={14} color={theme.accent} />
               </>
             ) : (
-              <Ionicons name="grid" size={20} color="#FFFFFF" />
+              <Ionicons name="grid" size={22} color="#FFFFFF" />
             )}
           </Pressable>
         </Animated.View>
@@ -183,9 +226,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   runningPill: {
-    width: 100,
-    height: 44,
-    borderRadius: 22,
+    width: RUNNING_WIDTH,
+    height: BUTTON_SIZE,
+    borderRadius: BUTTON_SIZE / 2,
     flexDirection: 'row',
     paddingHorizontal: 10,
     justifyContent: 'space-between',

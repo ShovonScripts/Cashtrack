@@ -92,6 +92,8 @@ function SixMonthTrendChart({
               }}
               accessibilityRole="button"
               accessibilityLabel={`${m.label}: ${formatAmount(m.spent)}`}
+              accessibilityHint="Shows the report for this month"
+              accessibilityState={{ selected: m.isSelected }}
               style={styles.barColumn}>
               <ThemedText
                 type="caption"
@@ -169,7 +171,7 @@ function SpendingDistributionChart({
           </View>
           <View style={styles.titleCopy}>
             <ThemedText type="defaultBold">Category Proportions</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
+            <ThemedText type="caption" themeColor="textSecondary" accessibilityLiveRegion="polite">
               {active
                 ? `${active.category}: ${formatAmount(active.amount)} (${active.percent.toFixed(1)}% of total)`
                 : 'Tap a category to see its share of monthly total'}
@@ -190,7 +192,8 @@ function SpendingDistributionChart({
                 setSelectedCategory(isSelected ? null : cat.category);
               }}
               accessibilityRole="button"
-              accessibilityLabel={`${cat.category} ${cat.percent.toFixed(0)} percent share`}
+              accessibilityLabel={`${cat.category}, ${formatAmount(cat.amount)}, ${cat.percent.toFixed(0)} percent of total`}
+              accessibilityState={{ selected: isSelected }}
               style={[
                 styles.stackedSegment,
                 {
@@ -216,6 +219,7 @@ function SpendingDistributionChart({
                 setSelectedCategory(isSelected ? null : cat.category);
               }}
               accessibilityRole="button"
+              accessibilityLabel={`${cat.category}, ${formatAmount(cat.amount)}, ${cat.percent.toFixed(0)} percent of total`}
               accessibilityState={{ selected: isSelected }}
               style={[
                 styles.legendChip,

@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Pressable, ScrollView, StyleSheet, TextInput, Vie
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
+import { BudgetMeter } from '@/components/budget-meter';
 import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
@@ -14,6 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { sumAmounts } from '@/utils/expense';
 import { getBudgetInsights } from '@/utils/advisor';
+import { getBudgetStatus } from '@/utils/budget-status';
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
 import { sumMoney } from '@/utils/money';
 
@@ -132,10 +134,9 @@ export default function BudgetsScreen() {
           const limit = categoryLimits[category];
           const draft = drafts[category] ?? (limit === undefined ? '' : String(limit));
           const spent = spentThisMonth(category);
-          const isOver = limit !== undefined && spent > limit;
+          const status = limit !== undefined ? getBudgetStatus(spent, limit) : null;
+          const statusColor = status?.state === 'over' ? theme.danger : status?.state === 'near' ? theme.warning : theme.success;
           const notice = insights.find((insight) => insight.category === category);
-          const progress = limit ? Math.min(spent / limit, 1) : 0;
-          const accent = isOver ? theme.danger : getCategoryColor(category);
 
           return (
             <Card key={category} style={styles.categoryCard}>
@@ -143,9 +144,9 @@ export default function BudgetsScreen() {
                 <CategoryIcon category={category} customIcons={categoryIcons} color={getCategoryColor(category)} size={16} containerSize={36} />
                 <ThemedText type="defaultBold" style={styles.categoryName}>{category}</ThemedText>
 
-                <View style={[styles.statusPill, { backgroundColor: limit !== undefined ? (isOver ? withAlpha(theme.danger, 0.15) : withAlpha(theme.success, 0.15)) : theme.cardMuted }]}>
-                  <ThemedText type="caption" style={{ color: limit !== undefined ? (isOver ? theme.danger : theme.success) : theme.textSecondary, fontWeight: '800' }}>
-                    {limit !== undefined ? (isOver ? 'Over Limit' : 'Active') : 'No Limit'}
+                <View style={[styles.statusPill, { backgroundColor: status ? withAlpha(statusColor, 0.15) : theme.cardMuted }]}>
+                  <ThemedText type="caption" style={{ color: status ? statusColor : theme.textSecondary, fontWeight: '800' }}>
+                    {status ? status.label : 'No Limit'}
                   </ThemedText>
                 </View>
               </View>
@@ -155,19 +156,7 @@ export default function BudgetsScreen() {
               </ThemedText>
 
               {limit !== undefined && (
-                <View style={styles.progressBlock}>
-                  <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
-                    <View style={[styles.fill, { width: `${progress * 100}%`, backgroundColor: accent }]} />
-                  </View>
-                  <View style={styles.progressFooter}>
-                    <ThemedText type="caption" themeColor={isOver ? 'danger' : 'textSecondary'}>
-                      {isOver ? `${formatAmount(spent - limit)} over limit` : `${formatAmount(limit - spent)} remaining`}
-                    </ThemedText>
-                    <ThemedText type="caption" style={{ fontWeight: '700', color: accent }}>
-                      {Math.round(progress * 100)}%
-                    </ThemedText>
-                  </View>
-                </View>
+                <BudgetMeter spent={spent} limit={limit} formatAmount={formatAmount} name={category} />
               )}
 
               {notice && (
@@ -286,10 +275,6 @@ const styles = StyleSheet.create({
   categoryHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   categoryName: { flex: 1 },
   statusPill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: Radius.pill },
-  progressBlock: { gap: 4 },
-  track: { height: 8, borderRadius: Radius.pill, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: Radius.pill },
-  progressFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   noticeBox: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: Radius.small },
   budgetNotice: { fontWeight: '700', fontSize: 11 },
   limitEntry: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: 4 },

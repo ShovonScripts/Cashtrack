@@ -238,6 +238,9 @@ export default function DashboardScreen() {
               title="No transactions"
               message={selectedFilterCategory === 'All' ? "Add your first expense and it will show up here." : `No expenses found in "${selectedFilterCategory}".`}
               tone={theme.accent}
+              icon="receipt-text-outline"
+              actionLabel={allExpenses.length === 0 ? 'Add expense' : undefined}
+              onAction={allExpenses.length === 0 ? () => router.push('/add-expense') : undefined}
             />
           ) : (
             <>

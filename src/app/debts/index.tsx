@@ -118,8 +118,11 @@ export default function DebtsScreen() {
             <Card style={styles.emptyCard}>
               <EmptyState
                 title="No debt records"
-                message="Track money you lent or borrowed by tapping the Add button above."
+                message="Track money you lent or borrowed."
                 tone={theme.accent}
+                icon="account-cash-outline"
+                actionLabel="Add debt"
+                onAction={() => router.push('/debts/add')}
               />
             </Card>
           ) : (

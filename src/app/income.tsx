@@ -299,6 +299,7 @@ export default function IncomeScreen() {
               title="No income recorded yet"
               message="Record your salary, freelance earnings, or extra income above."
               tone={theme.success}
+              icon="wallet-plus-outline"
             />
           </Card>
         ) : (

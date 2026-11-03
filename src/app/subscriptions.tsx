@@ -129,6 +129,7 @@ export default function SubscriptionsHubScreen() {
                 title="No recurring subscriptions"
                 message="Track Netflix, Spotify, gym memberships, and rent reminders in one place."
                 tone={theme.accent}
+                icon="autorenew"
               />
               <Pressable
                 onPress={() => {

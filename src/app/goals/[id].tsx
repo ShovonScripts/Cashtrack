@@ -343,7 +343,7 @@ export default function GoalDetailScreen() {
 
         {goal.contributions.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <EmptyState title="No contributions yet" message="Log your first savings contribution above." tone={theme.accent} />
+            <EmptyState title="No contributions yet" message="Log your first savings contribution above." tone={theme.accent} icon="cash-plus" />
           </Card>
         ) : (
           <View style={styles.list}>

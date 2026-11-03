@@ -214,7 +214,13 @@ export default function ExpensesScreen() {
         }
         ListEmptyComponent={
           expenses.length === 0 ? (
-            <EmptyState title="No transactions yet" message="Add your first expense to track your spending." />
+            <EmptyState
+              title="No transactions yet"
+              message="Add your first expense to track your spending."
+              icon="receipt-text-outline"
+              actionLabel="Add expense"
+              onAction={() => router.push('/add-expense')}
+            />
           ) : (
             <View style={styles.emptyResult}>
               <EmptyState

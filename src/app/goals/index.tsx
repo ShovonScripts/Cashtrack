@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { GoalProgressCard } from '@/components/goal-progress-card';
 import { LoadErrorState } from '@/components/load-error-state';
@@ -104,10 +105,7 @@ export default function GoalsOverviewScreen() {
         {/* Goals List */}
         <View style={styles.listSection}>
           {isLoading && goals.length === 0 ? (
-            <Card style={styles.emptyCard}>
-              <ActivityIndicator color={theme.accent} />
-              <ThemedText type="caption" themeColor="textSecondary">Loading your pots…</ThemedText>
-            </Card>
+            <SkeletonList rows={3} label="Loading your pots" />
           ) : goalLoadError ? (
             <Card style={styles.emptyCard}>
               <LoadErrorState
@@ -119,7 +117,14 @@ export default function GoalsOverviewScreen() {
             </Card>
           ) : filtered.length === 0 ? (
             <Card style={styles.emptyCard}>
-              <EmptyState title={emptyTitle} message={emptyMessage} tone={theme.accent} />
+              <EmptyState
+                title={emptyTitle}
+                message={emptyMessage}
+                tone={theme.accent}
+                icon="piggy-bank-outline"
+                actionLabel={goals.length === 0 ? 'Create a pot' : undefined}
+                onAction={goals.length === 0 ? () => router.push('/goals/add') : undefined}
+              />
             </Card>
           ) : (
             filtered.map((goal) => (

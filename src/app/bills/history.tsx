@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
@@ -24,8 +25,7 @@ export default function BillPaymentHistoryScreen() {
   if (isLoading && payments.length === 0) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator color={theme.accent} size="large" />
-        <ThemedText type="small" themeColor="textSecondary">Loading payments…</ThemedText>
+        <SkeletonList rows={4} label="Loading payments" />
       </View>
     );
   }
@@ -63,6 +63,7 @@ export default function BillPaymentHistoryScreen() {
               title="No bill payments yet"
               message="Payments you record against bills and subscriptions will appear here."
               tone={theme.accent}
+              icon="history"
             />
           </Card>
         ) : (

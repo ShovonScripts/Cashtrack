@@ -265,8 +265,11 @@ export default function BillsScreen() {
             <Card style={styles.emptyCard}>
               <EmptyState
                 title="No bills or reminders"
-                message="Stay on top of electricity bills, rent, EMI, and subscriptions by tapping Add Bill above."
+                message="Stay on top of electricity bills, rent, EMI, and subscriptions."
                 tone={theme.accent}
+                icon="calendar-clock"
+                actionLabel="Add bill"
+                onAction={() => router.push('/bills/add')}
               />
             </Card>
           ) : (

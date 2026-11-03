@@ -1,14 +1,14 @@
-import { router } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { SkeletonList } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/empty-state';
+import { Chip, IconButton, Screen, StatStrip } from '@/components/ui';
 import { GoalProgressCard } from '@/components/goal-progress-card';
 import { LoadErrorState } from '@/components/load-error-state';
-import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -41,66 +41,29 @@ export default function GoalsOverviewScreen() {
         : 'Every pot is fully funded. Create another or check the completed tab.';
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        {/* Hero Section */}
-        <View style={[styles.hero, { backgroundColor: Brand.deep }]}>
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>MONEY PLAN & POTS</ThemedText>
-              <Pressable
-                onPress={() => router.push('/goals/add')}
-                accessibilityRole="button"
-                accessibilityLabel="Create a new goal or pot"
-                style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-                <ThemedText type="defaultBold" style={styles.addButtonText}>＋ New pot</ThemedText>
-              </Pressable>
-            </View>
+    <Screen topInset={false}>
+        <Stack.Screen
+          options={{
+            headerRight: () => <IconButton icon="add" label="Create a new pot" onPress={() => router.push('/goals/add')} />,
+          }}
+        />
+        <StatStrip
+          items={[
+            { label: 'Active saved', value: formatAmount(totalSaved), tone: 'success' },
+            { label: 'Active targets', value: formatAmount(totalPlanned) },
+          ]}
+        />
 
-            <View style={styles.heroSummaryRow}>
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>ACTIVE SAVED</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
-                  {formatAmount(totalSaved)}
-                </ThemedText>
-              </View>
-              <View style={styles.heroDivider} />
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>ACTIVE TARGETS</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
-                  {formatAmount(totalPlanned)}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
-        </View>
-
-        {/* Filter Tabs */}
-        <View style={styles.tabsRow}>
-          {(['active', 'completed', 'all'] as FilterTab[]).map((t) => {
-            const selected = tab === t;
-            return (
-              <Pressable
-                key={t}
-                onPress={() => setTab(t)}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                style={[
-                  styles.tab,
-                  {
-                    backgroundColor: selected ? theme.accentFill : theme.cardMuted,
-                    borderColor: selected ? theme.accentFill : theme.border,
-                  },
-                ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? Palette.white : theme.textSecondary, textTransform: 'capitalize' }}>
-                  {t} ({t === 'active' ? activeGoals.length : t === 'completed' ? completedGoals.length : goals.length})
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          {(['active', 'completed', 'all'] as FilterTab[]).map((t) => (
+            <Chip
+              key={t}
+              label={`${t.charAt(0).toUpperCase()}${t.slice(1)} (${t === 'active' ? activeGoals.length : t === 'completed' ? completedGoals.length : goals.length})`}
+              selected={tab === t}
+              onPress={() => setTab(t)}
+            />
+          ))}
+        </ScrollView>
 
         {/* Goals List */}
         <View style={styles.listSection}>
@@ -137,37 +100,12 @@ export default function GoalsOverviewScreen() {
             ))
           )}
         </View>
-      </View>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  hero: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    minHeight: 180,
-    justifyContent: 'center',
-  },
-  heroContent: { gap: Spacing.two, zIndex: 1 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  addButton: { backgroundColor: Palette.white, borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  addButtonText: { color: Brand.deep },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.half },
-  heroStat: { flex: 1, gap: Spacing.half },
-  heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: Palette.white, fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
-  heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },
-  tabsRow: { flexDirection: 'row', gap: Spacing.two },
-  tab: { flex: 1, height: 44, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
+  filterScroll: { gap: Spacing.two, paddingVertical: 2 },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center', gap: Spacing.one },
-  pressed: { opacity: 0.75 },
 });

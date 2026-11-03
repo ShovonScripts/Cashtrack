@@ -5,10 +5,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
+import { Chip, Screen, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useDebts } from '@/context/debt-context';
 import { usePreferences } from '@/context/expense-context';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
@@ -45,71 +46,19 @@ export default function DebtsScreen() {
   const filters: FilterType[] = ['Active', 'All', 'Settled', 'Lent', 'Borrowed'];
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        {/* Signature CashTrack Brand Purple Hero Section */}
-        <View style={styles.hero}>
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>MONEY OVERVIEW</ThemedText>
-              <Pressable
-                onPress={() => router.push('/debts/add')}
-                accessibilityRole="button"
-                accessibilityLabel="Add debt"
-                style={({ pressed }) => [styles.quickAddButton, pressed && styles.pressed]}>
-                <ThemedText type="defaultBold" style={styles.quickAddText}>＋ Add debt</ThemedText>
-              </Pressable>
-            </View>
+    <Screen topInset={false}>
+        <StatStrip
+          items={[
+            { label: 'You are owed', value: formatAmount(youAreOwed), tone: 'success' },
+            { label: 'You owe', value: formatAmount(youOwe), tone: youOwe > 0 ? 'danger' : 'default' },
+            { label: 'Net position', value: `${net >= 0 ? '+' : ''}${formatAmount(net)}`, tone: net >= 0 ? 'success' : 'danger' },
+          ]}
+        />
 
-            <View style={styles.heroSummaryRow}>
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>YOU ARE OWED</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
-                  {formatAmount(youAreOwed)}
-                </ThemedText>
-              </View>
-              <View style={styles.heroDivider} />
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>YOU OWE</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5}>
-                  {formatAmount(youOwe)}
-                </ThemedText>
-              </View>
-            </View>
-
-            <View style={styles.heroNetRow}>
-              <ThemedText type="small" style={styles.heroNetText}>
-                Net Position: <ThemedText type="smallBold" style={{ color: Palette.white }}>{net >= 0 ? `+${formatAmount(net)} (Credit)` : `${formatAmount(net)} (Debit)`}</ThemedText>
-              </ThemedText>
-            </View>
-          </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
-        </View>
-
-        {/* Filter Pills with Counts */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          {filters.map((f) => {
-            const selected = filter === f;
-            return (
-              <Pressable
-                key={f}
-                onPress={() => setFilter(f)}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                style={[
-                  styles.filterChip,
-                  {
-                    backgroundColor: selected ? theme.accentFill : theme.cardMuted,
-                    borderColor: selected ? theme.accentFill : theme.border,
-                  },
-                ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? Palette.white : theme.textSecondary }}>
-                  {f} ({getCount(f)})
-                </ThemedText>
-              </Pressable>
-            );
-          })}
+          {filters.map((f) => (
+            <Chip key={f} label={`${f} (${getCount(f)})`} selected={filter === f} onPress={() => setFilter(f)} />
+          ))}
         </ScrollView>
 
         {/* Debt List */}
@@ -131,8 +80,7 @@ export default function DebtsScreen() {
             ))
           )}
         </View>
-      </View>
-    </ScrollView>
+    </Screen>
   );
 }
 
@@ -214,32 +162,7 @@ function DebtCard({ debt, formatAmount }: { debt: DebtRecord; formatAmount: (amo
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  hero: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    minHeight: 200,
-    justifyContent: 'center',
-  },
-  heroContent: { gap: Spacing.two, zIndex: 1 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  quickAddButton: { backgroundColor: Palette.white, borderRadius: Radius.pill, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
-  quickAddText: { color: Brand.deep },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.one },
-  heroStat: { flex: 1, gap: Spacing.half },
-  heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: Palette.white, fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 40, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroNetRow: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(255,255,255,0.15)', paddingTop: Spacing.two },
-  heroNetText: { color: 'rgba(255,255,255,0.8)' },
-  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.2)' },
-  heroOrbSmall: { position: 'absolute', width: 130, height: 130, borderRadius: 65, right: 14, bottom: -90, backgroundColor: 'rgba(176,76,252,0.2)' },
   filterScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
-  filterChip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   debtCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two, elevation: 1 },

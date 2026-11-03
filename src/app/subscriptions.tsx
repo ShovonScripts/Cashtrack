@@ -1,11 +1,12 @@
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Stack, router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
+import { IconButton, Screen, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { usePreferences } from '@/context/expense-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -71,50 +72,27 @@ export default function SubscriptionsHubScreen() {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        {/* Hero Banner with Bottom Add Button */}
-        <View style={[styles.hero, { backgroundColor: Brand.deep }]}>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-          <View pointerEvents="none" style={styles.heroOrbSmall} />
-
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>RECURRING & SUBSCRIPTIONS</ThemedText>
-            </View>
-
-            <View style={styles.heroSummaryRow}>
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>MONTHLY OUTFLOW</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatAmount(totalMonthlyOutflow)}
-                </ThemedText>
-              </View>
-              <View style={styles.heroDivider} />
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>ACTIVE RENEWALS</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {activeRecurring.length}
-                </ThemedText>
-              </View>
-            </View>
-
-            {/* Solid White Action Button at Bottom */}
-            <Pressable
-              onPress={() => {
-                triggerHaptic();
-                router.push('/bills/add');
-              }}
-              accessibilityRole="button"
-              accessibilityLabel="Add subscription or recurring bill"
-              style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <MaterialCommunityIcons name="plus" size={18} color={Brand.deep} />
-                <ThemedText type="defaultBold" style={styles.addButtonText}>Add recurring bill</ThemedText>
-              </View>
-            </Pressable>
-          </View>
-        </View>
+    <Screen topInset={false}>
+        <Stack.Screen
+          options={{
+            headerRight: () => (
+              <IconButton
+                icon="add"
+                label="Add recurring bill"
+                onPress={() => {
+                  triggerHaptic();
+                  router.push('/bills/add');
+                }}
+              />
+            ),
+          }}
+        />
+        <StatStrip
+          items={[
+            { label: 'Monthly outflow', value: formatAmount(totalMonthlyOutflow) },
+            { label: 'Active renewals', value: String(activeRecurring.length) },
+          ]}
+        />
 
         {/* Subscriptions & Recurring List */}
         <View style={styles.listSection}>
@@ -191,41 +169,11 @@ export default function SubscriptionsHubScreen() {
             </Card>
           )}
         </View>
-      </View>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  hero: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    position: 'relative',
-    justifyContent: 'space-between',
-  },
-  heroContent: { gap: Spacing.two, zIndex: 2 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.72)', letterSpacing: 1 },
-  addButton: {
-    backgroundColor: Palette.white,
-    borderRadius: Radius.medium,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: Spacing.two,
-  },
-  addButtonText: { color: Brand.deep, fontWeight: '700' },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginVertical: Spacing.half },
-  heroStat: { flex: 1, gap: Spacing.half },
-  heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: Palette.white, fontSize: 24, lineHeight: 30, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroOrbLarge: { position: 'absolute', width: 230, height: 230, borderRadius: 115, right: -90, top: -100, backgroundColor: 'rgba(139,123,255,0.25)', zIndex: 1 },
-  heroOrbSmall: { position: 'absolute', width: 150, height: 150, borderRadius: 75, left: -50, bottom: -60, backgroundColor: 'rgba(20,231,253,0.2)', zIndex: 1 },
   listSection: { gap: Spacing.two },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   emptyCard: { padding: Spacing.four, alignItems: 'center', gap: Spacing.three },

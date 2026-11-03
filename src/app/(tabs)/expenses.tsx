@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { SectionList, Pressable, StyleSheet, TextInput, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -9,6 +9,7 @@ import { Card, CardDivider } from '@/components/card';
 import { CategoryChips, type CategoryFilter } from '@/components/category-chips';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
+import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
@@ -70,7 +71,12 @@ function groupExpensesByDate(expensesList: Expense[], today: Date): ExpenseSecti
 }
 
 export default function ExpensesScreen() {
-  const { expenses } = useExpenses();
+  const { expenses: allExpenses } = useExpenses();
+  const { pendingDeleteIds, requestDelete } = useUndoDelete();
+  const expenses = useMemo(
+    () => allExpenses.filter((expense) => !pendingDeleteIds.has(expense.id)),
+    [allExpenses, pendingDeleteIds]
+  );
   const { categories, formatAmount } = usePreferences();
   const theme = useTheme();
   const now = useNow(60_000);
@@ -237,7 +243,7 @@ export default function ExpensesScreen() {
         )}
         renderItem={({ item, index, section }) => (
           <Card padded={false} style={styles.itemCard}>
-            <ExpenseListItem expense={item} />
+            <ExpenseListItem expense={item} onSwipeDelete={canUndoDelete(item) ? requestDelete : undefined} />
             {index < section.data.length - 1 && <CardDivider />}
           </Card>
         )}

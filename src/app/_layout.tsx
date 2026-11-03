@@ -24,6 +24,8 @@ import {
 import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsButton';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StopwatchProvider } from '@/context/stopwatch-context';
+import { ToastProvider } from '@/context/toast-context';
+import { UndoDeleteProvider } from '@/context/undo-delete-context';
 import { FeatureColors, Palette } from '@/constants/theme';
 
 preventAutoHideAsync();
@@ -484,7 +486,11 @@ export default function RootLayout() {
                   <StopwatchProvider>
                     <AnimatedSplashOverlay />
                     <AppLockHost>
-                      <Navigation />
+                      <ToastProvider>
+                        <UndoDeleteProvider>
+                          <Navigation />
+                        </UndoDeleteProvider>
+                      </ToastProvider>
                     </AppLockHost>
                   </StopwatchProvider>
                 </FinancialRemindersProvider>

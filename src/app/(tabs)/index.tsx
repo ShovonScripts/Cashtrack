@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
+import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
 import { MoneySummaryCard } from '@/components/dashboard/money-summary-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
@@ -30,7 +31,12 @@ const RECENT_LIMIT = 5;
 
 
 export default function DashboardScreen() {
-  const { expenses, isLoading } = useExpenses();
+  const { expenses: allExpenses, isLoading } = useExpenses();
+  const { pendingDeleteIds, requestDelete } = useUndoDelete();
+  const expenses = useMemo(
+    () => allExpenses.filter((expense) => !pendingDeleteIds.has(expense.id)),
+    [allExpenses, pendingDeleteIds]
+  );
   const {
     profile,
     categoryLimits,
@@ -238,7 +244,7 @@ export default function DashboardScreen() {
               {filteredRecent.map((expense, index) => (
                 <View key={expense.id}>
                   {index > 0 && <CardDivider />}
-                  <ExpenseListItem expense={expense} />
+                  <ExpenseListItem expense={expense} onSwipeDelete={canUndoDelete(expense) ? requestDelete : undefined} />
                 </View>
               ))}
               {expenses.length > 0 && (

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
 import { CategoryChips } from '@/components/category-chips';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { AmountField, Button, FormField, Screen } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDraft } from '@/types/expense';
@@ -77,206 +78,67 @@ export function ExpenseForm({
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag">
-        <View style={styles.container}>
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              AMOUNT
-            </ThemedText>
-            <View
-              style={[
-                styles.amountField,
-                { borderColor: theme.border, backgroundColor: theme.cardMuted },
-              ]}>
-              <ThemedText type="hero" style={styles.currency}>
-                {country.symbol.trim()}
-              </ThemedText>
-              <TextInput
-                value={amountText}
-                onChangeText={setAmountText}
-                placeholder="0.00"
-                placeholderTextColor={theme.textSecondary}
-                keyboardType="decimal-pad"
-                accessibilityLabel={`Expense amount in ${country.currencyCode}`}
-                accessibilityHint="Enter an amount greater than zero"
-                returnKeyType="done"
-                style={[styles.amountInput, { color: theme.text }]}
-              />
-            </View>
-            {showAmountError && (
-              <ThemedText type="caption" themeColor="danger" accessibilityLiveRegion="polite">
-                Enter a valid amount greater than zero.
-              </ThemedText>
-            )}
-          </View>
+      <Screen topInset={false}>
+        <AmountField
+          label="Amount"
+          value={amountText}
+          onChangeText={setAmountText}
+          symbol={country.symbol.trim()}
+          error={showAmountError ? 'Enter a valid amount greater than zero.' : undefined}
+        />
 
+        <View style={styles.field}>
+          <ThemedText type="smallBold">Date</ThemedText>
           <DatePicker value={date} onChange={setDate} />
-
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              CATEGORY
-            </ThemedText>
-            {/* `showAll` is off here, so the callback only ever gets real categories. */}
-            <CategoryChips
-              categories={categories}
-              value={category}
-              onChange={(next) => {
-                if (next !== 'All') {
-                  setCategory(next);
-                }
-              }}
-            />
-            {budgetNotice && (
-              <ThemedText
-                type="caption"
-                accessibilityLiveRegion="polite"
-                style={{ color: categoryLimit !== undefined && projectedCategorySpend > categoryLimit ? theme.danger : theme.warning }}>
-                {budgetNotice}
-              </ThemedText>
-            )}
-          </View>
-
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">
-              NOTE
-            </ThemedText>
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="What was it for?"
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel="Expense note"
-              multiline
-              style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text }]}
-            />
-          </View>
-
-          <Pressable
-            onPress={handleSubmit}
-            disabled={!isValid}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid }}
-            style={({ pressed }) => [
-              styles.saveButton,
-              { backgroundColor: theme.accentFill },
-              pressed && styles.pressed,
-              !isValid && styles.saveButtonDisabled,
-            ]}>
-            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>
-              {submitLabel}
-            </ThemedText>
-          </Pressable>
-
-          {onCancel && (
-            <Pressable
-              onPress={onCancel}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
-              <ThemedText type="defaultBold" themeColor="textSecondary">
-                Cancel
-              </ThemedText>
-            </Pressable>
-          )}
-
-          {onDelete && (
-            <Pressable
-              onPress={onDelete}
-              accessibilityRole="button"
-              accessibilityLabel="Delete expense"
-              style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}>
-              <ThemedText type="defaultBold" themeColor="danger">
-                Delete expense
-              </ThemedText>
-            </Pressable>
-          )}
-
-          {footerNote && (
-            <ThemedText type="small" themeColor="textSecondary" style={styles.footerNote}>
-              {footerNote}
-            </ThemedText>
-          )}
         </View>
-      </ScrollView>
+
+        <View style={styles.field}>
+          <ThemedText type="smallBold">Category</ThemedText>
+          {/* `showAll` is off here, so the callback only ever gets real categories. */}
+          <CategoryChips
+            categories={categories}
+            value={category}
+            onChange={(next) => {
+              if (next !== 'All') {
+                setCategory(next);
+              }
+            }}
+          />
+          {budgetNotice ? (
+            <ThemedText
+              type="caption"
+              accessibilityLiveRegion="polite"
+              style={{ color: categoryLimit !== undefined && projectedCategorySpend > categoryLimit ? theme.danger : theme.warning }}>
+              {budgetNotice}
+            </ThemedText>
+          ) : null}
+        </View>
+
+        <FormField
+          label="Note"
+          value={note}
+          onChangeText={setNote}
+          placeholder="What was it for?"
+          helper="Optional"
+          multiline
+        />
+
+        <Button label={submitLabel} onPress={handleSubmit} disabled={!isValid} />
+        {onCancel ? <Button label="Cancel" variant="ghost" onPress={onCancel} /> : null}
+        {onDelete ? <Button label="Delete expense" variant="danger" onPress={onDelete} /> : null}
+
+        {footerNote ? (
+          <ThemedText type="small" themeColor="textSecondary" style={styles.footerNote}>
+            {footerNote}
+          </ThemedText>
+        ) : null}
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-  },
-  container: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    padding: Spacing.four,
-    gap: Spacing.four,
-  },
-  field: {
-    gap: Spacing.two,
-  },
-  amountField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.large,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-  },
-  currency: {
-    fontSize: 24,
-    lineHeight: 30,
-  },
-  amountInput: {
-    flex: 1,
-    fontSize: 28,
-    lineHeight: 34,
-    fontWeight: 600,
-    fontVariant: ['tabular-nums'],
-    paddingVertical: Spacing.one,
-  },
-  input: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.large,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.three,
-    fontSize: 16,
-  },
-  noteInput: {
-    minHeight: Spacing.six * 2,
-    textAlignVertical: 'top',
-  },
-  saveButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.three,
-    borderRadius: Radius.medium,
-  },
-  saveButtonDisabled: {
-    opacity: 0.4,
-  },
-  deleteButton: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.three,
-  },
-  footerNote: {
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
+  flex: { flex: 1 },
+  field: { gap: Spacing.one },
+  footerNote: { textAlign: 'center' },
 });

@@ -8,7 +8,7 @@ import { ExpenseListItem } from '@/components/expense-list-item';
 import { MoneySummaryCard } from '@/components/dashboard/money-summary-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { useNow } from '@/hooks/use-now';
@@ -343,7 +343,7 @@ export default function DashboardScreen() {
             pressed && styles.pressed,
           ]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, flexWrap: 'nowrap' }}>
-            <MaterialCommunityIcons name="heart" size={16} color="#EB5757" />
+            <MaterialCommunityIcons name="heart" size={16} color={FeatureColors.red} />
             <ThemedText type="smallBold" numberOfLines={1}>About CashTrack & Support</ThemedText>
           </View>
         </Pressable>

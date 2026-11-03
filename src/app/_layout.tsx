@@ -24,7 +24,7 @@ import {
 import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsButton';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StopwatchProvider } from '@/context/stopwatch-context';
-import { Palette } from '@/constants/theme';
+import { FeatureColors, Palette } from '@/constants/theme';
 
 preventAutoHideAsync();
 
@@ -407,7 +407,7 @@ export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
 function RootErrorScreen({ error, retry }: ErrorBoundaryProps) {
   const isDark = useColorScheme() === 'dark';
   const palette = isDark
-    ? { background: '#0C0F12', card: '#151A1F', border: '#283038', text: '#F4F7FA', muted: '#9BA6B2', accent: '#159A8C' }
+    ? { background: '#0C0F12', card: '#151A1F', border: '#283038', text: '#F4F7FA', muted: '#9BA6B2', accent: FeatureColors.teal }
     : { background: '#F5F6F3', card: Palette.white, border: '#E2E5E0', text: '#11181C', muted: '#5F6B75', accent: '#0E7C70' };
 
   useEffect(() => {

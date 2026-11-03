@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import { Ionicons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CalculatorTool } from './tools/CalculatorTool';
 import { NotesTool } from './tools/NotesTool';
@@ -116,7 +116,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
-                    <Ionicons name="cash-outline" size={24} color="#059669" />
+                    <Ionicons name="cash-outline" size={24} color={FeatureColors.emerald} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Currency</ThemedText>
@@ -184,7 +184,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
-                    <Ionicons name="checkbox-outline" size={24} color="#059669" />
+                    <Ionicons name="checkbox-outline" size={24} color={FeatureColors.emerald} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">To-Do List</ThemedText>

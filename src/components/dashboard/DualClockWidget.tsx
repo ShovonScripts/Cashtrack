@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
@@ -186,8 +186,8 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
   return (
     <View style={styles.container}>
       <View style={compact ? styles.clocksColumn : styles.clocksRow}>
-        {renderClockCard(1, city1, time1, page ? (isDark ? '#4ade80' : '#16A34A') : '#4ade80')}
-        {renderClockCard(2, city2, time2, page ? (isDark ? '#38bdf8' : '#0284C7') : '#38bdf8')}
+        {renderClockCard(1, city1, time1, page ? (isDark ? FeatureColors.lime : '#16A34A') : FeatureColors.lime)}
+        {renderClockCard(2, city2, time2, page ? (isDark ? FeatureColors.skyLight : FeatureColors.sky) : FeatureColors.skyLight)}
       </View>
 
       {/* City Selector Modal */}

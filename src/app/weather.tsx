@@ -10,7 +10,7 @@ import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { WeatherWorldClocks } from '@/components/dashboard/WeatherWorldClocks';
-import { Palette } from '@/constants/theme';
+import { FeatureColors, Palette } from '@/constants/theme';
 
 export default function WeatherScreen() {
   const theme = useTheme();
@@ -73,10 +73,10 @@ export default function WeatherScreen() {
   const hourlyPillBorder = isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.08)';
   const hourlyActiveBg = isDark ? 'rgba(56, 189, 248, 0.22)' : 'rgba(56, 189, 248, 0.15)';
   const rainBadgeBg = isDark ? 'rgba(56, 189, 248, 0.22)' : 'rgba(14, 165, 233, 0.14)';
-  const rainBadgeColor = isDark ? '#38BDF8' : '#0284C7';
+  const rainBadgeColor = isDark ? FeatureColors.skyLight : FeatureColors.sky;
   const gaugeTrackBg = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
   const tempBarTrackBg = isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(0, 0, 0, 0.08)';
-  const forecastMaxColor = isDark ? '#4ADE80' : '#16A34A';
+  const forecastMaxColor = isDark ? FeatureColors.lime : '#16A34A';
   const insightCardBg = isDark ? theme.card : '#FEFCE8';
   const insightBorderColor = isDark ? 'rgba(250, 204, 21, 0.25)' : 'rgba(245, 158, 11, 0.35)';
 
@@ -94,7 +94,7 @@ export default function WeatherScreen() {
         <View style={styles.heroOverlay}>
           <View style={styles.topBadgesRow}>
             <View style={styles.locationBadge}>
-              <Ionicons name="location" size={13} color="#38BDF8" />
+              <Ionicons name="location" size={13} color={FeatureColors.skyLight} />
               <ThemedText style={styles.badgeText}>{weather.locationName}</ThemedText>
             </View>
             <View style={styles.timeBadge}>
@@ -202,26 +202,26 @@ export default function WeatherScreen() {
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-              <Ionicons name="umbrella" size={18} color="#0EA5E9" />
+              <Ionicons name="umbrella" size={18} color={FeatureColors.cyan} />
             </View>
             <ThemedText style={styles.metricLabel}>RAIN CHANCE</ThemedText>
           </View>
           <ThemedText type="defaultBold" style={styles.metricValue}>{weather.rainProbability}%</ThemedText>
           <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(5, weather.rainProbability))}%`, backgroundColor: '#0EA5E9' }]} />
+            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(5, weather.rainProbability))}%`, backgroundColor: FeatureColors.cyan }]} />
           </View>
         </Card>
 
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-              <Ionicons name="water" size={18} color="#3B82F6" />
+              <Ionicons name="water" size={18} color={FeatureColors.blue} />
             </View>
             <ThemedText style={styles.metricLabel}>HUMIDITY</ThemedText>
           </View>
           <ThemedText type="defaultBold" style={styles.metricValue}>{weather.humidity}%</ThemedText>
           <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(5, weather.humidity))}%`, backgroundColor: '#3B82F6' }]} />
+            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(5, weather.humidity))}%`, backgroundColor: FeatureColors.blue }]} />
           </View>
         </Card>
 
@@ -241,13 +241,13 @@ export default function WeatherScreen() {
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-              <Ionicons name="thermometer" size={18} color="#F59E0B" />
+              <Ionicons name="thermometer" size={18} color={FeatureColors.amber} />
             </View>
             <ThemedText style={styles.metricLabel}>DAILY RANGE</ThemedText>
           </View>
           <ThemedText type="defaultBold" style={styles.metricValue}>{formatTempNum(weather.tempMinC)} - {formatTempNum(weather.tempMaxC)}</ThemedText>
           <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: '80%', backgroundColor: '#F59E0B' }]} />
+            <View style={[styles.gaugeFill, { width: '80%', backgroundColor: FeatureColors.amber }]} />
           </View>
         </Card>
       </View>
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   highText: {
-    color: '#4ADE80',
+    color: FeatureColors.lime,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   lowText: {
-    color: '#38BDF8',
+    color: FeatureColors.skyLight,
     fontSize: 13,
     fontWeight: '700',
   },

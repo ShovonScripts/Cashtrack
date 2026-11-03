@@ -5,7 +5,7 @@ import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { triggerHaptic } from '@/utils/motion';
@@ -25,7 +25,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     title: 'Add Expense',
     subtitle: 'Outflows, shopping & receipts',
     icon: 'cash-minus',
-    color: '#EB5757',
+    color: FeatureColors.red,
     route: '/add-expense',
   },
   {
@@ -33,7 +33,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     title: 'Add Income',
     subtitle: 'Salary, freelance & side cash',
     icon: 'cash-plus',
-    color: '#27AE60',
+    color: FeatureColors.leaf,
     route: '/income',
   },
   {
@@ -41,7 +41,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     title: 'Add Bill / Reminder',
     subtitle: 'Rent, subscriptions & EMIs',
     icon: 'calendar-clock',
-    color: '#F2994A',
+    color: FeatureColors.orange,
     route: '/bills/add',
   },
   {
@@ -49,7 +49,7 @@ const QUICK_ACTIONS: QuickAction[] = [
     title: 'Add Debt / Loan',
     subtitle: 'Money lent or borrowed',
     icon: 'account-cash-outline',
-    color: '#2D9CDB',
+    color: FeatureColors.azure,
     route: '/debts/add',
   },
   {

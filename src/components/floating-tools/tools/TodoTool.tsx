@@ -4,7 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   clearCompletedTodos,
@@ -16,9 +16,9 @@ import {
 import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
 
 const PRIORITY_OPTIONS: { key: TodoPriority; label: string; color: string; icon: string }[] = [
-  { key: 'high', label: 'High', color: '#E11D48', icon: 'alert-circle-outline' },
+  { key: 'high', label: 'High', color: FeatureColors.crimson, icon: 'alert-circle-outline' },
   { key: 'medium', label: 'Medium', color: '#D97706', icon: 'time-outline' },
-  { key: 'low', label: 'Low', color: '#0284C7', icon: 'arrow-down-circle-outline' },
+  { key: 'low', label: 'Low', color: FeatureColors.sky, icon: 'arrow-down-circle-outline' },
 ];
 
 const CATEGORY_OPTIONS: { key: TodoCategory; label: string; icon: string }[] = [
@@ -174,7 +174,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
         <View style={styles.progressHeader}>
           <View style={styles.progressTextGroup}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="checkbox-outline" size={18} color={isFull ? '#14E7FD' : theme.accent} />
+              <Ionicons name="checkbox-outline" size={18} color={isFull ? Brand.bright : theme.accent} />
               <ThemedText type="smallBold" style={isFull ? { color: Palette.white, fontSize: 15 } : undefined}>
                 Task Overview
               </ThemedText>
@@ -208,7 +208,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
               styles.progressFill,
               {
                 width: `${progressPercent}%`,
-                backgroundColor: isFull ? '#34D399' : theme.success,
+                backgroundColor: isFull ? FeatureColors.mint : theme.success,
               },
             ]}
           />
@@ -536,9 +536,9 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                         <Ionicons
                           name={dueInfo.isOverdue ? 'alert-circle-outline' : 'calendar-outline'}
                           size={10}
-                          color={dueInfo.isOverdue ? '#E11D48' : dueInfo.isToday ? '#D97706' : theme.textSecondary}
+                          color={dueInfo.isOverdue ? FeatureColors.crimson : dueInfo.isToday ? '#D97706' : theme.textSecondary}
                         />
-                        <Text style={[styles.badgeText, { color: dueInfo.isOverdue ? '#E11D48' : dueInfo.isToday ? '#D97706' : theme.textSecondary }]}>
+                        <Text style={[styles.badgeText, { color: dueInfo.isOverdue ? FeatureColors.crimson : dueInfo.isToday ? '#D97706' : theme.textSecondary }]}>
                           {dueInfo.text}
                         </Text>
                       </View>
@@ -575,11 +575,11 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   progressCardFull: {
-    backgroundColor: '#00109D',
+    backgroundColor: Brand.deep,
     borderColor: 'rgba(255, 255, 255, 0.18)',
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: '#00109D',
+    shadowColor: Brand.deep,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

@@ -22,7 +22,7 @@ import { File, Paths } from 'expo-file-system';
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
 import { useDebts } from '@/context/debt-context';
 import { useExpenses, usePreferences } from '@/context/expense-context';
@@ -499,7 +499,7 @@ export default function ProfileScreen() {
     <View style={styles.outerContainer}>
       {/* Toast Notification Banner */}
       {savedToastVisible && (
-        <View style={[styles.savedToast, { backgroundColor: '#10B981' }]}>
+        <View style={[styles.savedToast, { backgroundColor: FeatureColors.green }]}>
           <MaterialCommunityIcons name="check-circle" size={18} color={Palette.white} />
           <ThemedText type="smallBold" style={{ color: Palette.white }}>
             Profile & Settings updated successfully!
@@ -534,7 +534,7 @@ export default function ProfileScreen() {
                   <View
                     style={[
                       styles.completionFill,
-                      { width: `${completionPercent}%`, backgroundColor: completionPercent === 100 ? '#10B981' : theme.accent },
+                      { width: `${completionPercent}%`, backgroundColor: completionPercent === 100 ? FeatureColors.green : theme.accent },
                     ]}
                   />
                 </View>
@@ -772,7 +772,7 @@ export default function ProfileScreen() {
               {/* Theme Mode Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="palette-outline" size={18} color="#F59E0B" />
+                  <MaterialCommunityIcons name="palette-outline" size={18} color={FeatureColors.amber} />
                   <ThemedText type="defaultBold">App Theme & Styling</ThemedText>
                 </View>
 
@@ -819,7 +819,7 @@ export default function ProfileScreen() {
               {/* Privacy & Security Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="shield-lock-outline" size={18} color="#159A8C" />
+                  <MaterialCommunityIcons name="shield-lock-outline" size={18} color={FeatureColors.teal} />
                   <ThemedText type="defaultBold">Privacy & Security</ThemedText>
                 </View>
 
@@ -835,7 +835,7 @@ export default function ProfileScreen() {
                     pressed && styles.pressed,
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#159A8C1E' }]}>
-                    <MaterialCommunityIcons name="cellphone-lock" size={17} color="#159A8C" />
+                    <MaterialCommunityIcons name="cellphone-lock" size={17} color={FeatureColors.teal} />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">App Lock</ThemedText>
@@ -850,7 +850,7 @@ export default function ProfileScreen() {
               {/* Regional & Currency Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="earth" size={18} color="#2D9CDB" />
+                  <MaterialCommunityIcons name="earth" size={18} color={FeatureColors.azure} />
                   <ThemedText type="defaultBold">Country & Regional Format</ThemedText>
                 </View>
 
@@ -866,7 +866,7 @@ export default function ProfileScreen() {
                     pressed && styles.pressed,
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#2D9CDB1E' }]}>
-                    <MaterialCommunityIcons name="flag-outline" size={17} color="#2D9CDB" />
+                    <MaterialCommunityIcons name="flag-outline" size={17} color={FeatureColors.azure} />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Country & Currency</ThemedText>
@@ -880,7 +880,7 @@ export default function ProfileScreen() {
                 {/* Temperature Unit Toggle */}
                 <View style={[styles.settingRowItemCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#3B82F61E' }]}>
-                    <MaterialCommunityIcons name="thermometer" size={17} color="#3B82F6" />
+                    <MaterialCommunityIcons name="thermometer" size={17} color={FeatureColors.blue} />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Temperature Unit</ThemedText>
@@ -914,7 +914,7 @@ export default function ProfileScreen() {
                 {/* First Day of Week */}
                 <View style={[styles.settingRowItemCompact, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#10B9811E' }]}>
-                    <MaterialCommunityIcons name="calendar-start" size={17} color="#10B981" />
+                    <MaterialCommunityIcons name="calendar-start" size={17} color={FeatureColors.green} />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">First Day of Week</ThemedText>
@@ -952,13 +952,13 @@ export default function ProfileScreen() {
           {activeTab === 'notifications' && (
             <Card style={styles.sectionCard}>
               <View style={styles.cardHeaderRow}>
-                <MaterialCommunityIcons name="bell-ring-outline" size={18} color="#EB5757" />
+                <MaterialCommunityIcons name="bell-ring-outline" size={18} color={FeatureColors.red} />
                 <ThemedText type="defaultBold">Smart Notifications & Alerts</ThemedText>
               </View>
 
               <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
                 <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#EB57571E' }]}>
-                  <MaterialCommunityIcons name="calendar-clock" size={17} color="#EB5757" />
+                  <MaterialCommunityIcons name="calendar-clock" size={17} color={FeatureColors.red} />
                 </View>
                 <View style={styles.switchCopy}>
                   <ThemedText type="smallBold">Bill Reminders</ThemedText>
@@ -1009,7 +1009,7 @@ export default function ProfileScreen() {
 
               <View style={styles.switchRowCompact}>
                 <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#7667F21E' }]}>
-                  <MaterialCommunityIcons name="notebook-edit-outline" size={17} color="#7667F2" />
+                  <MaterialCommunityIcons name="notebook-edit-outline" size={17} color={FeatureColors.violet} />
                 </View>
                 <View style={styles.switchCopy}>
                   <ThemedText type="smallBold">Daily Check-in</ThemedText>
@@ -1039,7 +1039,7 @@ export default function ProfileScreen() {
 
               <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
                 <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#F2994A1E' }]}>
-                  <MaterialCommunityIcons name="weather-sunny" size={17} color="#F2994A" />
+                  <MaterialCommunityIcons name="weather-sunny" size={17} color={FeatureColors.orange} />
                 </View>
                 <View style={styles.switchCopy}>
                   <ThemedText type="smallBold">Daily Motivation</ThemedText>
@@ -1069,7 +1069,7 @@ export default function ProfileScreen() {
 
               <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
                 <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#0284C71E' }]}>
-                  <MaterialCommunityIcons name="toolbox-outline" size={17} color="#0284C7" />
+                  <MaterialCommunityIcons name="toolbox-outline" size={17} color={FeatureColors.sky} />
                 </View>
                 <View style={styles.switchCopy}>
                   <ThemedText type="smallBold">Show extras</ThemedText>
@@ -1102,9 +1102,9 @@ export default function ProfileScreen() {
                 ]}>
                 <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#EB57571E' }]}>
                   {testingAlarm ? (
-                    <ActivityIndicator size="small" color="#EB5757" />
+                    <ActivityIndicator size="small" color={FeatureColors.red} />
                   ) : (
-                    <MaterialCommunityIcons name="bell-alert-outline" size={17} color="#EB5757" />
+                    <MaterialCommunityIcons name="bell-alert-outline" size={17} color={FeatureColors.red} />
                   )}
                 </View>
                 <View style={styles.rowCopy}>
@@ -1131,7 +1131,7 @@ export default function ProfileScreen() {
               {/* Data Backup & Export Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="database-sync-outline" size={18} color="#159A8C" />
+                  <MaterialCommunityIcons name="database-sync-outline" size={18} color={FeatureColors.teal} />
                   <ThemedText type="defaultBold">Data Export & Backup</ThemedText>
                 </View>
 
@@ -1147,9 +1147,9 @@ export default function ProfileScreen() {
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#159A8C1E' }]}>
                     {exporting ? (
-                      <ActivityIndicator size="small" color="#159A8C" />
+                      <ActivityIndicator size="small" color={FeatureColors.teal} />
                     ) : (
-                      <MaterialCommunityIcons name="file-excel-outline" size={17} color="#159A8C" />
+                      <MaterialCommunityIcons name="file-excel-outline" size={17} color={FeatureColors.teal} />
                     )}
                   </View>
                   <View style={styles.rowCopy}>
@@ -1172,9 +1172,9 @@ export default function ProfileScreen() {
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#159A8C1E' }]}>
                     {backingUp ? (
-                      <ActivityIndicator size="small" color="#159A8C" />
+                      <ActivityIndicator size="small" color={FeatureColors.teal} />
                     ) : (
-                      <MaterialCommunityIcons name="database-export-outline" size={17} color="#159A8C" />
+                      <MaterialCommunityIcons name="database-export-outline" size={17} color={FeatureColors.teal} />
                     )}
                   </View>
                   <View style={styles.rowCopy}>
@@ -1199,9 +1199,9 @@ export default function ProfileScreen() {
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#F2994A1E' }]}>
                     {restoring ? (
-                      <ActivityIndicator size="small" color="#F2994A" />
+                      <ActivityIndicator size="small" color={FeatureColors.orange} />
                     ) : (
-                      <MaterialCommunityIcons name="database-import-outline" size={17} color="#F2994A" />
+                      <MaterialCommunityIcons name="database-import-outline" size={17} color={FeatureColors.orange} />
                     )}
                   </View>
                   <View style={styles.rowCopy}>
@@ -1227,7 +1227,7 @@ export default function ProfileScreen() {
                     pressed && styles.pressed,
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#7667F21E' }]}>
-                    <MaterialCommunityIcons name="compass-outline" size={17} color="#7667F2" />
+                    <MaterialCommunityIcons name="compass-outline" size={17} color={FeatureColors.violet} />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">Replay App Walkthrough</ThemedText>
@@ -1249,7 +1249,7 @@ export default function ProfileScreen() {
                     pressed && styles.pressed,
                   ]}>
                   <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#0EA5E91E' }]}>
-                    <MaterialCommunityIcons name="book-open-page-variant-outline" size={17} color="#0EA5E9" />
+                    <MaterialCommunityIcons name="book-open-page-variant-outline" size={17} color={FeatureColors.cyan} />
                   </View>
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">User Manual</ThemedText>
@@ -1283,8 +1283,8 @@ export default function ProfileScreen() {
               {/* Danger Zone */}
               <Card style={[styles.sectionCard, { borderColor: '#FF6B6B40' }]}>
                 <View style={styles.cardHeaderRow}>
-                  <MaterialCommunityIcons name="alert-circle-outline" size={18} color="#FF6B6B" />
-                  <ThemedText type="defaultBold" style={{ color: '#FF6B6B' }}>Danger Zone</ThemedText>
+                  <MaterialCommunityIcons name="alert-circle-outline" size={18} color={FeatureColors.coral} />
+                  <ThemedText type="defaultBold" style={{ color: FeatureColors.coral }}>Danger Zone</ThemedText>
                 </View>
 
                 <Pressable
@@ -1295,8 +1295,8 @@ export default function ProfileScreen() {
                     { backgroundColor: '#FF6B6B15', borderColor: '#FF6B6B60' },
                     pressed && styles.pressed,
                   ]}>
-                  <MaterialCommunityIcons name="trash-can-outline" size={16} color="#FF6B6B" />
-                  <ThemedText type="smallBold" style={{ color: '#FF6B6B' }}>
+                  <MaterialCommunityIcons name="trash-can-outline" size={16} color={FeatureColors.coral} />
+                  <ThemedText type="smallBold" style={{ color: FeatureColors.coral }}>
                     Wipe All Local Data
                   </ThemedText>
                 </Pressable>

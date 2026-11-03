@@ -179,6 +179,11 @@ export const FeatureColors = {
   teal: '#159A8C',
   slate: '#5077C8',
   gray: '#828282',
+  skyLight: '#38BDF8',
+  mint: '#34D399',
+  lime: '#4ADE80',
+  orange: '#F2994A',
+  crimson: '#E11D48',
 } as const;
 
 /** Type scale. `ThemedText` types map onto these sizes. */

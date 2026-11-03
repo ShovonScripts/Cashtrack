@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CURRENCIES, convertCurrency } from '@/constants/currency-rates';
 
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#10B981',
+    backgroundColor: FeatureColors.green,
   },
   refreshBtn: {
     flexDirection: 'row',

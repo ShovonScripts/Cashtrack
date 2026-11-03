@@ -23,7 +23,7 @@ import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
-import { Palette } from '@/constants/theme';
+import { FeatureColors, Palette } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
@@ -156,7 +156,7 @@ export function SlidingHeroBanner({
                 <Text style={styles.whiteSubtext}>{weather.locationName}</Text>
               </View>
               <View style={styles.outlookPill}>
-                <Ionicons name="umbrella" size={13} color="#38bdf8" />
+                <Ionicons name="umbrella" size={13} color={FeatureColors.skyLight} />
                 <Text style={styles.outlookText}>{weather.rainProbability}% Rain</Text>
               </View>
             </View>
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   outlookText: {
-    color: '#38bdf8',
+    color: FeatureColors.skyLight,
     fontSize: 12,
     fontWeight: '600',
   },

@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
@@ -102,7 +102,7 @@ export function WeatherWorldClocks() {
       <View style={styles.clocksGrid}>
         {activeCities.map((city, index) => {
           const timeInfo = getFormattedTimeForZone(city.id === 'local' ? undefined : city.timeZone, now);
-          const accentColor = index % 2 === 0 ? (isDark ? '#4ade80' : '#16A34A') : (isDark ? '#38bdf8' : '#0284C7');
+          const accentColor = index % 2 === 0 ? (isDark ? FeatureColors.lime : '#16A34A') : (isDark ? FeatureColors.skyLight : FeatureColors.sky);
 
           return (
             <Pressable

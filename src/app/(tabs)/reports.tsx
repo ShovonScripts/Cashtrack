@@ -12,7 +12,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { useNow } from '@/hooks/use-now';
@@ -522,7 +522,7 @@ export default function ReportsScreen() {
                   ]}>
                   <ThemedText
                     type="caption"
-                    style={{ color: diffAmount <= 0 ? '#27AE60' : theme.danger, fontWeight: '700', fontSize: 10 }}>
+                    style={{ color: diffAmount <= 0 ? FeatureColors.leaf : theme.danger, fontWeight: '700', fontSize: 10 }}>
                     {diffAmount <= 0 ? `↓ ${diffPercent}%` : `↑ ${diffPercent}%`}
                   </ThemedText>
                 </View>
@@ -551,7 +551,7 @@ export default function ReportsScreen() {
                   ]}>
                   <ThemedText
                     type="caption"
-                    style={{ color: limitPercent <= 100 ? '#27AE60' : theme.danger, fontWeight: '700', fontSize: 10 }}>
+                    style={{ color: limitPercent <= 100 ? FeatureColors.leaf : theme.danger, fontWeight: '700', fontSize: 10 }}>
                     {limitPercent <= 100 ? 'On track' : 'Over limit'}
                   </ThemedText>
                 </View>
@@ -710,7 +710,7 @@ export default function ReportsScreen() {
             isGenerating && styles.disabled,
           ]}>
           <View style={styles.csvIconBadge}>
-            <MaterialCommunityIcons name="file-excel-box" size={24} color="#34D399" />
+            <MaterialCommunityIcons name="file-excel-box" size={24} color={FeatureColors.mint} />
           </View>
           <View style={styles.exportCopy}>
             <ThemedText type="defaultBold" style={{ color: Palette.white }}>
@@ -720,7 +720,7 @@ export default function ReportsScreen() {
               Excel / Google Sheets friendly raw data export
             </ThemedText>
           </View>
-          {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color="#34D399" />}
+          {!isGenerating && <MaterialCommunityIcons name="arrow-right" size={20} color={FeatureColors.mint} />}
         </Pressable>
 
         {message ? (
@@ -1043,7 +1043,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#064E3B', // Deep Emerald Slate
     borderWidth: 1,
     borderColor: 'rgba(52, 211, 153, 0.35)',
-    shadowColor: '#059669',
+    shadowColor: FeatureColors.emerald,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,

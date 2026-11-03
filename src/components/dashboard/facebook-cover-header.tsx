@@ -33,7 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
-import { Brand, Palette, Radius } from '@/constants/theme';
+import { Brand, FeatureColors, Palette, Radius } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
@@ -475,10 +475,9 @@ export function FacebookCoverHeader({
 
             {/* Single vertical affordance: teaser, state and control in one chip */}
             <Animated.View
-              style={[styles.verticalToggleWrap, { top: topPadding }, hintStyle]}>
+              style={[styles.verticalToggleWrap, { top: topPadding - 7 }, hintStyle]}>
               <Pressable
                 onPress={() => goToVerticalPage(isGreetingPage ? 1 : 0)}
-                hitSlop={{ top: 7, bottom: 7, left: 10, right: 10 }}
                 accessibilityRole="button"
                 accessibilityState={{ expanded: !isGreetingPage }}
                 accessibilityLabel={
@@ -486,15 +485,17 @@ export function FacebookCoverHeader({
                     ? `Year progress, ${progress.yearPercent} percent of ${progress.year} elapsed. Opens year progress.`
                     : 'Greeting. Returns to the greeting.'
                 }
-                style={({ pressed }) => [styles.verticalToggle, pressed && styles.verticalTogglePressed]}>
-                <Ionicons
-                  name={isGreetingPage ? 'chevron-up' : 'chevron-down'}
-                  size={12}
-                  color={Palette.white}
-                />
-                <Text style={styles.verticalToggleText} numberOfLines={1}>
-                  {isGreetingPage ? `${progress.yearPercent}% of ${progress.year}` : 'Greeting'}
-                </Text>
+                style={({ pressed }) => [styles.verticalToggleHit, pressed && styles.verticalTogglePressed]}>
+                <View style={styles.verticalToggle}>
+                  <Ionicons
+                    name={isGreetingPage ? 'chevron-up' : 'chevron-down'}
+                    size={12}
+                    color={Palette.white}
+                  />
+                  <Text style={styles.verticalToggleText} numberOfLines={1}>
+                    {isGreetingPage ? `${progress.yearPercent}% of ${progress.year}` : 'Greeting'}
+                  </Text>
+                </View>
               </Pressable>
             </Animated.View>
 
@@ -521,13 +522,13 @@ export function FacebookCoverHeader({
                   <Text style={styles.metricText}>{weather.rainProbability}%</Text>
                 </View>
                 <View style={styles.metricPill}>
-                  <Ionicons name="water" size={11} color="#38bdf8" />
+                  <Ionicons name="water" size={11} color={FeatureColors.skyLight} />
                   <Text style={styles.metricText}>{weather.humidity}%</Text>
                 </View>
               </View>
 
               <View style={styles.outlookPill}>
-                <Ionicons name="location" size={12} color="#38bdf8" />
+                <Ionicons name="location" size={12} color={FeatureColors.skyLight} />
                 <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
               </View>
             </View>
@@ -562,7 +563,7 @@ export function FacebookCoverHeader({
         {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
         <View style={[styles.slideCard, styles.quoteCardContainer, { width: screenWidth }]}>
           <LinearGradient
-            colors={['#000B76', '#00109D', '#0152F5']}
+            colors={['#000B76', Brand.deep, Brand.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={StyleSheet.absoluteFill}
@@ -836,7 +837,7 @@ const styles = StyleSheet.create({
     width: 5,
     height: 5,
     borderRadius: 2.5,
-    backgroundColor: '#14E7FD',
+    backgroundColor: Brand.bright,
   },
   balanceEyebrow: {
     color: 'rgba(255,255,255,0.68)',
@@ -902,6 +903,10 @@ const styles = StyleSheet.create({
     right: H_PADDING,
     zIndex: 5,
   },
+  verticalToggleHit: {
+    minHeight: 44,
+    justifyContent: 'center',
+  },
   verticalToggle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -947,7 +952,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   outlookText: {
-    color: '#38bdf8',
+    color: FeatureColors.skyLight,
     fontSize: 12.5,
     fontWeight: '600',
     flexShrink: 1,
@@ -1006,12 +1011,12 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   highText: {
-    color: '#4ade80',
+    color: FeatureColors.lime,
     fontSize: 12.5,
     fontWeight: '700',
   },
   lowText: {
-    color: '#38bdf8',
+    color: FeatureColors.skyLight,
     fontSize: 12.5,
     fontWeight: '700',
   },
@@ -1076,11 +1081,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#0152F5',
+    backgroundColor: Brand.primary,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    shadowColor: '#0152F5',
+    shadowColor: Brand.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,

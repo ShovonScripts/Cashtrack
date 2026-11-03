@@ -107,7 +107,7 @@ export default function CategoriesScreen() {
                 TOTAL CATEGORIES
               </ThemedText>
               <View style={styles.customBadgePill}>
-                <MaterialCommunityIcons name="shape-outline" size={12} color="#14E7FD" />
+                <MaterialCommunityIcons name="shape-outline" size={12} color={Brand.bright} />
                 <ThemedText type="caption" style={styles.customBadgeText}>
                   {customCategories.length} Custom
                 </ThemedText>

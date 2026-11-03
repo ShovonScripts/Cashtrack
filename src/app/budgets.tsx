@@ -95,7 +95,7 @@ export default function BudgetsScreen() {
                 SPENDING CAPS & BUDGETS
               </ThemedText>
               <View style={styles.monthPill}>
-                <MaterialCommunityIcons name="calendar-month" size={12} color="#14E7FD" />
+                <MaterialCommunityIcons name="calendar-month" size={12} color={Brand.bright} />
                 <ThemedText type="caption" style={styles.monthPillText}>
                   {monthLabel}
                 </ThemedText>

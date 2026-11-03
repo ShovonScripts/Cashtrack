@@ -2,16 +2,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
 
 type SummaryChipTone = 'positive' | 'negative' | 'info';
 
 const CHIP_DOT_COLORS: Record<SummaryChipTone, string> = {
-  positive: '#34D399',
+  positive: FeatureColors.mint,
   negative: '#F87171',
-  info: '#38BDF8',
+  info: FeatureColors.skyLight,
 };
 
 type SummaryChipProps = {

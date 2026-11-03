@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
@@ -36,20 +36,20 @@ function getReminderCategoryColor(
   isDueToday: boolean,
   theme: ReturnType<typeof useTheme>
 ): string {
-  if (isOverdue) return '#E11D48';
+  if (isOverdue) return FeatureColors.crimson;
   if (isDueToday) return '#D97706';
   switch (category) {
     case 'Rent':
       return '#2563EB';
     case 'Bills':
     case 'Utilities':
-      return '#0284C7';
+      return FeatureColors.sky;
     case 'EMI':
     case 'Loan':
     case 'Credit Card':
       return '#7C3AED';
     case 'Subscription':
-      return '#059669';
+      return FeatureColors.emerald;
     case 'Insurance':
       return '#0891B2';
     default:
@@ -84,7 +84,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
           {/* Top Eyebrow & View All Link */}
           <View style={styles.billsHeroHeader}>
             <View style={styles.billsHeroTitleGroup}>
-              <MaterialCommunityIcons name="calendar-clock" size={18} color="#14E7FD" />
+              <MaterialCommunityIcons name="calendar-clock" size={18} color={Brand.bright} />
               <Text style={styles.billsHeroEyebrow}>BILLS & REMINDERS</Text>
             </View>
 
@@ -132,7 +132,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
               </View>
             ) : (
               <View style={styles.nextDueRow}>
-                <Ionicons name="checkmark-circle-outline" size={14} color="#34D399" />
+                <Ionicons name="checkmark-circle-outline" size={14} color={FeatureColors.mint} />
                 <Text style={styles.nextDueText}>All upcoming bills caught up!</Text>
               </View>
             )}
@@ -147,7 +147,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
             accessibilityRole="button"
             style={({ pressed }) => [styles.subHubGlassBar, pressed && styles.pressed]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MaterialCommunityIcons name="repeat" size={16} color="#14E7FD" />
+              <MaterialCommunityIcons name="repeat" size={16} color={Brand.bright} />
               <Text style={styles.subHubGlassText}>Subscriptions & Recurring Hub</Text>
             </View>
             <MaterialCommunityIcons name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
@@ -269,14 +269,14 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   billsHeroCard: {
-    backgroundColor: '#00109D',
+    backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
     padding: Spacing.four,
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
-    shadowColor: '#00109D',
+    shadowColor: Brand.deep,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
     shadowRadius: 10,
@@ -478,7 +478,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.small,
   },
   alertPillText: {
-    color: '#E11D48',
+    color: FeatureColors.crimson,
     fontSize: 9,
     fontWeight: '800',
   },

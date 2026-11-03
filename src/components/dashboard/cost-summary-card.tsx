@@ -6,7 +6,7 @@ import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
 import type { CategoryTotal, CostSummary, SummaryPeriod } from '@/utils/period-summary';
 
 const CARD_BACKGROUND: Record<SummaryPeriod, string> = {
-  daily: '#00109D',
+  daily: Brand.deep,
   yesterday: '#0E23B8',
   weekly: '#0142D6',
   monthly: Brand.primary,

@@ -14,6 +14,7 @@ import Animated, {
 import { Ionicons } from '@expo/vector-icons';
 
 import type { WeatherConditionType } from '@/utils/weather';
+import { FeatureColors } from '@/constants/theme';
 
 interface AnimatedWeatherProps {
   conditionType: WeatherConditionType;
@@ -149,7 +150,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.glowRing, { width: iconSize * 1.2, height: iconSize * 1.2, borderRadius: iconSize * 0.6 }, sunAnimatedStyle]} />
-          <Ionicons name="sunny" size={iconSize} color="#F59E0B" />
+          <Ionicons name="sunny" size={iconSize} color={FeatureColors.amber} />
         </View>
       );
 
@@ -163,7 +164,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
     case 'partly-sunny':
       return (
         <View style={[styles.container, containerStyle]}>
-          <Ionicons name="sunny" size={iconSize * 0.75} color="#F59E0B" style={{ position: 'absolute', top: -2, right: -2 }} />
+          <Ionicons name="sunny" size={iconSize * 0.75} color={FeatureColors.amber} style={{ position: 'absolute', top: -2, right: -2 }} />
           <Animated.View style={cloudAnimatedStyle}>
             <Ionicons name="cloud" size={iconSize * 0.85} color="#94A3B8" />
           </Animated.View>
@@ -183,7 +184,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="rainy" size={iconSize} color="#3B82F6" />
+            <Ionicons name="rainy" size={iconSize} color={FeatureColors.blue} />
           </Animated.View>
           <View style={styles.rainOverlay}>
             <Animated.View style={[styles.drop, rainDrop1Style]} />
@@ -196,7 +197,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="snow" size={iconSize} color="#38BDF8" />
+            <Ionicons name="snow" size={iconSize} color={FeatureColors.skyLight} />
           </Animated.View>
         </View>
       );
@@ -212,7 +213,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       );
 
     default:
-      return <Ionicons name="partly-sunny" size={iconSize} color="#F59E0B" />;
+      return <Ionicons name="partly-sunny" size={iconSize} color={FeatureColors.amber} />;
   }
 }
 

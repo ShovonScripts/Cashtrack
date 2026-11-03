@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { QuickAddModal } from '@/components/quick-add-modal';
 import { useTheme } from '@/hooks/use-theme';
-import { Colors, Radius } from '@/constants/theme';
+import { Brand, Colors, Radius } from '@/constants/theme';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    shadowColor: '#0152F5',
+    shadowColor: Brand.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,

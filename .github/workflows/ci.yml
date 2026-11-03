@@ -44,3 +44,6 @@ jobs:
 
       - name: Hardcoded colour budget
         run: npm run check:colors
+
+      - name: Style family budget
+        run: npm run check:tokens

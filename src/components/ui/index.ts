@@ -1,5 +1,6 @@
 export { Button } from './button';
 export { Chip } from './chip';
+export { Icon } from './icon';
 export { ListRow } from './list-row';
 export { Screen } from './screen';
 export { Section } from './section';

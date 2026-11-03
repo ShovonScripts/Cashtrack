@@ -63,7 +63,8 @@
     "test": "node --test \"tests/**/*.test.ts\"",
     "check:contrast": "node scripts/contrast-check.cjs",
     "check:a11y": "node scripts/a11y-scan.cjs",
-    "check:colors": "node scripts/hex-budget.cjs"
+    "check:colors": "node scripts/hex-budget.cjs",
+    "check:tokens": "node scripts/token-budget.cjs"
   },
   "private": true
 }

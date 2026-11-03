@@ -188,7 +188,7 @@ export const FeatureColors = {
 
 /** Type scale. `ThemedText` types map onto these sizes. */
 export const Typography = {
-  micro: { fontSize: 10, lineHeight: 14 },
+  micro: { fontSize: 11, lineHeight: 14 },
   caption: { fontSize: 12, lineHeight: 16 },
   small: { fontSize: 14, lineHeight: 20 },
   body: { fontSize: 16, lineHeight: 24 },
@@ -227,6 +227,21 @@ export const Elevation = {
     shadowRadius: 10,
     elevation: 10,
   },
+} as const;
+
+/** Icon sizes in dp: inline text, rows and buttons, navigation, empty states. */
+export const IconSize = {
+  sm: 16,
+  md: 20,
+  lg: 24,
+  xl: 32,
+} as const;
+
+/** Square badge behind an icon: compact row, standard row, large tile. */
+export const BadgeSize = {
+  sm: 32,
+  md: 40,
+  lg: 48,
 } as const;
 
 /** Minimum touch target in dp (WCAG 2.5.8 and platform guidelines). */

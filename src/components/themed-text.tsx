@@ -13,6 +13,7 @@ export type ThemedTextProps = TextProps & {
     | 'smallBold'
     | 'subtitle'
     | 'caption'
+    | 'micro'
     | 'link'
     | 'linkPrimary'
     | 'code';
@@ -34,6 +35,7 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         type === 'smallBold' && styles.smallBold,
         type === 'subtitle' && styles.subtitle,
         type === 'caption' && styles.caption,
+        type === 'micro' && styles.micro,
         type === 'link' && styles.link,
         type === 'linkPrimary' && styles.linkPrimary,
         type === 'code' && styles.code,
@@ -84,6 +86,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
     fontWeight: 500,
+  },
+  micro: {
+    fontSize: 11,
+    lineHeight: 14,
+    fontWeight: 600,
   },
   link: {
     lineHeight: 30,

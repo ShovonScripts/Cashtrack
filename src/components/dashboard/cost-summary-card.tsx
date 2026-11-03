@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: Palette.white,
     borderRadius: Radius.pill,
-    height: 44,
+    minHeight: 44,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   addButtonPlaceholder: {
-    height: 36,
+    minHeight: 36,
     marginTop: 2,
   },
   addButtonPressed: {

@@ -28,6 +28,8 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           headerShown: false,
+          // The tab bar has a fixed height, so its labels keep a constant size while the rest of the app scales.
+          tabBarAllowFontScaling: false,
           tabBarActiveTintColor: theme.accent,
           tabBarInactiveTintColor: theme.textSecondary,
           tabBarStyle: {

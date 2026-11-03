@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   searchIcon: {
-    marginRight: 8,
+    marginEnd: 8,
   },
   searchInput: {
     flex: 1,

@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
-    height: 48,
+    minHeight: 48,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.medium,
     alignItems: 'center',

@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 44,
+    minHeight: 44,
     borderRadius: Radius.large,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,

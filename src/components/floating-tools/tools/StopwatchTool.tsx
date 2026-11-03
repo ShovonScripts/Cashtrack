@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    height: 48,
+    minHeight: 48,
     borderRadius: Radius.medium,
     flexDirection: 'row',
     alignItems: 'center',

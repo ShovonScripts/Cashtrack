@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.5,
     flex: 1,
-    marginRight: 4,
+    marginEnd: 4,
   },
   clockLabelCompact: {
     fontSize: 9.5,

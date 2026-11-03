@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     flex: 1,
-    marginRight: 8,
+    marginEnd: 8,
   },
   flag: {
     fontSize: 26,
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 46,
+    minHeight: 46,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,

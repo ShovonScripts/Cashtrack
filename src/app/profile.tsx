@@ -1767,7 +1767,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginEnd: 10,
   },
   modalActionBtn: {
     flexDirection: 'row',

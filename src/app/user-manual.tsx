@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
   },
   tableCellLeft: {
     flex: 0.42,
-    paddingRight: Spacing.two,
+    paddingEnd: Spacing.two,
   },
   tableCellRight: {
     flex: 0.58,

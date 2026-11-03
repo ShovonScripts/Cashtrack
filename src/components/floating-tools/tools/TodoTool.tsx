@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   addBtnFull: {
-    height: 44,
+    minHeight: 44,
     borderRadius: Radius.medium,
     flexDirection: 'row',
     alignItems: 'center',
@@ -712,7 +712,7 @@ const styles = StyleSheet.create({
   },
   filterTab: {
     flex: 1,
-    height: 44,
+    minHeight: 44,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'transparent',

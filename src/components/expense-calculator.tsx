@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 15,
-    height: 48,
+    minHeight: 48,
   },
   recurringHeader: {
     flexDirection: 'row',
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
   },
   frequencyChip: {
     flex: 1,
-    height: 44,
+    minHeight: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
   },
   keyButton: {
     flex: 1,
-    height: 44,
+    minHeight: 44,
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.medium,
     alignItems: 'center',

@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 42,
+    minHeight: 42,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.three,
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: StyleSheet.hairlineWidth,
-    marginLeft: 56,
+    marginStart: 56,
   },
   rowPressed: {
     opacity: 0.75,

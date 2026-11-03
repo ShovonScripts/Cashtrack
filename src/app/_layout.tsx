@@ -289,8 +289,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
-    paddingLeft: 8,
-    paddingRight: 14,
+    paddingStart: 8,
+    paddingEnd: 14,
     borderRadius: 999,
   },
   addIcon: {

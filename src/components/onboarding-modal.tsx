@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   changeCountryBtn: {
-    height: 44,
+    minHeight: 44,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   prevButton: {
-    height: 44,
+    minHeight: 44,
     paddingHorizontal: Spacing.three,
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
@@ -413,8 +413,8 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     flex: 1,
-    height: 44,
-    marginLeft: Spacing.two,
+    minHeight: 44,
+    marginStart: Spacing.two,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',

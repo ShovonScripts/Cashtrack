@@ -386,7 +386,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.half,
   },
   filterChip: {
-    height: 44,
+    minHeight: 44,
     paddingHorizontal: Spacing.three,
     borderRadius: Radius.pill,
     borderWidth: StyleSheet.hairlineWidth,

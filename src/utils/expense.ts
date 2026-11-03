@@ -1,6 +1,7 @@
 import type { CategoryFilter } from '@/components/category-chips';
 import { COUNTRIES, DEFAULT_COUNTRY, type CurrencyCode } from '@/constants/countries';
 import type { Expense } from '@/types/expense';
+import { roundMoney, sumMoney } from './money.ts';
 
 /** Default currency used for fresh installs; user settings can select another. */
 export const CURRENCY_SYMBOL = DEFAULT_COUNTRY.symbol;
@@ -18,7 +19,7 @@ const groupingFormatter = new Intl.NumberFormat('en-US', {
 
 /** Format amounts using the currency selected by the user. */
 export function formatCurrency(amount: number, currencyCode: CurrencyCode = DEFAULT_COUNTRY.currencyCode): string {
-  const rounded = Math.round(amount * 100) / 100;
+  const rounded = roundMoney(amount);
   const hasFraction = rounded % 1 !== 0;
   const body = hasFraction
     ? new Intl.NumberFormat('en-US', {
@@ -92,7 +93,7 @@ export function filterExpenses(
 }
 
 export function sumAmounts(expenses: Expense[]): number {
-  return expenses.reduce((total, expense) => total + expense.amount, 0);
+  return sumMoney(expenses.map((expense) => expense.amount));
 }
 
 export function totalForDate(expenses: Expense[], target: Date): number {

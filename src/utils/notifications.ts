@@ -10,7 +10,6 @@ if (Platform.OS !== 'web') {
     NotificationsModule = require('expo-notifications');
     NotificationsModule.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
         shouldShowBanner: true,

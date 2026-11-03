@@ -21,6 +21,7 @@ import {
 } from '@/storage/goal-repository';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
 import { subscribeToGoalChanges } from '@/utils/goal-events';
+import { roundMoney, sumMoney } from '@/utils/money';
 import { useExpenses } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 
@@ -134,7 +135,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     const today = new Date(year, month - 1, day);
     return rawGoals.map((goal) => {
       const goalContribs = contributions.filter((c) => c.goalId === goal.id);
-      const contributedAmount = goalContribs.reduce((sum, c) => sum + c.amount, 0);
+      const contributedAmount = sumMoney(goalContribs.map((c) => c.amount));
 
       const calc = calculateGoalProgress({
         targetAmount: goal.targetAmount,
@@ -163,7 +164,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     const goal: MoneyGoal = {
       id: createGoalId(),
       title: draft.title.trim(),
-      targetAmount: draft.targetAmount,
+      targetAmount: roundMoney(draft.targetAmount),
       startDate: draft.startDate,
       deadlineDate: draft.deadlineDate,
       frequency: draft.frequency,
@@ -179,9 +180,13 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateGoal = useCallback(async (updatedGoal: MoneyGoal) => {
-    await updateGoalRepo(updatedGoal);
+    const roundedGoal: MoneyGoal = {
+      ...updatedGoal,
+      targetAmount: roundMoney(updatedGoal.targetAmount),
+    };
+    await updateGoalRepo(roundedGoal);
     setRawGoals((current) =>
-      current.map((g) => (g.id === updatedGoal.id ? updatedGoal : g))
+      current.map((g) => (g.id === roundedGoal.id ? roundedGoal : g))
     );
   }, []);
 
@@ -202,7 +207,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
     const contribution: GoalContribution = {
       id: createContributionId(),
       goalId: draft.goalId,
-      amount: draft.amount,
+      amount: roundMoney(draft.amount),
       date: draft.date ?? new Date().toISOString(),
       note: draft.note?.trim() ?? '',
     };

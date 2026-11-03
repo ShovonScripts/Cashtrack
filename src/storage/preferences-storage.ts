@@ -1,120 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { EXPENSE_CATEGORIES } from '@/types/expense';
-import { COUNTRIES } from '@/constants/countries';
-import { DEFAULT_PREFERENCES, type GenderOption, type ThemeMode, type UserPreferences } from '@/types/preferences';
+import { DEFAULT_PREFERENCES, type UserPreferences } from '@/types/preferences';
 import { StorageParseError } from '@/storage/storage-errors';
+import { sanitizePreferences } from '@/utils/preferences';
 
 export const PREFERENCES_STORAGE_KEY = '@cashtrack/preferences';
 export const PREFERENCES_CORRUPT_BACKUP_KEY = '@cashtrack/preferences.corrupt-backup';
 
 export { StorageParseError };
-
-const GENDER_OPTIONS: GenderOption[] = ['woman', 'man', 'other', ''];
-
-function sanitizePreferences(value: unknown): UserPreferences {
-  if (typeof value !== 'object' || value === null) {
-    throw new StorageParseError('Preferences payload is not an object');
-  }
-  const candidate = value as Partial<UserPreferences>;
-  const rawProfile = candidate.profile && typeof candidate.profile === 'object'
-    ? candidate.profile as Partial<UserPreferences['profile']>
-    : {};
-  const age = typeof rawProfile.age === 'number' && Number.isInteger(rawProfile.age) && rawProfile.age >= 1 && rawProfile.age <= 120
-    ? rawProfile.age
-    : null;
-  const gender = GENDER_OPTIONS.includes(rawProfile.gender as GenderOption)
-    ? rawProfile.gender as GenderOption
-    : '';
-  const builtIns = new Set<string>(EXPENSE_CATEGORIES.map((category) => category.toLowerCase()));
-  const customCategories = Array.isArray(candidate.customCategories)
-    ? [...new Set(candidate.customCategories
-        .filter((category): category is string => typeof category === 'string')
-        .map((category) => category.trim().slice(0, 28))
-        .filter((category) => category.length > 0 && !builtIns.has(category.toLowerCase())))]
-    : [];
-  const categoryOrder = Array.isArray(candidate.categoryOrder)
-    ? [...new Set(candidate.categoryOrder
-        .filter((category): category is string => typeof category === 'string')
-        .map((category) => category.trim().slice(0, 28))
-        .filter((category) => category.length > 0))]
-    : [];
-  const categoryLimits: Record<string, number> = {};
-  if (candidate.categoryLimits && typeof candidate.categoryLimits === 'object') {
-    for (const [category, limit] of Object.entries(candidate.categoryLimits)) {
-      if (typeof limit === 'number' && Number.isFinite(limit) && limit > 0) {
-        categoryLimits[category] = limit;
-      }
-    }
-  }
-  const categoryIcons: Record<string, string> = {};
-  if (candidate.categoryIcons && typeof candidate.categoryIcons === 'object') {
-    for (const [category, icon] of Object.entries(candidate.categoryIcons)) {
-      if (typeof icon === 'string' && icon.trim().length > 0) {
-        categoryIcons[category] = icon.trim();
-      }
-    }
-  }
-
-  const notifiedThresholds = candidate.notifiedThresholds && typeof candidate.notifiedThresholds === 'object'
-    ? (candidate.notifiedThresholds as Record<string, string>)
-    : {};
-
-  const notifiedDebts = candidate.notifiedDebts && typeof candidate.notifiedDebts === 'object'
-    ? (candidate.notifiedDebts as Record<string, string>)
-    : {};
-
-  const countryCode = COUNTRIES.find((country) => country.code === candidate.countryCode)?.code ?? 'BD';
-  const hasCompletedOnboarding = typeof candidate.hasCompletedOnboarding === 'boolean'
-    ? candidate.hasCompletedOnboarding
-    : false;
-
-  const themeMode: ThemeMode = candidate.themeMode === 'light' || candidate.themeMode === 'dark' || candidate.themeMode === 'system'
-    ? candidate.themeMode
-    : 'system';
-
-  const temperatureUnit = candidate.temperatureUnit === 'C' || candidate.temperatureUnit === 'F'
-    ? candidate.temperatureUnit
-    : 'F';
-
-  const coverPhotoUri = typeof rawProfile.coverPhotoUri === 'string' ? rawProfile.coverPhotoUri : undefined;
-  const profilePhotoUri = typeof rawProfile.profilePhotoUri === 'string' ? rawProfile.profilePhotoUri : undefined;
-  const bio = typeof rawProfile.bio === 'string' ? rawProfile.bio.slice(0, 150) : '';
-
-  const firstDayOfWeek = candidate.firstDayOfWeek === 'sunday' ? 'sunday' : 'monday';
-  const enableBillReminders = typeof candidate.enableBillReminders === 'boolean' ? candidate.enableBillReminders : true;
-  const enableBudgetAlerts = typeof candidate.enableBudgetAlerts === 'boolean' ? candidate.enableBudgetAlerts : true;
-  const enableDailyReminder = typeof candidate.enableDailyReminder === 'boolean' ? candidate.enableDailyReminder : false;
-  const enableDailyQuotes = typeof candidate.enableDailyQuotes === 'boolean' ? candidate.enableDailyQuotes : false;
-  const appLockEnabled = typeof candidate.appLockEnabled === 'boolean' ? candidate.appLockEnabled : false;
-
-  return {
-    profile: {
-      name: typeof rawProfile.name === 'string' ? rawProfile.name.slice(0, 50) : '',
-      age,
-      gender,
-      bio,
-      coverPhotoUri,
-      profilePhotoUri,
-    },
-    countryCode,
-    customCategories,
-    categoryOrder,
-    categoryLimits,
-    categoryIcons,
-    notifiedThresholds,
-    notifiedDebts,
-    hasCompletedOnboarding,
-    themeMode,
-    temperatureUnit,
-    firstDayOfWeek,
-    enableBillReminders,
-    enableBudgetAlerts,
-    enableDailyReminder,
-    enableDailyQuotes,
-    appLockEnabled,
-  };
-}
 
 export async function loadPreferences(): Promise<UserPreferences> {
   const raw = await AsyncStorage.getItem(PREFERENCES_STORAGE_KEY);

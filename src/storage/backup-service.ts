@@ -33,7 +33,9 @@ import { clearRestoreJournal, readRestoreJournal, writeRestoreJournal } from '@/
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
+  BackupParseError,
   MAX_BACKUP_ATTACHMENTS,
+  MAX_BACKUP_FILE_BYTES,
   MAX_EMBEDDED_ATTACHMENT_CHARS,
   collectStoredImageUris,
   listAttachmentUris,
@@ -489,5 +491,12 @@ export async function pickBackupFile(): Promise<string | null> {
     mimeTypes: [BACKUP_MIME_TYPE, 'text/plain', 'application/octet-stream'],
   });
   if (result.canceled) return null;
-  return result.result.text();
+
+  const file = result.result;
+  if (typeof file.size === 'number' && file.size > MAX_BACKUP_FILE_BYTES) {
+    throw new BackupParseError(
+      `That backup is too large to import (limit ${Math.round(MAX_BACKUP_FILE_BYTES / (1024 * 1024))} MB).`,
+    );
+  }
+  return file.text();
 }

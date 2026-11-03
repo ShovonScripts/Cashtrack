@@ -21,6 +21,7 @@ import {
 import { scheduleReminderNotificationsAsync, cancelReminderNotificationsAsync } from '@/utils/reminder-notifications';
 import { calculateNextDueDate } from '@/utils/reminder-recurrence';
 import { applyReminderPayment, getReminderRemainingAmount, hasPartialPayment, isOverpayment } from '@/utils/reminder-payment';
+import { roundMoney } from '@/utils/money';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 
@@ -182,7 +183,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     const reminder: FinancialReminder = {
       id: createReminderId(),
       title: draft.title.trim(),
-      amount: draft.amount,
+      amount: draft.amount != null ? roundMoney(draft.amount) : null,
       isVariableAmount: draft.isVariableAmount,
       category: draft.category,
       dueDate: draft.dueDate,
@@ -190,8 +191,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       repeatType: draft.repeatType,
       status: 'upcoming',
       notes: draft.notes?.trim() ?? '',
-      totalAmount: draft.totalAmount ?? null,
-      installmentAmount: draft.installmentAmount ?? null,
+      totalAmount: draft.totalAmount != null ? roundMoney(draft.totalAmount) : null,
+      installmentAmount: draft.installmentAmount != null ? roundMoney(draft.installmentAmount) : null,
       totalInstallments: draft.totalInstallments ?? null,
       paidInstallments: 0,
       paidAmountCurrentCycle: 0,
@@ -216,11 +217,12 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     if (!existing) return;
 
     const paidThisCycle = Math.max(0, existing.paidAmountCurrentCycle ?? 0);
+    const roundedAmount = draft.amount !== null ? roundMoney(draft.amount) : null;
     if (
       !draft.isVariableAmount &&
-      draft.amount !== null &&
+      roundedAmount !== null &&
       paidThisCycle > 0 &&
-      draft.amount <= paidThisCycle + 0.005
+      roundedAmount <= paidThisCycle + 0.005
     ) {
       throw new Error('The amount must be greater than what has already been paid this cycle.');
     }
@@ -241,7 +243,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     const updated: FinancialReminder = {
       ...existing,
       title: draft.title.trim(),
-      amount: draft.amount,
+      amount: roundedAmount,
       isVariableAmount: draft.isVariableAmount,
       category: draft.category,
       dueDate: draft.dueDate,
@@ -249,8 +251,8 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
         dueChanged || repeatChanged ? draft.dueDate : existing.originalDueDate ?? draft.dueDate,
       repeatType: draft.repeatType,
       notes: draft.notes?.trim() ?? '',
-      totalAmount: draft.totalAmount ?? null,
-      installmentAmount: draft.installmentAmount ?? null,
+      totalAmount: draft.totalAmount != null ? roundMoney(draft.totalAmount) : null,
+      installmentAmount: draft.installmentAmount != null ? roundMoney(draft.installmentAmount) : null,
       totalInstallments: draft.totalInstallments ?? null,
       isAlarm: draft.isAlarm,
       alarmTime: draft.alarmTime ?? null,
@@ -281,8 +283,9 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       throw new Error('Please enter a valid payment amount greater than zero.');
     }
 
+    const roundedPaidAmount = roundMoney(paidAmount);
     const remainingAmount = getReminderRemainingAmount(target);
-    if (isOverpayment(target, paidAmount)) {
+    if (isOverpayment(target, roundedPaidAmount)) {
       throw new Error(`Payment cannot exceed the remaining balance of ${formatAmount(remainingAmount ?? 0)}.`);
     }
 
@@ -295,7 +298,7 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
     try {
       if (recordAsExpense) {
         const exp = addExpense({
-          amount: paidAmount,
+          amount: roundedPaidAmount,
           category: target.category === 'EMI' ? 'EMI' : target.category === 'Rent' ? 'Housing' : 'Bills',
           date: paidDate,
           note: note?.trim() || `Payment for ${target.title}`,
@@ -306,14 +309,14 @@ export function FinancialRemindersProvider({ children }: { children: ReactNode }
       const payment: ReminderPaymentRecord = {
         id: createPaymentId(),
         reminderId: id,
-        amount: paidAmount,
+        amount: roundedPaidAmount,
         paidDate,
         expenseId,
         notes: note?.trim() ?? '',
         createdAt: new Date().toISOString(),
       };
 
-      const { reminder: updated } = applyReminderPayment(target, paidAmount);
+      const { reminder: updated } = applyReminderPayment(target, roundedPaidAmount);
 
       try {
         await markPaymentAndReminderRepo(payment, updated);

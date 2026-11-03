@@ -1,4 +1,5 @@
 import type { GoalFrequency } from '@/types/goal';
+import { roundMoney } from './money.ts';
 
 export interface GoalCalculationResult {
   targetAmount: number;
@@ -80,12 +81,14 @@ export function calculateGoalProgress({
       : Math.max(0, totalDays - elapsedDays);
 
   const timeFraction = !hasDeadline ? 0 : Math.min(1, Math.max(0, elapsedDays / totalDays));
-  const hasTarget = targetAmount > 0;
-  const expectedProgress = hasTarget ? targetAmount * timeFraction : 0;
-  const actualProgress = Math.max(0, currentAmount);
-  const remainingAmount = hasTarget ? Math.max(0, targetAmount - actualProgress) : 0;
-  const aheadBehindAmount = hasTarget && hasDeadline ? actualProgress - expectedProgress : 0;
-  const isCompleted = hasTarget && actualProgress >= targetAmount;
+  const roundedTarget = roundMoney(targetAmount);
+  const roundedCurrent = roundMoney(currentAmount);
+  const hasTarget = roundedTarget > 0;
+  const expectedProgress = hasTarget ? roundMoney(roundedTarget * timeFraction) : 0;
+  const actualProgress = roundMoney(Math.max(0, roundedCurrent));
+  const remainingAmount = hasTarget ? roundMoney(Math.max(0, roundedTarget - actualProgress)) : 0;
+  const aheadBehindAmount = hasTarget && hasDeadline ? roundMoney(actualProgress - expectedProgress) : 0;
+  const isCompleted = hasTarget && actualProgress >= roundedTarget;
 
   const totalPeriods = getFrequencyPeriods(frequency, start, deadline, totalDays);
   const elapsedPeriods = today <= start ? 0 : Math.min(totalPeriods, getFrequencyPeriods(frequency, start, today, elapsedDays));
@@ -113,14 +116,14 @@ export function calculateGoalProgress({
     monthlyRequired = remainingAmount;
     frequencyRequired = remainingAmount;
   } else {
-    dailyRequired = remainingAmount / remainingDays;
-    weeklyRequired = Math.min(remainingAmount, dailyRequired * 7);
-    monthlyRequired = Math.min(remainingAmount, dailyRequired * (365.25 / 12));
-    frequencyRequired = Math.min(remainingAmount, remainingAmount / remainingPeriods);
+    dailyRequired = roundMoney(remainingAmount / remainingDays);
+    weeklyRequired = roundMoney(Math.min(remainingAmount, dailyRequired * 7));
+    monthlyRequired = roundMoney(Math.min(remainingAmount, dailyRequired * (365.25 / 12)));
+    frequencyRequired = roundMoney(Math.min(remainingAmount, remainingAmount / remainingPeriods));
   }
 
   return {
-    targetAmount,
+    targetAmount: roundedTarget,
     contributedAmount: actualProgress,
     remainingAmount,
     totalDays,

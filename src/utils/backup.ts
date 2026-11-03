@@ -12,6 +12,7 @@ import type { IncomeRecord } from '@/types/income';
 import type { Note, NoteColor } from '@/types/note';
 import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
 import type { UserPreferences } from '@/types/preferences';
+import { sanitizePreferences } from './preferences.ts';
 import type {
   FinancialReminder,
   ReminderCategory,
@@ -26,6 +27,8 @@ export const BACKUP_VERSION = 1;
 /** Base64-character ceiling shared by export and import. */
 export const MAX_EMBEDDED_ATTACHMENT_CHARS = 40 * 1024 * 1024;
 export const MAX_BACKUP_ATTACHMENTS = 100;
+/** Refuse oversized files before reading them fully into memory. */
+export const MAX_BACKUP_FILE_BYTES = 64 * 1024 * 1024;
 
 export type BackupAttachment = {
   mimeType: string;
@@ -453,7 +456,11 @@ function parsePayment(raw: unknown, index: number): ReminderPaymentRecord {
 function parsePreferences(raw: unknown): UserPreferences {
   const row = asRecord(raw, 'Preferences');
   if (!isRecord(row.profile)) fail('Preferences profile is missing or invalid.');
-  return row as unknown as UserPreferences;
+  try {
+    return sanitizePreferences(row);
+  } catch (error) {
+    fail(`Preferences are invalid: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 function isUnsafeKey(key: string): boolean {

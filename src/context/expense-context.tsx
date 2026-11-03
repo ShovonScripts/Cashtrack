@@ -15,6 +15,7 @@ import { EXPENSE_CATEGORIES, type Expense, type ExpenseCategory, type ExpenseDra
 import { getCountry, type CountryCode, type CountryOption } from '@/constants/countries';
 import { formatCurrency } from '@/utils/expense';
 import { mergeExpenseChanges } from '@/utils/expense-draft';
+import { roundMoney } from '@/utils/money';
 import { DEFAULT_PREFERENCES, type UserPreferences, type UserProfile } from '@/types/preferences';
 import { backupUnreadableExpenses, loadExpenses, saveExpenses } from '@/storage/expense-storage';
 import { backupUnreadablePreferences, loadPreferences, savePreferences } from '@/storage/preferences-storage';
@@ -366,6 +367,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   const addExpense = useCallback((draft: ExpenseDraft): Expense => {
     const expense: Expense = {
       ...draft,
+      amount: roundMoney(draft.amount),
       id: createId(),
       date: draft.date ?? new Date().toISOString(),
       isRecurring: draft.isRecurring ?? false,

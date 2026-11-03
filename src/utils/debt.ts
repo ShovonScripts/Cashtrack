@@ -1,4 +1,5 @@
 import type { DebtRecord } from '@/types/debt';
+import { sumMoney, subtractMoney } from './money.ts';
 
 /**
  * Pure debt-balance helpers shared by the list, detail screen and sharing.
@@ -7,9 +8,12 @@ import type { DebtRecord } from '@/types/debt';
 
 /** Sum of valid recorded payments. Malformed (non-finite or non-positive) entries are ignored. */
 export function getTotalPaid(debt: DebtRecord): number {
-  return (debt.payments ?? []).reduce((sum, payment) => {
-    return Number.isFinite(payment.amount) && payment.amount > 0 ? sum + payment.amount : sum;
-  }, 0);
+  return sumMoney(
+    (debt.payments ?? []).map((payment) => {
+      const amount = payment.amount;
+      return Number.isFinite(amount) && amount > 0 ? amount : 0;
+    })
+  );
 }
 
 /**
@@ -20,7 +24,7 @@ export function getTotalPaid(debt: DebtRecord): number {
  */
 export function getRemainingBalance(debt: DebtRecord): number {
   if (debt.status === 'settled') return 0;
-  return Math.max(0, debt.amount - getTotalPaid(debt));
+  return Math.max(0, subtractMoney(debt.amount, getTotalPaid(debt)));
 }
 
 /** True when the debt is closed, either explicitly settled or fully paid off. */
@@ -36,21 +40,21 @@ export interface DebtSummary {
 
 /** "You are owed" / "You owe" totals built from remaining balances of open debts. */
 export function summarizeDebts(debts: readonly DebtRecord[]): DebtSummary {
-  let youAreOwed = 0;
-  let youOwe = 0;
+  const owed: number[] = [];
+  const owe: number[] = [];
 
   for (const debt of debts) {
     if (debt.status === 'settled') continue;
     const remaining = getRemainingBalance(debt);
     if (remaining <= 0) continue;
     if (debt.type === 'lent') {
-      youAreOwed += remaining;
+      owed.push(remaining);
     } else {
-      youOwe += remaining;
+      owe.push(remaining);
     }
   }
 
-  return { youAreOwed, youOwe, net: youAreOwed - youOwe };
+  return { youAreOwed: sumMoney(owed), youOwe: sumMoney(owe), net: subtractMoney(sumMoney(owed), sumMoney(owe)) };
 }
 
 /**

@@ -11,16 +11,21 @@ export type SaveOutcome = 'saved' | 'skipped' | 'failed';
 
 export class SaveQueue {
   private queue: Promise<void> = Promise.resolve();
-
-  constructor() {
-    activeQueues.add(this);
-  }
+  private registered = false;
 
   /**
    * Runs a save and reports why it did or did not reach storage, so callers can
    * distinguish an intentional skip (during a restore) from a real failure.
    */
   async enqueueDetailed(saveFn: () => Promise<void>): Promise<SaveOutcome> {
+    // Register lazily: callers create queues with `useRef(new SaveQueue())`,
+    // which evaluates the constructor on every render. Registering here keeps
+    // the global set bounded to queues that actually hold writes.
+    if (!this.registered) {
+      activeQueues.add(this);
+      this.registered = true;
+    }
+
     let outcome: SaveOutcome = 'skipped';
     const generation = lockGeneration;
     this.queue = this.queue.then(async () => {

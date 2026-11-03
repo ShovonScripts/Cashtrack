@@ -15,6 +15,7 @@ import { withAlpha } from '@/utils/color';
 import { sumAmounts } from '@/utils/expense';
 import { getBudgetInsights } from '@/utils/advisor';
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
+import { sumMoney } from '@/utils/money';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -53,7 +54,7 @@ export default function BudgetsScreen() {
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   }));
 
-  const totalCap = Object.values(categoryLimits).reduce((sum, limit) => sum + (limit || 0), 0);
+  const totalCap = sumMoney(Object.values(categoryLimits).map((limit) => limit || 0));
 
   const saveLimit = (category: string) => {
     triggerHaptic();

@@ -14,6 +14,7 @@ import type { DebtRecord, DebtDraft, DebtPayment } from '@/types/debt';
 import { backupUnreadableDebts, loadDebts, saveDebts } from '@/storage/debt-storage';
 import { StorageParseError } from '@/storage/storage-errors';
 import { checkAndTriggerDebtNotifications } from '@/utils/notifications';
+import { roundMoney } from '@/utils/money';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { SaveQueue, shouldSave } from '@/utils/save-queue';
 import { debtReducer } from '@/utils/debt-reducer';
@@ -146,6 +147,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
   const addDebt = useCallback((draft: DebtDraft): DebtRecord => {
     const debt: DebtRecord = {
       ...draft,
+      amount: roundMoney(draft.amount),
       id: createDebtId(),
       date: draft.date ?? new Date().toISOString(),
       dueDate: draft.dueDate ?? null,
@@ -158,7 +160,11 @@ export function DebtProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateDebt = useCallback((id: string, changes: DebtDraft) => {
-    dispatch({ type: 'UPDATE_DEBT', id, changes });
+    const roundedChanges: DebtDraft = {
+      ...changes,
+      amount: typeof changes.amount === 'number' ? roundMoney(changes.amount) : changes.amount,
+    };
+    dispatch({ type: 'UPDATE_DEBT', id, changes: roundedChanges });
   }, []);
 
   const deleteDebt = useCallback((id: string) => {
@@ -174,7 +180,7 @@ export function DebtProvider({ children }: { children: ReactNode }) {
     const payment: DebtPayment = {
       id: `pay-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
       debtId,
-      amount,
+      amount: roundMoney(amount),
       date: new Date().toISOString(),
       note,
     };

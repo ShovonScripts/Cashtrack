@@ -232,6 +232,25 @@ describe('backup validation', () => {
     assert.throws(() => parseBackup(JSON.stringify(badPreferences)), /profile is missing/i);
   });
 
+  it('sanitizes invalid preference fields instead of trusting the backup', () => {
+    const file = buildFile({
+      ...buildData(),
+      preferences: {
+        ...preferences,
+        countryCode: 'ZZ',
+        themeMode: 'neon',
+        categoryLimits: { Food: -5, Rent: 100 },
+        notifiedThresholds: JSON.parse('{"__proto__":"x","Food":"2026-10-01"}'),
+      } as never,
+    });
+    const parsed = parseBackup(JSON.stringify(file));
+    assert.equal(parsed.data.preferences.countryCode, 'BD');
+    assert.equal(parsed.data.preferences.themeMode, 'system');
+    assert.deepEqual(parsed.data.preferences.categoryLimits, { Rent: 100 });
+    assert.deepEqual(parsed.data.preferences.notifiedThresholds, { Food: '2026-10-01' });
+    assert.equal(Object.getPrototypeOf(parsed.data.preferences.notifiedThresholds), Object.prototype);
+  });
+
   it('rejects non-string attachment data', () => {
     const file = buildFile({
       ...buildData(),

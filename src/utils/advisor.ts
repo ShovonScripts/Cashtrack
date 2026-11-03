@@ -1,5 +1,6 @@
 import type { Expense } from '../types/expense.ts';
 import { sumAmounts } from './expense.ts';
+import { roundMoney, subtractMoney } from './money.ts';
 
 export type BudgetNoticeLevel = 'over' | 'near' | 'pace';
 
@@ -47,15 +48,17 @@ export function getBudgetInsights(
   return Object.entries(limits)
     .map(([category, limit]) => {
       const spent = getCategoryMonthlySpend(expenses, category, month);
-      const percentUsed = limit > 0 ? spent / limit : 0;
-      const projectedSpend = daysElapsed > 0 ? (spent / daysElapsed) * daysInMonth : spent;
+      const roundedSpent = roundMoney(spent);
+      const roundedLimit = roundMoney(limit);
+      const percentUsed = roundedLimit > 0 ? roundedSpent / roundedLimit : 0;
+      const projectedSpend = daysElapsed > 0 ? roundMoney((roundedSpent / daysElapsed) * daysInMonth) : roundedSpent;
       let level: BudgetNoticeLevel | null = null;
 
-      if (spent > limit) level = 'over';
+      if (roundedSpent > roundedLimit) level = 'over';
       else if (percentUsed >= 0.8) level = 'near';
-      else if (isCurrentMonth && daysElapsed >= 5 && projectedSpend > limit) level = 'pace';
+      else if (isCurrentMonth && daysElapsed >= 5 && projectedSpend > roundedLimit) level = 'pace';
 
-      return level ? { category, level, spent, limit, remaining: limit - spent, percentUsed, projectedSpend } : null;
+      return level ? { category, level, spent: roundedSpent, limit: roundedLimit, remaining: roundMoney(roundedLimit - roundedSpent), percentUsed, projectedSpend } : null;
     })
     .filter((insight): insight is BudgetInsight => insight !== null)
     .sort((first, second) => {
@@ -88,10 +91,10 @@ export function getSmartFinancialIntelligence({
   const daysElapsed = isCurrentMonth ? Math.max(1, today.getDate()) : daysInMonth;
   const daysRemaining = Math.max(0, daysInMonth - daysElapsed);
 
-  const dailyBurnRate = totalSpent / daysElapsed;
-  const projectedMonthSpend = isCurrentMonth ? totalSpent + (dailyBurnRate * daysRemaining) : totalSpent;
+  const dailyBurnRate = roundMoney(totalSpent / daysElapsed);
+  const projectedMonthSpend = isCurrentMonth ? roundMoney(totalSpent + (dailyBurnRate * daysRemaining)) : totalSpent;
 
-  const netCashFlow = totalIncome - totalSpent;
+  const netCashFlow = subtractMoney(totalIncome, totalSpent);
   const savingsRate = totalIncome > 0 ? Math.round((netCashFlow / totalIncome) * 100) : 0;
 
   let healthStatus: FinancialHealthStatus = 'Good';

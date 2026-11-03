@@ -1,11 +1,8 @@
 import type { FinancialReminder } from '@/types/reminder';
 import { calculateNextDueDate } from './reminder-recurrence.ts';
+import { roundMoney } from './money.ts';
 
 const PAYMENT_EPSILON = 0.005;
-
-function roundMoney(value: number): number {
-  return Number(value.toFixed(2));
-}
 
 export function getReminderRemainingAmount(reminder: FinancialReminder): number | null {
   if (reminder.status === 'paid') return 0;

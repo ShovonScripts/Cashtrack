@@ -7,6 +7,13 @@ import {
   goalTargetNeedsOptionalMigration,
   type SqliteTableInfoColumn,
 } from '@/storage/goal-migration';
+import {
+  buildGoalContributionsRebuildSql,
+  buildReminderPaymentsRebuildSql,
+  hasForeignKey,
+  RELATIONAL_SCHEMA_VERSION,
+  type ForeignKeyInfo,
+} from '@/storage/relational-migration';
 
 export const DATABASE_NAME = 'cashtrack.db';
 
@@ -17,6 +24,7 @@ export const DATABASE_NAME = 'cashtrack.db';
  */
 const SCHEMA_SQL = `
 PRAGMA journal_mode = WAL;
+PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS income_transactions (
   id TEXT PRIMARY KEY NOT NULL,
@@ -36,11 +44,11 @@ ${createMoneyGoalsTableSql('money_goals')};
 
 CREATE TABLE IF NOT EXISTS goal_contributions (
   id TEXT PRIMARY KEY NOT NULL,
-  goal_id TEXT NOT NULL,
+  goal_id TEXT NOT NULL REFERENCES money_goals(id) ON DELETE CASCADE,
   amount REAL NOT NULL CHECK (amount > 0),
   date TEXT NOT NULL,
   note TEXT NOT NULL DEFAULT '',
-  source_income_id TEXT
+  source_income_id TEXT REFERENCES income_transactions(id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_goal_contributions_goal
@@ -73,7 +81,7 @@ ON financial_reminders (due_date ASC);
 
 CREATE TABLE IF NOT EXISTS reminder_payments (
   id TEXT PRIMARY KEY NOT NULL,
-  reminder_id TEXT NOT NULL,
+  reminder_id TEXT NOT NULL REFERENCES financial_reminders(id) ON DELETE CASCADE,
   amount REAL NOT NULL CHECK (amount > 0),
   paid_date TEXT NOT NULL,
   expense_id TEXT,
@@ -90,6 +98,10 @@ let initPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   const db = await SQLite.openDatabaseAsync(DATABASE_NAME);
   await db.execAsync(SCHEMA_SQL);
+
+  // Rebuilds are easier with enforcement disabled; it is restored before the
+  // connection is handed to the repositories.
+  await db.execAsync('PRAGMA foreign_keys = OFF;');
 
   // Idempotent column additions for recurring income on existing databases
   try {
@@ -140,7 +152,36 @@ async function openAndPrepare(): Promise<SQLite.SQLiteDatabase> {
   // fixed target. Rebuild again only if the live table still carries that CHECK.
   await migrateGoalTargetOptional(db);
 
+  // Older databases had no foreign keys on child tables. Rebuild them once,
+  // then leave enforcement on for every later write.
+  await migrateRelationalForeignKeys(db);
+  await db.execAsync('PRAGMA foreign_keys = ON;');
+  await db.execAsync(`PRAGMA user_version = ${RELATIONAL_SCHEMA_VERSION};`);
+
   return db;
+}
+
+/**
+ * Adds cascading foreign keys to the two relational child tables on databases
+ * created before they existed. Detection uses `PRAGMA foreign_key_list`, so a
+ * fresh install (whose DDL already declares the keys) is a no-op.
+ */
+async function migrateRelationalForeignKeys(db: SQLite.SQLiteDatabase): Promise<void> {
+  const goalForeignKeys = await db.getAllAsync<ForeignKeyInfo>('PRAGMA foreign_key_list(goal_contributions);');
+  const paymentForeignKeys = await db.getAllAsync<ForeignKeyInfo>('PRAGMA foreign_key_list(reminder_payments);');
+
+  const needsGoalMigration = !hasForeignKey(goalForeignKeys, 'goal_id', 'money_goals');
+  const needsPaymentMigration = !hasForeignKey(paymentForeignKeys, 'reminder_id', 'financial_reminders');
+  if (!needsGoalMigration && !needsPaymentMigration) return;
+
+  await db.withTransactionAsync(async () => {
+    if (needsGoalMigration) {
+      await db.execAsync(buildGoalContributionsRebuildSql());
+    }
+    if (needsPaymentMigration) {
+      await db.execAsync(buildReminderPaymentsRebuildSql());
+    }
+  });
 }
 
 /**

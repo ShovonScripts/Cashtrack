@@ -9,7 +9,6 @@ if (Platform.OS !== 'web') {
     NotificationsModule = require('expo-notifications');
     NotificationsModule.setNotificationHandler({
       handleNotification: async () => ({
-        shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
         shouldShowBanner: true,
@@ -41,6 +40,35 @@ export async function hasReminderNotificationPermissionAsync(): Promise<boolean>
   try {
     const { status } = await NotificationsModule.getPermissionsAsync();
     return status === 'granted';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Exact alarms are a separate Android 12+ permission. Below Android 12, and on
+ * iOS/web, the platform reports it as granted.
+ */
+export async function hasExactAlarmPermissionAsync(): Promise<boolean> {
+  if (Platform.OS !== 'android' || !NotificationsModule?.getExactAlarmPermissionsAsync) {
+    return Platform.OS !== 'android';
+  }
+  try {
+    const { granted } = await NotificationsModule.getExactAlarmPermissionsAsync();
+    return granted;
+  } catch {
+    return false;
+  }
+}
+
+/** Opens Android's exact-alarm settings screen. No-op when already granted. */
+export async function requestExactAlarmPermissionsAsync(): Promise<boolean> {
+  if (Platform.OS !== 'android' || !NotificationsModule?.requestExactAlarmPermissionsAsync) {
+    return Platform.OS !== 'android';
+  }
+  try {
+    const { granted } = await NotificationsModule.requestExactAlarmPermissionsAsync();
+    return granted;
   } catch {
     return false;
   }
@@ -105,6 +133,12 @@ export async function scheduleReminderNotificationsAsync(
     : await hasReminderNotificationPermissionAsync();
   if (!hasPermission || reminder.status === 'paid' || reminder.status === 'skipped') return;
 
+  // An alarm the user just enabled should ask for exact-alarm access while the
+  // app has their attention. Background rescheduling never prompts.
+  if (options?.requestPermission && reminder.isAlarm) {
+    await requestExactAlarmPermissionsAsync();
+  }
+
   // First cancel any existing notifications for this reminder to avoid duplicates
   await cancelReminderNotificationsAsync(reminder.id);
 
@@ -161,7 +195,9 @@ export async function scheduleReminderNotificationsAsync(
           trigger: {
             type: NotificationsModule.SchedulableTriggerInputTypes.DATE,
             date: sched.triggerDate,
-            ...(sched.isAlarm ? { channelId: ALARM_CHANNEL_ID } : {}),
+            ...(sched.isAlarm
+              ? { channelId: ALARM_CHANNEL_ID, delivery: 'alarmClock' }
+              : {}),
           },
         });
       } catch {}
@@ -179,6 +215,7 @@ export async function scheduleTestAlarmNotificationAsync(): Promise<boolean> {
   const hasPermission = await requestNotificationPermissionsAsync();
   if (!hasPermission) return false;
 
+  await requestExactAlarmPermissionsAsync();
   await ensureAlarmChannelAsync();
 
   try {

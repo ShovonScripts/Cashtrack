@@ -12,18 +12,25 @@ import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 import { triggerHaptic } from '@/utils/motion';
 
+import { roundMoney, sumMoney } from '@/utils/money';
+
 function toMonthlyAmount(amount: number | null, repeatType: string): number {
   if (amount === null) return 0;
+  let monthly = 0;
   switch (repeatType) {
     case 'weekly':
-      return (amount * 52) / 12;
+      monthly = (amount * 52) / 12;
+      break;
     case 'yearly':
-      return amount / 12;
+      monthly = amount / 12;
+      break;
     case 'monthly':
-      return amount;
+      monthly = amount;
+      break;
     default:
-      return 0;
+      monthly = 0;
   }
+  return roundMoney(monthly);
 }
 
 function getCategoryIcon(category: string): keyof typeof MaterialCommunityIcons.glyphMap {
@@ -59,9 +66,8 @@ export default function SubscriptionsHubScreen() {
     (r) => r.derivedStatus !== 'paid' && r.derivedStatus !== 'skipped'
   );
 
-  const totalMonthlyOutflow = activeRecurring.reduce(
-    (sum, r) => sum + toMonthlyAmount(r.amount, r.repeatType),
-    0,
+  const totalMonthlyOutflow = sumMoney(
+    activeRecurring.map((r) => toMonthlyAmount(r.amount, r.repeatType))
   );
 
   return (

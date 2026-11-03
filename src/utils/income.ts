@@ -1,5 +1,6 @@
 import type { IncomeRecord, IncomeDraft } from '../types/income.ts';
 import type { Expense } from '../types/expense.ts';
+import { roundMoney, sumMoney, subtractMoney } from './money.ts';
 
 export function constrainIncomeEdit(record: IncomeRecord, changes: IncomeDraft): IncomeDraft {
   if (!record.recurringParentId) return changes;
@@ -16,7 +17,7 @@ export function constrainIncomeEdit(record: IncomeRecord, changes: IncomeDraft):
 export function applyIncomeUpdate(record: IncomeRecord, changes: IncomeDraft): IncomeRecord {
   return {
     ...record,
-    amount: changes.amount,
+    amount: roundMoney(changes.amount),
     date: changes.date ?? record.date,
     note: changes.note ?? record.note,
     isRecurring: changes.isRecurring ?? record.isRecurring,
@@ -44,7 +45,7 @@ export function calculateMonthlyCashFlow({
   month: Date;
 }) {
   const monthIncome = getMonthIncome(incomeList, month);
-  const moneyIn = monthIncome.reduce((sum, item) => sum + item.amount, 0);
+  const moneyIn = sumMoney(monthIncome.map((item) => item.amount));
 
   const year = month.getFullYear();
   const m = month.getMonth();
@@ -52,9 +53,9 @@ export function calculateMonthlyCashFlow({
     const d = new Date(expense.date);
     return d.getFullYear() === year && d.getMonth() === m;
   });
-  const moneyOut = monthExpenses.reduce((sum, item) => sum + item.amount, 0);
+  const moneyOut = sumMoney(monthExpenses.map((item) => item.amount));
 
-  const net = moneyIn - moneyOut;
+  const net = subtractMoney(moneyIn, moneyOut);
 
   return {
     moneyIn,

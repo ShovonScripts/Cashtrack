@@ -27,7 +27,7 @@ pipeline involved in normal use.
 
 ## Requirements
 
-- Node.js 20.19 or newer (CI uses Node 24)
+- Node.js 24 or newer (CI uses Node 24)
 - npm
 - Expo Go for UI work, or a development build for native modules
 

@@ -26,6 +26,7 @@ import {
 import { calculateIncomeAllocations, type AllocationResult } from '@/utils/savings-allocator';
 import { notifyGoalDataChanged } from '@/utils/goal-events';
 import { applyIncomeUpdate, constrainIncomeEdit } from '@/utils/income';
+import { roundMoney } from '@/utils/money';
 import { getRecurringPeriodKey } from '@/utils/recurring';
 import { processRecurringIncome } from '@/utils/recurring-income';
 import { loadRecurringSkips, skipRecurringPeriod } from '@/storage/recurring-skips';
@@ -176,7 +177,7 @@ export function IncomeProvider({ children }: { children: ReactNode }) {
   const addIncome = useCallback((draft: IncomeDraft): Promise<IncomeRecord> => runMutation(async () => {
     const record: IncomeRecord = {
       id: createIncomeId(),
-      amount: draft.amount,
+      amount: roundMoney(draft.amount),
       date: draft.date ?? new Date().toISOString(),
       note: draft.note ?? '',
       isRecurring: draft.isRecurring ?? false,

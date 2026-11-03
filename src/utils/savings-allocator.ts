@@ -1,15 +1,12 @@
 import type { GoalContribution, MoneyGoal } from '../types/goal.ts';
 import type { IncomeRecord } from '../types/income.ts';
+import { roundMoney } from './money.ts';
 
 export type AllocationResult = {
   goalId: string;
   amount: number;
   note: string;
 };
-
-function roundCurrency(value: number): number {
-  return Math.round(value * 100) / 100;
-}
 
 /**
  * Splits an income across percentage-based pots.
@@ -28,7 +25,7 @@ export function calculateIncomeAllocations(
   for (const contribution of contributions) {
     contributedByGoal.set(
       contribution.goalId,
-      roundCurrency((contributedByGoal.get(contribution.goalId) ?? 0) + contribution.amount)
+      roundMoney((contributedByGoal.get(contribution.goalId) ?? 0) + contribution.amount)
     );
   }
 
@@ -43,22 +40,22 @@ export function calculateIncomeAllocations(
     .sort((a, b) => a.startDate.localeCompare(b.startDate) || a.id.localeCompare(b.id));
 
   const results: AllocationResult[] = [];
-  let remainingIncome = roundCurrency(income.amount);
+  let remainingIncome = roundMoney(income.amount);
 
   for (const goal of activeGoals) {
     if (remainingIncome <= 0) break;
 
     const contributed = contributedByGoal.get(goal.id) ?? 0;
     const hasTarget = goal.targetAmount > 0;
-    const remainingTarget = hasTarget ? roundCurrency(goal.targetAmount - contributed) : Infinity;
+    const remainingTarget = hasTarget ? roundMoney(goal.targetAmount - contributed) : Infinity;
     if (remainingTarget <= 0) continue;
 
     const percent = goal.allocationPercent ?? 0;
-    const rawAmount = roundCurrency((income.amount * percent) / 100);
-    const amount = roundCurrency(Math.min(rawAmount, remainingTarget, remainingIncome));
+    const rawAmount = roundMoney((income.amount * percent) / 100);
+    const amount = roundMoney(Math.min(rawAmount, remainingTarget, remainingIncome));
     if (amount <= 0) continue;
 
-    remainingIncome = roundCurrency(remainingIncome - amount);
+    remainingIncome = roundMoney(remainingIncome - amount);
     const capped = amount < rawAmount;
     results.push({
       goalId: goal.id,

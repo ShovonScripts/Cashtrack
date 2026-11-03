@@ -31,7 +31,15 @@ preventAutoHideAsync();
 function Navigation() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { isLoading, dataLoadError, dataRecovered, resetAllData, saveError, retrySave } = useExpenses();
+  const {
+    isLoading,
+    dataLoadError,
+    dataRecovered,
+    resetAllData,
+    saveError,
+    retrySave,
+    reloadAllData,
+  } = useExpenses();
   const { enableDailyReminder, enableDailyQuotes } = usePreferences();
   const {
     isLoading: debtLoading,
@@ -39,10 +47,15 @@ function Navigation() {
     debtRecovered,
     saveError: debtSaveError,
     retrySave: retryDebtSave,
+    reloadDebts,
   } = useDebts();
-  const { isLoading: incomeLoading } = useIncome();
-  const { isLoading: goalsLoading } = useGoals();
-  const { isLoading: remindersLoading } = useFinancialReminders();
+  const { isLoading: incomeLoading, incomeLoadError, reloadIncome } = useIncome();
+  const { isLoading: goalsLoading, goalLoadError, reloadGoals } = useGoals();
+  const {
+    isLoading: remindersLoading,
+    remindersLoadError,
+    reloadReminders,
+  } = useFinancialReminders();
 
   const reminderQueueRef = useRef<Promise<void>>(Promise.resolve());
 
@@ -96,9 +109,18 @@ function Navigation() {
     return <LoadingScreen />;
   }
 
-  const unrecoveredLoadError = dataLoadError || debtLoadError;
+  const unrecoveredLoadError =
+    dataLoadError || debtLoadError || incomeLoadError || goalLoadError || remindersLoadError;
   const recoveredData = !unrecoveredLoadError && (dataRecovered || debtRecovered);
   const showLoadErrorBanner = unrecoveredLoadError || recoveredData;
+
+  const handleRetryLoad = () => {
+    reloadAllData();
+    reloadDebts();
+    reloadIncome();
+    reloadGoals();
+    reloadReminders();
+  };
 
   const handleStartFresh = async () => {
     try {
@@ -154,16 +176,25 @@ function Navigation() {
           <ThemedText style={{ color: '#FFFFFF', flex: 1, fontSize: 13, fontWeight: '600' }}>
             {recoveredData
               ? 'Some saved data was unreadable. The original was backed up and new changes will save.'
-              : 'Saved data could not be read. New changes will NOT be saved.'}
+              : 'Some saved data could not be read. Retry, or start fresh if it keeps happening.'}
           </ThemedText>
           {!recoveredData && (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Start fresh and reset data"
-              onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
-              style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
-              <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Retry loading saved data"
+                onPress={handleRetryLoad}
+                style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+                <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Retry</ThemedText>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Start fresh and reset data"
+                onPress={() => confirmDelete('Start Fresh', 'This will reset your data and clear the error. Proceed?', () => void handleStartFresh())}
+                style={{ backgroundColor: '#FFFFFF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, minHeight: 44, justifyContent: 'center' }}>
+                <ThemedText style={{ color: theme.danger, fontSize: 12, fontWeight: '700' }}>Start fresh</ThemedText>
+              </Pressable>
+            </View>
           )}
         </View>
       )}

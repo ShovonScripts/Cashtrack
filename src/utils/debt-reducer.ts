@@ -1,5 +1,6 @@
 import type { DebtRecord, DebtDraft, DebtPayment } from '@/types/debt';
 import { getTotalPaid } from './debt.ts';
+import { roundMoney } from './money.ts';
 
 /**
  * Pure reducer for the debt store. Extracted from the context provider so the
@@ -26,6 +27,7 @@ export function debtReducer(state: DebtRecord[], action: DebtAction): DebtRecord
           ? {
               ...debt,
               ...action.changes,
+              amount: typeof action.changes.amount === 'number' ? roundMoney(action.changes.amount) : debt.amount,
               date: action.changes.date ?? debt.date,
               dueDate: action.changes.dueDate !== undefined ? action.changes.dueDate : debt.dueDate,
             }

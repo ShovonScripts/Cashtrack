@@ -15,6 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { confirmAction } from '@/utils/confirm';
 import { formatDate } from '@/utils/expense';
+import { sumMoney } from '@/utils/money';
 import type { IncomeRecord } from '@/types/income';
 import type { RecurringFrequency } from '@/types/expense';
 
@@ -119,7 +120,7 @@ export default function IncomeScreen() {
     );
   };
 
-  const totalAllTime = incomeList.reduce((sum, item) => sum + item.amount, 0);
+  const totalAllTime = sumMoney(incomeList.map((item) => item.amount));
   const editingItem = editingId ? incomeList.find((item) => item.id === editingId) : undefined;
   const isEditingGenerated = Boolean(editingItem?.recurringParentId);
 

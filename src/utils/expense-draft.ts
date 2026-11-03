@@ -1,4 +1,5 @@
 import type { Expense, ExpenseDraft } from '@/types/expense';
+import { roundMoney } from './money.ts';
 
 /**
  * Applies an edit to an expense without touching fields the draft does not mention.
@@ -13,7 +14,7 @@ export function mergeExpenseChanges(expense: Expense, draft: ExpenseDraft): Expe
   const merged: Expense = { ...expense };
 
   if (typeof draft.amount === 'number') {
-    merged.amount = draft.amount;
+    merged.amount = roundMoney(draft.amount);
   }
   if (typeof draft.category === 'string') {
     merged.category = draft.category;

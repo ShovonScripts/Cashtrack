@@ -1,5 +1,6 @@
 import type { Expense, ExpenseCategory } from '@/types/expense';
 import type { FirstDayOfWeek } from '@/types/preferences';
+import { fromMinorUnits, sumMoney, toMinorUnits } from './money.ts';
 
 export type SummaryPeriod = 'yesterday' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
@@ -51,7 +52,7 @@ function addDays(date: Date, days: number): Date {
 }
 
 function sumAmounts(expenses: Expense[]): number {
-  return expenses.reduce((total, expense) => total + expense.amount, 0);
+  return sumMoney(expenses.map((expense) => expense.amount));
 }
 
 /**
@@ -216,14 +217,15 @@ export function getCategoryTotals(
   const totals = new Map<ExpenseCategory, number>();
 
   for (const expense of periodExpenses) {
-    totals.set(expense.category, (totals.get(expense.category) ?? 0) + expense.amount);
+    const minor = toMinorUnits(expense.amount);
+    totals.set(expense.category, (totals.get(expense.category) ?? 0) + minor);
   }
 
   return [...totals.entries()]
-    .map(([category, amount]) => ({
+    .map(([category, minor]) => ({
       category,
-      amount,
-      percent: total > 0 ? (amount / total) * 100 : 0,
+      amount: fromMinorUnits(minor),
+      percent: total > 0 ? (fromMinorUnits(minor) / total) * 100 : 0,
     }))
     .sort((first, second) => second.amount - first.amount);
 }

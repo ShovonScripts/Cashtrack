@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
-import { SkeletonList } from '@/components/ui/skeleton';
+import { Screen, SkeletonList, StatStrip } from '@/components/ui';
 import { EmptyState } from '@/components/empty-state';
 import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { usePreferences } from '@/context/expense-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 
@@ -24,29 +24,20 @@ export default function BillPaymentHistoryScreen() {
 
   if (isLoading && payments.length === 0) {
     return (
-      <View style={styles.centered}>
+      <Screen topInset={false}>
         <SkeletonList rows={4} label="Loading payments" />
-      </View>
+      </Screen>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        <View style={[styles.summaryCard, { backgroundColor: theme.accentMuted, borderColor: theme.border }]}>
-          <View style={[styles.summaryIcon, { backgroundColor: theme.accentFill }]}>
-            <MaterialCommunityIcons name="history" size={22} color={theme.onBrand} />
-          </View>
-          <View style={styles.summaryCopy}>
-            <ThemedText type="caption" themeColor="textSecondary">TOTAL PAID</ThemedText>
-            <ThemedText type="subtitle" numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(totalPaid)}
-            </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {payments.length} {payments.length === 1 ? 'payment' : 'payments'} recorded
-            </ThemedText>
-          </View>
-        </View>
+    <Screen topInset={false}>
+        <StatStrip
+          items={[
+            { label: 'Total paid', value: formatAmount(totalPaid) },
+            { label: 'Payments', value: String(payments.length) },
+          ]}
+        />
 
         {remindersLoadError ? (
           <Card style={styles.emptyCard}>
@@ -118,31 +109,11 @@ export default function BillPaymentHistoryScreen() {
             })}
           </View>
         )}
-      </View>
-    </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.two },
-  summaryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-    padding: Spacing.three,
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  summaryIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  summaryCopy: { flex: 1, gap: 1 },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   list: { gap: Spacing.two },
   paymentRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, padding: Spacing.three },

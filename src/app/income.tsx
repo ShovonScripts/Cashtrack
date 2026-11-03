@@ -1,16 +1,17 @@
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
+import { AmountField, Button, FormField, Screen, SegmentedControl, StatStrip, SwitchRow } from '@/components/ui';
 import { LoadErrorState } from '@/components/load-error-state';
 import { ThemedText } from '@/components/themed-text';
 import { DatePicker } from '@/components/date-picker';
 import { useIncome } from '@/context/income-context';
 import { usePreferences } from '@/context/expense-context';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { confirmAction } from '@/utils/confirm';
@@ -28,7 +29,7 @@ const FREQUENCIES: { label: string; value: RecurringFrequency }[] = [
 export default function IncomeScreen() {
   const theme = useTheme();
   const { incomeList, isLoading, incomeLoadError, reloadIncome, addIncome, updateIncome, deleteIncome } = useIncome();
-  const { formatAmount } = usePreferences();
+  const { formatAmount, country } = usePreferences();
 
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -129,78 +130,40 @@ export default function IncomeScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <View style={styles.container}>
-        {/* Multi-Tone Spendly Brand Glass Hero Card */}
-        <View style={styles.heroGlassCard}>
-          <View pointerEvents="none" style={styles.primaryBlueOrb} />
-          <View pointerEvents="none" style={styles.brightCyanOrb} />
+      <Screen topInset={false}>
+        <StatStrip
+          items={[
+            { label: 'Total money in', value: formatAmount(totalAllTime), tone: 'success' },
+            { label: 'Records', value: String(incomeList.length) },
+          ]}
+        />
 
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>
-                TOTAL MONEY IN (ALL TIME)
-              </ThemedText>
-              <View style={styles.recordBadgePill}>
-                <MaterialCommunityIcons name="arrow-down-bold-circle" size={12} color={theme.success} />
-                <ThemedText type="caption" style={styles.recordBadgeText}>
-                  {incomeList.length} {incomeList.length === 1 ? 'record' : 'records'}
-                </ThemedText>
-              </View>
-            </View>
-
-            <ThemedText type="hero" style={styles.heroVal} numberOfLines={1} adjustsFontSizeToFit>
-              {formatAmount(totalAllTime)}
-            </ThemedText>
-          </View>
-        </View>
-
-        {/* Add / Edit Income Form Card */}
         <Card style={styles.formCard}>
           <View style={styles.formHeader}>
-            <View style={styles.headerTitleRow}>
-              <View style={[styles.headerIconBadge, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
-                <MaterialCommunityIcons name="cash-plus" size={20} color={theme.success} />
-              </View>
-
-              <ThemedText type="defaultBold" style={{ fontSize: 16 }}>
-                {editingId ? 'Edit Income Record' : 'Record Money In'}
-              </ThemedText>
-            </View>
-
-            {editingId && (
-              <Pressable onPress={handleCancelEdit} accessibilityRole="button">
-                <ThemedText type="smallBold" style={{ color: theme.accent }}>Cancel</ThemedText>
-              </Pressable>
-            )}
+            <ThemedText type="defaultBold" accessibilityRole="header">
+              {editingId ? 'Edit income record' : 'Record money in'}
+            </ThemedText>
+            {editingId ? <Button label="Cancel" variant="ghost" onPress={handleCancelEdit} /> : null}
           </View>
 
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Amount</ThemedText>
-            <TextInput
-              value={amount}
-              onChangeText={(val) => { setAmount(val.replace(/[^0-9.]/g, '')); setMessage(''); }}
-              placeholder="0.00"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="decimal-pad"
-              accessibilityLabel="Income amount"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
+          <AmountField
+            label="Amount"
+            value={amount}
+            onChangeText={(value) => {
+              setAmount(value);
+              setMessage('');
+            }}
+            symbol={country.symbol.trim()}
+          />
 
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Source / Note <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="e.g. Salary, Freelance, Gift"
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel="Income source or note"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
+          <FormField
+            label="Source or note"
+            value={note}
+            onChangeText={setNote}
+            placeholder="e.g. Salary, Freelance, Gift"
+            helper="Optional"
+          />
 
-          {/* Date Picker */}
           <View style={styles.field}>
             <ThemedText type="smallBold">Date</ThemedText>
             {isEditingGenerated ? (
@@ -216,66 +179,35 @@ export default function IncomeScreen() {
             )}
           </View>
 
-          {!isEditingGenerated && (
-            <View style={styles.switchRow}>
-              <View style={styles.switchCopy}>
-                <ThemedText type="smallBold">Recurring Income</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">Repeat automatically each period</ThemedText>
-              </View>
-              <Switch
+          {!isEditingGenerated ? (
+            <View style={styles.bleed}>
+              <SwitchRow
+                label="Recurring income"
+                description="Repeat automatically each period"
                 value={isRecurring}
                 onValueChange={setIsRecurring}
-                accessibilityLabel="Recurring income"
-                trackColor={{ false: theme.border, true: theme.accent }}
-                thumbColor={Palette.white}
               />
             </View>
-          )}
+          ) : null}
 
-          {!isEditingGenerated && isRecurring && (
-            <View style={styles.field}>
-              <ThemedText type="smallBold">Frequency</ThemedText>
-              <View style={styles.freqGrid}>
-                {FREQUENCIES.map((f) => {
-                  const selected = recurringFrequency === f.value;
-                  return (
-                    <Pressable
-                      key={f.value}
-                      onPress={() => setRecurringFrequency(f.value)}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected }}
-                      style={[
-                        styles.freqChip,
-                        {
-                          borderColor: selected ? theme.accent : theme.border,
-                          backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
-                        },
-                      ]}>
-                      <ThemedText type="smallBold" themeColor={selected ? 'accent' : 'textSecondary'}>{f.label}</ThemedText>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-          )}
+          {!isEditingGenerated && isRecurring ? (
+            <SegmentedControl label="Frequency" value={recurringFrequency} onChange={setRecurringFrequency} options={FREQUENCIES} />
+          ) : null}
 
           {message ? (
-            <ThemedText type="caption" themeColor={message.includes('successfully') ? 'accent' : 'danger'}>
+            <ThemedText
+              type="caption"
+              themeColor={message.includes('successfully') ? 'accent' : 'danger'}
+              accessibilityLiveRegion="polite">
               {message}
             </ThemedText>
           ) : null}
 
-          <Pressable
+          <Button
+            label={editingId ? 'Update money in' : 'Add money in'}
             onPress={handleSave}
-            disabled={isSubmitting}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isSubmitting }}
-            style={({ pressed }) => [styles.addButton, { backgroundColor: theme.accentFill }, pressed && styles.pressed, isSubmitting && { opacity: 0.5 }]}>
-            <MaterialCommunityIcons name={editingId ? "content-save-check" : "plus-circle"} size={18} color={theme.onBrand} />
-            <ThemedText type="smallBold" style={{ color: theme.onBrand }}>
-              {isSubmitting ? 'Saving…' : editingId ? 'Update Money In' : 'Add Money In'}
-            </ThemedText>
-          </Pressable>
+            loading={isSubmitting}
+          />
         </Card>
 
         {/* Income History */}
@@ -316,8 +248,7 @@ export default function IncomeScreen() {
             ))}
           </View>
         )}
-        </View>
-      </ScrollView>
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
@@ -361,75 +292,13 @@ function IncomeItem({
 }
 
 const styles = StyleSheet.create({
+  bleed: { marginHorizontal: -Spacing.three },
   flex: { flex: 1 },
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  heroGlassCard: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    position: 'relative',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  primaryBlueOrb: {
-    position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: Brand.primary,
-    opacity: 0.5,
-  },
-  brightCyanOrb: {
-    position: 'absolute',
-    bottom: -50,
-    left: -20,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: Brand.bright,
-    opacity: 0.25,
-  },
-  heroContent: { gap: Spacing.one, zIndex: 1 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 0.8, fontSize: 11, fontWeight: '700' },
-  recordBadgePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.pill,
-  },
-  recordBadgeText: { color: Palette.white, fontSize: 11, fontWeight: '700' },
-  heroVal: { color: Palette.white, fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'], fontWeight: '800' },
   formCard: { gap: Spacing.three },
   formHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerIconBadge: { width: 32, height: 32, borderRadius: Radius.small, justifyContent: 'center', alignItems: 'center' },
   field: { gap: Spacing.one },
-  input: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 15 },
   readOnlyDate: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   readOnlyDateCopy: { flex: 1, gap: 2 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  switchCopy: { flex: 1, gap: 2 },
-  freqGrid: { flexDirection: 'row', gap: Spacing.two },
-  freqChip: { flex: 1, minHeight: 44, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, justifyContent: 'center', alignItems: 'center' },
-  addButton: {
-    minHeight: 48,
-    borderRadius: Radius.medium,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.one },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   list: { gap: Spacing.two },
@@ -438,5 +307,4 @@ const styles = StyleSheet.create({
   itemIcon: { width: 40, height: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   itemInfo: { flex: 1, gap: 2 },
   actionBtn: { padding: 4 },
-  pressed: { opacity: 0.75, transform: [{ scale: 0.98 }] },
 });

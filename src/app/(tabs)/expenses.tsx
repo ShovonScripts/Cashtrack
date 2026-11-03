@@ -10,9 +10,10 @@ import { CategoryChips, type CategoryFilter } from '@/components/category-chips'
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
 import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
+import { Button, ScreenHeader, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
-import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
@@ -113,15 +114,7 @@ export default function ExpensesScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.headerBlock}>
-            {/* Top Screen Title Row */}
-            <View style={styles.titleRow}>
-              <View style={styles.titleCopy}>
-                <ThemedText type="title">Transactions & Expenses</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">
-                  Searchable ledger, filter by tags & date
-                </ThemedText>
-              </View>
-            </View>
+            <ScreenHeader title="Transactions" subtitle="Search and filter your spending" />
 
             {/* Search Input Bar */}
             <View style={[styles.searchField, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
@@ -165,50 +158,17 @@ export default function ExpensesScreen() {
               categories={categories}
             />
 
-            {/* CashTrack Brand Multi-Tone Glass Hero Summary Card */}
             {expenses.length > 0 && (
-              <View style={styles.heroGlassCard}>
-                <View pointerEvents="none" style={styles.primaryBlueOrb} />
-                <View pointerEvents="none" style={styles.brightCyanOrb} />
-
-                <View style={styles.summaryTop}>
-                  <ThemedText type="caption" style={styles.heroLabel}>
-                    {isFiltering ? 'FILTERED TOTAL' : 'TOTAL TRANSACTIONS'}
-                  </ThemedText>
-
-                  {isFiltering && (
-                    <Pressable
-                      onPress={handleClear}
-                      accessibilityRole="button"
-                      hitSlop={8}
-                      style={({ pressed }) => [styles.resetChip, pressed && styles.pressed]}>
-                      <ThemedText type="caption" style={{ color: Palette.white, fontWeight: '700' }}>
-                        Reset filters ✕
-                      </ThemedText>
-                    </Pressable>
-                  )}
-                </View>
-
-                <ThemedText type="hero" style={styles.heroValue} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatAmount(totalSpentVisible)}
-                </ThemedText>
-
-                <View style={styles.heroStatRow}>
-                  <View style={styles.glassStatPill}>
-                    <MaterialCommunityIcons name="receipt" size={13} color={Palette.white} />
-                    <ThemedText type="caption" style={styles.glassStatText}>
-                      {visible.length} {visible.length === 1 ? 'expense' : 'expenses'}
-                    </ThemedText>
-                  </View>
-
-                  <View style={styles.glassStatPill}>
-                    <MaterialCommunityIcons name="calculator-variant-outline" size={13} color={Brand.bright} />
-                    <ThemedText type="caption" style={[styles.glassStatText, { color: Brand.bright }]}>
-                      {formatAmount(avgExpense)} / item avg
-                    </ThemedText>
-                  </View>
-                </View>
-              </View>
+              <>
+                <StatStrip
+                  items={[
+                    { label: isFiltering ? 'Filtered total' : 'Total', value: formatAmount(totalSpentVisible) },
+                    { label: 'Expenses', value: String(visible.length) },
+                    { label: 'Average', value: formatAmount(avgExpense) },
+                  ]}
+                />
+                {isFiltering && <Button label="Reset filters" variant="ghost" onPress={handleClear} />}
+              </>
             )}
           </View>
         }
@@ -290,24 +250,6 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     marginBottom: Spacing.two,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  titleCopy: {
-    flex: 1,
-    gap: 1,
-  },
-  themeIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.medium,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
   fab: {
     position: 'absolute',
     right: Spacing.four,
@@ -346,85 +288,6 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  heroGlassCard: {
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: Brand.deep, // #00109D
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    gap: Spacing.two,
-    borderWidth: 1,
-    borderColor: 'rgba(20, 231, 253, 0.35)',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
-    marginTop: Spacing.one,
-  },
-  primaryBlueOrb: {
-    position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(1, 82, 245, 0.45)',
-  },
-  brightCyanOrb: {
-    position: 'absolute',
-    bottom: -60,
-    left: -40,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(20, 231, 253, 0.3)',
-  },
-  summaryTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    zIndex: 2,
-  },
-  heroLabel: {
-    color: 'rgba(255,255,255,0.75)',
-    letterSpacing: 1,
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  heroValue: {
-    color: Palette.white,
-    fontSize: 38,
-    lineHeight: 46,
-    fontVariant: ['tabular-nums'],
-    zIndex: 2,
-  },
-  resetChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  heroStatRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    zIndex: 2,
-  },
-  glassStatPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
-  glassStatText: {
-    color: Palette.white,
-    fontWeight: '600',
-    fontSize: 12,
   },
   sectionHeaderRow: {
     flexDirection: 'row',

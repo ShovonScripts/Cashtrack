@@ -1,15 +1,17 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ExpenseCategoryGrid } from '@/components/expense-category-grid';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
+import { Chip } from '@/components/ui';
 import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseDraft, type RecurringFrequency } from '@/types/expense';
 import { sumAmounts } from '@/utils/expense';
 import { evaluateExpression } from '@/utils/expression';
+import { getRecentCategories } from '@/utils/recent-categories';
 
 type ExpenseCalculatorProps = {
   initialValues?: Partial<ExpenseDraft>;
@@ -46,7 +48,14 @@ export function ExpenseCalculator({
   );
   const [evaluated, setEvaluated] = useState<boolean>(true);
   const [date, setDate] = useState(() => (initialValues?.date ? new Date(initialValues.date) : new Date()));
-  const [category, setCategory] = useState<ExpenseCategory>(initialValues?.category ?? EMPTY_VALUES.category);
+  const isNewEntry = !initialValues?.category;
+  const recentCategories = useMemo(
+    () => (isNewEntry ? getRecentCategories(expenses, categories, 4) : []),
+    [isNewEntry, expenses, categories]
+  );
+  const [category, setCategory] = useState<ExpenseCategory>(
+    initialValues?.category ?? recentCategories[0] ?? EMPTY_VALUES.category
+  );
   const [note, setNote] = useState<string>(initialValues?.note ?? EMPTY_VALUES.note);
   const [isRecurring, setIsRecurring] = useState<boolean>(initialValues?.isRecurring ?? false);
   const [recurringFrequency, setRecurringFrequency] = useState<RecurringFrequency>(
@@ -172,6 +181,16 @@ export function ExpenseCalculator({
             <ThemedText type="caption" themeColor="textSecondary" style={styles.sectionLabel}>
               CATEGORY
             </ThemedText>
+            {recentCategories.length >= 2 && (
+              <View style={styles.recentRow} accessibilityRole="radiogroup" accessibilityLabel="Recent categories">
+                <ThemedText type="caption" themeColor="textSecondary">
+                  Recent
+                </ThemedText>
+                {recentCategories.map((name) => (
+                  <Chip key={name} label={name} selected={category === name} onPress={() => setCategory(name)} />
+                ))}
+              </View>
+            )}
             <ExpenseCategoryGrid categories={categories} value={category} onChange={setCategory} />
           </View>
 
@@ -345,6 +364,12 @@ export function ExpenseCalculator({
 }
 
 const styles = StyleSheet.create({
+  recentRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: Spacing.two,
+  },
   flex: {
     flex: 1,
   },

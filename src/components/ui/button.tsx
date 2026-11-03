@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 type ButtonProps = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   loading?: boolean;
   disabled?: boolean;
   /** Spoken label when it should differ from the visible text. */
@@ -29,8 +29,14 @@ export function Button({
   const inactive = disabled || loading;
 
   const background =
-    variant === 'primary' ? theme.accentFill : variant === 'danger' ? theme.dangerFill : theme.cardMuted;
-  const textColor = variant === 'secondary' ? theme.text : theme.onBrand;
+    variant === 'primary'
+      ? theme.accentFill
+      : variant === 'danger'
+        ? theme.dangerFill
+        : variant === 'ghost'
+          ? 'transparent'
+          : theme.cardMuted;
+  const textColor = variant === 'secondary' ? theme.text : variant === 'ghost' ? theme.accent : theme.onBrand;
 
   return (
     <Pressable

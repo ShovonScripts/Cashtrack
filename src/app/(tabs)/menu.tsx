@@ -243,6 +243,18 @@ export default function MenuScreen() {
       route: '/user-manual',
       badge: 'Guide',
     },
+    ...(__DEV__
+      ? [
+          {
+            id: 'style-guide',
+            title: 'Style guide',
+            subtitle: 'Development build only',
+            icon: 'palette-outline' as const,
+            color: FeatureColors.violet,
+            route: '/dev/style-guide',
+          },
+        ]
+      : []),
     {
       id: 'about',
       title: 'About CashTrack & Support',

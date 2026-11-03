@@ -1,7 +1,12 @@
+export { Badge } from './badge';
 export { Button } from './button';
 export { Chip } from './chip';
+export { HeroCard } from './hero-card';
 export { Icon } from './icon';
+export { IconButton } from './icon-button';
 export { ListRow } from './list-row';
 export { Screen } from './screen';
+export { ScreenHeader } from './screen-header';
 export { Section } from './section';
 export { Skeleton, SkeletonList } from './skeleton';
+export { StatStrip } from './stat-strip';

@@ -11,6 +11,8 @@ type ScreenProps = {
   scroll?: boolean;
   /** Add room for the tab bar and the floating tools button. */
   tabInset?: boolean;
+  /** Pad for the status bar. Turn off on pushed pages, whose native header already does. */
+  topInset?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
 };
 
@@ -18,12 +20,12 @@ type ScreenProps = {
  * Standard page shell: themed background, safe-area top padding, a centred
  * column capped at `MaxContentWidth`, and consistent gutters.
  */
-export function Screen({ children, scroll = true, tabInset = false, contentStyle }: ScreenProps) {
+export function Screen({ children, scroll = true, tabInset = false, topInset = true, contentStyle }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const bottom = tabInset ? BottomTabInset + Spacing.six : Spacing.four;
 
   const column = (
-    <View style={[styles.column, { paddingTop: Math.max(insets.top, Spacing.three) }, contentStyle]}>
+    <View style={[styles.column, { paddingTop: topInset ? Math.max(insets.top, Spacing.three) : Spacing.three }, contentStyle]}>
       {children}
     </View>
   );

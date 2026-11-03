@@ -1,20 +1,27 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
+import { Card, CardDivider } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
+import {
+  AmountField,
+  Button,
+  FormField,
+  Screen,
+  SegmentedControl,
+  SwitchRow,
+} from '@/components/ui';
 import { useDebts } from '@/context/debt-context';
-import { useExpenses } from '@/context/expense-context';
+import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
-import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { withAlpha } from '@/utils/color';
+import { Spacing } from '@/constants/theme';
 import type { DebtType } from '@/types/debt';
 
 export default function AddDebtScreen() {
-  const theme = useTheme();
   const { addDebt, deleteDebt } = useDebts();
+  const { country } = usePreferences();
   const { addExpense } = useExpenses();
   const { addIncome } = useIncome();
 
@@ -86,182 +93,86 @@ export default function AddDebtScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag">
-        <View style={styles.container}>
-          {/* Type Selector */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">TRANSACTION TYPE</ThemedText>
-            <View style={styles.typeRow}>
-              <Pressable
-                onPress={() => setType('lent')}
-                accessibilityRole="button"
-                accessibilityState={{ selected: type === 'lent' }}
-                style={[
-                  styles.typeButton,
-                  {
-                    backgroundColor: type === 'lent' ? withAlpha(theme.success, 0.15) : theme.cardMuted,
-                    borderColor: type === 'lent' ? theme.success : theme.border,
-                  },
-                ]}>
-                <ThemedText type="defaultBold" style={{ color: type === 'lent' ? theme.success : theme.textSecondary }}>
-                  I Lent Money
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                onPress={() => setType('borrowed')}
-                accessibilityRole="button"
-                accessibilityState={{ selected: type === 'borrowed' }}
-                style={[
-                  styles.typeButton,
-                  {
-                    backgroundColor: type === 'borrowed' ? withAlpha(theme.danger, 0.15) : theme.cardMuted,
-                    borderColor: type === 'borrowed' ? theme.danger : theme.border,
-                  },
-                ]}>
-                <ThemedText type="defaultBold" style={{ color: type === 'borrowed' ? theme.danger : theme.textSecondary }}>
-                  I Borrowed Money
-                </ThemedText>
-              </Pressable>
-            </View>
-          </View>
+      <Screen topInset={false}>
+        <SegmentedControl
+          label="Transaction type"
+          value={type}
+          onChange={setType}
+          options={[
+            { value: 'lent', label: 'I lent money' },
+            { value: 'borrowed', label: 'I borrowed money' },
+          ]}
+        />
 
-          {/* Person Name */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">PERSON NAME</ThemedText>
-            <TextInput
-              value={personName}
-              onChangeText={(v) => { setPersonName(v); setError(''); }}
-              placeholder="e.g. Rahim"
-              placeholderTextColor={theme.textSecondary}
-              autoCapitalize="words"
-              accessibilityLabel="Person name"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
+        <FormField
+          label="Person name"
+          value={personName}
+          onChangeText={(value) => {
+            setPersonName(value);
+            setError('');
+          }}
+          placeholder="e.g. Rahim"
+          autoCapitalize="words"
+          maxLength={50}
+        />
 
-          {/* Amount */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">AMOUNT</ThemedText>
-            <TextInput
-              value={amountText}
-              onChangeText={(v) => { setAmountText(v.replace(/[^0-9.]/g, '')); setError(''); }}
-              placeholder="0.00"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="decimal-pad"
-              accessibilityLabel="Amount"
-              style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
+        <AmountField
+          label="Amount"
+          value={amountText}
+          onChangeText={(value) => {
+            setAmountText(value);
+            setError('');
+          }}
+          symbol={country.symbol.trim()}
+        />
 
-          {/* Affect Balance Option */}
-          <View style={styles.field}>
-            <View style={styles.dueDateHeader}>
-              <View style={styles.toggleLabelCopy}>
-                <ThemedText type="smallBold">Affect main balance</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">
-                  {type === 'lent' ? 'Automatically log as an expense' : 'Automatically log as income'}
-                </ThemedText>
-              </View>
-              <Pressable
-                onPress={() => setAffectBalance(!affectBalance)}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: affectBalance }}
-                accessibilityLabel="Affect main balance"
-                style={[styles.toggleBadge, { backgroundColor: affectBalance ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
-                <ThemedText type="smallBold" style={{ color: affectBalance ? Palette.white : theme.textSecondary }}>
-                  {affectBalance ? 'YES' : 'NO'}
-                </ThemedText>
-              </Pressable>
-            </View>
-          </View>
-
-          {/* Date */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">TRANSACTION DATE</ThemedText>
-            <DatePicker value={date} onChange={setDate} label="Transaction date" />
-          </View>
-
-          {/* Due Date Option */}
-          <View style={styles.field}>
-            <View style={styles.dueDateHeader}>
-              <ThemedText type="caption" themeColor="textSecondary">DUE DATE (OPTIONAL)</ThemedText>
-              <Pressable
-                onPress={() => setHasDueDate(!hasDueDate)}
-                accessibilityRole="switch"
-                accessibilityState={{ checked: hasDueDate }}
-                accessibilityLabel="Enable due date"
-                style={[styles.toggleBadge, { backgroundColor: hasDueDate ? theme.accentFill : theme.cardMuted, borderColor: theme.border }]}>
-                <ThemedText type="smallBold" style={{ color: hasDueDate ? Palette.white : theme.textSecondary }}>
-                  {hasDueDate ? 'ENABLED' : 'NONE'}
-                </ThemedText>
-              </Pressable>
-            </View>
-            {hasDueDate && <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />}
-          </View>
-
-          {/* Note */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">NOTE (OPTIONAL)</ThemedText>
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="What was this for?"
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel="Debt note"
-              multiline
-              style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
-
-          {error ? <ThemedText type="caption" themeColor="danger">{error}</ThemedText> : null}
-
-          <Pressable
-            onPress={handleSave}
-            disabled={!isValid || isSaving}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid || isSaving }}
-            style={({ pressed }) => [
-              styles.saveButton,
-              { backgroundColor: theme.accentFill },
-              pressed && styles.pressed,
-              (!isValid || isSaving) && styles.saveButtonDisabled,
-            ]}>
-            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>
-              {isSaving ? 'Saving…' : 'Save Debt'}
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel"
-            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
-          </Pressable>
+        <View style={styles.field}>
+          <ThemedText type="smallBold">Transaction date</ThemedText>
+          <DatePicker value={date} onChange={setDate} label="Transaction date" />
         </View>
-      </ScrollView>
+
+        <Card padded={false}>
+          <SwitchRow
+            label="Affect main balance"
+            description={type === 'lent' ? 'Automatically log as an expense' : 'Automatically log as income'}
+            value={affectBalance}
+            onValueChange={setAffectBalance}
+          />
+          <CardDivider />
+          <SwitchRow label="Set a due date" value={hasDueDate} onValueChange={setHasDueDate} />
+        </Card>
+
+        {hasDueDate ? (
+          <View style={styles.field}>
+            <ThemedText type="smallBold">Due date</ThemedText>
+            <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />
+          </View>
+        ) : null}
+
+        <FormField
+          label="Note"
+          value={note}
+          onChangeText={setNote}
+          placeholder="What was this for?"
+          helper="Optional"
+          maxLength={200}
+          multiline
+        />
+
+        {error ? (
+          <ThemedText type="caption" themeColor="danger" accessibilityLiveRegion="polite">
+            {error}
+          </ThemedText>
+        ) : null}
+
+        <Button label="Save debt" onPress={handleSave} disabled={!isValid} loading={isSaving} />
+        <Button label="Cancel" variant="ghost" onPress={() => router.back()} />
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contentContainer: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   field: { gap: Spacing.one },
-  typeRow: { flexDirection: 'row', gap: Spacing.two },
-  typeButton: { flex: 1, height: 50, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.two },
-  input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, fontSize: 16 },
-  amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  noteInput: { minHeight: 70, textAlignVertical: 'top' },
-  dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  toggleLabelCopy: { flex: 1, gap: 2, paddingRight: Spacing.two },
-  toggleBadge: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.half, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth },
-  saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
-  saveButtonDisabled: { opacity: 0.4 },
-  cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
-  pressed: { opacity: 0.7 },
 });

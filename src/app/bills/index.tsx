@@ -3,16 +3,16 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/card';
+import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { LoadErrorState } from '@/components/load-error-state';
+import { Chip, ListRow, Screen, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { usePreferences } from '@/context/expense-context';
 import { getReminderRemainingAmount, hasPartialPayment } from '@/utils/reminder-payment';
-import { Brand, MaxContentWidth, Palette, Radius, Spacing, withAlpha } from '@/constants/theme';
+import { Brand, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { confirmAction, confirmDelete, notify } from '@/utils/confirm';
@@ -50,7 +50,6 @@ function getReminderCategoryIcon(category: string): keyof typeof MaterialCommuni
 
 export default function BillsScreen() {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const { reminders, payments, isLoading, remindersLoadError, reloadReminders } = useFinancialReminders();
   const { formatAmount } = usePreferences();
   const [tab, setTab] = useState<FilterTab>('all');
@@ -94,160 +93,58 @@ export default function BillsScreen() {
   const safeFormatAmount = (amt: number | null) => (amt !== null ? formatAmount(amt) : 'Variable');
 
   return (
-    <ScrollView
-      contentContainerStyle={[styles.content, { paddingTop: Math.max(insets.top, Spacing.three) }]}
-      showsVerticalScrollIndicator={false}>
-      <View style={styles.container}>
-        {/* Spendly Brand Multi-Tone Glass Hero Card */}
-        <View style={styles.heroGlassCard}>
-          <View pointerEvents="none" style={styles.primaryBlueOrb} />
-          <View pointerEvents="none" style={styles.brightCyanOrb} />
+    <Screen topInset={false}>
+        <StatStrip
+          items={[
+            { label: 'Due this month', value: formatAmount(monthDueTotal) },
+            overdueCount > 0
+      ? { label: 'Needs action', value: `${overdueCount} overdue`, tone: 'danger' as const }
+      : dueTodayCount > 0
+        ? { label: 'Needs action', value: `${dueTodayCount} due today`, tone: 'warning' as const }
+        : { label: 'Needs action', value: 'All clear', tone: 'success' as const },
+          ]}
+        />
 
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>
-                DUE THIS MONTH
-              </ThemedText>
-              <Pressable
-                onPress={() => {
-                  triggerHaptic();
-                  router.push('/bills/add');
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Add bill or reminder"
-                style={({ pressed }) => [styles.glassAddBtn, pressed && styles.pressed]}>
-                <MaterialCommunityIcons name="plus" size={16} color={Palette.white} />
-                <ThemedText type="smallBold" style={styles.quickAddText}>
-                  Add Bill
-                </ThemedText>
-              </Pressable>
-            </View>
-
-            <View style={styles.heroSummaryRow}>
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>
-                  TOTAL DUE
-                </ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatAmount(monthDueTotal)}
-                </ThemedText>
-              </View>
-
-              <View style={styles.heroDivider} />
-
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>
-                  ACTION NEEDED
-                </ThemedText>
-                <View style={styles.actionPillRow}>
-                  {overdueCount > 0 ? (
-                    <View style={styles.overdueGlassPill}>
-                      <MaterialCommunityIcons name="alert-circle" size={12} color={theme.dangerOnBrand} />
-                      <ThemedText type="caption" style={{ color: theme.dangerOnBrand, fontWeight: '800' }}>
-                        {overdueCount} Overdue
-                      </ThemedText>
-                    </View>
-                  ) : dueTodayCount > 0 ? (
-                    <View style={styles.dueTodayGlassPill}>
-                      <MaterialCommunityIcons name="clock-alert" size={12} color={theme.warningOnBrand} />
-                      <ThemedText type="caption" style={{ color: theme.warningOnBrand, fontWeight: '800' }}>
-                        {dueTodayCount} Due Today
-                      </ThemedText>
-                    </View>
-                  ) : (
-                    <View style={styles.allClearGlassPill}>
-                      <MaterialCommunityIcons name="check-circle" size={12} color={theme.successOnBrand} />
-                      <ThemedText type="caption" style={{ color: theme.successOnBrand, fontWeight: '800' }}>
-                        All Clear
-                      </ThemedText>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Calendar View Banner Button */}
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/bills/calendar');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Open calendar view"
-          style={({ pressed }) => [
-            styles.calendarBannerCard,
-            { backgroundColor: theme.card, borderColor: theme.border },
-            pressed && styles.pressed,
-          ]}>
-          <View style={[styles.calendarBannerIcon, { backgroundColor: theme.accentMuted }]}>
-            <MaterialCommunityIcons name="calendar-month" size={22} color={theme.accent} />
-          </View>
-          <View style={styles.calendarBannerCopy}>
-            <ThemedText type="smallBold">Monthly Renewal Calendar</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Tap to view interactive calendar grid of upcoming bills & renewals
-            </ThemedText>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-        </Pressable>
-
-        {/* Payment history banner button */}
-        <Pressable
-          onPress={() => {
-            triggerHaptic();
-            router.push('/bills/history');
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Open bill payment history"
-          style={({ pressed }) => [
-            styles.calendarBannerCard,
-            { backgroundColor: theme.card, borderColor: theme.border },
-            pressed && styles.pressed,
-          ]}>
-          <View style={[styles.calendarBannerIcon, { backgroundColor: theme.cardMuted }]}>
-            <MaterialCommunityIcons name="history" size={22} color={theme.textSecondary} />
-          </View>
-          <View style={styles.calendarBannerCopy}>
-            <ThemedText type="smallBold">Payment History</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {payments.length === 0
+        <Card padded={false}>
+          <ListRow
+            title="Monthly renewal calendar"
+            subtitle="See upcoming bills and renewals by date"
+            icon="calendar-month-outline"
+            color={theme.accent}
+            onPress={() => {
+              triggerHaptic();
+              router.push('/bills/calendar');
+            }}
+          />
+          <CardDivider />
+          <ListRow
+            title="Payment history"
+            subtitle={
+              payments.length === 0
                 ? 'No bill payments recorded yet'
-                : `${payments.length} ${payments.length === 1 ? 'payment' : 'payments'} recorded`}
-            </ThemedText>
-          </View>
-          <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
-        </Pressable>
+                : `${payments.length} ${payments.length === 1 ? 'payment' : 'payments'} recorded`
+            }
+            icon="history"
+            color={theme.textSecondary}
+            onPress={() => {
+              triggerHaptic();
+              router.push('/bills/history');
+            }}
+          />
+        </Card>
 
-        {/* Filter Tabs */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-          {tabs.map((t) => {
-            const selected = tab === t.value;
-            const chipColor = t.color || theme.accent;
-            return (
-              <Pressable
-                key={t.value}
-                onPress={() => {
-                  triggerHaptic();
-                  setTab(t.value);
-                }}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                style={({ pressed }) => [
-                  styles.filterChip,
-                  {
-                    backgroundColor: selected ? withAlpha(chipColor, 0.16) : theme.cardMuted,
-                    borderColor: selected ? chipColor : theme.border,
-                  },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="smallBold" style={{ color: selected ? chipColor : theme.textSecondary, fontSize: 12 }}>
-                  {t.label} ({t.count})
-                </ThemedText>
-              </Pressable>
-            );
-          })}
+          {tabs.map((t) => (
+            <Chip
+              key={t.value}
+              label={`${t.label} (${t.count})`}
+              selected={tab === t.value}
+              onPress={() => {
+                triggerHaptic();
+                setTab(t.value);
+              }}
+            />
+          ))}
         </ScrollView>
 
         {/* Reminders List */}
@@ -278,8 +175,7 @@ export default function BillsScreen() {
             ))
           )}
         </View>
-      </View>
-    </ScrollView>
+    </Screen>
   );
 }
 
@@ -480,123 +376,7 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
 }
 
 const styles = StyleSheet.create({
-  content: { flexGrow: 1, paddingBottom: 110 },
-  container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', paddingHorizontal: Spacing.three, gap: Spacing.three },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  headerCopy: { flex: 1, gap: 1 },
-  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
-  themeIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.medium,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  heroGlassCard: {
-    position: 'relative',
-    overflow: 'hidden',
-    backgroundColor: Brand.deep, // #00109D
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    gap: Spacing.two,
-    borderWidth: 1,
-    borderColor: 'rgba(20, 231, 253, 0.35)',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  primaryBlueOrb: {
-    position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(1, 82, 245, 0.45)',
-  },
-  brightCyanOrb: {
-    position: 'absolute',
-    bottom: -60,
-    left: -40,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(20, 231, 253, 0.3)',
-  },
-  heroContent: { gap: Spacing.two, zIndex: 2 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.75)', letterSpacing: 1, fontSize: 11, fontWeight: '800' },
-  glassAddBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: Radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
-  },
-  quickAddText: { color: Palette.white },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroStat: { flex: 1, gap: 2 },
-  heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
-  heroStatVal: { color: Palette.white, fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
-  actionPillRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
-  overdueGlassPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(239, 68, 68, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
-  dueTodayGlassPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(251, 191, 36, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
-  allClearGlassPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(52, 211, 153, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
-  },
   filterScroll: { gap: Spacing.two, paddingVertical: 2 },
-  calendarBannerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.three,
-  },
-  calendarBannerIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  calendarBannerCopy: { flex: 1, gap: 2 },
-  filterChip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
   billCard: { borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two },

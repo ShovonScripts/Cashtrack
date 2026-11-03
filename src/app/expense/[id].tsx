@@ -9,9 +9,10 @@ import { ThemedView } from '@/components/themed-view';
 import { getCategoryColor } from '@/constants/categories';
 import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
+import { useDeleteExpenseFlow } from '@/context/undo-delete-context';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
-import { confirmDelete } from '@/utils/confirm';
+import { describeRecurrence } from '@/utils/expense-detail';
 
 type RowProps = {
   label: string;
@@ -35,7 +36,8 @@ function DetailRow({ label, value, wrap = false }: RowProps) {
 
 export default function ExpenseDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getExpense, deleteExpense } = useExpenses();
+  const { getExpense } = useExpenses();
+  const deleteWithUndo = useDeleteExpenseFlow();
   const { formatAmount, categoryIcons } = usePreferences();
   const theme = useTheme();
 
@@ -61,12 +63,8 @@ export default function ExpenseDetailsScreen() {
 
   const accent = getCategoryColor(expense.category);
 
-  const handleDelete = () => {
-    confirmDelete('Delete expense?', 'This cannot be undone.', async () => {
-      await deleteExpense(expense.id);
-      router.back();
-    });
-  };
+  const handleDelete = () => deleteWithUndo(expense, () => router.back());
+  const recurrence = describeRecurrence(expense);
 
   return (
     <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
@@ -101,6 +99,22 @@ export default function ExpenseDetailsScreen() {
           <View style={styles.padded}>
             <DetailRow label="Note" value={expense.note || 'No note added'} wrap />
           </View>
+          {recurrence && (
+            <>
+              <CardDivider />
+              <View style={styles.padded}>
+                <DetailRow
+                  label="Repeats"
+                  value={
+                    expense.recurringEndDate
+                      ? `${recurrence}, until ${formatDate(expense.recurringEndDate)}`
+                      : recurrence
+                  }
+                  wrap
+                />
+              </View>
+            </>
+          )}
           {expense.receiptUri && (
             <>
               <CardDivider />
@@ -223,6 +237,7 @@ const styles = StyleSheet.create({
   },
   dangerButton: {
     flex: 1,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.three,

@@ -12,6 +12,7 @@ import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { Expense } from '@/types/expense';
 import { formatDate } from '@/utils/expense';
+import { hasExtraDetails } from '@/utils/expense-detail';
 import { triggerHaptic } from '@/utils/motion';
 import { router } from 'expo-router';
 
@@ -32,7 +33,12 @@ export function ExpenseListItem({ expense, onPress, index = 0, onSwipeDelete }: 
       onPress();
       return;
     }
-    router.push({ pathname: '/expense/[id]', params: { id: expense.id } });
+    // The details page only adds a receipt photo and the recurring schedule.
+    // Without either, go straight to the edit form.
+    router.push({
+      pathname: hasExtraDetails(expense) ? '/expense/[id]' : '/expense/[id]/edit',
+      params: { id: expense.id },
+    });
   };
 
   const accent = getCategoryColor(expense.category);
@@ -47,7 +53,8 @@ export function ExpenseListItem({ expense, onPress, index = 0, onSwipeDelete }: 
         onAccessibilityAction={(event) => {
           if (event.nativeEvent.actionName === 'delete') onSwipeDelete?.(expense);
         }}
-        style={({ pressed }) => [styles.container, pressed && styles.pressed]}>
+        // The row must be opaque: the swipe actions sit behind it and would show through.
+        style={({ pressed }) => [styles.container, { backgroundColor: pressed ? theme.cardMuted : theme.card }]}>
         <CategoryIcon category={expense.category} customIcons={categoryIcons} color={accent} size={18} containerSize={40} />
 
         <View style={styles.details}>
@@ -120,10 +127,6 @@ const styles = StyleSheet.create({
     minHeight: 76,
     paddingVertical: Spacing.three,
     paddingHorizontal: Spacing.three,
-  },
-  pressed: {
-    opacity: 0.6,
-    transform: [{ scale: 0.99 }],
   },
   details: {
     flex: 1,

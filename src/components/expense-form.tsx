@@ -16,6 +16,8 @@ type ExpenseFormProps = {
   submitLabel: string;
   onSubmit: (draft: ExpenseDraft) => void;
   onCancel?: () => void;
+  /** When set, a Delete button is shown under Cancel. */
+  onDelete?: () => void;
   /** Text shown under the form, e.g. "The date cannot be changed yet." */
   footerNote?: string;
 };
@@ -32,6 +34,7 @@ export function ExpenseForm({
   submitLabel,
   onSubmit,
   onCancel,
+  onDelete,
   footerNote,
 }: ExpenseFormProps) {
   const theme = useTheme();
@@ -178,6 +181,18 @@ export function ExpenseForm({
             </Pressable>
           )}
 
+          {onDelete && (
+            <Pressable
+              onPress={onDelete}
+              accessibilityRole="button"
+              accessibilityLabel="Delete expense"
+              style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}>
+              <ThemedText type="defaultBold" themeColor="danger">
+                Delete expense
+              </ThemedText>
+            </Pressable>
+          )}
+
           {footerNote && (
             <ThemedText type="small" themeColor="textSecondary" style={styles.footerNote}>
               {footerNote}
@@ -247,6 +262,11 @@ const styles = StyleSheet.create({
   },
   saveButtonDisabled: {
     opacity: 0.4,
+  },
+  deleteButton: {
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cancelButton: {
     alignItems: 'center',

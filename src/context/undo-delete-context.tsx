@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import { useToast } from '@/context/toast-context';
+import { confirmDelete } from '@/utils/confirm';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { Expense } from '@/types/expense';
 
@@ -66,6 +67,35 @@ export function UndoDeleteProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ pendingDeleteIds, requestDelete }), [pendingDeleteIds, requestDelete]);
 
   return <UndoDeleteContext.Provider value={value}>{children}</UndoDeleteContext.Provider>;
+}
+
+/**
+ * One delete behaviour for every screen: Undo toast for ordinary expenses, and
+ * a confirm dialog for recurring templates (which also remove their occurrences).
+ * `onDone` runs once the delete is requested, for example to leave the screen.
+ */
+export function useDeleteExpenseFlow() {
+  const { requestDelete } = useUndoDelete();
+  const { deleteExpense } = useExpenses();
+
+  return useCallback(
+    (expense: Expense, onDone?: () => void) => {
+      if (canUndoDelete(expense)) {
+        requestDelete(expense);
+        onDone?.();
+        return;
+      }
+      confirmDelete(
+        'Delete recurring expense?',
+        'This also removes every expense it created. This cannot be undone.',
+        async () => {
+          await deleteExpense(expense.id);
+          onDone?.();
+        }
+      );
+    },
+    [deleteExpense, requestDelete]
+  );
 }
 
 export function useUndoDelete(): UndoDeleteContextValue {

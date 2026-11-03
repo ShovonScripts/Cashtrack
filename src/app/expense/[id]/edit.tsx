@@ -5,11 +5,13 @@ import { ExpenseForm } from '@/components/expense-form';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useExpenses } from '@/context/expense-context';
+import { useDeleteExpenseFlow } from '@/context/undo-delete-context';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 
 export default function EditExpenseScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getExpense, updateExpense } = useExpenses();
+  const deleteWithUndo = useDeleteExpenseFlow();
 
   const expense = getExpense(id);
 
@@ -30,6 +32,7 @@ export default function EditExpenseScreen() {
       initialValues={{ amount: expense.amount, category: expense.category, note: expense.note, date: expense.date }}
       submitLabel="Save changes"
       onCancel={() => router.back()}
+      onDelete={() => deleteWithUndo(expense, () => router.back())}
       onSubmit={(draft) => {
         updateExpense(expense.id, draft);
         router.back();

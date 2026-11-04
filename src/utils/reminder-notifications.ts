@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { QUICK_ALARM_ID_PREFIX } from '@/utils/stopwatch';
 import type { FinancialReminder } from '@/types/reminder';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
 
@@ -8,12 +9,17 @@ if (Platform.OS !== 'web') {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     NotificationsModule = require('expo-notifications');
     NotificationsModule.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: true,
-        shouldShowList: true,
-      }),
+      handleNotification: async (notification: { request?: { identifier?: string } }) => {
+        // Quick alarms ring inside the app (looping tone + vibration) while it
+        // is open, so the system notification stays quiet to avoid a double sound.
+        const quiet = (notification?.request?.identifier ?? '').startsWith(QUICK_ALARM_ID_PREFIX);
+        return {
+          shouldPlaySound: !quiet,
+          shouldSetBadge: false,
+          shouldShowBanner: !quiet,
+          shouldShowList: !quiet,
+        };
+      },
     });
   } catch {
     // Fallback for environments without notifications

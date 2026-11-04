@@ -3,9 +3,11 @@ import * as Haptics from 'expo-haptics';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 
+import { startRinging, stopRinging } from '@/utils/alarm-ringer';
 import { cancelQuickAlarmAsync, prepareQuickAlarmsAsync, scheduleQuickAlarmAsync } from '@/utils/quick-alarm';
 import {
   MAX_ACTIVE_ALARMS,
+  RING_WINDOW_MS,
   SNOOZE_MS,
   addSavedTimer,
   defaultAlarmLabel,
@@ -38,6 +40,8 @@ type StopwatchContextType = {
   alarms: QuickAlarm[];
   /** Countdowns that have rung and are waiting to be dismissed or snoozed. */
   finishedAlarms: QuickAlarm[];
+  /** Finished alarms that are ringing right now (looping tone + vibration). */
+  ringingIds: string[];
   savedTimers: SavedTimer[];
   /** When on, starting a timer also starts the stopwatch and a finished timer drops a lap marker. */
   syncStopwatch: boolean;
@@ -98,6 +102,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const [seconds, setSeconds] = useState<number>(0);
   const [alarms, setAlarms] = useState<QuickAlarm[]>([]);
   const [finishedAlarms, setFinishedAlarms] = useState<QuickAlarm[]>([]);
+  const [ringingIds, setRingingIds] = useState<string[]>([]);
   const [savedTimers, setSavedTimers] = useState<SavedTimer[]>([]);
   const [syncStopwatch, setSyncStopwatchState] = useState<boolean>(false);
 
@@ -147,6 +152,14 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     finishedRef.current = finishedAlarms;
   }, [finishedAlarms]);
+
+  // One looping tone + vibration while anything is ringing.
+  const isRinging = ringingIds.length > 0;
+  useEffect(() => {
+    if (!isRinging) return;
+    void startRinging();
+    return () => stopRinging();
+  }, [isRinging]);
 
   // Restore everything the user left running or saved.
   useEffect(() => {
@@ -219,6 +232,15 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     commitAlarms(active);
     setFinishedAlarms((prev) => [...prev, ...expired].slice(-MAX_ACTIVE_ALARMS));
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+
+    // Ring like a phone alarm, but only for timers that just ended: one that
+    // finished minutes ago while the app was closed already rang via the OS.
+    const fresh = expired.filter((alarm) => now - alarm.endAt < RING_WINDOW_MS);
+    if (fresh.length > 0) {
+      setRingingIds((prev) => [...prev, ...fresh.map((alarm) => alarm.id)]);
+      // The in-app ring takes over from the system notification.
+      for (const alarm of fresh) void cancelQuickAlarmAsync(alarm.id);
+    }
 
     const current = swRef.current;
     if (syncRef.current && current.running) {
@@ -319,6 +341,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
 
   const dismissFinishedAlarm = useCallback((id: string) => {
     setFinishedAlarms((prev) => prev.filter((alarm) => alarm.id !== id));
+    setRingingIds((prev) => prev.filter((ringingId) => ringingId !== id));
     void cancelQuickAlarmAsync(id);
   }, []);
 
@@ -374,6 +397,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
         clearLaps,
         alarms,
         finishedAlarms,
+        ringingIds,
         savedTimers,
         syncStopwatch,
         setSyncStopwatch,

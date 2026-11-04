@@ -77,10 +77,12 @@ function CountdownRow({ alarm, onCancel }: { alarm: QuickAlarm; onCancel: () => 
 
 function FinishedRow({
   alarm,
+  ringing,
   onDismiss,
   onSnooze,
 }: {
   alarm: QuickAlarm;
+  ringing: boolean;
   onDismiss: () => void;
   onSnooze: () => void;
 }) {
@@ -90,13 +92,13 @@ function FinishedRow({
       style={[styles.row, { backgroundColor: withAlpha(theme.danger, 0.1), borderColor: theme.danger }]}
       accessibilityLiveRegion="polite">
       <View style={styles.rowTop}>
-        <Ionicons name="notifications" size={22} color={theme.danger} />
+        <Ionicons name={ringing ? 'notifications' : 'notifications-outline'} size={ringing ? 28 : 22} color={theme.danger} />
         <View style={styles.rowCopy}>
           <ThemedText type="smallBold" numberOfLines={1}>
             {alarm.label}
           </ThemedText>
           <ThemedText type="caption" themeColor="textSecondary">
-            Time&apos;s up · {formatDurationLabel(alarm.durationMs)} timer
+            {ringing ? 'Ringing…' : 'Time’s up'} · {formatDurationLabel(alarm.durationMs)} timer
           </ThemedText>
         </View>
       </View>
@@ -111,10 +113,10 @@ function FinishedRow({
         <Pressable
           onPress={onDismiss}
           accessibilityRole="button"
-          accessibilityLabel={`Dismiss ${alarm.label}`}
+          accessibilityLabel={`${ringing ? 'Stop' : 'Dismiss'} ${alarm.label}`}
           style={({ pressed }) => [styles.smallButton, { backgroundColor: theme.dangerFill, borderColor: theme.dangerFill }, pressed && styles.pressed]}>
           <ThemedText type="smallBold" style={{ color: Palette.white }}>
-            Dismiss
+            {ringing ? 'Stop' : 'Dismiss'}
           </ThemedText>
         </Pressable>
       </View>
@@ -159,6 +161,7 @@ export function QuickAlarmPanel() {
   const {
     alarms,
     finishedAlarms,
+    ringingIds,
     savedTimers,
     syncStopwatch,
     setSyncStopwatch,
@@ -231,6 +234,7 @@ export function QuickAlarmPanel() {
         <FinishedRow
           key={alarm.id}
           alarm={alarm}
+          ringing={ringingIds.includes(alarm.id)}
           onDismiss={() => dismissFinishedAlarm(alarm.id)}
           onSnooze={async () => explain(await snoozeFinishedAlarm(alarm.id))}
         />

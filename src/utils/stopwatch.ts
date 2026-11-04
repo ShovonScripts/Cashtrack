@@ -31,6 +31,11 @@ export const MAX_ACTIVE_ALARMS = 5;
 export const MAX_SAVED_TIMERS = 8;
 export const MAX_TIMER_MS = 24 * 60 * 60 * 1000 - 1000;
 export const SNOOZE_MS = 5 * 60 * 1000;
+/** A timer that ended longer ago than this is not rung again when the app opens. */
+export const RING_WINDOW_MS = 60 * 1000;
+
+/** Notification identifiers for quick alarms start with this prefix. */
+export const QUICK_ALARM_ID_PREFIX = 'quick-alarm:';
 
 const pad = (n: number, width = 2) => String(n).padStart(width, '0');
 

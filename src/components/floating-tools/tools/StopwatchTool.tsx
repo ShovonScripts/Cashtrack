@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, StyleSheet, View, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -6,10 +7,14 @@ import { ThemedText } from '@/components/themed-text';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
+import { QUICK_ALARM_MINUTES } from '@/utils/quick-alarm';
 
 export function StopwatchTool() {
   const theme = useTheme();
-  const { seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps } = useStopwatch();
+  const {
+    seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps,
+    alarmEndAt, alarmMinutes, startQuickAlarm, cancelQuickAlarm,
+  } = useStopwatch();
 
   const formatTime = (totalSecs: number) => {
     const mins = Math.floor(totalSecs / 60);
@@ -26,6 +31,33 @@ export function StopwatchTool() {
     } else {
       startTimer();
     }
+  };
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (alarmEndAt === null) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [alarmEndAt]);
+  const alarmRemaining = alarmEndAt === null ? 0 : Math.min((alarmMinutes ?? 0) * 60, Math.max(0, Math.ceil((alarmEndAt - now) / 1000)));
+
+  const formatCountdown = (totalSecs: number) =>
+    `${String(Math.floor(totalSecs / 60)).padStart(2, '0')}:${String(totalSecs % 60).padStart(2, '0')}`;
+
+  const handleSetAlarm = async (minutes: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const ok = await startQuickAlarm(minutes);
+    if (!ok) {
+      Alert.alert(
+        'Alarm not set',
+        'Allow notifications (and alarms & reminders on Android) for CashTrack so the alarm can ring. Alarms are not available on web or Expo Go.',
+      );
+    }
+  };
+
+  const handleCancelAlarm = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    cancelQuickAlarm();
   };
 
   const handleLapOrReset = () => {
@@ -90,6 +122,63 @@ export function StopwatchTool() {
             {isRunning ? 'Lap' : 'Reset'}
           </ThemedText>
         </Pressable>
+      </View>
+
+      {/* Quick alarm */}
+      <View style={[styles.alarmSection, { backgroundColor: theme.cardMuted, borderColor: alarmEndAt ? theme.accent : theme.border }]}>
+        <View style={styles.lapHeader}>
+          <View style={styles.lapTitleRow}>
+            <Ionicons name="alarm-outline" size={14} color={alarmEndAt ? theme.accent : theme.textSecondary} />
+            <ThemedText type="smallBold" style={{ fontSize: 11, letterSpacing: 0.5 }}>
+              QUICK ALARM
+            </ThemedText>
+          </View>
+          {alarmEndAt !== null && (
+            <Pressable onPress={handleCancelAlarm} accessibilityRole="button" accessibilityLabel="Cancel quick alarm" hitSlop={8}>
+              <ThemedText type="caption" style={{ color: theme.danger, fontSize: 11 }}>Cancel</ThemedText>
+            </Pressable>
+          )}
+        </View>
+
+        {alarmEndAt !== null && (
+          <View style={styles.alarmCountdown}>
+            <ThemedText type="defaultBold" style={{ fontSize: 22, fontVariant: ['tabular-nums'], color: theme.accent }}>
+              {formatCountdown(alarmRemaining)}
+            </ThemedText>
+            <ThemedText type="caption" themeColor="textSecondary">
+              Rings in {alarmMinutes} min alarm
+            </ThemedText>
+          </View>
+        )}
+
+        <View style={styles.chipRow}>
+          {QUICK_ALARM_MINUTES.map((m) => {
+            const active = alarmEndAt !== null && alarmMinutes === m;
+            return (
+              <Pressable
+                key={m}
+                onPress={() => handleSetAlarm(m)}
+                accessibilityRole="button"
+                accessibilityLabel={`Set ${m} minute alarm`}
+                accessibilityState={{ selected: active }}
+                style={({ pressed }) => [
+                  styles.chip,
+                  {
+                    backgroundColor: active ? theme.accentFill : theme.card,
+                    borderColor: active ? theme.accent : theme.border,
+                  },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="defaultBold" style={{ fontSize: 14, color: active ? Palette.white : theme.text }}>
+                  {m}
+                </ThemedText>
+                <ThemedText type="caption" style={{ fontSize: 10, color: active ? Palette.white : theme.textSecondary }}>
+                  min
+                </ThemedText>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
 
       {/* Lap History Section filling bottom empty space */}
@@ -181,6 +270,29 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.97 }],
+  },
+  alarmSection: {
+    width: '100%',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.large,
+    padding: Spacing.two,
+    gap: Spacing.two,
+  },
+  alarmCountdown: {
+    alignItems: 'center',
+    gap: 2,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    gap: Spacing.one,
+  },
+  chip: {
+    flex: 1,
+    minHeight: 48,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   lapSection: {
     width: '100%',

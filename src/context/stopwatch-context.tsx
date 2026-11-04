@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 
+import { cancelQuickAlarmAsync, scheduleQuickAlarmAsync } from '@/utils/quick-alarm';
+
 type StopwatchContextType = {
   seconds: number;
   isRunning: boolean;
@@ -10,6 +12,11 @@ type StopwatchContextType = {
   resetTimer: () => void;
   addLap: () => void;
   clearLaps: () => void;
+  /** Epoch ms at which the quick alarm rings, or null when none is set. */
+  alarmEndAt: number | null;
+  alarmMinutes: number | null;
+  startQuickAlarm: (minutes: number) => Promise<boolean>;
+  cancelQuickAlarm: () => void;
 };
 
 const StopwatchContext = createContext<StopwatchContextType | undefined>(undefined);
@@ -59,6 +66,33 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const elapsedBeforeStartRef = useRef<number>(0);
   const startedAtRef = useRef<number>(0);
   const lastNotificationSecondRef = useRef<number | null>(null);
+  const [alarmEndAt, setAlarmEndAt] = useState<number | null>(null);
+  const [alarmMinutes, setAlarmMinutes] = useState<number | null>(null);
+
+  // Clear the countdown once the alarm time has passed (the OS rings it).
+  useEffect(() => {
+    if (alarmEndAt === null) return;
+    const remaining = alarmEndAt - Date.now();
+    const timeout = setTimeout(() => {
+      setAlarmEndAt(null);
+      setAlarmMinutes(null);
+    }, Math.max(remaining, 0) + 500);
+    return () => clearTimeout(timeout);
+  }, [alarmEndAt]);
+
+  const startQuickAlarm = async (minutes: number) => {
+    const fireAt = await scheduleQuickAlarmAsync(minutes);
+    if (fireAt === null) return false;
+    setAlarmEndAt(fireAt);
+    setAlarmMinutes(minutes);
+    return true;
+  };
+
+  const cancelQuickAlarm = () => {
+    setAlarmEndAt(null);
+    setAlarmMinutes(null);
+    void cancelQuickAlarmAsync();
+  };
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -127,7 +161,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <StopwatchContext.Provider value={{ seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps }}>
+    <StopwatchContext.Provider value={{ seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps, alarmEndAt, alarmMinutes, startQuickAlarm, cancelQuickAlarm }}>
       {children}
     </StopwatchContext.Provider>
   );

@@ -789,13 +789,14 @@ Open **Menu Hub → Stopwatch & Timer** or use the floating tools menu.
 - **LAP TIMES** history
 - Clear lap times
 
-The stopwatch is not saved across an app reload; it starts fresh when the app is reopened.
+The stopwatch, its laps and your running timers are saved, so they survive closing or reloading the app.
 
 ### 11.4 World Clocks
 
 Open **Menu Hub → World Clocks**.
 
 - The screen is titled **World Clocks**.
+- Each city shows how far it is **ahead or behind** your time (for example `+5:30 · 5h 30m ahead`), and whether it is already **Tomorrow** or still **Yesterday** there.
 - It shows **Pinned Timezones (N)**.
 - Tap **Add City** to search by city or country.
 - Tap a pinned city's remove button to unpin it.
@@ -1277,9 +1278,9 @@ CashTrack does not include a custom ringtone and cannot loop a notification like
 
 The web version does not support App Lock, restore, or notifications. Some share-sheet actions become browser downloads or print dialogs.
 
-### Stopwatch state is not persistent
+### Stopwatch state is saved
 
-The stopwatch resets when the app is reloaded.
+The stopwatch keeps its time and laps when the app is reloaded or closed.
 
 ### Currency changes do not convert amounts
 

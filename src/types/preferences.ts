@@ -34,7 +34,7 @@ export type UserPreferences = {
   enableDailyReminder?: boolean;
   enableDailyQuotes?: boolean;
   appLockEnabled?: boolean;
-  /** Shows optional extras (world clocks and stopwatch in the More tab). Off by default. */
+  /** Shows optional extras (world clocks in the More tab). Off by default. */
   showExtras?: boolean;
 };
 

@@ -44,7 +44,7 @@ type MenuItem = {
 export default function MenuScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { profile, country, customCategories, showExtras } = usePreferences();
+  const { profile, country, customCategories } = usePreferences();
   const { goals } = useGoals();
   const { debts } = useDebts();
   const { reminders } = useFinancialReminders();
@@ -68,25 +68,6 @@ export default function MenuScreen() {
   const overdueRemindersCount = activeReminders.filter(
     (r) => r.derivedStatus === 'overdue'
   ).length;
-
-  const EXTRA_TOOLS: MenuItem[] = [
-    {
-      id: 'world-clock',
-      title: 'World Clocks',
-      subtitle: 'World times and timezones',
-      icon: 'earth',
-      color: FeatureColors.sky,
-      route: '/world-clock',
-    },
-    {
-      id: 'stopwatch',
-      title: 'Stopwatch & Timer',
-      subtitle: 'Time yourself and track durations',
-      icon: 'timer-outline',
-      color: FeatureColors.amber,
-      route: '/stopwatch',
-    },
-  ];
 
   const UTILITY_TOOLS: MenuItem[] = [
     {
@@ -120,6 +101,22 @@ export default function MenuScreen() {
       icon: 'check-circle-outline',
       color: FeatureColors.emerald,
       route: '/todo',
+    },
+    {
+      id: 'stopwatch',
+      title: 'Stopwatch & Timer',
+      subtitle: 'Laps and alarm timers that ring your phone',
+      icon: 'timer-outline',
+      color: FeatureColors.amber,
+      route: '/stopwatch',
+    },
+    {
+      id: 'world-clock',
+      title: 'World Clocks',
+      subtitle: 'City times, and how far ahead or behind they are',
+      icon: 'earth',
+      color: FeatureColors.sky,
+      route: '/world-clock',
     },
   ];
 
@@ -278,7 +275,7 @@ export default function MenuScreen() {
 
   const filteredTools =
     selectedCategory === 'all' || selectedCategory === 'tools'
-      ? filterItems(showExtras ? [...UTILITY_TOOLS, ...EXTRA_TOOLS] : UTILITY_TOOLS)
+      ? filterItems(UTILITY_TOOLS)
       : [];
   const filteredFinancial =
     selectedCategory === 'all' || selectedCategory === 'finances'

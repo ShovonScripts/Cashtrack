@@ -105,8 +105,6 @@ export default function ProfileScreen() {
     enableDailyQuotes,
     setEnableDailyQuotes,
     appLockEnabled,
-    showExtras,
-    setShowExtras,
   } = usePreferences();
 
   const { goals, reloadGoals } = useGoals();
@@ -1062,28 +1060,6 @@ export default function ProfileScreen() {
                     setEnableDailyQuotes(val);
                   }}
                   accessibilityLabel="Daily motivation quote notification"
-                  trackColor={{ false: theme.border, true: theme.accent }}
-                  thumbColor={Palette.white}
-                />
-              </View>
-
-              <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
-                <View style={[styles.rowIconBadgeCompact, { backgroundColor: '#0284C71E' }]}>
-                  <MaterialCommunityIcons name="toolbox-outline" size={17} color={FeatureColors.sky} />
-                </View>
-                <View style={styles.switchCopy}>
-                  <ThemedText type="smallBold">Show extras</ThemedText>
-                  <ThemedText type="caption" themeColor="textSecondary">
-                    Show World Clocks and Stopwatch in More → Tools
-                  </ThemedText>
-                </View>
-                <Switch
-                  value={showExtras}
-                  onValueChange={(val) => {
-                    triggerHaptic();
-                    setShowExtras(val);
-                  }}
-                  accessibilityLabel="Show extras: world clocks and stopwatch in the More tab"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor={Palette.white}
                 />

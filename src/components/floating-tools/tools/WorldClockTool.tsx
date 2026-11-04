@@ -4,6 +4,8 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { GlassView } from 'expo-glass-effect';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/themed-text';
 import { Palette, Radius, Spacing } from '@/constants/theme';
@@ -11,9 +13,131 @@ import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
+import { CITY_PHOTO_HEADERS, getCityPhoto } from '@/constants/city-photos';
+import { getTimeDifference } from '@/utils/world-clock';
 
 const CUSTOM_CLOCKS_KEY = '@cashtrack_user_world_clocks';
 const DEFAULT_SELECTED_IDS = ['nyc', 'london', 'tokyo', 'sydney', 'dubai', 'paris'];
+
+const PHOTO_TEXT = Palette.white;
+const PHOTO_TEXT_MUTED = 'rgba(255, 255, 255, 0.82)';
+
+type CityClockCardProps = {
+  city: WorldCity;
+  now: Date;
+  glassCardStyle: object;
+  onRemove: () => void;
+};
+
+/** One pinned city: landmark photo behind the card, time on top. */
+function CityClockCard({ city, now, glassCardStyle, onRemove }: CityClockCardProps) {
+  const theme = useTheme();
+  const [photoFailed, setPhotoFailed] = useState(false);
+  const photo = getCityPhoto(city.id);
+  const showPhoto = photo !== null && !photoFailed;
+
+  const timeInfo = getFormattedTimeForZone(city.timeZone, now);
+  const diff = getTimeDifference(city.timeZone, now);
+
+  const textColor = showPhoto ? PHOTO_TEXT : theme.text;
+  const mutedColor = showPhoto ? PHOTO_TEXT_MUTED : theme.textSecondary;
+  const diffColor = showPhoto
+    ? diff?.direction === 'ahead' ? theme.successOnBrand : diff?.direction === 'behind' ? theme.warningOnBrand : PHOTO_TEXT
+    : diff?.direction === 'ahead' ? theme.success : diff?.direction === 'behind' ? theme.warning : theme.textSecondary;
+
+  const content = (
+    <View style={styles.cityCardInner}>
+      <View style={styles.cityCardTop}>
+        <View style={styles.cityNameRow}>
+          <ThemedText style={styles.flag}>{city.flag}</ThemedText>
+          <View style={{ flex: 1 }}>
+            <ThemedText type="defaultBold" numberOfLines={1} style={{ color: textColor }}>{city.cityName}</ThemedText>
+            <ThemedText type="caption" numberOfLines={1} style={{ color: mutedColor }}>
+              {city.countryName}
+            </ThemedText>
+          </View>
+        </View>
+        <Pressable
+          onPress={onRemove}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel={`Remove ${city.cityName} clock`}
+          style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.5 }]}>
+          <Ionicons name="close-circle-outline" size={22} color={mutedColor} />
+        </Pressable>
+      </View>
+
+      {diff && (
+        <View
+          style={[styles.diffPill, { backgroundColor: showPhoto ? 'rgba(0, 0, 0, 0.45)' : `${diffColor}1F` }]}
+          accessible
+          accessibilityLabel={`${city.cityName} is ${diff.label} of your time, ${diff.dayLabel.toLowerCase()}`}>
+          <Ionicons
+            name={diff.direction === 'ahead' ? 'arrow-up-circle' : diff.direction === 'behind' ? 'arrow-down-circle' : 'remove-circle'}
+            size={14}
+            color={diffColor}
+          />
+          <ThemedText type="smallBold" style={{ color: diffColor, fontSize: 12 }}>
+            {diff.badge === 'Same' ? 'Same time as you' : `${diff.badge}  ·  ${diff.label}`}
+          </ThemedText>
+        </View>
+      )}
+
+      <View style={styles.timeSection}>
+        <ThemedText type="title" style={[styles.timeText, { color: textColor }]}>
+          {timeInfo.timeStr}
+        </ThemedText>
+        <View style={[styles.ampmBadge, { backgroundColor: showPhoto ? 'rgba(255, 255, 255, 0.2)' : `${theme.accent}15` }]}>
+          <ThemedText type="smallBold" style={{ color: showPhoto ? PHOTO_TEXT : theme.accent, fontSize: 11 }}>
+            {timeInfo.ampm}
+          </ThemedText>
+        </View>
+      </View>
+
+      <View style={[styles.cardFooter, showPhoto && { borderTopColor: 'rgba(255,255,255,0.25)' }]}>
+        <ThemedText type="caption" style={{ color: mutedColor }}>
+          📅 {timeInfo.dateStr}
+        </ThemedText>
+        {diff && diff.dayLabel !== 'Today' && (
+          <ThemedText type="smallBold" style={{ color: showPhoto ? PHOTO_TEXT : theme.accent, fontSize: 12 }}>
+            {diff.dayLabel}
+          </ThemedText>
+        )}
+      </View>
+    </View>
+  );
+
+  return (
+    <View style={[styles.cityCard, showPhoto ? styles.cityCardPhoto : glassCardStyle]}>
+      {showPhoto && (
+        <>
+          <Image
+            source={{ uri: photo.uri, headers: CITY_PHOTO_HEADERS }}
+            style={StyleSheet.absoluteFill}
+            contentFit="cover"
+            cachePolicy="disk"
+            transition={300}
+            accessible={false}
+            onError={() => setPhotoFailed(true)}
+          />
+          {/* Darkens the photo so the white text stays readable on any picture. */}
+          <LinearGradient
+            colors={['rgba(8, 12, 24, 0.30)', 'rgba(8, 12, 24, 0.80)']}
+            style={StyleSheet.absoluteFill}
+            pointerEvents="none"
+          />
+        </>
+      )}
+      {Platform.OS === 'ios' && !showPhoto ? (
+        <GlassView glassEffectStyle="regular" style={styles.iosGlassWrap}>
+          {content}
+        </GlassView>
+      ) : (
+        content
+      )}
+    </View>
+  );
+}
 
 export function WorldClockTool() {
   const theme = useTheme();
@@ -66,36 +190,6 @@ export function WorldClockTool() {
     borderTopWidth: 1.5,
     borderTopColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 1)',
     shadowColor: isDark ? '#000' : '#8898aa',
-  };
-
-  const getTimeDifferenceLabel = (timeZone: string) => {
-    if (!timeZone) return '';
-    try {
-      const localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const localFormatter = new Intl.DateTimeFormat('en-US', { timeZone: localTz, hour: 'numeric', minute: 'numeric', hour12: false });
-      const targetFormatter = new Intl.DateTimeFormat('en-US', { timeZone, hour: 'numeric', minute: 'numeric', hour12: false });
-
-      const localParts = localFormatter.formatToParts(now);
-      const targetParts = targetFormatter.formatToParts(now);
-
-      const getVal = (parts: Intl.DateTimeFormatPart[], type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
-
-      const localHour = getVal(localParts, 'hour');
-      const targetHour = getVal(targetParts, 'hour');
-      const localMin = getVal(localParts, 'minute');
-      const targetMin = getVal(targetParts, 'minute');
-
-      let diff = (targetHour + targetMin / 60) - (localHour + localMin / 60);
-      if (diff > 12) diff -= 24;
-      if (diff < -12) diff += 24;
-
-      const roundedDiff = Math.round(diff);
-      if (roundedDiff === 0) return 'Same time';
-      if (roundedDiff > 0) return `+${roundedDiff} hrs ahead`;
-      return `${Math.abs(roundedDiff)} hrs behind`;
-    } catch {
-      return '';
-    }
   };
 
   const activeCities = selectedCityIds
@@ -166,64 +260,22 @@ export function WorldClockTool() {
         </View>
       ) : (
         <View style={styles.citiesGrid}>
-          {activeCities.map((city) => {
-            const timeInfo = getFormattedTimeForZone(city.timeZone, now);
-            const diffLabel = getTimeDifferenceLabel(city.timeZone);
-
-            const cardContent = (
-              <View style={styles.cityCardInner}>
-                <View style={styles.cityCardTop}>
-                  <View style={styles.cityNameRow}>
-                    <ThemedText style={styles.flag}>{city.flag}</ThemedText>
-                    <View style={{ flex: 1 }}>
-                      <ThemedText type="defaultBold" numberOfLines={1}>{city.cityName}</ThemedText>
-                      <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
-                        {city.countryName} {diffLabel ? `• ${diffLabel}` : ''}
-                      </ThemedText>
-                    </View>
-                  </View>
-                  <Pressable
-                    onPress={() => handleRemoveCity(city.id)}
-                    hitSlop={12}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${city.cityName} clock`}
-                    style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.5 }]}>
-                    <Ionicons name="close-circle-outline" size={20} color={theme.textSecondary} />
-                  </Pressable>
-                </View>
-
-                <View style={styles.timeSection}>
-                  <ThemedText type="title" style={[styles.timeText, { color: theme.text }]}>
-                    {timeInfo.timeStr}
-                  </ThemedText>
-                  <View style={[styles.ampmBadge, { backgroundColor: `${theme.accent}15` }]}>
-                    <ThemedText type="smallBold" style={{ color: theme.accent, fontSize: 11 }}>
-                      {timeInfo.ampm}
-                    </ThemedText>
-                  </View>
-                </View>
-
-                <View style={styles.cardFooter}>
-                  <ThemedText type="caption" themeColor="textSecondary">
-                    📅 {timeInfo.dateStr}
-                  </ThemedText>
-                </View>
-              </View>
-            );
-
-            return (
-              <View key={city.id} style={[styles.cityCard, glassCardStyle]}>
-                {Platform.OS === 'ios' ? (
-                  <GlassView glassEffectStyle="regular" style={styles.iosGlassWrap}>
-                    {cardContent}
-                  </GlassView>
-                ) : (
-                  cardContent
-                )}
-              </View>
-            );
-          })}
+          {activeCities.map((city) => (
+            <CityClockCard
+              key={city.id}
+              city={city}
+              now={now}
+              glassCardStyle={glassCardStyle}
+              onRemove={() => handleRemoveCity(city.id)}
+            />
+          ))}
         </View>
+      )}
+
+      {activeCities.length > 0 && (
+        <ThemedText type="caption" themeColor="textSecondary" style={styles.credit}>
+          City photos from Wikipedia and Wikimedia Commons, used under their free licences.
+        </ThemedText>
       )}
 
       {/* Add City Modal */}
@@ -391,6 +443,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  credit: {
+    textAlign: 'center',
+    fontSize: 11,
+  },
+  cityCardPhoto: {
+    backgroundColor: '#1B2230',
+    borderColor: 'transparent',
+  },
   iosGlassWrap: {
     padding: Spacing.three,
   },
@@ -415,6 +475,15 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     padding: 4,
+  },
+  diffPill: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.pill,
   },
   timeSection: {
     flexDirection: 'row',

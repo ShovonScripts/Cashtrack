@@ -43,7 +43,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'Build savings pots toward targets.',
           'View daily, weekly, monthly, and yearly spending reports.',
           'Export a PDF or CSV report.',
-          'Use built-in notes, a calculator, a currency converter, and weather. Turn on **Show extras** in Profile to add world clocks and a stopwatch to More → Tools.',
+          'Use built-in notes, a calculator, a currency converter, a stopwatch and timer, world clocks, and weather. They are all under More → Tools.',
         ],
       },
       { type: 'heading', text: 'Local-first by design' },

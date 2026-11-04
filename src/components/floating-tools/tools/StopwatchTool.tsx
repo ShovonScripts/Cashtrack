@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View, ScrollView } from 'react-native';
+import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
@@ -7,22 +6,13 @@ import { ThemedText } from '@/components/themed-text';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
-import { QUICK_ALARM_MINUTES } from '@/utils/quick-alarm';
+import { QuickAlarmPanel } from '@/components/floating-tools/tools/QuickAlarmPanel';
+import { formatClock, formatLap, lapExtremes } from '@/utils/stopwatch';
 
 export function StopwatchTool() {
   const theme = useTheme();
-  const {
-    seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps,
-    alarmEndAt, alarmMinutes, startQuickAlarm, cancelQuickAlarm,
-  } = useStopwatch();
-
-  const formatTime = (totalSecs: number) => {
-    const mins = Math.floor(totalSecs / 60);
-    const secs = totalSecs % 60;
-    const hrs = Math.floor(mins / 60);
-    const remMins = mins % 60;
-    return `${String(hrs).padStart(2, '0')}:${String(remMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  };
+  const { seconds, isRunning, laps, startTimer, pauseTimer, resetTimer, addLap, clearLaps } = useStopwatch();
+  const { bestId, worstId } = lapExtremes(laps);
 
   const handleStartPause = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -31,33 +21,6 @@ export function StopwatchTool() {
     } else {
       startTimer();
     }
-  };
-
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (alarmEndAt === null) return;
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
-  }, [alarmEndAt]);
-  const alarmRemaining = alarmEndAt === null ? 0 : Math.min((alarmMinutes ?? 0) * 60, Math.max(0, Math.ceil((alarmEndAt - now) / 1000)));
-
-  const formatCountdown = (totalSecs: number) =>
-    `${String(Math.floor(totalSecs / 60)).padStart(2, '0')}:${String(totalSecs % 60).padStart(2, '0')}`;
-
-  const handleSetAlarm = async (minutes: number) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const ok = await startQuickAlarm(minutes);
-    if (!ok) {
-      Alert.alert(
-        'Alarm not set',
-        'Allow notifications (and alarms & reminders on Android) for CashTrack so the alarm can ring. Alarms are not available on web or Expo Go.',
-      );
-    }
-  };
-
-  const handleCancelAlarm = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    cancelQuickAlarm();
   };
 
   const handleLapOrReset = () => {
@@ -85,7 +48,7 @@ export function StopwatchTool() {
         ]}>
         <Ionicons name="timer-outline" size={28} color={isRunning ? theme.accent : theme.textSecondary} />
         <ThemedText type="hero" style={[styles.timeText, { color: theme.text }]}>
-          {formatTime(seconds)}
+          {formatClock(seconds)}
         </ThemedText>
         <ThemedText type="caption" themeColor="textSecondary">
           {isRunning ? 'Stopwatch Active' : seconds > 0 ? 'Paused' : 'Ready'}
@@ -124,62 +87,7 @@ export function StopwatchTool() {
         </Pressable>
       </View>
 
-      {/* Quick alarm */}
-      <View style={[styles.alarmSection, { backgroundColor: theme.cardMuted, borderColor: alarmEndAt ? theme.accent : theme.border }]}>
-        <View style={styles.lapHeader}>
-          <View style={styles.lapTitleRow}>
-            <Ionicons name="alarm-outline" size={14} color={alarmEndAt ? theme.accent : theme.textSecondary} />
-            <ThemedText type="smallBold" style={{ fontSize: 11, letterSpacing: 0.5 }}>
-              QUICK ALARM
-            </ThemedText>
-          </View>
-          {alarmEndAt !== null && (
-            <Pressable onPress={handleCancelAlarm} accessibilityRole="button" accessibilityLabel="Cancel quick alarm" hitSlop={8}>
-              <ThemedText type="caption" style={{ color: theme.danger, fontSize: 11 }}>Cancel</ThemedText>
-            </Pressable>
-          )}
-        </View>
-
-        {alarmEndAt !== null && (
-          <View style={styles.alarmCountdown}>
-            <ThemedText type="defaultBold" style={{ fontSize: 22, fontVariant: ['tabular-nums'], color: theme.accent }}>
-              {formatCountdown(alarmRemaining)}
-            </ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Rings in {alarmMinutes} min alarm
-            </ThemedText>
-          </View>
-        )}
-
-        <View style={styles.chipRow}>
-          {QUICK_ALARM_MINUTES.map((m) => {
-            const active = alarmEndAt !== null && alarmMinutes === m;
-            return (
-              <Pressable
-                key={m}
-                onPress={() => handleSetAlarm(m)}
-                accessibilityRole="button"
-                accessibilityLabel={`Set ${m} minute alarm`}
-                accessibilityState={{ selected: active }}
-                style={({ pressed }) => [
-                  styles.chip,
-                  {
-                    backgroundColor: active ? theme.accentFill : theme.card,
-                    borderColor: active ? theme.accent : theme.border,
-                  },
-                  pressed && styles.pressed,
-                ]}>
-                <ThemedText type="defaultBold" style={{ fontSize: 14, color: active ? Palette.white : theme.text }}>
-                  {m}
-                </ThemedText>
-                <ThemedText type="caption" style={{ fontSize: 10, color: active ? Palette.white : theme.textSecondary }}>
-                  min
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+      <QuickAlarmPanel />
 
       {/* Lap History Section filling bottom empty space */}
       <View style={[styles.lapSection, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
@@ -187,7 +95,7 @@ export function StopwatchTool() {
           <View style={styles.lapTitleRow}>
             <Ionicons name="flag-outline" size={14} color={theme.textSecondary} />
             <ThemedText type="smallBold" style={{ fontSize: 11, letterSpacing: 0.5 }}>
-              LAP TIMES ({laps.length})
+              LAP TIMES ({laps.filter((lap) => !lap.label).length})
             </ThemedText>
           </View>
           {laps.length > 0 && (
@@ -210,17 +118,30 @@ export function StopwatchTool() {
               Record laps while the stopwatch is running
             </ThemedText>
           ) : (
-            laps.map((lapTime, idx) => {
-              const lapNum = laps.length - idx;
+            laps.map((lap, idx) => {
+              const isBest = lap.id === bestId;
+              const isWorst = lap.id === worstId;
+              const tone = isBest ? theme.success : isWorst ? theme.danger : theme.text;
               return (
                 <View
-                  key={idx}
+                  key={lap.id}
+                  accessible
+                  accessibilityLabel={
+                    lap.label
+                      ? `${lap.label} at ${formatLap(lap.totalMs)}`
+                      : `Lap ${lap.index}, split ${formatLap(lap.splitMs)}, total ${formatLap(lap.totalMs)}${isBest ? ', fastest' : isWorst ? ', slowest' : ''}`
+                  }
                   style={[styles.lapItem, { borderBottomColor: theme.border }, idx === laps.length - 1 && { borderBottomWidth: 0 }]}>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary, fontSize: 13 }}>
-                    Lap {lapNum}
+                  <ThemedText type="caption" style={{ color: lap.label ? theme.accent : theme.textSecondary, fontSize: 13, flex: 1 }} numberOfLines={1}>
+                    {lap.label ?? `Lap ${lap.index}${isBest ? ' · fastest' : isWorst ? ' · slowest' : ''}`}
                   </ThemedText>
-                  <ThemedText type="defaultBold" style={{ fontSize: 14, fontVariant: ['tabular-nums'] }}>
-                    {lapTime}
+                  {!lap.label && (
+                    <ThemedText type="defaultBold" style={{ fontSize: 14, fontVariant: ['tabular-nums'], color: tone, marginRight: Spacing.three }}>
+                      +{formatLap(lap.splitMs)}
+                    </ThemedText>
+                  )}
+                  <ThemedText type="caption" style={{ fontSize: 13, fontVariant: ['tabular-nums'], color: theme.textSecondary }}>
+                    {formatLap(lap.totalMs)}
                   </ThemedText>
                 </View>
               );
@@ -270,29 +191,6 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.8,
     transform: [{ scale: 0.97 }],
-  },
-  alarmSection: {
-    width: '100%',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.large,
-    padding: Spacing.two,
-    gap: Spacing.two,
-  },
-  alarmCountdown: {
-    alignItems: 'center',
-    gap: 2,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    gap: Spacing.one,
-  },
-  chip: {
-    flex: 1,
-    minHeight: 48,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   lapSection: {
     width: '100%',

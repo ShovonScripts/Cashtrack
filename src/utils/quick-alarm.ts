@@ -1,14 +1,21 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 import {
-  ensureAlarmChannelAsync,
+  hasExactAlarmPermissionAsync,
   requestExactAlarmPermissionsAsync,
   requestNotificationPermissionsAsync,
 } from '@/utils/reminder-notifications';
 
-export const QUICK_ALARM_MINUTES = [1, 5, 10, 15, 30] as const;
+export { QUICK_ALARM_MINUTES } from '@/utils/stopwatch';
 
-const QUICK_ALARM_ID = 'quick-alarm:stopwatch';
+// v2: the first version set sound: 'default', which Android read as a missing
+// sound file and made the channel silent. Channels cannot be edited once
+// created, so the fix needs a new id.
+const QUICK_ALARM_CHANNEL_ID = 'quick-alarms-v2';
+const OLD_QUICK_ALARM_CHANNEL_ID = 'quick-alarms-channel';
+const EXACT_ASKED_KEY = 'cashtrack-quick-alarm-exact-asked-v1';
+const idFor = (alarmId: string) => `quick-alarm:${alarmId}`;
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -20,47 +27,91 @@ if (Platform.OS !== 'web') {
   }
 }
 
-/** Schedules a ringing alarm `minutes` from now. Returns the fire time (ms) or null on failure. */
-export async function scheduleQuickAlarmAsync(minutes: number): Promise<number | null> {
-  if (Platform.OS === 'web' || !NotificationsModule) return null;
-
-  const granted = await requestNotificationPermissionsAsync();
-  if (!granted) return null;
-
-  await requestExactAlarmPermissionsAsync();
-  await ensureAlarmChannelAsync();
-
+/** Its own channel, so the user can tune quick-alarm sound apart from bill alarms. */
+async function ensureQuickAlarmChannelAsync(): Promise<void> {
+  if (Platform.OS !== 'android' || !NotificationsModule?.setNotificationChannelAsync) return;
   try {
-    await NotificationsModule.cancelScheduledNotificationAsync(QUICK_ALARM_ID);
+    await NotificationsModule.deleteNotificationChannelAsync?.(OLD_QUICK_ALARM_CHANNEL_ID);
   } catch {}
+  try {
+    await NotificationsModule.setNotificationChannelAsync(QUICK_ALARM_CHANNEL_ID, {
+      name: 'Quick Alarms & Timers',
+      description: 'Rings when a stopwatch-page timer finishes.',
+      importance: NotificationsModule.AndroidImportance.MAX,
+      // No `sound` key on purpose: leaving it out selects the default sound.
+      vibrationPattern: [0, 800, 400, 800, 400, 800],
+      enableVibrate: true,
+      bypassDnd: true,
+      lightColor: '#0152F5',
+      lockscreenVisibility: NotificationsModule.AndroidNotificationVisibility.PUBLIC,
+      audioAttributes: {
+        usage: NotificationsModule.AndroidAudioUsage?.ALARM,
+        contentType: NotificationsModule.AndroidAudioContentType?.SONIFICATION,
+      },
+    });
+  } catch {}
+}
 
-  const fireAt = Date.now() + minutes * 60 * 1000;
+/**
+ * Android 14+ denies exact alarms by default, and asking opens the system
+ * Settings screen. Ask at most once, and only when it is really missing, so
+ * starting a timer never throws the user out of the app again and again.
+ * Without it the timer still rings, just possibly a little late.
+ */
+async function askForExactAlarmOnceAsync(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    if (await hasExactAlarmPermissionAsync()) return;
+    if ((await AsyncStorage.getItem(EXACT_ASKED_KEY)) === '1') return;
+    await AsyncStorage.setItem(EXACT_ASKED_KEY, '1');
+    await requestExactAlarmPermissionsAsync();
+  } catch {}
+}
+
+/**
+ * Asks for permission once, so several alarms started together do not each
+ * open a prompt. Returns false when the phone cannot ring (denied, web, Expo Go).
+ */
+export async function prepareQuickAlarmsAsync(): Promise<boolean> {
+  if (Platform.OS === 'web' || !NotificationsModule) return false;
+  const granted = await requestNotificationPermissionsAsync();
+  if (!granted) return false;
+  await askForExactAlarmOnceAsync();
+  await ensureQuickAlarmChannelAsync();
+  return true;
+}
+
+/** Schedules the phone to ring at `fireAt` (epoch ms). Returns false on failure. */
+export async function scheduleQuickAlarmAsync(alarmId: string, label: string, fireAt: number): Promise<boolean> {
+  if (Platform.OS === 'web' || !NotificationsModule) return false;
   try {
     await NotificationsModule.scheduleNotificationAsync({
-      identifier: QUICK_ALARM_ID,
+      identifier: idFor(alarmId),
       content: {
-        title: '⏰ Quick Alarm',
-        body: `Your ${minutes} minute alarm is ringing!`,
+        title: '⏰ Time\'s up!',
+        body: `${label} timer is ringing.`,
         sound: true,
         priority: NotificationsModule.AndroidNotificationPriority.MAX,
       },
       trigger: {
         type: NotificationsModule.SchedulableTriggerInputTypes.DATE,
         date: new Date(fireAt),
-        channelId: 'reminder-alarms-channel',
+        channelId: QUICK_ALARM_CHANNEL_ID,
         delivery: 'alarmClock',
       },
     });
-    return fireAt;
+    return true;
   } catch {
-    return null;
+    return false;
   }
 }
 
-export async function cancelQuickAlarmAsync(): Promise<void> {
+export async function cancelQuickAlarmAsync(alarmId: string): Promise<void> {
   if (Platform.OS === 'web' || !NotificationsModule) return;
   try {
-    await NotificationsModule.cancelScheduledNotificationAsync(QUICK_ALARM_ID);
-    await NotificationsModule.dismissNotificationAsync(QUICK_ALARM_ID);
+    await NotificationsModule.cancelScheduledNotificationAsync(idFor(alarmId));
+  } catch {}
+  try {
+    await NotificationsModule.dismissNotificationAsync(idFor(alarmId));
   } catch {}
 }

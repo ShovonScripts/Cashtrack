@@ -148,20 +148,14 @@ function FloatingToolsButtonInner() {
     pathname === '/app-lock'
   );
 
-  if (hideButton || keyboardVisible) {
-    return (
-      <ToolsMenuModal
-        visible={modalVisible}
-        onClose={() => {
-          setModalVisible(false);
-          setIsInteracting(false);
-        }}
-      />
-    );
-  }
+  // The modal must stay at the same place in the tree whether or not the button
+  // shows. Returning it alone while the keyboard is open made React unmount and
+  // rebuild it mid-typing, which crashed the app and wiped the form.
+  const showButton = !hideButton && !keyboardVisible;
 
   return (
     <>
+      {showButton && (
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.floatingContainer, animatedStyle]}>
           <Pressable
@@ -198,6 +192,7 @@ function FloatingToolsButtonInner() {
           </Pressable>
         </Animated.View>
       </GestureDetector>
+      )}
 
       <ToolsMenuModal
         visible={modalVisible}

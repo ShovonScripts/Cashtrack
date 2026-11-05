@@ -11,7 +11,7 @@
  */
 
 /** Must match EXPO_PUBLIC_SIGNUP_KEY in the app's .env. Use a long random string. */
-const SHARED_KEY = 'Hello-Cashtract-Creator-Johirul-Islam-&-Mr-Nasir';
+const SHARED_KEY = 'PASTE-THE-SAME-LONG-RANDOM-STRING-AS-IN-THE-APP';
 
 const SHEET_NAME = 'Signups';
 const HEADERS = [

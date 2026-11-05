@@ -159,6 +159,28 @@ export const Palette = {
   black: '#000000',
 } as const;
 
+/**
+ * Launch quote screen. Always dark (a calm "night sky" in the brand blues),
+ * whatever the theme, so the quote reads the same every morning. Measured at
+ * the lightest spot (the `edge` stop under the violet glow): `text` 7.0:1,
+ * `author` 5.3:1, `muted` 4.9:1, so every role passes WCAG AA anywhere on screen.
+ */
+export const LaunchQuoteColors = {
+  base: '#030A2B',
+  mid: '#06177A',
+  edge: '#0B3FC6',
+  /** Soft cyan for the author line and greeting icon, drawn from `Brand.bright`. */
+  author: '#8FEFFF',
+  glowCyan: 'rgba(20, 231, 253, 0.22)',
+  glowBlue: 'rgba(1, 82, 245, 0.35)',
+  glowViolet: 'rgba(118, 103, 242, 0.22)',
+  mark: 'rgba(20, 231, 253, 0.55)',
+  text: '#FFFFFF',
+  muted: 'rgba(222, 232, 255, 0.9)',
+  hairline: 'rgba(255, 255, 255, 0.14)',
+  chip: 'rgba(255, 255, 255, 0.08)',
+} as const;
+
 /** Feature hues for icon badges and category accents. */
 export const FeatureColors = {
   sky: '#0284C7',

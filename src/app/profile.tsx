@@ -104,6 +104,8 @@ export default function ProfileScreen() {
     setEnableDailyReminder,
     enableDailyQuotes,
     setEnableDailyQuotes,
+    showLaunchQuote,
+    setShowLaunchQuote,
     appLockEnabled,
   } = usePreferences();
 
@@ -1060,6 +1062,26 @@ export default function ProfileScreen() {
                     setEnableDailyQuotes(val);
                   }}
                   accessibilityLabel="Daily motivation quote notification"
+                  trackColor={{ false: theme.border, true: theme.accent }}
+                  thumbColor={Palette.white}
+                />
+              </View>
+
+              <View style={[styles.switchRowCompact, { borderBottomColor: theme.border }]}>
+                <View style={[styles.rowIconBadgeCompact, { backgroundColor: `${FeatureColors.violet}1E` }]}>
+                  <MaterialCommunityIcons name="format-quote-open" size={17} color={FeatureColors.violet} />
+                </View>
+                <View style={styles.switchCopy}>
+                  <ThemedText type="smallBold">Quote on Launch</ThemedText>
+                  <ThemedText type="caption" themeColor="textSecondary">A new quote each time you open the app</ThemedText>
+                </View>
+                <Switch
+                  value={showLaunchQuote}
+                  onValueChange={(val) => {
+                    triggerHaptic();
+                    setShowLaunchQuote(val);
+                  }}
+                  accessibilityLabel="Show a motivational quote when the app opens"
                   trackColor={{ false: theme.border, true: theme.accent }}
                   thumbColor={Palette.white}
                 />

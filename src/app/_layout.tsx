@@ -22,6 +22,7 @@ import {
   scheduleDailySpendingReminderNotificationsAsync,
 } from '@/utils/spending-reminder-notifications';
 import { FloatingToolsButton } from '@/components/floating-tools/FloatingToolsButton';
+import { LaunchQuoteLayer } from '@/components/launch-quote/use-launch-quote';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StopwatchProvider } from '@/context/stopwatch-context';
 import { ToastProvider } from '@/context/toast-context';
@@ -229,6 +230,7 @@ function Navigation() {
           </Pressable>
         </View>
       )}
+      <LaunchQuoteLayer floating={<FloatingToolsButton />}>
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: theme.background },
@@ -277,7 +279,7 @@ function Navigation() {
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />
         <Stack.Screen name="expense/[id]/edit" options={{ title: 'Edit Expense' }} />
       </Stack>
-      <FloatingToolsButton />
+      </LaunchQuoteLayer>
     </View>
     </GestureHandlerRootView>
   );

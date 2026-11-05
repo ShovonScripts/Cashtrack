@@ -915,6 +915,7 @@ The **Alerts** tab contains:
 - **Budget Caps** — 80% and 100% cap warnings
 - **Daily Check-in** — a daily reminder
 - **Daily Motivation** — daily quote notifications
+- **Quote on Launch** — a full-screen quote each time you open the app (on by default; needs no notification permission)
 - **Test Alarm Sound** — sends a test notification after 5 seconds
 
 Each toggle asks for notification permission when needed. If permission is denied, CashTrack shows a message directing you to device settings.
@@ -1078,6 +1079,14 @@ When enabled, CashTrack sends:
 
 - **Daily Check-in** — a daily reminder to review your money
 - **Daily Motivation** — a daily financial quote notification
+
+**Quote on launch**
+
+- Each time you open CashTrack (not when you return from the background), a motivational money quote fills the screen with a greeting and today's date.
+- Tap anywhere to continue. On Android, the back button also continues.
+- If App Lock is on, the quote appears right after you unlock.
+- You get a different quote from the one you saw last time.
+- Turn it off in **Profile & settings → Alerts → Quote on Launch**.
 
 ### 15.4 Test alarm
 

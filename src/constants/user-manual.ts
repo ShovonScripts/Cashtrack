@@ -878,6 +878,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           '**Budget Caps** — 80% and 100% cap warnings.',
           '**Daily Check-in** — a daily reminder.',
           '**Daily Motivation** — daily quote notifications.',
+          '**Quote on Launch** — a full-screen quote each time you open the app. On by default; needs no notification permission.',
           '**Test Alarm Sound** — sends a test notification after 5 seconds.',
         ],
       },
@@ -1064,6 +1065,17 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'paragraph',
         text: 'When enabled, CashTrack sends a **Daily Check-in** reminder to review your money and a **Daily Motivation** financial quote notification.',
+      },
+      { type: 'heading', text: 'Quote on launch' },
+      {
+        type: 'bullets',
+        items: [
+          'Each time you open CashTrack (not when you return from the background), a motivational money quote fills the screen with a greeting and today\'s date.',
+          'Tap anywhere to continue. On Android, the back button also continues.',
+          'If App Lock is on, the quote appears right after you unlock.',
+          'You get a different quote from the one you saw last time.',
+          'Turn it off in **Profile & settings → Alerts → Quote on Launch**.',
+        ],
       },
       { type: 'heading', text: 'Test alarm' },
       {

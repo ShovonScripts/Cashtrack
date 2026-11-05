@@ -36,6 +36,8 @@ export type UserPreferences = {
   appLockEnabled?: boolean;
   /** Shows optional extras (world clocks in the More tab). Off by default. */
   showExtras?: boolean;
+  /** Shows a motivational quote screen each time the app is opened. On by default. */
+  showLaunchQuote?: boolean;
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -57,5 +59,6 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   enableDailyQuotes: false,
   appLockEnabled: false,
   showExtras: false,
+  showLaunchQuote: true,
 };
 

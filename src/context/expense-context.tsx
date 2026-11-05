@@ -150,6 +150,8 @@ type PreferencesContextValue = {
   setAppLockEnabled: (enabled: boolean) => void;
   showExtras: boolean;
   setShowExtras: (enabled: boolean) => void;
+  showLaunchQuote: boolean;
+  setShowLaunchQuote: (enabled: boolean) => void;
 };
 
 export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
@@ -605,6 +607,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, showExtras: enabled }));
   }, []);
 
+  const setShowLaunchQuote = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, showLaunchQuote: enabled }));
+  }, []);
+
   const setAppLockEnabled = useCallback((enabled: boolean) => {
     setPreferences((current) => ({ ...current, appLockEnabled: enabled }));
   }, []);
@@ -751,6 +757,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setAppLockEnabled,
     showExtras: preferences.showExtras ?? false,
     setShowExtras,
+    showLaunchQuote: preferences.showLaunchQuote ?? true,
+    setShowLaunchQuote,
   }), [
     preferences,
     country,
@@ -777,6 +785,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableDailyQuotes,
     setAppLockEnabled,
     setShowExtras,
+    setShowLaunchQuote,
   ]);
 
   return (

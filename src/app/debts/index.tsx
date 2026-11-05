@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   personInfo: { flex: 1, gap: Spacing.half },
   badges: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: Spacing.two, paddingVertical: 2, borderRadius: Radius.small },
-  amount: { fontSize: 20, lineHeight: 26, fontVariant: ['tabular-nums'] },
+  amount: { fontSize: 18, lineHeight: 26, fontVariant: ['tabular-nums'] },
   cardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(0,0,0,0.04)', paddingTop: Spacing.two },
   footerInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
   note: { flex: 1, textAlign: 'right' },

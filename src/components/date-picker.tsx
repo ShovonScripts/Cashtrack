@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   monthTitle: { fontSize: 22, lineHeight: 28 },
   monthActions: { flexDirection: 'row', gap: Spacing.two },
   monthButton: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  monthButtonText: { fontSize: 28, lineHeight: 34 },
+  monthButtonText: { fontSize: 32, lineHeight: 38 },
   calendarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
   dayCell: { width: `${100 / 7}%`, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   selectedDay: { color: Palette.white },

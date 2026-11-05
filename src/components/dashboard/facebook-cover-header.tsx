@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -379,8 +379,8 @@ export function FacebookCoverHeader({
                         {profile.name?.trim() || 'User'}
                       </Text>
                       <View style={styles.profileDateRow}>
-                        <Ionicons
-                          name="calendar-outline"
+                        <MaterialCommunityIcons
+                          name="calendar-blank-outline"
                           size={11}
                           color="rgba(255,255,255,0.76)"
                         />
@@ -391,7 +391,7 @@ export function FacebookCoverHeader({
                     </View>
 
                     <View style={styles.profileChevron}>
-                      <Ionicons name="chevron-forward" size={15} color="rgba(255,255,255,0.92)" />
+                      <MaterialCommunityIcons name="chevron-right" size={15} color="rgba(255,255,255,0.92)" />
                     </View>
                   </TouchableOpacity>
 
@@ -487,7 +487,7 @@ export function FacebookCoverHeader({
                 }
                 style={({ pressed }) => [styles.verticalToggleHit, pressed && styles.verticalTogglePressed]}>
                 <View style={styles.verticalToggle}>
-                  <Ionicons
+                  <MaterialCommunityIcons
                     name={isGreetingPage ? 'chevron-up' : 'chevron-down'}
                     size={12}
                     color={Palette.white}
@@ -518,17 +518,17 @@ export function FacebookCoverHeader({
               {/* Extra Forecast Pills */}
               <View style={styles.metricsRow}>
                 <View style={styles.metricPill}>
-                  <Ionicons name="umbrella" size={11} color="#60a5fa" />
+                  <MaterialCommunityIcons name="umbrella" size={11} color="#60a5fa" />
                   <Text style={styles.metricText}>{weather.rainProbability}%</Text>
                 </View>
                 <View style={styles.metricPill}>
-                  <Ionicons name="water" size={11} color={FeatureColors.skyLight} />
+                  <MaterialCommunityIcons name="water" size={11} color={FeatureColors.skyLight} />
                   <Text style={styles.metricText}>{weather.humidity}%</Text>
                 </View>
               </View>
 
               <View style={styles.outlookPill}>
-                <Ionicons name="location" size={12} color={FeatureColors.skyLight} />
+                <MaterialCommunityIcons name="map-marker" size={12} color={FeatureColors.skyLight} />
                 <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
               </View>
             </View>
@@ -554,7 +554,7 @@ export function FacebookCoverHeader({
             </View>
 
             <View style={styles.slideHint}>
-              <Ionicons name="information-circle-outline" size={11} color="rgba(255,255,255,0.8)" />
+              <MaterialCommunityIcons name="information-outline" size={11} color="rgba(255,255,255,0.8)" />
               <Text style={styles.slideHintText}>Tap card for details</Text>
             </View>
           </View>
@@ -692,7 +692,7 @@ const styles = StyleSheet.create({
   },
   brandMark: {
     color: Palette.white,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.6,
   },
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     color: Palette.white,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
   },
   profileTextInfo: {
@@ -764,7 +764,7 @@ const styles = StyleSheet.create({
   },
   whiteSubtext: {
     color: 'rgba(255, 255, 255, 0.78)',
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '500',
     lineHeight: 14,
     textShadowColor: 'rgba(0,0,0,0.35)',
@@ -833,7 +833,7 @@ const styles = StyleSheet.create({
   },
   balanceEyebrow: {
     color: 'rgba(255,255,255,0.68)',
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.1,
   },
@@ -848,14 +848,14 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   trendText: {
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     flexShrink: 1,
   },
   balanceValue: {
     color: Palette.white,
-    fontSize: 26,
+    fontSize: 22,
     lineHeight: 30,
     fontWeight: '800',
     letterSpacing: -0.8,
@@ -879,14 +879,14 @@ const styles = StyleSheet.create({
   },
   panelStatLabel: {
     color: 'rgba(255,255,255,0.62)',
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.6,
   },
   panelStatValue: {
     color: Palette.white,
-    fontSize: 13,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 20,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -916,7 +916,7 @@ const styles = StyleSheet.create({
   },
   verticalToggleText: {
     color: Palette.white,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.6,
     textTransform: 'uppercase',
@@ -945,7 +945,7 @@ const styles = StyleSheet.create({
   },
   outlookText: {
     color: FeatureColors.skyLight,
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
     flexShrink: 1,
   },
@@ -965,7 +965,7 @@ const styles = StyleSheet.create({
   },
   metricText: {
     color: Palette.white,
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '600',
   },
   weatherClockRow: {
@@ -984,7 +984,7 @@ const styles = StyleSheet.create({
   },
   giantTempCompact: {
     color: Palette.white,
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '800',
     letterSpacing: -0.8,
     fontVariant: ['tabular-nums'],
@@ -1004,12 +1004,12 @@ const styles = StyleSheet.create({
   },
   highText: {
     color: FeatureColors.lime,
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
   },
   lowText: {
     color: FeatureColors.skyLight,
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
   },
   slideHint: {
@@ -1020,7 +1020,7 @@ const styles = StyleSheet.create({
   },
   slideHintText: {
     color: 'rgba(255, 255, 255, 0.88)',
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.2,
     textShadowColor: 'rgba(0, 0, 0, 0.45)',
@@ -1081,7 +1081,7 @@ const styles = StyleSheet.create({
   },
   floatingQuoteSymbol: {
     color: Palette.white,
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '900',
     marginTop: 4,
   },
@@ -1101,7 +1101,7 @@ const styles = StyleSheet.create({
   },
   referenceQuoteText: {
     color: '#111827',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     fontStyle: 'italic',
     lineHeight: 20,
@@ -1126,7 +1126,7 @@ const styles = StyleSheet.create({
   },
   referenceAuthorTitle: {
     color: '#6B7280',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '600',
     marginTop: 1,
   },
@@ -1152,13 +1152,13 @@ const styles = StyleSheet.create({
   },
   footerBrandText: {
     color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.5,
   },
   footerBrandUrl: {
     color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1.5,
   },

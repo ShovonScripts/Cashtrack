@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   intro: { gap: Spacing.one },
-  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
+  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 11 },
   heroCard: {
     position: 'relative',
     overflow: 'hidden',
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   heroDetailText: { color: Palette.white, fontWeight: '600', fontSize: 12 },
   metricsRow: { flexDirection: 'row', gap: Spacing.two },
   metricCard: { flex: 1, gap: Spacing.one, padding: Spacing.three },
-  metricValue: { fontSize: 15, fontVariant: ['tabular-nums'] },
+  metricValue: { fontSize: 16, fontVariant: ['tabular-nums'] },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
   breakdownCard: { gap: Spacing.two },
   categoryItem: { gap: Spacing.one },

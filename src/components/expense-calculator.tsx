@@ -248,7 +248,7 @@ export function ExpenseCalculator({
                           style={[
                             styles.keyText,
                             isEquals && { color: Palette.white },
-                            isToday && { color: theme.accent, fontSize: 13 },
+                            isToday && { color: theme.accent, fontSize: 14 },
                           ]}>
                           {key}
                         </ThemedText>
@@ -415,8 +415,8 @@ const styles = StyleSheet.create({
   },
   resultAmount: {
     flex: 1,
-    fontSize: 28,
-    lineHeight: 34,
+    fontSize: 32,
+    lineHeight: 38,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.large,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
-    fontSize: 15,
+    fontSize: 16,
     minHeight: 48,
   },
   recurringHeader: {

@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     paddingVertical: 0,
   },
   listContent: {
@@ -207,12 +207,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   noteTitle: {
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 20,
     fontWeight: '700',
   },
   noteContent: {
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 19,
   },
   dateText: {

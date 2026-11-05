@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -79,14 +79,14 @@ export function CostSummaryCard({
             accessibilityRole="button"
             accessibilityLabel={`Add expense for ${summary.title.toLowerCase()}`}
             style={({ pressed }) => [styles.addButton, pressed && styles.addButtonPressed]}>
-            <Ionicons name="add" size={16} color={Brand.deep} />
+            <MaterialCommunityIcons name="plus" size={16} color={Brand.deep} />
             <ThemedText type="defaultBold" style={styles.addButtonText}>
               Add expense
             </ThemedText>
           </Pressable>
         ) : topCategory && summary.amount > 0 ? (
           <View style={styles.topCategoryFooter}>
-            <Ionicons name="flash-outline" size={13} color={Palette.white} />
+            <MaterialCommunityIcons name="flash-outline" size={13} color={Palette.white} />
             <ThemedText type="caption" style={styles.topCategoryText} numberOfLines={1}>
               Top: {topCategory.category} · {formatAmount(topCategory.amount)} ({Math.round(topCategory.percent)}%)
             </ThemedText>
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.75)',
     letterSpacing: 0.8,
     fontWeight: '800',
-    fontSize: 10.5,
+    fontSize: 11,
   },
   rangePill: {
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   rangePillText: {
     color: Palette.white,
     fontWeight: '700',
-    fontSize: 10.5,
+    fontSize: 11,
   },
   value: {
     color: Palette.white,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   },
   detail: {
     color: 'rgba(255,255,255,0.85)',
-    fontSize: 12.5,
+    fontSize: 12,
     lineHeight: 17,
   },
   addButton: {
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: Brand.deep,
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: '700',
   },
   orbLarge: {

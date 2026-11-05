@@ -270,25 +270,25 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
         </View>
 
         <View style={styles.titleCopy}>
-          <ThemedText type="defaultBold" numberOfLines={1} style={{ fontSize: 15 }}>
+          <ThemedText type="defaultBold" numberOfLines={1} style={{ fontSize: 16 }}>
             {reminder.title}
           </ThemedText>
           <View style={styles.badges}>
             <View style={[styles.badgePill, { backgroundColor: theme.cardMuted }]}>
-              <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+              <ThemedText type="caption" style={{ color: theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                 {reminder.category}
               </ThemedText>
             </View>
 
             <View style={[styles.badgePill, { backgroundColor: `${statusColor}18` }]}>
-              <ThemedText type="caption" style={{ color: statusColor, fontWeight: '800', fontSize: 10 }}>
+              <ThemedText type="caption" style={{ color: statusColor, fontWeight: '800', fontSize: 11 }}>
                 {statusLabel}
               </ThemedText>
             </View>
 
             {isPartiallyPaid && (
               <View style={[styles.badgePill, { backgroundColor: `${theme.warning}18` }]}>
-                <ThemedText type="caption" style={{ color: theme.warning, fontWeight: '800', fontSize: 10 }}>
+                <ThemedText type="caption" style={{ color: theme.warning, fontWeight: '800', fontSize: 11 }}>
                   Part paid
                 </ThemedText>
               </View>
@@ -297,7 +297,7 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
             {reminder.isAlarm && (
               <View style={[styles.badgePill, { backgroundColor: '#0152F518', flexDirection: 'row', alignItems: 'center', gap: 3 }]}>
                 <MaterialCommunityIcons name="alarm" size={11} color={Brand.primary} />
-                <ThemedText type="caption" style={{ color: Brand.primary, fontWeight: '800', fontSize: 10 }}>
+                <ThemedText type="caption" style={{ color: Brand.primary, fontWeight: '800', fontSize: 11 }}>
                   {reminder.alarmTime ? `Alarm ${reminder.alarmTime}` : 'Alarm'}
                 </ThemedText>
               </View>
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   titleCopy: { flex: 1, gap: 4, minWidth: 0 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
   badgePill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: Radius.pill },
-  amount: { fontSize: 17, lineHeight: 22, fontVariant: ['tabular-nums'] },
+  amount: { fontSize: 18, lineHeight: 22, fontVariant: ['tabular-nums'] },
   cardFooter: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.two },
   footerInfo: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1, minWidth: 0 },
   actionRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: 6, flexShrink: 0 },

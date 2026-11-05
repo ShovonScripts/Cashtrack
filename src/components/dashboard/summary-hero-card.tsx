@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.75)',
     letterSpacing: 0.8,
     fontWeight: '800',
-    fontSize: 10.5,
+    fontSize: 11,
     flexShrink: 1,
   },
   monthPill: {
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   monthPillText: {
     color: Palette.white,
     fontWeight: '700',
-    fontSize: 10.5,
+    fontSize: 11,
   },
   heroValue: {
     color: Palette.white,
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   chipText: {
     color: Palette.white,
     fontWeight: '700',
-    fontSize: 11.5,
+    fontSize: 12,
     fontVariant: ['tabular-nums'],
     flexShrink: 1,
   },
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: Brand.deep,
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: '700',
   },
 });

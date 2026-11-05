@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   paymentInfo: { gap: 2, flex: 1 },
   addPaymentSection: { marginTop: Spacing.three, gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e4e4ed', paddingTop: Spacing.three },
   paymentInputRow: { flexDirection: 'row', gap: Spacing.two },
-  input: { minHeight: 42, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 13 },
+  input: { minHeight: 42, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 14 },
   addPayBtn: { width: 42, height: 42, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   primaryButton: { flex: 1, minWidth: 130, height: 50, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.one, borderRadius: Radius.medium },

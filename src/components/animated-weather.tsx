@@ -11,7 +11,7 @@ import Animated, {
   Easing,
   interpolate,
 } from 'react-native-reanimated';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { WeatherConditionType } from '@/utils/weather';
 import { FeatureColors } from '@/constants/theme';
@@ -150,23 +150,23 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.glowRing, { width: iconSize * 1.2, height: iconSize * 1.2, borderRadius: iconSize * 0.6 }, sunAnimatedStyle]} />
-          <Ionicons name="sunny" size={iconSize} color={FeatureColors.amber} />
+          <MaterialCommunityIcons name="white-balance-sunny" size={iconSize} color={FeatureColors.amber} />
         </View>
       );
 
     case 'clear-night':
       return (
         <View style={[styles.container, containerStyle]}>
-          <Ionicons name="moon" size={iconSize} color="#E0E7FF" />
+          <MaterialCommunityIcons name="weather-night" size={iconSize} color="#E0E7FF" />
         </View>
       );
 
     case 'partly-sunny':
       return (
         <View style={[styles.container, containerStyle]}>
-          <Ionicons name="sunny" size={iconSize * 0.75} color={FeatureColors.amber} style={{ position: 'absolute', top: -2, right: -2 }} />
+          <MaterialCommunityIcons name="white-balance-sunny" size={iconSize * 0.75} color={FeatureColors.amber} style={{ position: 'absolute', top: -2, right: -2 }} />
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="cloud" size={iconSize * 0.85} color="#94A3B8" />
+            <MaterialCommunityIcons name="cloud" size={iconSize * 0.85} color="#94A3B8" />
           </Animated.View>
         </View>
       );
@@ -175,7 +175,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="cloudy" size={iconSize} color="#94A3B8" />
+            <MaterialCommunityIcons name="weather-cloudy" size={iconSize} color="#94A3B8" />
           </Animated.View>
         </View>
       );
@@ -184,7 +184,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="rainy" size={iconSize} color={FeatureColors.blue} />
+            <MaterialCommunityIcons name="weather-rainy" size={iconSize} color={FeatureColors.blue} />
           </Animated.View>
           <View style={styles.rainOverlay}>
             <Animated.View style={[styles.drop, rainDrop1Style]} />
@@ -197,7 +197,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="snow" size={iconSize} color={FeatureColors.skyLight} />
+            <MaterialCommunityIcons name="weather-snowy" size={iconSize} color={FeatureColors.skyLight} />
           </Animated.View>
         </View>
       );
@@ -207,13 +207,13 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.flashOverlay, flashStyle]} />
           <Animated.View style={cloudAnimatedStyle}>
-            <Ionicons name="thunderstorm" size={iconSize} color="#A855F7" />
+            <MaterialCommunityIcons name="weather-lightning-rainy" size={iconSize} color="#A855F7" />
           </Animated.View>
         </View>
       );
 
     default:
-      return <Ionicons name="partly-sunny" size={iconSize} color={FeatureColors.amber} />;
+      return <MaterialCommunityIcons name="weather-partly-cloudy" size={iconSize} color={FeatureColors.amber} />;
   }
 }
 

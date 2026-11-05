@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   headerRow: { marginTop: Spacing.two, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   headerCopy: { flex: 1, gap: 1 },
-  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
+  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 11 },
   monthSelectorCard: {
     flexDirection: 'row',
     alignItems: 'center',

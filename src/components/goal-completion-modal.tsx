@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   container: { width: '100%', maxWidth: 420, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth, padding: Spacing.four, alignItems: 'center', gap: Spacing.three },
   badge: { width: 68, height: 68, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   textGroup: { alignItems: 'center', gap: Spacing.half, textAlign: 'center' },
-  title: { fontSize: 24, lineHeight: 30, textAlign: 'center' },
+  title: { fontSize: 22, lineHeight: 30, textAlign: 'center' },
   subtitle: { textAlign: 'center', maxWidth: 320, marginTop: Spacing.half },
   statCard: { width: '100%', gap: Spacing.two },
   statRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

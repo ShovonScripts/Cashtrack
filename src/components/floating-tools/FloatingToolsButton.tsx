@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -183,10 +183,10 @@ function FloatingToolsButtonInner() {
                 <ThemedText type="smallBold" style={[styles.pillText, { color: theme.text }]}>
                   {formatTime(seconds)}
                 </ThemedText>
-                <Ionicons name="timer-outline" size={14} color={theme.accent} />
+                <MaterialCommunityIcons name="timer-outline" size={14} color={theme.accent} />
               </>
             ) : (
-              <Ionicons name="grid" size={22} color={Palette.white} />
+              <MaterialCommunityIcons name="view-grid" size={22} color={Palette.white} />
             )}
           </Pressable>
         </Animated.View>

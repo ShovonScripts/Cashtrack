@@ -437,11 +437,11 @@ const styles = StyleSheet.create({
   container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', paddingHorizontal: Spacing.three, gap: Spacing.three },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Spacing.two },
   headerCopy: { flex: 1, gap: 1 },
-  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
+  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 11 },
   dateSelectorCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.two },
   arrowButton: { width: 44, height: 44, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   dateLabelBlock: { flex: 1, alignItems: 'center', gap: 2 },
-  dateLabelText: { fontSize: 15, fontWeight: '800' },
+  dateLabelText: { fontSize: 16, fontWeight: '800' },
   heroGlassCard: {
     position: 'relative',
     overflow: 'hidden',

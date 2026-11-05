@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroStat: { flex: 1, gap: 2 },
   heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
-  heroStatVal: { color: Palette.white, fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'], fontWeight: '800' },
+  heroStatVal: { color: Palette.white, fontSize: 22, lineHeight: 32, fontVariant: ['tabular-nums'], fontWeight: '800' },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
   categoryCard: { gap: Spacing.two },
   categoryHeading: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },

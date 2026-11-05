@@ -178,7 +178,7 @@ function Navigation() {
       <View style={{ flex: 1, backgroundColor: theme.background }}>
       {showLoadErrorBanner && (
         <View style={{ backgroundColor: recoveredData ? theme.accentFill : theme.dangerFill, paddingTop: insets.top + 8, paddingBottom: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 999 }}>
-          <ThemedText style={{ color: Palette.white, flex: 1, fontSize: 13, fontWeight: '600' }}>
+          <ThemedText style={{ color: Palette.white, flex: 1, fontSize: 14, fontWeight: '600' }}>
             {recoveredData
               ? 'Some saved data was unreadable. The original was backed up and new changes will save.'
               : 'Some saved data could not be read. Retry, or start fresh if it keeps happening.'}
@@ -216,7 +216,7 @@ function Navigation() {
             gap: 12,
             zIndex: 999,
           }}>
-          <ThemedText style={{ color: Palette.white, flex: 1, fontSize: 13, fontWeight: '600' }}>
+          <ThemedText style={{ color: Palette.white, flex: 1, fontSize: 14, fontWeight: '600' }}>
             Changes could not be saved to this device. Keep the app open and retry.
           </ThemedText>
           <Pressable
@@ -340,16 +340,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   errorBadgeText: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '800',
   },
   errorTitle: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '700',
     textAlign: 'center',
   },
   errorBody: {
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 19,
     textAlign: 'center',
   },
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   },
   errorButtonText: {
     color: Palette.white,
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
 });

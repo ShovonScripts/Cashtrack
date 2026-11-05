@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { FeatureColors, Radius, Spacing } from '@/constants/theme';
@@ -53,7 +53,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                   accessibilityLabel="Back to tools"
                   hitSlop={6}
                   style={[styles.backButton, { backgroundColor: theme.cardMuted }]}>
-                  <Ionicons name="arrow-back" size={18} color={theme.text} />
+                  <MaterialCommunityIcons name="arrow-left" size={18} color={theme.text} />
                 </Pressable>
               )}
               <View>
@@ -83,7 +83,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
               accessibilityLabel="Close quick tools"
               hitSlop={6}
               style={[styles.closeButton, { backgroundColor: theme.cardMuted }]}>
-              <Ionicons name="close" size={18} color={theme.text} />
+              <MaterialCommunityIcons name="close" size={18} color={theme.text} />
             </Pressable>
           </View>
 
@@ -99,7 +99,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: `${theme.accent}15` }]}>
-                    <Ionicons name="calculator-outline" size={24} color={theme.accent} />
+                    <MaterialCommunityIcons name="calculator-variant-outline" size={24} color={theme.accent} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Calculator</ThemedText>
@@ -116,7 +116,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
-                    <Ionicons name="cash-outline" size={24} color={FeatureColors.emerald} />
+                    <MaterialCommunityIcons name="cash" size={24} color={FeatureColors.emerald} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Currency</ThemedText>
@@ -133,7 +133,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: `${theme.success}15` }]}>
-                    <Ionicons name="document-text-outline" size={24} color={theme.success} />
+                    <MaterialCommunityIcons name="file-document-outline" size={24} color={theme.success} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Keep Notes</ThemedText>
@@ -150,7 +150,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: `${theme.warning}15` }]}>
-                    <Ionicons name="stopwatch-outline" size={24} color={theme.warning} />
+                    <MaterialCommunityIcons name="timer-outline" size={24} color={theme.warning} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Stopwatch</ThemedText>
@@ -167,7 +167,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: '#4F46E515' }]}>
-                    <Ionicons name="calendar-outline" size={24} color="#4F46E5" />
+                    <MaterialCommunityIcons name="calendar-blank-outline" size={24} color="#4F46E5" />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">Calendar</ThemedText>
@@ -184,7 +184,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     pressed && styles.pressedCard,
                   ]}>
                   <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
-                    <Ionicons name="checkbox-outline" size={24} color={FeatureColors.emerald} />
+                    <MaterialCommunityIcons name="checkbox-marked-outline" size={24} color={FeatureColors.emerald} />
                   </View>
                   <View style={styles.cardTextContainer}>
                     <ThemedText type="defaultBold">To-Do List</ThemedText>

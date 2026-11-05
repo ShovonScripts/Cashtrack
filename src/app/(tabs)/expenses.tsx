@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontWeight: '800',
     letterSpacing: 1,
-    fontSize: 10.5,
+    fontSize: 11,
   },
   sectionTotal: {
     fontWeight: '700',

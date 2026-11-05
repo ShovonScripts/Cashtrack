@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
@@ -17,24 +17,24 @@ import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
 
 const PRIORITY_OPTIONS: { key: TodoPriority; label: string; color: string; icon: string }[] = [
   { key: 'high', label: 'High', color: FeatureColors.crimson, icon: 'alert-circle-outline' },
-  { key: 'medium', label: 'Medium', color: '#D97706', icon: 'time-outline' },
+  { key: 'medium', label: 'Medium', color: '#D97706', icon: 'clock-outline' },
   { key: 'low', label: 'Low', color: FeatureColors.sky, icon: 'arrow-down-circle-outline' },
 ];
 
 const CATEGORY_OPTIONS: { key: TodoCategory; label: string; icon: string }[] = [
   { key: 'financial', label: 'Financial', icon: 'wallet-outline' },
   { key: 'bills', label: 'Bills', icon: 'flash-outline' },
-  { key: 'personal', label: 'Personal', icon: 'person-outline' },
-  { key: 'general', label: 'General', icon: 'checkmark-done-circle-outline' },
+  { key: 'personal', label: 'Personal', icon: 'account-outline' },
+  { key: 'general', label: 'General', icon: 'check-all' },
 ];
 
 type QuickDueDate = 'none' | 'today' | 'tomorrow' | 'next_week';
 
 const DUE_DATE_OPTIONS: { key: QuickDueDate; label: string; icon: string }[] = [
-  { key: 'none', label: 'No due date', icon: 'calendar-outline' },
-  { key: 'today', label: 'Due Today', icon: 'today-outline' },
-  { key: 'tomorrow', label: 'Due Tomorrow', icon: 'time-outline' },
-  { key: 'next_week', label: 'In 7 Days', icon: 'calendar-number-outline' },
+  { key: 'none', label: 'No due date', icon: 'calendar-blank-outline' },
+  { key: 'today', label: 'Due Today', icon: 'calendar-today' },
+  { key: 'tomorrow', label: 'Due Tomorrow', icon: 'clock-outline' },
+  { key: 'next_week', label: 'In 7 Days', icon: 'calendar-week' },
 ];
 
 function calculateDueDate(quick: QuickDueDate): string | undefined {
@@ -174,8 +174,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
         <View style={styles.progressHeader}>
           <View style={styles.progressTextGroup}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Ionicons name="checkbox-outline" size={18} color={isFull ? Brand.bright : theme.accent} />
-              <ThemedText type="smallBold" style={isFull ? { color: Palette.white, fontSize: 15 } : undefined}>
+              <MaterialCommunityIcons name="checkbox-marked-outline" size={18} color={isFull ? Brand.bright : theme.accent} />
+              <ThemedText type="smallBold" style={isFull ? { color: Palette.white, fontSize: 16 } : undefined}>
                 Task Overview
               </ThemedText>
             </View>
@@ -239,7 +239,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                 { backgroundColor: title.trim() ? theme.accentFill : theme.border },
                 pressed && styles.pressed,
               ]}>
-              <Ionicons name="add" size={20} color={title.trim() ? Palette.white : theme.textSecondary} />
+              <MaterialCommunityIcons name="plus" size={20} color={title.trim() ? Palette.white : theme.textSecondary} />
             </Pressable>
           )}
         </View>
@@ -270,7 +270,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                           borderColor: selected ? p.color : theme.border,
                         },
                       ]}>
-                      <Ionicons name={p.icon as any} size={13} color={selected ? p.color : theme.textSecondary} />
+                      <MaterialCommunityIcons name={p.icon as any} size={13} color={selected ? p.color : theme.textSecondary} />
                       <ThemedText type="caption" style={{ color: selected ? p.color : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                         {p.label}
                       </ThemedText>
@@ -304,7 +304,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                           borderColor: selected ? theme.accentFill : theme.border,
                         },
                       ]}>
-                      <Ionicons name={c.icon as any} size={13} color={selected ? Palette.white : theme.textSecondary} />
+                      <MaterialCommunityIcons name={c.icon as any} size={13} color={selected ? Palette.white : theme.textSecondary} />
                       <ThemedText type="caption" style={{ color: selected ? Palette.white : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                         {c.label}
                       </ThemedText>
@@ -338,7 +338,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                           borderColor: selected ? theme.accent : theme.border,
                         },
                       ]}>
-                      <Ionicons name={d.icon as any} size={13} color={selected ? theme.accent : theme.textSecondary} />
+                      <MaterialCommunityIcons name={d.icon as any} size={13} color={selected ? theme.accent : theme.textSecondary} />
                       <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                         {d.label}
                       </ThemedText>
@@ -359,8 +359,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                 { backgroundColor: title.trim() ? theme.accentFill : theme.border },
                 pressed && styles.pressed,
               ]}>
-              <Ionicons name="add" size={20} color={title.trim() ? Palette.white : theme.textSecondary} />
-              <ThemedText type="defaultBold" style={{ color: title.trim() ? Palette.white : theme.textSecondary, fontSize: 13.5 }}>
+              <MaterialCommunityIcons name="plus" size={20} color={title.trim() ? Palette.white : theme.textSecondary} />
+              <ThemedText type="defaultBold" style={{ color: title.trim() ? Palette.white : theme.textSecondary, fontSize: 14 }}>
                 Add Task
               </ThemedText>
             </Pressable>
@@ -385,8 +385,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                       borderColor: selected ? p.color : theme.border,
                     },
                   ]}>
-                  <Ionicons name={p.icon as any} size={12} color={selected ? p.color : theme.textSecondary} />
-                  <ThemedText type="caption" style={{ color: selected ? p.color : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                  <MaterialCommunityIcons name={p.icon as any} size={12} color={selected ? p.color : theme.textSecondary} />
+                  <ThemedText type="caption" style={{ color: selected ? p.color : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                     {p.label}
                   </ThemedText>
                 </Pressable>
@@ -410,8 +410,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                       borderColor: selected ? theme.accentFill : theme.border,
                     },
                   ]}>
-                  <Ionicons name={c.icon as any} size={12} color={selected ? Palette.white : theme.textSecondary} />
-                  <ThemedText type="caption" style={{ color: selected ? Palette.white : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                  <MaterialCommunityIcons name={c.icon as any} size={12} color={selected ? Palette.white : theme.textSecondary} />
+                  <ThemedText type="caption" style={{ color: selected ? Palette.white : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                     {c.label}
                   </ThemedText>
                 </Pressable>
@@ -435,8 +435,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                       borderColor: selected ? theme.accent : theme.border,
                     },
                   ]}>
-                  <Ionicons name={d.icon as any} size={12} color={selected ? theme.accent : theme.textSecondary} />
-                  <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                  <MaterialCommunityIcons name={d.icon as any} size={12} color={selected ? theme.accent : theme.textSecondary} />
+                  <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                     {d.label}
                   </ThemedText>
                 </Pressable>
@@ -463,7 +463,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                 styles.filterTab,
                 selected && { backgroundColor: theme.card, borderColor: theme.border, ...Elevation.low },
               ]}>
-              <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '800', textTransform: 'uppercase', fontSize: 10 }}>
+              <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '800', textTransform: 'uppercase', fontSize: 11 }}>
                 {f} ({count})
               </ThemedText>
             </Pressable>
@@ -474,7 +474,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
       {/* List Feed */}
       {filteredTodos.length === 0 ? (
         <View style={[styles.emptyBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-          <Ionicons name="checkmark-done-circle-outline" size={38} color={theme.accent} />
+          <MaterialCommunityIcons name="check-all" size={38} color={theme.accent} />
           <ThemedText type="smallBold" style={{ color: theme.text }}>
             {todos.length === 0 ? 'No tasks yet' : 'No items match filter'}
           </ThemedText>
@@ -507,8 +507,8 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                   accessibilityState={{ checked: item.completed }}
                   hitSlop={10}
                   style={styles.checkBtn}>
-                  <Ionicons
-                    name={item.completed ? 'checkmark-circle' : 'ellipse-outline'}
+                  <MaterialCommunityIcons
+                    name={item.completed ? 'check-circle' : 'checkbox-blank-circle-outline'}
                     size={22}
                     color={item.completed ? theme.success : theme.textSecondary}
                   />
@@ -528,13 +528,13 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                       <Text style={[styles.badgeText, { color: pObj.color }]}>{pObj.label}</Text>
                     </View>
                     <View style={[styles.badge, { backgroundColor: theme.cardMuted }]}>
-                      <Ionicons name={cObj.icon as any} size={10} color={theme.textSecondary} />
+                      <MaterialCommunityIcons name={cObj.icon as any} size={10} color={theme.textSecondary} />
                       <Text style={[styles.badgeText, { color: theme.textSecondary }]}>{cObj.label}</Text>
                     </View>
                     {dueInfo && !item.completed && (
                       <View style={[styles.badge, { backgroundColor: dueInfo.isOverdue ? '#E11D481E' : dueInfo.isToday ? '#D977061E' : theme.cardMuted }]}>
-                        <Ionicons
-                          name={dueInfo.isOverdue ? 'alert-circle-outline' : 'calendar-outline'}
+                        <MaterialCommunityIcons
+                          name={dueInfo.isOverdue ? 'alert-circle-outline' : 'calendar-blank-outline'}
                           size={10}
                           color={dueInfo.isOverdue ? FeatureColors.crimson : dueInfo.isToday ? '#D97706' : theme.textSecondary}
                         />
@@ -658,7 +658,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sectionEyebrow: {
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
   },
@@ -758,7 +758,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   badgeText: {
-    fontSize: 9.5,
+    fontSize: 11,
     fontWeight: '800',
   },
   deleteBtn: {

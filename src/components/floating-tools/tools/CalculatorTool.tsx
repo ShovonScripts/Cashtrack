@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
@@ -152,7 +152,7 @@ export function CalculatorTool() {
       <View style={[styles.historySection, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <View style={styles.historyHeader}>
           <View style={styles.historyTitleRow}>
-            <Ionicons name="time-outline" size={14} color={theme.textSecondary} />
+            <MaterialCommunityIcons name="clock-outline" size={14} color={theme.textSecondary} />
             <ThemedText type="smallBold" style={{ fontSize: 11, letterSpacing: 0.5 }}>
               RECENT CALCULATIONS
             </ThemedText>
@@ -181,7 +181,7 @@ export function CalculatorTool() {
                 accessibilityRole="button"
                 accessibilityLabel={`Reuse calculation ${item.expression} equals ${item.result}`}
                 style={[styles.historyItem, { borderBottomColor: theme.border }, idx === history.length - 1 && { borderBottomWidth: 0 }]}>
-                <ThemedText type="caption" style={{ color: theme.textSecondary, fontSize: 13 }}>{item.expression} =</ThemedText>
+                <ThemedText type="caption" style={{ color: theme.textSecondary, fontSize: 14 }}>{item.expression} =</ThemedText>
                 <ThemedText type="defaultBold" style={{ fontSize: 14 }}>{item.result}</ThemedText>
               </Pressable>
             ))
@@ -207,15 +207,15 @@ const styles = StyleSheet.create({
   },
   label: {
     alignSelf: 'flex-start',
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 0.6,
   },
   expressionText: {
-    fontSize: 13,
+    fontSize: 14,
     fontVariant: ['tabular-nums'],
   },
   resultText: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },

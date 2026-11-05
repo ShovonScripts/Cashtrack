@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, FeatureColors, glow, Palette, Radius, Spacing } from '@/constants/theme';
@@ -119,7 +119,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
 
             {nextReminder ? (
               <View style={styles.nextDueRow}>
-                <Ionicons name="time-outline" size={14} color="rgba(255,255,255,0.85)" />
+                <MaterialCommunityIcons name="clock-outline" size={14} color="rgba(255,255,255,0.85)" />
                 <Text style={styles.nextDueText} numberOfLines={1}>
                   Next: <Text style={{ fontWeight: '800', color: Palette.white }}>{nextReminder.title}</Text> · {
                     nextReminder.daysUntilDue < 0
@@ -132,7 +132,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
               </View>
             ) : (
               <View style={styles.nextDueRow}>
-                <Ionicons name="checkmark-circle-outline" size={14} color={FeatureColors.mint} />
+                <MaterialCommunityIcons name="check-circle-outline" size={14} color={FeatureColors.mint} />
                 <Text style={styles.nextDueText}>All upcoming bills caught up!</Text>
               </View>
             )}
@@ -170,7 +170,7 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
             accessibilityLabel="Add new bill"
             hitSlop={8}
             style={({ pressed }) => [styles.quickAddPill, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
-            <Ionicons name="add" size={14} color={theme.accent} />
+            <MaterialCommunityIcons name="plus" size={14} color={theme.accent} />
             <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>Add bill</ThemedText>
           </Pressable>
         </View>
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   heroTotalLabel: {
     color: 'rgba(255, 255, 255, 0.72)',
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
   },
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   },
   overdueGlassText: {
     color: '#FFD1D1',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   },
   nextDueRow: {
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   },
   subHubGlassText: {
     color: Palette.white,
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '700',
   },
   billsFeedSection: {
@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   feedTitle: {
     letterSpacing: 0.8,
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '800',
   },
   quickAddPill: {
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   },
   alertPillText: {
     color: FeatureColors.crimson,
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
   },
   feedRightCol: {
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   feedAmount: {
-    fontSize: 15,
+    fontSize: 16,
     fontVariant: ['tabular-nums'],
   },
   payNowBtn: {

@@ -10,7 +10,7 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 
@@ -152,11 +152,11 @@ export function SlidingHeroBanner({
           <View style={styles.cardInner}>
             <View style={styles.slideHeader}>
               <View style={styles.locationBadge}>
-                <Ionicons name="location" size={13} color={Palette.white} />
+                <MaterialCommunityIcons name="map-marker" size={13} color={Palette.white} />
                 <Text style={styles.whiteSubtext}>{weather.locationName}</Text>
               </View>
               <View style={styles.outlookPill}>
-                <Ionicons name="umbrella" size={13} color={FeatureColors.skyLight} />
+                <MaterialCommunityIcons name="umbrella" size={13} color={FeatureColors.skyLight} />
                 <Text style={styles.outlookText}>{weather.rainProbability}% Rain</Text>
               </View>
             </View>
@@ -170,7 +170,7 @@ export function SlidingHeroBanner({
             </View>
 
             <View style={styles.glassTipBox}>
-              <Ionicons name="bulb" size={15} color="#facc15" />
+              <MaterialCommunityIcons name="lightbulb-on-outline" size={15} color="#facc15" />
               <Text style={styles.tipContentText} numberOfLines={2}>{weather.financialTip}</Text>
             </View>
           </View>
@@ -184,10 +184,10 @@ export function SlidingHeroBanner({
           <View style={styles.cardInner}>
             <View style={styles.slideHeader}>
               <View style={styles.wisdomPill}>
-                <Ionicons name="ribbon" size={14} color="#c084fc" />
+                <MaterialCommunityIcons name="ribbon" size={14} color="#c084fc" />
                 <Text style={styles.wisdomText}>Daily Wisdom</Text>
               </View>
-              <Ionicons name="chatbubble-outline" size={18} color="rgba(255,255,255,0.7)" />
+              <MaterialCommunityIcons name="chat-outline" size={18} color="rgba(255,255,255,0.7)" />
             </View>
 
             <View style={styles.quoteBody}>
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   },
   giantTemp: {
     color: Palette.white,
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   },
   tipContentText: {
     color: Palette.white,
-    fontSize: 11.5,
+    fontSize: 12,
     fontWeight: '500',
     flex: 1,
     lineHeight: 15,
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   },
   quoteBodyText: {
     color: Palette.white,
-    fontSize: 13.5,
+    fontSize: 14,
     fontWeight: '600',
     fontStyle: 'italic',
     lineHeight: 18,

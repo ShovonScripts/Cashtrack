@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, View, Pressable, Modal, ScrollView, TextInput, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 import { GlassView } from 'expo-glass-effect';
@@ -63,7 +63,7 @@ function CityClockCard({ city, now, glassCardStyle, onRemove }: CityClockCardPro
           accessibilityRole="button"
           accessibilityLabel={`Remove ${city.cityName} clock`}
           style={({ pressed }) => [styles.deleteBtn, pressed && { opacity: 0.5 }]}>
-          <Ionicons name="close-circle-outline" size={22} color={mutedColor} />
+          <MaterialCommunityIcons name="close-circle-outline" size={22} color={mutedColor} />
         </Pressable>
       </View>
 
@@ -72,8 +72,8 @@ function CityClockCard({ city, now, glassCardStyle, onRemove }: CityClockCardPro
           style={[styles.diffPill, { backgroundColor: showPhoto ? 'rgba(0, 0, 0, 0.45)' : `${diffColor}1F` }]}
           accessible
           accessibilityLabel={`${city.cityName} is ${diff.label} of your time, ${diff.dayLabel.toLowerCase()}`}>
-          <Ionicons
-            name={diff.direction === 'ahead' ? 'arrow-up-circle' : diff.direction === 'behind' ? 'arrow-down-circle' : 'remove-circle'}
+          <MaterialCommunityIcons
+            name={diff.direction === 'ahead' ? 'arrow-up-circle' : diff.direction === 'behind' ? 'arrow-down-circle' : 'minus-circle'}
             size={14}
             color={diffColor}
           />
@@ -243,7 +243,7 @@ export function WorldClockTool() {
             { backgroundColor: theme.accentFill },
             pressed && { opacity: 0.85, transform: [{ scale: 0.97 }] },
           ]}>
-          <Ionicons name="add" size={18} color={Palette.white} />
+          <MaterialCommunityIcons name="plus" size={18} color={Palette.white} />
           <ThemedText type="smallBold" style={{ color: Palette.white }}>Add City</ThemedText>
         </Pressable>
       </View>
@@ -294,13 +294,13 @@ export function WorldClockTool() {
                 style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}
                 accessibilityRole="button"
                 accessibilityLabel="Close modal">
-                <Ionicons name="close" size={18} color={theme.text} />
+                <MaterialCommunityIcons name="close" size={18} color={theme.text} />
               </Pressable>
             </View>
 
             {/* Search Input */}
             <View style={[styles.searchBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <Ionicons name="search" size={16} color={theme.textSecondary} />
+              <MaterialCommunityIcons name="magnify" size={16} color={theme.textSecondary} />
               <TextInput
                 style={[styles.searchInput, { color: theme.text }]}
                 placeholder="Search city or country..."
@@ -315,7 +315,7 @@ export function WorldClockTool() {
                   hitSlop={8}
                   accessibilityRole="button"
                   accessibilityLabel="Clear search">
-                  <Ionicons name="close-circle" size={16} color={theme.textSecondary} />
+                  <MaterialCommunityIcons name="close-circle" size={16} color={theme.textSecondary} />
                 </Pressable>
               )}
             </View>
@@ -362,7 +362,7 @@ export function WorldClockTool() {
                           styles.addIndicator,
                           { backgroundColor: added ? theme.accentFill : theme.card, borderColor: theme.border },
                         ]}>
-                        <Ionicons name={added ? 'checkmark' : 'add'} size={14} color={added ? Palette.white : theme.text} />
+                        <MaterialCommunityIcons name={added ? 'check' : 'plus'} size={14} color={added ? Palette.white : theme.text} />
                       </View>
                     </View>
                   </Pressable>
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
     marginEnd: 8,
   },
   flag: {
-    fontSize: 26,
+    fontSize: 22,
   },
   deleteBtn: {
     padding: 4,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
   },
   timeText: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.5,
@@ -549,7 +549,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
   },
   modalScroll: {
     gap: Spacing.two,

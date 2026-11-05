@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 680, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
-  title: { fontSize: 26, lineHeight: 32, fontWeight: '700' },
+  title: { fontSize: 22, lineHeight: 32, fontWeight: '700' },
   formCard: { gap: Spacing.three },
   field: { gap: Spacing.one },
   input: { minHeight: 48, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 16 },

@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   field: { gap: Spacing.one },
   input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, fontSize: 16 },
-  amountInput: { fontSize: 24, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
   dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   toggleLabelCopy: { flex: 1, gap: 2, paddingRight: Spacing.two },
   saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },

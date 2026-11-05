@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
@@ -65,7 +65,7 @@ function CountdownRow({ alarm, onCancel }: { alarm: QuickAlarm; onCancel: () => 
           accessibilityLabel={`Cancel ${alarm.label} timer`}
           hitSlop={4}
           style={styles.iconButton}>
-          <Ionicons name="close-circle-outline" size={24} color={theme.textSecondary} />
+          <MaterialCommunityIcons name="close-circle-outline" size={24} color={theme.textSecondary} />
         </Pressable>
       </View>
       <View style={[styles.track, { backgroundColor: theme.border }]}>
@@ -92,7 +92,7 @@ function FinishedRow({
       style={[styles.row, { backgroundColor: withAlpha(theme.danger, 0.1), borderColor: theme.danger }]}
       accessibilityLiveRegion="polite">
       <View style={styles.rowTop}>
-        <Ionicons name={ringing ? 'notifications' : 'notifications-outline'} size={ringing ? 28 : 22} color={theme.danger} />
+        <MaterialCommunityIcons name={ringing ? 'bell-ring' : 'bell-outline'} size={ringing ? 28 : 22} color={theme.danger} />
         <View style={styles.rowCopy}>
           <ThemedText type="smallBold" numberOfLines={1}>
             {alarm.label}
@@ -220,7 +220,7 @@ export function QuickAlarmPanel() {
     <View style={[styles.section, { backgroundColor: theme.cardMuted, borderColor: alarms.length ? theme.accent : theme.border }]}>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <Ionicons name="alarm-outline" size={14} color={alarms.length ? theme.accent : theme.textSecondary} />
+          <MaterialCommunityIcons name="alarm" size={14} color={alarms.length ? theme.accent : theme.textSecondary} />
           <ThemedText type="smallBold" style={styles.title}>
             TIMER &amp; ALARM{alarms.length ? ` (${alarms.length})` : ''}
           </ThemedText>
@@ -269,7 +269,7 @@ export function QuickAlarmPanel() {
                 },
                 pressed && styles.pressed,
               ]}>
-              <ThemedText type="defaultBold" style={{ fontSize: 15 }}>
+              <ThemedText type="defaultBold" style={{ fontSize: 16 }}>
                 {m}
               </ThemedText>
               <ThemedText type="caption" themeColor="textSecondary" style={styles.chipUnit}>
@@ -291,7 +291,7 @@ export function QuickAlarmPanel() {
             },
             pressed && styles.pressed,
           ]}>
-          <Ionicons name={customOpen ? 'close' : 'add'} size={20} color={customOpen ? theme.onBrand : theme.accent} />
+          <MaterialCommunityIcons name={customOpen ? 'close' : 'plus'} size={20} color={customOpen ? theme.onBrand : theme.accent} />
           <ThemedText type="caption" style={[styles.chipUnit, { color: customOpen ? theme.onBrand : theme.textSecondary }]}>
             custom
           </ThemedText>
@@ -354,7 +354,7 @@ export function QuickAlarmPanel() {
                 accessibilityRole="button"
                 accessibilityLabel={`Start ${timer.label}, ${formatDurationLabel(timer.durationMs)}`}
                 style={({ pressed }) => [styles.savedMain, pressed && styles.pressed]}>
-                <Ionicons name="play-circle-outline" size={24} color={theme.accent} />
+                <MaterialCommunityIcons name="play-circle-outline" size={24} color={theme.accent} />
                 <View style={styles.rowCopy}>
                   <ThemedText type="smallBold" numberOfLines={1}>
                     {timer.label}
@@ -370,7 +370,7 @@ export function QuickAlarmPanel() {
                 accessibilityLabel={`Delete saved timer ${timer.label}`}
                 hitSlop={4}
                 style={styles.iconButton}>
-                <Ionicons name="trash-outline" size={20} color={theme.textSecondary} />
+                <MaterialCommunityIcons name="trash-can-outline" size={20} color={theme.textSecondary} />
               </Pressable>
             </View>
           ))}
@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chipUnit: { fontSize: 10 },
+  chipUnit: { fontSize: 11 },
   pressed: { opacity: 0.75, transform: [{ scale: 0.97 }] },
   editor: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, padding: Spacing.two, gap: Spacing.two },
   nameInput: {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.medium,
     paddingHorizontal: Spacing.three,
-    fontSize: 15,
+    fontSize: 16,
   },
   digitRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: Spacing.one },
   digitWrap: { flex: 1, maxWidth: 84, alignItems: 'center', gap: 2 },
@@ -442,11 +442,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.medium,
     textAlign: 'center',
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },
-  colon: { fontSize: 26, lineHeight: 56, width: 10, textAlign: 'center' },
+  colon: { fontSize: 22, lineHeight: 56, width: 10, textAlign: 'center' },
   editorActions: { flexDirection: 'row', gap: Spacing.two },
   flex: { flex: 1 },
   saved: { gap: Spacing.one },

@@ -561,7 +561,7 @@ export default function ProfileScreen() {
                   <Image source={{ uri: profilePhotoUri }} style={styles.avatarImage} />
                 ) : (
                   <View style={[styles.avatarPlaceholder, { backgroundColor: theme.accentFill }]}>
-                    <ThemedText type="subtitle" style={{ color: Palette.white, fontWeight: '800', fontSize: 24 }}>
+                    <ThemedText type="subtitle" style={{ color: Palette.white, fontWeight: '800', fontSize: 22 }}>
                       {name ? name.charAt(0).toUpperCase() : 'S'}
                     </ThemedText>
                   </View>
@@ -650,7 +650,7 @@ export default function ProfileScreen() {
                       style={{
                         color: active ? theme.text : theme.textSecondary,
                         fontWeight: active ? '700' : '500',
-                        fontSize: 11.5,
+                        fontSize: 12,
                       }}>
                       {tab.label}
                     </ThemedText>
@@ -1401,8 +1401,8 @@ export default function ProfileScreen() {
                     >
                       <Image source={getCoverSource(preset.uri)} style={styles.presetThumbnail} />
                       <View style={styles.presetMeta}>
-                        <ThemedText type="smallBold" style={{ fontSize: 13 }}>{preset.name}</ThemedText>
-                        <ThemedText type="caption" numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 10.5 }}>
+                        <ThemedText type="smallBold" style={{ fontSize: 14 }}>{preset.name}</ThemedText>
+                        <ThemedText type="caption" numberOfLines={1} style={{ color: theme.textSecondary, fontSize: 11 }}>
                           {preset.description}
                         </ThemedText>
                       </View>
@@ -1428,7 +1428,7 @@ export default function ProfileScreen() {
                 style={[styles.modalActionBtn, { backgroundColor: Brand.primary }]}
               >
                 <MaterialCommunityIcons name="image-plus" size={16} color={Palette.white} />
-                <ThemedText type="smallBold" style={{ color: Palette.white, fontSize: 13 }}>
+                <ThemedText type="smallBold" style={{ color: Palette.white, fontSize: 14 }}>
                   Upload Custom Photo
                 </ThemedText>
               </Pressable>
@@ -1484,7 +1484,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.small,
   },
   completionRow: { flexDirection: 'row', alignItems: 'center' },
-  completionText: { color: Palette.white, fontSize: 9.5, fontWeight: '700' },
+  completionText: { color: Palette.white, fontSize: 11, fontWeight: '700' },
   completionTrack: { width: 70, height: 3, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 2, overflow: 'hidden' },
   completionFill: { height: '100%', borderRadius: 2 },
   coverEditOverlay: {
@@ -1499,7 +1499,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     gap: 3,
   },
-  coverEditText: { color: Palette.white, fontSize: 10.5, fontWeight: '600' },
+  coverEditText: { color: Palette.white, fontSize: 11, fontWeight: '600' },
   avatarRowContainer: {
     paddingHorizontal: Spacing.two,
     marginTop: -34,
@@ -1543,7 +1543,7 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: Radius.pill,
   },
-  badgePillText: { fontSize: 9.5, fontWeight: '700' },
+  badgePillText: { fontSize: 11, fontWeight: '700' },
   statsStrip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1555,7 +1555,7 @@ const styles = StyleSheet.create({
   },
   statBox: { flex: 1, alignItems: 'center', gap: 1 },
   statNumber: { fontSize: 14, fontWeight: '800' },
-  statLabel: { fontSize: 9.5 },
+  statLabel: { fontSize: 11 },
   statDivider: { width: StyleSheet.hairlineWidth, height: '55%' },
   tabBarContainer: {
     borderRadius: Radius.medium,
@@ -1589,7 +1589,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: Spacing.two,
-    fontSize: 13,
+    fontSize: 14,
   },
   multilineInput: { minHeight: 52, paddingTop: 6, paddingBottom: 6, textAlignVertical: 'top' },
   choiceGridHorizontal: { flexDirection: 'row', gap: 6 },
@@ -1672,7 +1672,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     borderWidth: StyleSheet.hairlineWidth,
   },
-  footerNote: { textAlign: 'center', lineHeight: 16, paddingHorizontal: Spacing.two, marginTop: Spacing.one, fontSize: 10.5 },
+  footerNote: { textAlign: 'center', lineHeight: 16, paddingHorizontal: Spacing.two, marginTop: Spacing.one, fontSize: 11 },
   floatingActionBar: {
     position: 'absolute',
     bottom: 16,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import { Card } from '@/components/card';
@@ -61,7 +61,7 @@ export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
           accessibilityLabel="Previous month"
           hitSlop={8}
           style={[styles.arrowBtn, { backgroundColor: theme.cardMuted }]}>
-          <Ionicons name="chevron-back" size={18} color={theme.text} />
+          <MaterialCommunityIcons name="chevron-left" size={18} color={theme.text} />
         </Pressable>
         <ThemedText type="defaultBold">{monthLabel}</ThemedText>
         <Pressable
@@ -70,7 +70,7 @@ export function CalendarTool({ onNavigate }: { onNavigate?: () => void }) {
           accessibilityLabel="Next month"
           hitSlop={8}
           style={[styles.arrowBtn, { backgroundColor: theme.cardMuted }]}>
-          <Ionicons name="chevron-forward" size={18} color={theme.text} />
+          <MaterialCommunityIcons name="chevron-right" size={18} color={theme.text} />
         </Pressable>
       </Card>
 

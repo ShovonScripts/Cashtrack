@@ -247,8 +247,8 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   monthLetter: {
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 11,
+    lineHeight: 14,
     color: 'rgba(255,255,255,0.5)',
   },
   monthLetterCurrent: {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, Platform, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -127,7 +127,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
             {city.flag} {city.cityName.toUpperCase()}
           </Text>
           {!readOnly && (
-            <Ionicons
+            <MaterialCommunityIcons
               name={page ? 'pencil' : 'swap-horizontal'}
               size={compact ? 10 : 11}
               color={page ? theme.textSecondary : 'rgba(255,255,255,0.6)'}
@@ -211,7 +211,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
                 accessibilityRole="button"
                 accessibilityLabel="Close city picker"
                 style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
-                <Ionicons name="close" size={18} color={theme.text} />
+                <MaterialCommunityIcons name="close" size={18} color={theme.text} />
               </Pressable>
             </View>
 
@@ -296,11 +296,11 @@ const styles = StyleSheet.create({
     marginEnd: 4,
   },
   clockLabelCompact: {
-    fontSize: 9.5,
+    fontSize: 11,
     letterSpacing: 0.3,
   },
   clockLabelPage: {
-    fontSize: 10,
+    fontSize: 11,
     letterSpacing: 0.25,
   },
   timeRow: {
@@ -320,16 +320,16 @@ const styles = StyleSheet.create({
     letterSpacing: 0,
   },
   ampmText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   },
   dateText: {
     color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '500',
   },
   dateTextCompact: {
-    fontSize: 9,
+    fontSize: 11,
   },
   backdrop: {
     flex: 1,
@@ -377,6 +377,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   flagEmoji: {
-    fontSize: 24,
+    fontSize: 22,
   },
 });

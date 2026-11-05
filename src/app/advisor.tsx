@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View, Platform } from 'react-native';
-import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { Card } from '@/components/card';
@@ -71,7 +71,7 @@ export default function AdvisorScreen() {
           <View style={styles.intelligenceContent}>
             <View style={styles.intelligenceHeader}>
               <View style={styles.liveAiBadge}>
-                <Ionicons name="sparkles" size={12} color={theme.success} />
+                <MaterialCommunityIcons name="creation" size={12} color={theme.success} />
                 <ThemedText type="caption" style={{ color: theme.success, fontWeight: '800' }}>
                   Live Spending Advisor
                 </ThemedText>
@@ -138,7 +138,7 @@ export default function AdvisorScreen() {
           <View style={styles.cardHeaderRow}>
             <View style={styles.headerTitleRow}>
               <MaterialCommunityIcons name="swap-horizontal-bold" size={18} color={theme.accent} />
-              <ThemedText type="defaultBold" style={{ fontSize: 15 }}>
+              <ThemedText type="defaultBold" style={{ fontSize: 16 }}>
                 Monthly Cash Flow
               </ThemedText>
             </View>
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
-  eyebrow: { letterSpacing: 1.1, fontWeight: '800', fontSize: 10 },
+  eyebrow: { letterSpacing: 1.1, fontWeight: '800', fontSize: 11 },
   intelligenceHeroGlass: {
     backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
   intelMetricValue: {

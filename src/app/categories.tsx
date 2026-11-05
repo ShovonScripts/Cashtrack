@@ -267,14 +267,14 @@ export default function CategoriesScreen() {
                         style={[styles.renameInput, { borderColor: theme.accent, color: theme.text, backgroundColor: theme.cardMuted }]}
                       />
                     ) : (
-                      <ThemedText type="defaultBold" numberOfLines={1} style={{ fontSize: 15 }}>
+                      <ThemedText type="defaultBold" numberOfLines={1} style={{ fontSize: 16 }}>
                         {category}
                       </ThemedText>
                     )}
 
                     <View style={styles.badgeRow}>
                       <View style={[styles.typeBadge, { backgroundColor: isCustom ? theme.accentMuted : theme.cardMuted }]}>
-                        <ThemedText type="caption" style={{ color: isCustom ? theme.accent : theme.textSecondary, fontWeight: '700', fontSize: 10 }}>
+                        <ThemedText type="caption" style={{ color: isCustom ? theme.accent : theme.textSecondary, fontWeight: '700', fontSize: 11 }}>
                           {isCustom ? 'Custom' : 'Built-in'}
                         </ThemedText>
                       </View>
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
-  eyebrow: { letterSpacing: 1.1, fontWeight: '800', fontSize: 10 },
+  eyebrow: { letterSpacing: 1.1, fontWeight: '800', fontSize: 11 },
   heroGlassCard: {
     backgroundColor: Brand.deep,
     borderRadius: Radius.xlarge,
@@ -408,14 +408,14 @@ const styles = StyleSheet.create({
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   heroStat: { flex: 1, gap: 2 },
   heroStatLabel: { color: 'rgba(255,255,255,0.75)', fontSize: 11, fontWeight: '700' },
-  heroStatVal: { color: Palette.white, fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums'], fontWeight: '800' },
+  heroStatVal: { color: Palette.white, fontSize: 32, lineHeight: 38, fontVariant: ['tabular-nums'], fontWeight: '800' },
   heroDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: 'rgba(255,255,255,0.25)' },
   addCard: { gap: Spacing.three },
   cardHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   headerIconBadge: { width: 32, height: 32, borderRadius: Radius.small, justifyContent: 'center', alignItems: 'center' },
   field: { gap: Spacing.one },
   addRow: { flexDirection: 'row', gap: Spacing.two },
-  input: { flex: 1, minWidth: 0, minHeight: 48, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, paddingHorizontal: Spacing.three, fontSize: 15 },
+  input: { flex: 1, minWidth: 0, minHeight: 48, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, paddingHorizontal: Spacing.three, fontSize: 16 },
   addButton: { minWidth: 80, minHeight: 48, borderRadius: Radius.medium, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: Spacing.three },
   addButtonText: { color: Palette.white },
   iconPackGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

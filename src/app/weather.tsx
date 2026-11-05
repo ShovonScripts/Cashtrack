@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { usePreferences } from '@/context/expense-context';
@@ -94,7 +94,7 @@ export default function WeatherScreen() {
         <View style={styles.heroOverlay}>
           <View style={styles.topBadgesRow}>
             <View style={styles.locationBadge}>
-              <Ionicons name="location" size={13} color={FeatureColors.skyLight} />
+              <MaterialCommunityIcons name="map-marker" size={13} color={FeatureColors.skyLight} />
               <ThemedText style={styles.badgeText}>{weather.locationName}</ThemedText>
             </View>
             <View style={styles.timeBadge}>
@@ -118,7 +118,7 @@ export default function WeatherScreen() {
 
       {isOffline && (
         <Card style={[styles.offlineBanner, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-          <Ionicons name="cloud-offline-outline" size={16} color={theme.textSecondary} />
+          <MaterialCommunityIcons name="cloud-off-outline" size={16} color={theme.textSecondary} />
           <ThemedText type="caption" themeColor="textSecondary" style={styles.offlineBannerText}>
              Live weather unavailable. Showing sample data — pull down to retry with location access.
           </ThemedText>
@@ -129,7 +129,7 @@ export default function WeatherScreen() {
       <Card style={[styles.insightCard, { backgroundColor: insightCardBg, borderColor: insightBorderColor }]}>
         <View style={styles.insightHeaderRow}>
           <View style={styles.insightIconCircle}>
-            <Ionicons name="bulb" size={16} color="#D97706" />
+            <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color="#D97706" />
           </View>
           <View style={styles.insightHeaderCopy}>
             <ThemedText style={styles.insightEyebrow}>SMART MONEY & WEATHER</ThemedText>
@@ -143,7 +143,7 @@ export default function WeatherScreen() {
       <Card style={styles.clockCardSection}>
         <View style={styles.clockSectionHeader}>
           <View style={styles.clockSectionTitleRow}>
-            <Ionicons name="globe-outline" size={16} color={rainBadgeColor} />
+            <MaterialCommunityIcons name="web" size={16} color={rainBadgeColor} />
             <ThemedText style={styles.clockSectionTitle}>WORLD CLOCKS</ThemedText>
           </View>
           <ThemedText style={styles.clockSectionHint}>Tap to edit</ThemedText>
@@ -155,7 +155,7 @@ export default function WeatherScreen() {
       <Card style={styles.hourlyCard}>
         <View style={styles.hourlyHeaderRow}>
           <View style={styles.hourlyHeaderLeft}>
-            <Ionicons name="time" size={16} color={rainBadgeColor} />
+            <MaterialCommunityIcons name="clock" size={16} color={rainBadgeColor} />
             <ThemedText style={styles.hourlyHeaderTitle}>24-HOUR FORECAST</ThemedText>
           </View>
           <ThemedText style={styles.hourlyHeaderBadge}>Hourly</ThemedText>
@@ -184,7 +184,7 @@ export default function WeatherScreen() {
               <View style={styles.hourlyRainSlot}>
                 {hour.rainProbability > 10 ? (
                   <View style={[styles.hourlyRainBadge, { backgroundColor: rainBadgeBg }]}>
-                    <Ionicons name="umbrella" size={9} color={rainBadgeColor} />
+                    <MaterialCommunityIcons name="umbrella" size={9} color={rainBadgeColor} />
                     <ThemedText style={[styles.hourlyRainText, { color: rainBadgeColor }]}>{hour.rainProbability}%</ThemedText>
                   </View>
                 ) : null}
@@ -202,7 +202,7 @@ export default function WeatherScreen() {
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-              <Ionicons name="umbrella" size={18} color={FeatureColors.cyan} />
+              <MaterialCommunityIcons name="umbrella" size={18} color={FeatureColors.cyan} />
             </View>
             <ThemedText style={styles.metricLabel}>RAIN CHANCE</ThemedText>
           </View>
@@ -215,7 +215,7 @@ export default function WeatherScreen() {
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-              <Ionicons name="water" size={18} color={FeatureColors.blue} />
+              <MaterialCommunityIcons name="water" size={18} color={FeatureColors.blue} />
             </View>
             <ThemedText style={styles.metricLabel}>HUMIDITY</ThemedText>
           </View>
@@ -228,7 +228,7 @@ export default function WeatherScreen() {
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
-              <Ionicons name="sparkles" size={18} color="#A855F7" />
+              <MaterialCommunityIcons name="creation" size={18} color="#A855F7" />
             </View>
             <ThemedText style={styles.metricLabel}>WIND SPEED</ThemedText>
           </View>
@@ -241,7 +241,7 @@ export default function WeatherScreen() {
         <Card style={styles.metricCard}>
           <View style={styles.metricHeader}>
             <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-              <Ionicons name="thermometer" size={18} color={FeatureColors.amber} />
+              <MaterialCommunityIcons name="thermometer" size={18} color={FeatureColors.amber} />
             </View>
             <ThemedText style={styles.metricLabel}>DAILY RANGE</ThemedText>
           </View>
@@ -255,7 +255,7 @@ export default function WeatherScreen() {
       {/* APPLE-WEATHER STYLE 5-DAY FORECAST CARD */}
       <Card style={styles.forecastCard}>
         <View style={styles.forecastHeaderRow}>
-          <Ionicons name="calendar" size={16} color={rainBadgeColor} />
+          <MaterialCommunityIcons name="calendar" size={16} color={rainBadgeColor} />
           <ThemedText type="defaultBold" style={styles.forecastTitle}>5-DAY FORECAST</ThemedText>
         </View>
 
@@ -274,7 +274,7 @@ export default function WeatherScreen() {
               <View style={styles.rainPillSlot}>
                 {item.rainProbability > 10 ? (
                   <View style={[styles.rainPill, { backgroundColor: rainBadgeBg }]}>
-                    <Ionicons name="umbrella" size={9} color={rainBadgeColor} />
+                    <MaterialCommunityIcons name="umbrella" size={9} color={rainBadgeColor} />
                     <ThemedText style={[styles.rainPillText, { color: rainBadgeColor }]}>{item.rainProbability}%</ThemedText>
                   </View>
                 ) : null}
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: Palette.white,
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
   },
   heroCenter: {
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
   },
   highText: {
     color: FeatureColors.lime,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
   },
   highLowDivider: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
   lowText: {
     color: FeatureColors.skyLight,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
   },
   hourlyCard: {
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   hourlyLabel: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
     opacity: 0.9,
   },
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   hourlyTemp: {
-    fontSize: 15.5,
+    fontSize: 16,
     fontWeight: '700',
   },
   metricsGrid: {
@@ -507,7 +507,7 @@ const styles = StyleSheet.create({
     opacity: 0.65,
   },
   metricValue: {
-    fontSize: 17,
+    fontSize: 18,
   },
   gaugeTrack: {
     height: 4,
@@ -547,16 +547,16 @@ const styles = StyleSheet.create({
   },
   insightEyebrow: {
     color: '#D97706',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.8,
   },
   insightTitle: {
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 19,
   },
   insightBody: {
-    fontSize: 14.5,
+    fontSize: 16,
     lineHeight: 21.5,
     opacity: 0.9,
   },

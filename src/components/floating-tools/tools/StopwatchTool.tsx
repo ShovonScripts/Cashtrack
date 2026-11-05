@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
@@ -44,7 +44,7 @@ export function StopwatchTool() {
             boxShadow: isRunning ? glow(theme.accent) : [],
           },
         ]}>
-        <Ionicons name="timer-outline" size={28} color={isRunning ? theme.accent : theme.textSecondary} />
+        <MaterialCommunityIcons name="timer-outline" size={28} color={isRunning ? theme.accent : theme.textSecondary} />
         <ThemedText type="hero" style={[styles.timeText, { color: theme.text }]}>
           {formatClock(seconds)}
         </ThemedText>
@@ -63,7 +63,7 @@ export function StopwatchTool() {
             { backgroundColor: isRunning ? theme.dangerFill : theme.accentFill },
             pressed && styles.pressed,
           ]}>
-          <Ionicons name={isRunning ? 'pause' : 'play'} size={20} color={Palette.white} />
+          <MaterialCommunityIcons name={isRunning ? 'pause' : 'play'} size={20} color={Palette.white} />
           <ThemedText type="defaultBold" style={{ color: Palette.white }}>
             {isRunning ? 'Pause' : 'Start'}
           </ThemedText>
@@ -78,7 +78,7 @@ export function StopwatchTool() {
             { backgroundColor: theme.cardMuted, borderWidth: StyleSheet.hairlineWidth, borderColor: theme.border },
             pressed && styles.pressed,
           ]}>
-          <Ionicons name={isRunning ? 'flag-outline' : 'refresh'} size={20} color={theme.text} />
+          <MaterialCommunityIcons name={isRunning ? 'flag-outline' : 'refresh'} size={20} color={theme.text} />
           <ThemedText type="defaultBold" style={{ color: theme.text }}>
             {isRunning ? 'Lap' : 'Reset'}
           </ThemedText>
@@ -91,7 +91,7 @@ export function StopwatchTool() {
       <View style={[styles.lapSection, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
         <View style={styles.lapHeader}>
           <View style={styles.lapTitleRow}>
-            <Ionicons name="flag-outline" size={14} color={theme.textSecondary} />
+            <MaterialCommunityIcons name="flag-outline" size={14} color={theme.textSecondary} />
             <ThemedText type="smallBold" style={{ fontSize: 11, letterSpacing: 0.5 }}>
               LAP TIMES ({laps.filter((lap) => !lap.label).length})
             </ThemedText>
@@ -130,7 +130,7 @@ export function StopwatchTool() {
                       : `Lap ${lap.index}, split ${formatLap(lap.splitMs)}, total ${formatLap(lap.totalMs)}${isBest ? ', fastest' : isWorst ? ', slowest' : ''}`
                   }
                   style={[styles.lapItem, { borderBottomColor: theme.border }, idx === laps.length - 1 && { borderBottomWidth: 0 }]}>
-                  <ThemedText type="caption" style={{ color: lap.label ? theme.accent : theme.textSecondary, fontSize: 13, flex: 1 }} numberOfLines={1}>
+                  <ThemedText type="caption" style={{ color: lap.label ? theme.accent : theme.textSecondary, fontSize: 14, flex: 1 }} numberOfLines={1}>
                     {lap.label ?? `Lap ${lap.index}${isBest ? ' · fastest' : isWorst ? ' · slowest' : ''}`}
                   </ThemedText>
                   {!lap.label && (
@@ -138,7 +138,7 @@ export function StopwatchTool() {
                       +{formatLap(lap.splitMs)}
                     </ThemedText>
                   )}
-                  <ThemedText type="caption" style={{ fontSize: 13, fontVariant: ['tabular-nums'], color: theme.textSecondary }}>
+                  <ThemedText type="caption" style={{ fontSize: 14, fontVariant: ['tabular-nums'], color: theme.textSecondary }}>
                     {formatLap(lap.totalMs)}
                   </ThemedText>
                 </View>

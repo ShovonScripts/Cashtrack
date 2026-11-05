@@ -540,7 +540,7 @@ export default function ReportsScreen() {
                   ]}>
                   <ThemedText
                     type="caption"
-                    style={{ color: diffAmount <= 0 ? FeatureColors.leaf : theme.danger, fontWeight: '700', fontSize: 10 }}>
+                    style={{ color: diffAmount <= 0 ? FeatureColors.leaf : theme.danger, fontWeight: '700', fontSize: 11 }}>
                     {diffAmount <= 0 ? `↓ ${diffPercent}%` : `↑ ${diffPercent}%`}
                   </ThemedText>
                 </View>
@@ -569,13 +569,13 @@ export default function ReportsScreen() {
                   ]}>
                   <ThemedText
                     type="caption"
-                    style={{ color: limitPercent <= 100 ? FeatureColors.leaf : theme.danger, fontWeight: '700', fontSize: 10 }}>
+                    style={{ color: limitPercent <= 100 ? FeatureColors.leaf : theme.danger, fontWeight: '700', fontSize: 11 }}>
                     {limitPercent <= 100 ? 'On track' : 'Over limit'}
                   </ThemedText>
                 </View>
               ) : (
                 <View style={[styles.trendBadge, { backgroundColor: theme.accentMuted }]}>
-                  <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700', fontSize: 10 }}>
+                  <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700', fontSize: 11 }}>
                     Safe
                   </ThemedText>
                 </View>
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   headerCopy: { flex: 1, gap: 1 },
-  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 10 },
+  eyebrow: { letterSpacing: 1, fontWeight: '800', fontSize: 11 },
   themeIconButton: {
     width: 44,
     height: 44,
@@ -950,7 +950,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.small,
   },
   metricValue: {
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 20,
     fontVariant: ['tabular-nums'],
   },
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   barValueText: {
-    fontSize: 10,
+    fontSize: 11,
     fontVariant: ['tabular-nums'],
   },
   barTrack: {

@@ -401,13 +401,13 @@ function ContributionChart({ contributions, formatAmount }: { contributions: Goa
           const dateStr = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(c.date));
           return (
             <View key={c.id} style={styles.chartColumn}>
-              <ThemedText type="caption" style={{ fontSize: 9, color: theme.textSecondary }} numberOfLines={1}>
+              <ThemedText type="caption" style={{ fontSize: 11, color: theme.textSecondary }} numberOfLines={1}>
                 {formatAmount(c.amount)}
               </ThemedText>
               <View style={[styles.barTrack, { backgroundColor: theme.backgroundElement }]}>
                 <View style={[styles.barFill, { height, backgroundColor: theme.accent }]} />
               </View>
-              <ThemedText type="caption" style={{ fontSize: 9, color: theme.textSecondary }} numberOfLines={1}>
+              <ThemedText type="caption" style={{ fontSize: 11, color: theme.textSecondary }} numberOfLines={1}>
                 {dateStr}
               </ThemedText>
             </View>
@@ -477,7 +477,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: Radius.pill,
   },
-  heroTitle: { color: Palette.white, fontSize: 24, lineHeight: 30 },
+  heroTitle: { color: Palette.white, fontSize: 22, lineHeight: 30 },
   heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.half },
   heroStat: { flex: 1, gap: Spacing.half },
   heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },

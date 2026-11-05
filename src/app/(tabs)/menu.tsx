@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   accountNameText: {
-    fontSize: 15,
+    fontSize: 16,
   },
   privateTagPill: {
     paddingHorizontal: 6,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
   },
   privateTagText: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
   },
   currencyPill: {
@@ -613,7 +613,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 14,
     paddingVertical: 0,
   },
   filterScroll: {

@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   eyebrow: {
     letterSpacing: 0.8,
     fontWeight: '800',
-    fontSize: 10.5,
+    fontSize: 11,
   },
   periodPill: {
     flexShrink: 0,

@@ -47,12 +47,12 @@ export function GoalProgressCard({
               {isFlexible ? (
                 <View style={[styles.badgePill, { backgroundColor: withAlpha(theme.info, 0.15) }]}>
                   <MaterialCommunityIcons name="piggy-bank-outline" size={12} color={theme.info} />
-                  <ThemedText type="caption" style={{ color: theme.info, fontWeight: '700', fontSize: 10 }}>Flexible Stash</ThemedText>
+                  <ThemedText type="caption" style={{ color: theme.info, fontWeight: '700', fontSize: 11 }}>Flexible Stash</ThemedText>
                 </View>
               ) : goal.allocationType === 'percentage' && goal.allocationPercent ? (
                 <View style={[styles.badgePill, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
                   <MaterialCommunityIcons name="lightning-bolt" size={12} color={theme.success} />
-                  <ThemedText type="caption" style={{ color: theme.success, fontWeight: '700', fontSize: 10 }}>{goal.allocationPercent}% Auto-Save</ThemedText>
+                  <ThemedText type="caption" style={{ color: theme.success, fontWeight: '700', fontSize: 11 }}>{goal.allocationPercent}% Auto-Save</ThemedText>
                 </View>
               ) : null}
             </View>

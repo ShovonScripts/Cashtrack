@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -135,7 +135,7 @@ export default function EditNoteScreen() {
                 accessibilityLabel="Delete note"
                 hitSlop={6}
                 style={[styles.iconBtn, { backgroundColor: `${theme.danger}15` }]}>
-                <Ionicons name="trash-outline" size={18} color={theme.danger} />
+                <MaterialCommunityIcons name="trash-can-outline" size={18} color={theme.danger} />
               </Pressable>
               <Pressable
                 onPress={handleSave}

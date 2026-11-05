@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Share, StyleSheet, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
 
@@ -169,7 +169,7 @@ export function NotesTool() {
       {/* Top Status & Toolbar */}
       <View style={styles.header}>
         <View style={styles.headerTitleRow}>
-          <Ionicons name="cloud-done-outline" size={15} color={statusColor} />
+          <MaterialCommunityIcons name="cloud-check-outline" size={15} color={statusColor} />
           <ThemedText type="smallBold" style={{ color: statusColor, fontSize: 12 }}>
             {actionFeedback || savedStatus || 'Auto-saved locally'}
           </ThemedText>
@@ -197,7 +197,7 @@ export function NotesTool() {
               !note.trim() && { opacity: 0.4 },
               pressed && { opacity: 0.7 },
             ]}>
-            <Ionicons name="copy-outline" size={14} color={theme.accent} />
+            <MaterialCommunityIcons name="content-copy" size={14} color={theme.accent} />
           </Pressable>
 
           <Pressable
@@ -212,7 +212,7 @@ export function NotesTool() {
               !note.trim() && { opacity: 0.4 },
               pressed && { opacity: 0.7 },
             ]}>
-            <Ionicons name="share-outline" size={14} color={theme.success} />
+            <MaterialCommunityIcons name="share-variant-outline" size={14} color={theme.success} />
           </Pressable>
 
           <Pressable
@@ -227,7 +227,7 @@ export function NotesTool() {
               !note && { opacity: 0.4 },
               pressed && { opacity: 0.7 },
             ]}>
-            <Ionicons name="trash-outline" size={14} color={theme.danger} />
+            <MaterialCommunityIcons name="trash-can-outline" size={14} color={theme.danger} />
           </Pressable>
         </View>
       </View>
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.large,
     padding: Spacing.three,
-    fontSize: 15,
+    fontSize: 16,
     lineHeight: 22,
     textAlignVertical: 'top',
     minHeight: 220,

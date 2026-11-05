@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1, paddingBottom: Spacing.five },
   container: { width: '100%', maxWidth: 700, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   intro: { gap: Spacing.one },
-  title: { fontSize: 30, lineHeight: 36 },
+  title: { fontSize: 32, lineHeight: 38 },
   notice: { gap: Spacing.one, borderRadius: Radius.medium },
   searchField: { minHeight: 50, flexDirection: 'row', alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, paddingHorizontal: Spacing.three },
   searchInput: { flex: 1, minWidth: 0, fontSize: 16, paddingVertical: Spacing.two },

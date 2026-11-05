@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, Platform, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -128,7 +128,7 @@ export function WeatherWorldClocks() {
                     accessibilityRole="button"
                     accessibilityLabel={`Remove ${city.cityName}`}
                     hitSlop={12}>
-                    <Ionicons name="close-circle" size={14} color={theme.textSecondary} />
+                    <MaterialCommunityIcons name="close-circle" size={14} color={theme.textSecondary} />
                   </Pressable>
                 )}
               </View>
@@ -157,7 +157,7 @@ export function WeatherWorldClocks() {
               { backgroundColor: theme.cardMuted, borderColor: theme.border },
               pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
             ]}>
-            <Ionicons name="add" size={22} color={theme.accent} />
+            <MaterialCommunityIcons name="plus" size={22} color={theme.accent} />
             <Text style={[styles.addClockText, { color: theme.accent }]}>
               Add Clock ({cityIds.length}/{MAX_WEATHER_CLOCKS})
             </Text>
@@ -188,7 +188,7 @@ export function WeatherWorldClocks() {
                 accessibilityRole="button"
                 accessibilityLabel="Close city picker"
                 style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
-                <Ionicons name="close" size={18} color={theme.text} />
+                <MaterialCommunityIcons name="close" size={18} color={theme.text} />
               </Pressable>
             </View>
 
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   clockLabel: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.25,
     flex: 1,
@@ -288,11 +288,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   ampmText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
   },
   dateText: {
-    fontSize: 10.5,
+    fontSize: 11,
     fontWeight: '500',
   },
   backdrop: {
@@ -341,6 +341,6 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
   },
   flagEmoji: {
-    fontSize: 24,
+    fontSize: 22,
   },
 });

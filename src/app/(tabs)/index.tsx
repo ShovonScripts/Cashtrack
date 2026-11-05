@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
@@ -268,7 +268,7 @@ export default function DashboardScreen() {
                     <ThemedText type="smallBold" style={{ color: theme.accent }}>
                       See all transactions
                     </ThemedText>
-                    <Ionicons name="arrow-forward" size={16} color={theme.accent} />
+                    <MaterialCommunityIcons name="arrow-right" size={16} color={theme.accent} />
                   </Pressable>
                 </>
               )}

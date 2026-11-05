@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -152,8 +152,8 @@ export function CurrencyTool() {
               { backgroundColor: theme.card, borderColor: theme.border },
               pressed && { opacity: 0.8 },
             ]}>
-            <ThemedText type="defaultBold" style={{ fontSize: 13 }}>{fromCurr.code} ({fromCurr.symbol})</ThemedText>
-            <Ionicons name={showFromPicker ? 'chevron-up' : 'chevron-down'} size={14} color={theme.accent} />
+            <ThemedText type="defaultBold" style={{ fontSize: 14 }}>{fromCurr.code} ({fromCurr.symbol})</ThemedText>
+            <MaterialCommunityIcons name={showFromPicker ? 'chevron-up' : 'chevron-down'} size={14} color={theme.accent} />
           </Pressable>
         </View>
 
@@ -210,7 +210,7 @@ export function CurrencyTool() {
             { backgroundColor: theme.card, borderColor: theme.border },
             pressed && { transform: [{ scale: 0.9 }], backgroundColor: `${theme.accent}22` },
           ]}>
-          <Ionicons name="swap-vertical" size={18} color={theme.accent} />
+          <MaterialCommunityIcons name="swap-vertical" size={18} color={theme.accent} />
         </Pressable>
       </View>
 
@@ -233,8 +233,8 @@ export function CurrencyTool() {
               { backgroundColor: theme.card, borderColor: theme.border },
               pressed && { opacity: 0.8 },
             ]}>
-            <ThemedText type="defaultBold" style={{ fontSize: 13 }}>{toCurr.code} ({toCurr.symbol})</ThemedText>
-            <Ionicons name={showToPicker ? 'chevron-up' : 'chevron-down'} size={14} color={theme.success} />
+            <ThemedText type="defaultBold" style={{ fontSize: 14 }}>{toCurr.code} ({toCurr.symbol})</ThemedText>
+            <MaterialCommunityIcons name={showToPicker ? 'chevron-up' : 'chevron-down'} size={14} color={theme.success} />
           </Pressable>
         </View>
 
@@ -279,7 +279,7 @@ export function CurrencyTool() {
         <View style={styles.rateHeaderRow}>
           <View style={styles.liveBadgeRow}>
             <View style={[styles.greenDot, rates ? undefined : { backgroundColor: theme.textSecondary }]} />
-            <ThemedText type="smallBold" style={{ color: rates ? theme.success : theme.textSecondary, fontSize: 10 }}>
+            <ThemedText type="smallBold" style={{ color: rates ? theme.success : theme.textSecondary, fontSize: 11 }}>
               {rates ? 'LIVE MID-MARKET RATES' : 'OFFLINE REFERENCE RATES'}
             </ThemedText>
           </View>
@@ -290,7 +290,7 @@ export function CurrencyTool() {
             accessibilityLabel="Refresh exchange rates"
             style={styles.refreshBtn}
             hitSlop={8}>
-            <Ionicons name="refresh" size={13} color={theme.accent} style={isUpdating ? { transform: [{ rotate: '180deg' }] } : undefined} />
+            <MaterialCommunityIcons name="refresh" size={13} color={theme.accent} style={isUpdating ? { transform: [{ rotate: '180deg' }] } : undefined} />
             <ThemedText type="caption" style={{ color: theme.accent, fontSize: 11, fontWeight: '700' }}>
               {isUpdating ? 'Updating...' : lastUpdated}
             </ThemedText>
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   popularLabel: {
-    fontSize: 9,
+    fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   cardHeaderTitle: {
     letterSpacing: 0.5,
     fontWeight: '700',
-    fontSize: 10,
+    fontSize: 11,
   },
   currencySelector: {
     flexDirection: 'row',
@@ -397,14 +397,14 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     paddingVertical: 0,
     fontVariant: ['tabular-nums'],
   },
   resultAmount: {
     flex: 1,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
   },

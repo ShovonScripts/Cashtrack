@@ -11,7 +11,7 @@
  */
 
 /** Must match EXPO_PUBLIC_SIGNUP_KEY in the app's .env. Use a long random string. */
-const SHARED_KEY = 'PASTE-THE-SAME-LONG-RANDOM-STRING-AS-IN-THE-APP';
+const SHARED_KEY = 'Hello-Cashtract-Creator-Johirul-Islam-&-Mr-Nasir';
 
 const SHEET_NAME = 'Signups';
 const HEADERS = [
@@ -127,3 +127,4 @@ function reply(ok, message) {
   const body = ok ? { ok: true, message: message || undefined } : { ok: false, error: message };
   return ContentService.createTextOutput(JSON.stringify(body)).setMimeType(ContentService.MimeType.JSON);
 }
+

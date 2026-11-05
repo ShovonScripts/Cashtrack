@@ -21,6 +21,7 @@ import { File, Paths } from 'expo-file-system';
 
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
+import { StayInTouchCard } from '@/components/signup/stay-in-touch-card';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Elevation, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
@@ -1126,6 +1127,8 @@ export default function ProfileScreen() {
           {/* TAB 4: DATA & PRIVACY */}
           {activeTab === 'data' && (
             <View style={styles.tabSectionStack}>
+              <StayInTouchCard />
+
               {/* Data Backup & Export Card */}
               <Card style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>

@@ -1134,6 +1134,15 @@ If notifications do not arrive:
 
 CashTrack does not create an account and does not upload your financial records to a CashTrack server.
 
+**Stay in touch (optional)**
+
+- The last onboarding step, and **Profile & settings → Data & privacy → Stay in touch**, let you join the CashTrack list. It is optional; the app works the same if you skip it.
+- If you join, CashTrack sends only what you type (name, email, and phone if given), whether you want updates, your country, and the app version and platform.
+- Your money records are never sent.
+- Updates are only sent if you tick the box. It starts unticked.
+- If you are offline, your details wait on the phone and send the next time you are online.
+- Tap **Withdraw and delete my details** to remove them from the phone and ask for our copy to be deleted.
+
 ### 16.2 Network features
 
 These features may use the internet:

@@ -18,6 +18,10 @@ export type FormFieldProps = Pick<
   | 'returnKeyType'
   | 'onSubmitEditing'
   | 'editable'
+  // Autofill: lets the keyboard offer the user's saved name, email and phone.
+  | 'autoComplete'
+  | 'textContentType'
+  | 'autoCorrect'
 > & {
   label: string;
   /** Hint under the field. Replaced by the error when there is one. */

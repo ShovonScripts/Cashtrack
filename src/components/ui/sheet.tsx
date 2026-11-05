@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { IconButton } from '@/components/ui/icon-button';
@@ -24,7 +24,11 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.root} accessibilityViewIsModal>
+      {/* Lifts the panel above the keyboard on iOS so fields in a sheet stay visible. */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.root}
+        accessibilityViewIsModal>
         <Pressable
           style={[styles.backdrop, { backgroundColor: theme.overlay }]}
           onPress={onClose}
@@ -48,7 +52,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
             {children}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }

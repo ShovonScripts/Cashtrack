@@ -10,6 +10,7 @@ import { AppLockProvider } from '@/context/app-lock-context';
 import { ThemedText } from '@/components/themed-text';
 import { ExpenseProvider, useExpenses, usePreferences } from '@/context/expense-context';
 import { DebtProvider, useDebts } from '@/context/debt-context';
+import { SignupProvider } from '@/context/signup-context';
 import { IncomeProvider, useIncome } from '@/context/income-context';
 import { GoalProvider, useGoals } from '@/context/goal-context';
 import { FinancialRemindersProvider, useFinancialReminders } from '@/context/financial-reminders-context';
@@ -485,14 +486,16 @@ export default function RootLayout() {
               <GoalProvider>
                 <FinancialRemindersProvider>
                   <StopwatchProvider>
-                    <AnimatedSplashOverlay />
-                    <AppLockHost>
-                      <ToastProvider>
-                        <UndoDeleteProvider>
-                          <Navigation />
-                        </UndoDeleteProvider>
-                      </ToastProvider>
-                    </AppLockHost>
+                    <SignupProvider>
+                      <AnimatedSplashOverlay />
+                      <AppLockHost>
+                        <ToastProvider>
+                          <UndoDeleteProvider>
+                            <Navigation />
+                          </UndoDeleteProvider>
+                        </ToastProvider>
+                      </AppLockHost>
+                    </SignupProvider>
                   </StopwatchProvider>
                 </FinancialRemindersProvider>
               </GoalProvider>

@@ -1141,6 +1141,18 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         type: 'paragraph',
         text: 'These features may use the internet: live weather, currency exchange rates, and opening external links such as the donation page. They do not upload your expense ledger.',
       },
+      { type: 'heading', text: 'Stay in touch (optional)' },
+      {
+        type: 'bullets',
+        items: [
+          'The last onboarding step, and **Profile & settings → Data & privacy → Stay in touch**, let you join the CashTrack list. It is optional; the app works the same if you skip it.',
+          'If you join, CashTrack sends only what you type (name, email, and phone if given), whether you want updates, your country, and the app version and platform.',
+          'Your money records are never sent.',
+          'Updates are only sent if you tick the box. It starts unticked.',
+          'If you are offline, your details wait on the phone and send the next time you are online.',
+          'Tap **Withdraw and delete my details** to remove them from the phone and ask for our copy to be deleted.',
+        ],
+      },
       { type: 'heading', text: 'Device security' },
       {
         type: 'bullets',

@@ -4,7 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, Elevation, FeatureColors, glow, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   clearCompletedTodos,
@@ -461,7 +461,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
               accessibilityRole="button"
               style={[
                 styles.filterTab,
-                selected && { backgroundColor: theme.card, borderColor: theme.border, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 2, elevation: 1 },
+                selected && { backgroundColor: theme.card, borderColor: theme.border, ...Elevation.low },
               ]}>
               <ThemedText type="caption" style={{ color: selected ? theme.accent : theme.textSecondary, fontWeight: '800', textTransform: 'uppercase', fontSize: 10 }}>
                 {f} ({count})
@@ -579,11 +579,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.18)',
     position: 'relative',
     overflow: 'hidden',
-    shadowColor: Brand.deep,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: glow(Brand.deep),
   },
   heroOrbLarge: {
     position: 'absolute',

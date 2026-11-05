@@ -5,7 +5,7 @@ import { Stack, router } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Palette, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { saveNote } from '@/storage/notes-storage';
 import { NoteColor } from '@/types/note';
 import { notify } from '@/utils/confirm';
@@ -46,7 +46,7 @@ export default function AddNoteScreen() {
   };
 
   const selectedColorObj = COLORS.find((c) => c.key === color) || COLORS[0];
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
   const dynamicBg = isDark ? selectedColorObj.darkHex : selectedColorObj.hex;
 
   return (

@@ -13,7 +13,7 @@ import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
 import { Button, ScreenHeader, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Elevation, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
@@ -259,11 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    ...Elevation.high,
     zIndex: 10,
   },
   searchField: {

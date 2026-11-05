@@ -31,11 +31,12 @@ function contrastRatio(hex1, hex2) {
   return (l1 + 0.05) / (l2 + 0.05);
 }
 
+// Keep in sync with Colors.light in src/constants/theme.ts.
 const lightSurfaces = {
-  background: '#ffffff',
-  backgroundElement: '#F0F0F3',
+  background: '#F4F6FA',
+  backgroundElement: '#ECEEF3',
   card: '#FFFFFF',
-  cardMuted: '#F7F7F9',
+  cardMuted: '#F9FAFC',
 };
 
 const darkSurfaces = {

@@ -33,7 +33,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
-import { Brand, FeatureColors, Palette, Radius } from '@/constants/theme';
+import { Brand, Elevation, FeatureColors, glow, Palette, Radius } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
@@ -714,11 +714,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.28,
-    shadowRadius: 6,
-    elevation: 4,
+    ...Elevation.onMedia,
   },
   avatarImage: {
     width: '100%',
@@ -792,11 +788,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(6,10,24,0.5)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(255,255,255,0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 4,
+    ...Elevation.onMedia,
     overflow: 'hidden',
   },
   splitRow: {
@@ -1085,11 +1077,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    boxShadow: glow(Brand.primary, 'strong'),
   },
   floatingQuoteSymbol: {
     color: Palette.white,
@@ -1109,11 +1097,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 24,
     paddingBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    ...Elevation.onMedia,
   },
   referenceQuoteText: {
     color: '#111827',

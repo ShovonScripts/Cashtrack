@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { glow, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
 import { QuickAlarmPanel } from '@/components/floating-tools/tools/QuickAlarmPanel';
@@ -40,10 +40,8 @@ export function StopwatchTool() {
           {
             backgroundColor: theme.cardMuted,
             borderColor: isRunning ? theme.accent : theme.border,
-            shadowColor: theme.accent,
-            shadowOpacity: isRunning ? 0.15 : 0,
-            shadowRadius: 12,
-            elevation: isRunning ? 6 : 0,
+            // A soft accent glow only while the timer runs.
+            boxShadow: isRunning ? glow(theme.accent) : [],
           },
         ]}>
         <Ionicons name="timer-outline" size={28} color={isRunning ? theme.accent : theme.textSecondary} />

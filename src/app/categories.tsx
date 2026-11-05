@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { CategoryIcon } from '@/components/category-icon';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { getCategoryColor, ICON_PACK } from '@/constants/categories';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, glow, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 function triggerHaptic() {
@@ -372,11 +372,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(20, 231, 253, 0.35)',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    boxShadow: glow(Brand.primary),
   },
   primaryBlueOrb: {
     position: 'absolute',

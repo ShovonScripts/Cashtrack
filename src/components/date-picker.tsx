@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Elevation, Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   calendarDot: { width: 3, height: 3, borderRadius: Radius.pill },
   dateCopy: { flex: 1, gap: 0 },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: Spacing.two },
-  dialog: { width: '100%', maxWidth: 360, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.xlarge, padding: Spacing.three, gap: Spacing.three, elevation: 12 },
+  dialog: { width: '100%', maxWidth: 360, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.xlarge, padding: Spacing.three, gap: Spacing.three, ...Elevation.high },
   dialogHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   monthCopy: { gap: Spacing.one },
   monthTitle: { fontSize: 22, lineHeight: 28 },

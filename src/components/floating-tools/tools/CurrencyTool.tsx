@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
+import { Elevation, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CURRENCIES, convertCurrency } from '@/constants/currency-rates';
 
@@ -207,7 +207,7 @@ export function CurrencyTool() {
           accessibilityLabel="Swap currencies"
           style={({ pressed }) => [
             styles.swapButton,
-            { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.accent },
+            { backgroundColor: theme.card, borderColor: theme.border },
             pressed && { transform: [{ scale: 0.9 }], backgroundColor: `${theme.accent}22` },
           ]}>
           <Ionicons name="swap-vertical" size={18} color={theme.accent} />
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.medium,
     overflow: 'hidden',
     zIndex: 50,
-    elevation: 6,
+    ...Elevation.high,
   },
   dropdownScroll: {
     maxHeight: 150,
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
+    ...Elevation.medium,
   },
   rateCard: {
     borderWidth: StyleSheet.hairlineWidth,

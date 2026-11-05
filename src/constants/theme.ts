@@ -7,6 +7,8 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+import { withAlpha } from '@/utils/color';
+
 /**
  * CashTrack brand palette, re-sampled pixel by pixel from the current app icon
  * (assets/images/icon.png), the blue wallet mark.
@@ -44,13 +46,19 @@ export const Brand = {
 export const Colors = {
   light: {
     text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
+    /**
+     * Cool off-white canvas (a whisper of the brand blue). White cards lift off
+     * it on their own; on a pure white page no shadow can separate them.
+     */
+    background: '#F4F6FA',
+    backgroundElement: '#ECEEF3',
     backgroundSelected: '#E0E1E6',
     textSecondary: '#60646C',
     card: '#FFFFFF',
-    cardMuted: '#F7F7F9',
-    border: '#E6E6EA',
+    cardMuted: '#F9FAFC',
+    border: '#E4E7EE',
+    /** Faint navy edge that keeps a card crisp where its shadow is lightest. */
+    cardBorder: 'rgba(16, 24, 64, 0.07)',
     danger: '#C8252C',
     success: '#0B7252',
     warning: '#96520B',
@@ -78,6 +86,8 @@ export const Colors = {
     card: '#1C1D20',
     cardMuted: '#17181A',
     border: '#2A2C31',
+    /** Shadows vanish on black, so dark cards separate by a top-lit hairline. */
+    cardBorder: 'rgba(255, 255, 255, 0.08)',
     danger: '#FF6B6B',
     success: '#34D399',
     warning: '#F59E0B',
@@ -219,36 +229,55 @@ export const Typography = {
   hero: { fontSize: 32, lineHeight: 38 },
 } as const;
 
-/** Shadow presets. Android uses `elevation`; iOS and web use the shadow props. */
+/**
+ * Shadow ink: a deep navy taken from the brand, not pure black. Tinted shadows
+ * read as soft depth; black ones read as grey smudges.
+ */
+const INK = '16, 24, 64';
+
+/**
+ * Depth scale. Each level is two stacked shadows, the way physical light
+ * works: a tight "contact" shadow that gives the edge its crispness, and a wide
+ * "ambient" one that gives the lift. Uses `boxShadow` (new architecture, iOS,
+ * Android and web), which draws outside the view, so it works together with
+ * `overflow: 'hidden'` and rounded corners.
+ *
+ *   none    flat: list rows, anything inside a card
+ *   low     raised: every resting card (what `Card` uses)
+ *   medium  lifted: pressed-up controls, selected tiles, small floating chips
+ *   high    floating: sheets, toasts, the tools button, pop-overs
+ *   top     the tab bar, which casts its shadow upward
+ *   onMedia anything floating over a photo or a dark slide (avatars, glass
+ *           panels): neutral black and stronger, because navy ink at card
+ *           strength disappears against an image
+ *
+ * In dark mode shadows vanish against black, so surfaces separate by
+ * lightness and a hairline edge (`cardBorder`) instead. Hand-written shadows
+ * outside this file are counted by scripts/token-budget.cjs.
+ */
 export const Elevation = {
-  none: {
-    shadowColor: Palette.black,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  low: {
-    shadowColor: Palette.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  medium: {
-    shadowColor: Palette.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 5,
-  },
-  high: {
-    shadowColor: Palette.black,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 10,
-  },
+  none: { boxShadow: [] },
+  low: { boxShadow: `0 1px 2px rgba(${INK}, 0.05), 0 4px 14px rgba(${INK}, 0.06)` },
+  medium: { boxShadow: `0 2px 4px rgba(${INK}, 0.06), 0 10px 24px rgba(${INK}, 0.10)` },
+  high: { boxShadow: `0 4px 10px rgba(${INK}, 0.08), 0 18px 40px rgba(${INK}, 0.16)` },
+  top: { boxShadow: `0 -1px 0 rgba(${INK}, 0.04), 0 -8px 24px rgba(${INK}, 0.06)` },
+  onMedia: { boxShadow: '0 2px 6px rgba(0, 0, 0, 0.26), 0 10px 24px rgba(0, 0, 0, 0.22)' },
+} as const;
+
+/**
+ * Coloured glow for brand-filled surfaces (hero cards, primary buttons, the
+ * selected chip): the surface seems to light the page under it. Pass a 6-digit
+ * hex colour token. Use at most one glowing element per screen.
+ */
+export function glow(color: string, strength: 'soft' | 'strong' = 'soft'): string {
+  const [near, far] = strength === 'strong' ? [0.3, 0.26] : [0.2, 0.16];
+  return `0 3px 8px ${withAlpha(color, near)}, 0 12px 28px ${withAlpha(color, far)}`;
+}
+
+/** Press feedback shared by tappable cards and tiles: a slight sink, never a flash. */
+export const PressFeedback = {
+  opacity: 0.94,
+  transform: [{ scale: 0.98 }],
 } as const;
 
 /** Icon sizes in dp: inline text, rows and buttons, navigation, empty states. */

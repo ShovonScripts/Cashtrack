@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { usePreferences } from '@/context/expense-context';
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/card';
@@ -19,7 +19,7 @@ export default function WeatherScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
 
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
 
   const handleRefresh = async () => {
     setRefreshing(true);

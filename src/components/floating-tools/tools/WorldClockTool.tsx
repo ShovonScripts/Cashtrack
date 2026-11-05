@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/themed-text';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Elevation, Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -189,7 +189,6 @@ export function WorldClockTool() {
     borderColor: isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.9)',
     borderTopWidth: 1.5,
     borderTopColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 1)',
-    shadowColor: isDark ? '#000' : '#8898aa',
   };
 
   const activeCities = selectedCityIds
@@ -426,10 +425,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: Radius.pill,
     gap: 6,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
+    ...Elevation.low,
   },
   citiesGrid: {
     gap: Spacing.two,
@@ -438,10 +434,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.large,
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
+    ...Elevation.low,
   },
   credit: {
     textAlign: 'center',

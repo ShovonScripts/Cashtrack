@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Palette, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { deleteNote, getNotes, saveNote } from '@/storage/notes-storage';
 import { Note, NoteColor } from '@/types/note';
 import { confirmDelete, notify } from '@/utils/confirm';
@@ -93,7 +93,7 @@ export default function EditNoteScreen() {
   };
 
   const selectedColorObj = COLORS.find((c) => c.key === color) || COLORS[0];
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
   const dynamicBg = isDark ? selectedColorObj.darkHex : selectedColorObj.hex;
 
   if (isLoading) {

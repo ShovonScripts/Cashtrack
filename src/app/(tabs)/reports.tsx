@@ -13,7 +13,7 @@ import { CategoryIcon } from '@/components/category-icon';
 import { WhatChangedCard } from '@/components/insights/what-changed-card';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, FeatureColors, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, glow, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useIncome } from '@/context/income-context';
 import { useNow } from '@/hooks/use-now';
@@ -858,11 +858,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderWidth: 1,
     borderColor: 'rgba(20, 231, 253, 0.35)',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    boxShadow: glow(Brand.primary),
   },
   primaryBlueOrb: {
     position: 'absolute',
@@ -1044,11 +1040,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.primary, // #0152F5
     borderWidth: 1,
     borderColor: 'rgba(20, 231, 253, 0.3)',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: glow(Brand.primary),
   },
   exportCardCsv: {
     minHeight: 64,
@@ -1061,11 +1053,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#064E3B', // Deep Emerald Slate
     borderWidth: 1,
     borderColor: 'rgba(52, 211, 153, 0.35)',
-    shadowColor: FeatureColors.emerald,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: glow(FeatureColors.emerald),
   },
   pdfIconBadge: {
     width: 40,

@@ -8,8 +8,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Card } from '@/components/card';
 import { Icon, IconButton } from '@/components/ui';
-import { Palette, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Brand, glow, Palette, Radius, Spacing } from '@/constants/theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { getNotes } from '@/storage/notes-storage';
 import { Note, NoteColor } from '@/types/note';
 
@@ -29,7 +29,7 @@ export default function NotesIndexScreen() {
   const [search, setSearch] = useState<string>('');
   const [isGrid, setIsGrid] = useState<boolean>(true);
 
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
 
   const loadNotes = async () => {
     const data = await getNotes();
@@ -156,7 +156,7 @@ export default function NotesIndexScreen() {
         accessibilityLabel="Add note"
         style={({ pressed }) => [
           styles.fab,
-          { backgroundColor: theme.accentFill, shadowColor: theme.accent, bottom: Math.max(Spacing.four, insets.bottom + 16) },
+          { backgroundColor: theme.accentFill, bottom: Math.max(Spacing.four, insets.bottom + 16) },
           pressed && { transform: [{ scale: 0.93 }] },
         ]}>
         <Icon name="add" size="lg" color={Palette.white} />
@@ -244,10 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    boxShadow: glow(Brand.primary, 'strong'),
     zIndex: 99,
   },
 });

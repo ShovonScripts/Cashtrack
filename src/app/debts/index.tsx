@@ -9,7 +9,7 @@ import { Chip, Screen, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useDebts } from '@/context/debt-context';
 import { usePreferences } from '@/context/expense-context';
-import { Radius, Spacing } from '@/constants/theme';
+import { Elevation, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
   filterScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
   listSection: { gap: Spacing.two },
   emptyCard: { padding: Spacing.four, alignItems: 'center' },
-  debtCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two, elevation: 1 },
+  debtCard: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, padding: Spacing.three, gap: Spacing.two, ...Elevation.low },
   cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   avatar: { width: 42, height: 42, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   personInfo: { flex: 1, gap: Spacing.half },

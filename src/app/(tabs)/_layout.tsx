@@ -6,8 +6,8 @@ import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { QuickAddModal } from '@/components/quick-add-modal';
-import { useTheme } from '@/hooks/use-theme';
-import { Brand, Colors, Radius } from '@/constants/theme';
+import { useIsDark, useTheme } from '@/hooks/use-theme';
+import { Brand, Elevation, glow, Radius } from '@/constants/theme';
 
 function triggerHaptic() {
   if (Platform.OS !== 'web') {
@@ -17,6 +17,7 @@ function triggerHaptic() {
 
 export default function TabLayout() {
   const theme = useTheme();
+  const isDark = useIsDark();
   const insets = useSafeAreaInsets();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
@@ -39,11 +40,7 @@ export default function TabLayout() {
             height: tabHeight,
             paddingBottom: bottomPadding,
             paddingTop: 8,
-            elevation: 10,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: theme.background === Colors.dark.background ? 0 : 0.08,
-            shadowRadius: 8,
+            ...(isDark ? Elevation.none : Elevation.top),
           },
           tabBarLabelStyle: {
             fontSize: 11,
@@ -163,10 +160,6 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    boxShadow: glow(Brand.primary, 'strong'),
   },
 });

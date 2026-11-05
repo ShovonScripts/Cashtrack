@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/components/themed-text';
 import { FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
 
 const CLOCK_1_KEY = '@cashtrack_banner_clock_1';
@@ -75,7 +75,7 @@ export function DualClockWidget({ variant = 'default', readOnly = false }: DualC
   const theme = useTheme();
   const compact = variant === 'compact';
   const page = variant === 'page';
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
 
   const { city1Id, city2Id } = useClockPreferences();
   const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);

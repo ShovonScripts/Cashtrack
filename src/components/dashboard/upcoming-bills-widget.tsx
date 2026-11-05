@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, glow, Palette, Radius, Spacing } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
@@ -276,11 +276,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
-    shadowColor: Brand.deep,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 6,
+    boxShadow: glow(Brand.deep),
   },
   billsHeroCardAlert: {
     borderColor: 'rgba(225, 29, 72, 0.45)',

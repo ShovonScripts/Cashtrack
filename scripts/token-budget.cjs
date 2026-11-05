@@ -7,7 +7,10 @@
  *
  *   fontSizes  font sizes outside the seven text roles (11, 12, 14, 16, 18, 22, 32)
  *   ionicons   files that still import Ionicons (the app uses MaterialCommunityIcons)
- *   shadows    hand-written shadow/elevation lines outside the theme file
+ *   shadows    hand-written shadow props outside the theme file: any
+ *              shadowColor/shadowOpacity/shadowRadius/elevation (inline or on
+ *              their own line) and any boxShadow written as a literal string.
+ *              Use `Elevation.*` or `glow()` from src/constants/theme.ts.
  */
 const fs = require('fs');
 const path = require('path');
@@ -34,9 +37,8 @@ for (const dir of DIRS) {
       if (!ALLOWED_SIZES.has(Number(m[1]))) counts.fontSizes += 1;
     }
     if (/import \{[^}]*\bIonicons\b[^}]*\} from '@expo\/vector-icons'/.test(text)) counts.ionicons += 1;
-    for (const line of text.split(/\r?\n/)) {
-      if (/^\s*(shadowOpacity|shadowRadius|elevation):/.test(line)) counts.shadows += 1;
-    }
+    counts.shadows += (text.match(/\b(shadowColor|shadowOpacity|shadowRadius|elevation):/g) || []).length;
+    counts.shadows += (text.match(/\bboxShadow:\s*['"`]/g) || []).length;
   }
 }
 

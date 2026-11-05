@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, glow, Palette, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
 
@@ -153,6 +153,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'space-between',
+    // The home hero lights the page under it: the one glowing surface on Home.
+    boxShadow: glow(Brand.deep, 'strong'),
   },
   heroOrbLarge: {
     position: 'absolute',

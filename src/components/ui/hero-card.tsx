@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, glow, Palette, Radius, Spacing } from '@/constants/theme';
 
 type HeroCardProps = {
   /** Small uppercase label above the figure, such as "TOTAL SPENT". */
@@ -49,6 +49,8 @@ const styles = StyleSheet.create({
     padding: Spacing.four,
     gap: Spacing.one,
     overflow: 'hidden',
+    // The one brand surface on the page glows; nothing else does.
+    boxShadow: glow(Brand.primary),
   },
   eyebrow: { color: Palette.white, opacity: 0.85, letterSpacing: 1.2 },
   value: { color: Palette.white },

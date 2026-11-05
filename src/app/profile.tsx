@@ -22,7 +22,7 @@ import { File, Paths } from 'expo-file-system';
 import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, Elevation, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
 import { useDebts } from '@/context/debt-context';
 import { useExpenses, usePreferences } from '@/context/expense-context';
@@ -1465,11 +1465,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: Radius.pill,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 6,
+    ...Elevation.high,
   },
   bannerCard: { overflow: 'hidden', paddingBottom: Spacing.two },
   coverContainer: { height: 120, width: '100%', position: 'relative' },
@@ -1513,11 +1509,7 @@ const styles = StyleSheet.create({
     height: 68,
     borderRadius: 34,
     borderWidth: 3,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    ...Elevation.onMedia,
   },
   avatarImage: { width: '100%', height: '100%', borderRadius: 32, resizeMode: 'cover' },
   avatarPlaceholder: { width: '100%', height: '100%', borderRadius: 32, justifyContent: 'center', alignItems: 'center' },
@@ -1692,11 +1684,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: Radius.large,
     borderWidth: StyleSheet.hairlineWidth,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    ...Elevation.high,
   },
   floatingActionCopy: { gap: 1 },
   floatingActionButtons: { flexDirection: 'row', gap: 6 },
@@ -1724,11 +1712,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xlarge,
     borderWidth: 1,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 8,
+    ...Elevation.high,
   },
   modalHeaderRow: {
     flexDirection: 'row',

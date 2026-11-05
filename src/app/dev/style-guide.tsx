@@ -1,6 +1,6 @@
 import { Redirect, Stack } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -26,8 +26,18 @@ import {
 } from '@/components/ui';
 import { HeroCard } from '@/components/ui/hero-card';
 import { Icons, type IconConcept } from '@/constants/icons';
-import { FeatureColors, Spacing, Typography } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import {
+  Brand,
+  Elevation,
+  FeatureColors,
+  glow,
+  Palette,
+  PressFeedback,
+  Radius,
+  Spacing,
+  Typography,
+} from '@/constants/theme';
+import { useIsDark, useTheme } from '@/hooks/use-theme';
 
 const TEXT_ROLES = [
   { label: 'Display 32', type: 'hero' },
@@ -39,12 +49,20 @@ const TEXT_ROLES = [
   { label: 'Micro 11', type: 'micro' },
 ] as const;
 
+const DEPTH_LEVELS = [
+  { key: 'none', label: 'Flat', use: 'Rows, items inside cards' },
+  { key: 'low', label: 'Raised', use: 'Every resting card' },
+  { key: 'medium', label: 'Lifted', use: 'Selected tiles, controls' },
+  { key: 'high', label: 'Floating', use: 'Sheets, toasts, the tools button' },
+] as const;
+
 /**
  * Development-only reference page: every shared component in one place, so a
  * change to the design system can be checked in light and dark at a glance.
  */
 export default function StyleGuideScreen() {
   const theme = useTheme();
+  const isDark = useIsDark();
   const [chip, setChip] = useState('Food');
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -74,6 +92,49 @@ export default function StyleGuideScreen() {
               </ThemedText>
             ))}
           </Card>
+        </Section>
+
+        <Section
+          title="Depth"
+          subtitle={
+            isDark
+              ? 'Dark mode: surfaces separate by lightness and a hairline edge. Shadows vanish on black.'
+              : 'Light mode: two-layer navy shadows on the off-white page. Tap a tile to feel the press.'
+          }>
+          <View style={styles.depthGrid}>
+            {DEPTH_LEVELS.map((level) => (
+              <Pressable
+                key={level.key}
+                accessibilityRole="button"
+                accessibilityLabel={`${level.label} depth example`}
+                style={({ pressed }) => [
+                  styles.depthTile,
+                  { backgroundColor: theme.card, borderColor: theme.cardBorder },
+                  !isDark && Elevation[level.key],
+                  pressed && PressFeedback,
+                ]}>
+                <ThemedText type="smallBold">{level.label}</ThemedText>
+                <ThemedText type="caption" themeColor="textSecondary">
+                  {level.use}
+                </ThemedText>
+              </Pressable>
+            ))}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Brand glow example"
+              style={({ pressed }) => [
+                styles.depthTile,
+                styles.glowTile,
+                pressed && PressFeedback,
+              ]}>
+              <ThemedText type="smallBold" style={styles.onBrand}>
+                Glow
+              </ThemedText>
+              <ThemedText type="caption" style={styles.onBrandMuted}>
+                One brand surface per page
+              </ThemedText>
+            </Pressable>
+          </View>
         </Section>
 
         <Section title="Hero card" subtitle="One per page, at most.">
@@ -205,4 +266,23 @@ const styles = StyleSheet.create({
   stack: { gap: Spacing.two },
   wrap: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Spacing.two },
   iconCell: { width: 72, alignItems: 'center', gap: Spacing.one, paddingVertical: Spacing.one },
+  // Extra padding so the floating shadow is not clipped by the section edge.
+  depthGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.three, paddingBottom: Spacing.two },
+  depthTile: {
+    flexBasis: '46%',
+    flexGrow: 1,
+    minHeight: 92,
+    padding: Spacing.three,
+    gap: Spacing.one,
+    borderRadius: Radius.large,
+    borderWidth: StyleSheet.hairlineWidth,
+    justifyContent: 'flex-end',
+  },
+  glowTile: {
+    backgroundColor: Brand.primary,
+    borderColor: 'transparent',
+    boxShadow: glow(Brand.primary),
+  },
+  onBrand: { color: Palette.white },
+  onBrandMuted: { color: Palette.white, opacity: 0.9 },
 });

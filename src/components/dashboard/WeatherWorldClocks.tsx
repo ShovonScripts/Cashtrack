@@ -7,7 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { ThemedText } from '@/components/themed-text';
 import { FeatureColors, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
 
 const WEATHER_CLOCKS_KEY = '@cashtrack_weather_world_clocks';
@@ -48,7 +48,7 @@ async function saveWeatherClocks(ids: string[]) {
 
 export function WeatherWorldClocks() {
   const theme = useTheme();
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
 
   const [cityIds, setCityIds] = useState<string[]>(cachedWeatherClocks);
   const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);

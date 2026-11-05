@@ -13,7 +13,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useTheme } from '@/hooks/use-theme';
 import { useStopwatch } from '@/context/stopwatch-context';
 import { ToolsMenuModal } from './ToolsMenuModal';
-import { Palette } from '@/constants/theme';
+import { Elevation, Palette } from '@/constants/theme';
 
 const BUTTON_SIZE = 48;
 const RUNNING_WIDTH = 104;
@@ -174,7 +174,6 @@ function FloatingToolsButtonInner() {
                 backgroundColor: isRunning ? theme.card : theme.accentFill,
                 borderColor: isRunning ? theme.accent : 'transparent',
                 opacity: isInteracting || pressed || isRunning || modalVisible ? 1 : 0.85,
-                shadowColor: '#000000',
               },
               pressed && { transform: [{ scale: 0.93 }] },
             ]}>
@@ -216,10 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: BUTTON_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...Elevation.high,
   },
   runningPill: {
     width: RUNNING_WIDTH,

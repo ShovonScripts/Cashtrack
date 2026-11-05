@@ -10,7 +10,7 @@ import { Card } from '@/components/card';
 import { CategoryIcon } from '@/components/category-icon';
 import { ThemedText } from '@/components/themed-text';
 import { getCategoryColor } from '@/constants/categories';
-import { Brand, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, glow, MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
@@ -451,11 +451,7 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     borderWidth: 1,
     borderColor: 'rgba(20, 231, 253, 0.35)',
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
+    boxShadow: glow(Brand.primary),
   },
   primaryBlueOrb: { position: 'absolute', top: -40, right: -30, width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(1, 82, 245, 0.45)' },
   brightCyanOrb: { position: 'absolute', bottom: -60, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(20, 231, 253, 0.3)' },
@@ -492,11 +488,7 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.primary,
     paddingHorizontal: Spacing.three,
     marginTop: Spacing.one,
-    shadowColor: Brand.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    boxShadow: glow(Brand.primary),
   },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.75, transform: [{ scale: 0.99 }] },

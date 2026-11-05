@@ -13,7 +13,7 @@ import { DebtProvider, useDebts } from '@/context/debt-context';
 import { IncomeProvider, useIncome } from '@/context/income-context';
 import { GoalProvider, useGoals } from '@/context/goal-context';
 import { FinancialRemindersProvider, useFinancialReminders } from '@/context/financial-reminders-context';
-import { useTheme } from '@/hooks/use-theme';
+import { useTheme, useIsDark } from '@/hooks/use-theme';
 import { confirmDelete, notify } from '@/utils/confirm';
 import { cancelQuoteNotificationsAsync, scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
 import { recoverPendingRestore } from '@/storage/backup-service';
@@ -393,8 +393,7 @@ function AppLockHost({ children }: { children: ReactNode }) {
 }
 
 function AppThemeProvider({ children }: { children: React.ReactNode }) {
-  const theme = useTheme();
-  const isDark = theme.background !== '#ffffff';
+  const isDark = useIsDark();
 
   return (
     <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>

@@ -23,7 +23,7 @@ import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/
 import { AnimatedWeather } from '@/components/animated-weather';
 import { WeatherBackground } from '@/components/weather-background';
 import { DualClockWidget } from '@/components/dashboard/DualClockWidget';
-import { FeatureColors, Palette } from '@/constants/theme';
+import { Elevation, FeatureColors, Palette } from '@/constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 32;
@@ -235,11 +235,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
+    ...Elevation.medium,
   },
   fullCoverImage: {
     ...StyleSheet.absoluteFill,

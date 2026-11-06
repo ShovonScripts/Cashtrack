@@ -275,6 +275,7 @@ function Navigation() {
         <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
         <Stack.Screen name="user-manual" options={{ title: 'User Manual' }} />
         <Stack.Screen name="about" options={{ title: 'About CashTrack' }} />
+        <Stack.Screen name="privacy" options={{ title: 'Privacy Policy' }} />
         <Stack.Screen name="add-expense" options={{ title: 'Add Expense', presentation: 'modal' }} />
         <Stack.Screen name="period-report" options={{ title: 'Spending Report' }} />
         <Stack.Screen name="expense/[id]" options={{ title: 'Expense' }} />

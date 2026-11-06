@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CashTrack Privacy Policy</title>
+<meta name="description" content="How the CashTrack expense tracker handles your information.">
+<style>
+:root { --bg: #F4F6FA; --card: #FFFFFF; --text: #0F172A; --muted: #475569; --accent: #0152F5; --accent-bg: #E8EFFE; --border: #E2E8F0; color-scheme: light dark; }
+@media (prefers-color-scheme: dark) { :root { --bg: #000000; --card: #16181D; --text: #F1F5F9; --muted: #A3ADBD; --accent: #7AA5FF; --accent-bg: #14223F; --border: #2A2F38; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 32px; line-height: 1.2; margin: 0 0 4px; }
+h2 { font-size: 20px; margin: 0 0 8px; }
+.updated { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+.summary, section { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+.summary { background: var(--accent-bg); border-color: transparent; }
+.summary h2 { font-size: 16px; }
+p, li, td { color: var(--muted); }
+p { margin: 0 0 12px; } p:last-child { margin-bottom: 0; }
+ul { margin: 0 0 12px; padding-left: 20px; } ul:last-child { margin-bottom: 0; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+.table { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 8px; border-bottom: 1px solid var(--border); }
+thead th { color: var(--text); }
+tbody th { color: var(--text); font-weight: 600; }
+footer { color: var(--muted); font-size: 14px; text-align: center; margin-top: 24px; }
+</style>
+</head>
+<body>
+<main>
+<h1>CashTrack Privacy Policy</h1>
+<p class="updated">Last updated 6 November 2026</p>
+<div class="summary"><h2>The short version</h2><ul><li>Your money records (expenses, income, budgets, bills, debts, goals, notes) stay on your phone. We never receive them.</li><li>There are no ads, no analytics and no tracking SDKs.</li><li>If you choose to join &quot;Stay in touch&quot;, we receive your name, email, optional phone number and country. You can withdraw and delete them in the app at any time.</li></ul></div>
+<section id="who"><h2>Who we are</h2><p>CashTrack is a personal expense tracker made by an independent developer (&quot;we&quot;, &quot;us&quot;). This policy explains what information the app handles, where it goes and the choices you have. It applies to the CashTrack app on Android, iOS and the web.</p></section>
+<section id="device"><h2>Information that stays on your device</h2><p>Everything you enter to manage your money is stored only on your device, in the app's private storage. We do not run a server for it, and we cannot see, read or recover it. This includes:</p>
+<ul><li>Expenses, income, categories, budgets and category limits.</li><li>Bills, reminders, subscriptions, debts, savings pots and goals.</li><li>Notes, to-do items, and receipt or profile photos you attach.</li><li>Your profile name, country, currency and app settings.</li><li>Your app lock setting. Fingerprint or Face ID is checked by your phone's operating system; the app only learns whether the check passed and never receives your biometric data.</li></ul>
+<p>Because the data lives only on your device, uninstalling the app or clearing its data deletes it. Use the backup or export option in Profile &amp; settings if you want a copy. A backup file is saved or shared wherever you choose; we never receive it.</p></section>
+<section id="signup"><h2>Stay in touch (optional)</h2><p>During setup, and later in Profile &amp; settings &gt; Data &amp; privacy, you can choose to join our mailing list. This is optional: skipping it changes nothing in the app. If you join, we receive:</p>
+<ul><li>Your name and email address.</li><li>Your phone number, only if you enter one.</li><li>Whether you ticked &quot;Send me product updates and tips&quot;.</li><li>Your country (from your app settings), the platform (Android, iOS or web) and the app version.</li><li>A random install ID created by the app, so a retry or a withdrawal reaches the right entry. It is not linked to your device's advertising ID or hardware.</li></ul>
+<p>We use this to contact you about CashTrack: new features, important changes and, if you ticked the box, tips and product updates. We do not sell it, rent it or share it with advertisers.</p>
+<p>These details are stored in a private Google Sheet owned by the developer, received through Google Apps Script. Google hosts that data under its own terms and privacy policy (<a href="https://policies.google.com/privacy">https://policies.google.com/privacy</a>).</p></section>
+<section id="services"><h2>Online services the app uses</h2><p>Some features fetch public information from other services. When they do, that service sees your IP address, as with any internet request. None of them receive your money records.</p>
+<div class="table"><table><thead><tr><th scope="col">Feature</th><th scope="col">Service</th><th scope="col">What is sent</th></tr></thead><tbody><tr><th scope="row">Weather</th><td>Open-Meteo (open-meteo.com)</td><td>Your approximate location (latitude and longitude), only while you use the weather feature</td></tr><tr><th scope="row">City name for weather</th><td>Your phone's geocoder, or BigDataCloud (bigdatacloud.com) as a fallback</td><td>The same location coordinates</td></tr><tr><th scope="row">Currency converter</th><td>ExchangeRate-API (open.er-api.com)</td><td>Nothing about you; it downloads public rates</td></tr><tr><th scope="row">World clock photos</th><td>Wikimedia (wikimedia.org)</td><td>Nothing about you; it downloads public images</td></tr><tr><th scope="row">Stay in touch</th><td>Google Apps Script and Google Sheets</td><td>The sign-up details listed above, only if you join</td></tr></tbody></table></div></section>
+<section id="permissions"><h2>Permissions</h2><ul><li>Location: asked for only to show local weather. Your location is not stored by us. You can deny it and the rest of the app works.</li><li>Photos: to choose a profile or cover picture, or attach a receipt. Chosen photos stay on your device.</li><li>Notifications and exact alarms: to remind you about bills and timers. Reminders are scheduled on your device; we do not send push messages.</li><li>Biometrics: to unlock the app with your fingerprint or face, if you turn on app lock.</li></ul></section>
+<section id="not"><h2>What we do not do</h2><ul><li>No ads or advertising IDs.</li><li>No analytics, crash reporting or tracking SDKs.</li><li>No bank logins and no access to your bank accounts.</li><li>No selling or sharing of personal information.</li><li>No tracking across other apps or websites.</li></ul></section>
+<section id="retention"><h2>How long we keep your information</h2><p>On-device data stays until you delete it or uninstall the app. Stay-in-touch details stay until you withdraw. Withdrawing deletes your entry from the sheet; it is not just marked inactive.</p></section>
+<section id="rights"><h2>Your choices and rights</h2><ul><li>Withdraw from Stay in touch in Profile &amp; settings &gt; Data &amp; privacy. This deletes your details from our sheet. If you are offline, the app sends the request the next time you are online.</li><li>Ask for a copy of the sign-up details we hold, or ask us to correct or delete them, by emailing us. This also works if you no longer have the app.</li><li>Delete all on-device data with &quot;Reset All Local Data&quot; in Profile &amp; settings, or by uninstalling the app.</li><li>Depending on where you live (for example under the GDPR in the EU and UK), you may also have the right to object to or restrict how we use your data, and to complain to your local data protection authority.</li></ul>
+<p>Our legal basis for using sign-up details is your consent, which you can withdraw at any time.</p></section>
+<section id="security"><h2>Security</h2><p>Sign-up details are sent over an encrypted HTTPS connection. On your device, data sits in the app's private storage, protected by your phone's own security, and you can add app lock. Android cloud backup is turned off for the app, so your records are not copied to Google Drive automatically. No method is perfectly secure, but we keep what we collect to a minimum.</p></section>
+<section id="children"><h2>Children</h2><p>CashTrack is not directed at children under 13, and we do not knowingly collect their personal information. If you believe a child has joined Stay in touch, email us and we will delete the entry.</p></section>
+<section id="changes"><h2>Changes to this policy</h2><p>If we change what the app collects, we will update this policy and the &quot;Last updated&quot; date. For important changes, we will also tell you in the app.</p></section>
+<section id="contact"><h2>Contact</h2><p>Questions, or a request to see or delete your data: <a href="mailto:jishovon@gmail.com">jishovon@gmail.com</a></p></section>
+<footer>CashTrack · <a href="mailto:jishovon@gmail.com">jishovon@gmail.com</a></footer>
+</main>
+</body>
+</html>

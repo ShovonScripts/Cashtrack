@@ -23,7 +23,7 @@ import { Card } from '@/components/card';
 import { OnboardingModal } from '@/components/onboarding-modal';
 import { StayInTouchCard } from '@/components/signup/stay-in-touch-card';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Elevation, FeatureColors, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, Elevation, FeatureColors, Palette, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { COVER_PRESETS, DEFAULT_COVER_KEY, DEFAULT_COVER_URI, getCoverSource } from '@/constants/cover-presets';
 import { useDebts } from '@/context/debt-context';
 import { useExpenses, usePreferences } from '@/context/expense-context';
@@ -1276,6 +1276,27 @@ export default function ProfileScreen() {
                   <View style={styles.rowCopy}>
                     <ThemedText type="smallBold">About CashTrack</ThemedText>
                     <ThemedText type="caption" themeColor="textSecondary">Privacy promise & version</ThemedText>
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
+                </Pressable>
+
+                <Pressable
+                  onPress={() => {
+                    triggerHaptic();
+                    router.push('/privacy');
+                  }}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.settingRowItemCompact,
+                    { backgroundColor: theme.cardMuted, borderColor: theme.border },
+                    pressed && styles.pressed,
+                  ]}>
+                  <View style={[styles.rowIconBadgeCompact, { backgroundColor: withAlpha(FeatureColors.indigo, 0.12) }]}>
+                    <MaterialCommunityIcons name="shield-lock-outline" size={17} color={FeatureColors.indigo} />
+                  </View>
+                  <View style={styles.rowCopy}>
+                    <ThemedText type="smallBold">Privacy Policy</ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary">What is collected and your choices</ThemedText>
                   </View>
                   <MaterialCommunityIcons name="chevron-right" size={18} color={theme.textSecondary} />
                 </Pressable>

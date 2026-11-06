@@ -2,8 +2,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRef, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { ExternalLink } from '@/components/external-link';
 import { ThemedText } from '@/components/themed-text';
 import { FormField } from '@/components/ui';
+import { PRIVACY_POLICY_URL } from '@/constants/privacy-policy';
 import { MinTouchTarget, PressFeedback, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { EMAIL_MAX, NAME_MAX, PHONE_MAX, type SignupErrors, type SignupInput } from '@/utils/signup';
@@ -95,7 +97,10 @@ export function StayInTouchForm({ value, onChange, errors, onSubmit }: Props) {
         <MaterialCommunityIcons name="shield-lock-outline" size={18} color={theme.accent} />
         <ThemedText type="caption" style={styles.noteText}>
           We receive only what you type here, plus your country. Your money records never leave this phone. You can
-          withdraw and delete these details in {'Profile & settings'}.
+          withdraw and delete these details in {'Profile & settings'}.{' '}
+          <ExternalLink href={PRIVACY_POLICY_URL} style={{ color: theme.accent, fontWeight: '600' }}>
+            Privacy policy
+          </ExternalLink>
         </ThemedText>
       </View>
     </View>

@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { Link } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
@@ -7,7 +8,7 @@ import { SpendlyLogo } from '@/components/spendly-logo';
 import { ThemedText } from '@/components/themed-text';
 import { Icon, Screen, Section } from '@/components/ui';
 import type { GlyphName } from '@/constants/icons';
-import { BadgeSize, Radius, Spacing } from '@/constants/theme';
+import { BadgeSize, MinTouchTarget, PressFeedback, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 const DONATION_URL = 'https://buymeacoffee.com/mr.nas';
@@ -65,6 +66,17 @@ export default function AboutScreen() {
               Because Spendly is 100% local-only, it does not sync cloud backups automatically. Remember to save reports or export your data before changing devices.
             </ThemedText>
           </View>
+          <Link href="/privacy" asChild>
+            <Pressable
+              accessibilityRole="link"
+              style={({ pressed }) => [styles.policyLink, pressed && PressFeedback]}>
+              <Icon name="shield-lock-outline" size="md" />
+              <ThemedText type="smallBold" style={[styles.flex, { color: theme.accent }]}>
+                Read the full privacy policy
+              </ThemedText>
+              <Icon name="chevron-right" size="md" color={theme.textSecondary} />
+            </Pressable>
+          </Link>
         </Card>
       </Section>
 
@@ -128,6 +140,8 @@ const styles = StyleSheet.create({
   },
   featureCopy: { flex: 1, gap: Spacing.half },
   note: { borderRadius: Radius.medium, padding: Spacing.three },
+  policyLink: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, minHeight: MinTouchTarget },
+  flex: { flex: 1 },
   support: { alignItems: 'center', gap: Spacing.two, padding: Spacing.four },
   centered: { textAlign: 'center' },
   donate: {

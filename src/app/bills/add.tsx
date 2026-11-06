@@ -6,7 +6,7 @@ export default function AddBillScreen() {
 
   return (
     <BillReminderForm
-      submitLabel="Save Reminder"
+      submitLabel="Save bill"
       onSubmit={async (draft) => {
         await addReminder(draft);
       }}

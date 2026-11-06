@@ -1,10 +1,11 @@
 import { useLocalSearchParams, router } from 'expo-router';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { BillReminderForm } from '@/components/bill-reminder-form';
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function EditBillScreen() {
@@ -17,7 +18,9 @@ export default function EditBillScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color={theme.accent} size="large" />
-        <ThemedText type="small" themeColor="textSecondary">Loading bill…</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Loading bill…
+        </ThemedText>
       </View>
     );
   }
@@ -26,16 +29,10 @@ export default function EditBillScreen() {
     return (
       <View style={styles.centered}>
         <ThemedText type="subtitle">Bill not found</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.notFoundText}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
           This bill or reminder no longer exists.
         </ThemedText>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={styles.backButton}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back</ThemedText>
-        </Pressable>
+        <Button label="Go back" variant="ghost" onPress={() => router.back()} />
       </View>
     );
   }
@@ -45,7 +42,7 @@ export default function EditBillScreen() {
       key={reminder.id}
       initial={reminder}
       paidThisCycle={Math.max(0, reminder.paidAmountCurrentCycle ?? 0)}
-      submitLabel="Save Changes"
+      submitLabel="Save changes"
       onSubmit={async (draft) => {
         await updateReminder(reminder.id, draft);
       }}
@@ -54,16 +51,6 @@ export default function EditBillScreen() {
 }
 
 const styles = StyleSheet.create({
-  centered: {
-    flex: 1,
-    width: '100%',
-    maxWidth: MaxContentWidth,
-    alignSelf: 'center',
-    padding: Spacing.four,
-    gap: Spacing.two,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notFoundText: { textAlign: 'center' },
-  backButton: { marginTop: Spacing.two },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.two, padding: Spacing.four },
+  centerText: { textAlign: 'center' },
 });

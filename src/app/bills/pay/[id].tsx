@@ -1,12 +1,14 @@
 import { useLocalSearchParams, router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
+import { Card } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
+import { AmountField, Button, FormField, Screen, StatStrip, SwitchRow } from '@/components/ui';
 import { usePreferences } from '@/context/expense-context';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount, isOverpayment } from '@/utils/reminder-payment';
 
@@ -19,23 +21,20 @@ export default function PayBillScreen() {
 
   if (isLoading) {
     return (
-      <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
-        <ActivityIndicator size="large" />
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={theme.accent} />
       </View>
     );
   }
 
   if (!reminder) {
     return (
-      <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
-        <ThemedText type="subtitle">Reminder not found</ThemedText>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          style={{ marginTop: Spacing.three }}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back</ThemedText>
-        </Pressable>
+      <View style={styles.centered}>
+        <ThemedText type="subtitle">Bill not found</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.centerText}>
+          This bill or reminder no longer exists.
+        </ThemedText>
+        <Button label="Go back" variant="ghost" onPress={() => router.back()} />
       </View>
     );
   }
@@ -49,8 +48,7 @@ type PayBillFormProps = {
 };
 
 function PayBillForm({ reminder, onPay }: PayBillFormProps) {
-  const theme = useTheme();
-  const { formatAmount } = usePreferences();
+  const { country, formatAmount } = usePreferences();
   const remainingAmount = getReminderRemainingAmount(reminder);
   const paidThisCycle = Math.max(0, reminder.paidAmountCurrentCycle ?? 0);
   const isFullyCovered = remainingAmount !== null && remainingAmount <= 0;
@@ -60,184 +58,137 @@ function PayBillForm({ reminder, onPay }: PayBillFormProps) {
   const [paidDate, setPaidDate] = useState(() => new Date());
   const [recordAsExpense, setRecordAsExpense] = useState(true);
   const [note, setNote] = useState('');
-  const [error, setError] = useState('');
+  const [amountError, setAmountError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
-  const isValid =
-    !isFullyCovered &&
-    !Number.isNaN(parsedAmount) &&
-    Number.isFinite(parsedAmount) &&
-    parsedAmount > 0;
 
   const handlePay = async () => {
     if (isSubmitting) return;
     if (reminder.status === 'paid') {
-      setError('This bill is already marked as paid.');
+      setSubmitError('This bill is already marked as paid.');
       return;
     }
-    if (isFullyCovered) {
-      setError('This bill is already fully paid for the current cycle.');
-      return;
-    }
-    if (!isValid) {
-      setError('Please enter a valid payment amount greater than zero.');
+    const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setAmountError('Enter an amount above zero.');
       return;
     }
     if (isOverpayment(reminder, parsedAmount)) {
-      setError(`Payment cannot exceed the remaining balance of ${formatAmount(remainingAmount ?? 0)}.`);
+      setAmountError(`This is more than the ${formatAmount(remainingAmount ?? 0)} left to pay.`);
       return;
     }
 
     setIsSubmitting(true);
-    setError('');
+    setSubmitError('');
     try {
       await onPay(reminder.id, parsedAmount, paidDate.toISOString(), recordAsExpense, note);
       router.back();
     } catch (err) {
       console.error('[cashtrack] Failed to mark bill as paid', err);
-      setError(err instanceof Error && err.message ? err.message : 'Could not save this payment. Please try again.');
+      setSubmitError(err instanceof Error && err.message ? err.message : 'Could not save this payment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  let amountHelper: string | undefined;
+  if (reminder.isVariableAmount) amountHelper = 'This bill varies. Enter the exact amount you paid.';
+  else if (remainingAmount !== null && paidThisCycle > 0 && remainingAmount > 0) {
+    amountHelper = 'The amount left is filled in. You can pay part of it.';
+  }
 
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag">
-        <View style={styles.container}>
-          <View style={styles.headerBox}>
-            <ThemedText type="caption" themeColor="textSecondary">RECORD BILL PAYMENT</ThemedText>
-            <ThemedText type="subtitle">{reminder.title}</ThemedText>
-            <ThemedText type="small" themeColor="textSecondary">Category: {reminder.category}</ThemedText>
-          </View>
+      <Screen topInset={false}>
+        <View style={styles.intro}>
+          <ThemedText type="subtitle">{reminder.title}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {reminder.category}
+          </ThemedText>
+        </View>
 
-          {remainingAmount !== null && paidThisCycle > 0 && (
-            <View style={[styles.summaryBox, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-              <View style={styles.summaryRow}>
-                <ThemedText type="caption" themeColor="textSecondary">BILL AMOUNT</ThemedText>
-                <ThemedText type="smallBold">{formatAmount(reminder.amount ?? 0)}</ThemedText>
-              </View>
-              <View style={styles.summaryRow}>
-                <ThemedText type="caption" themeColor="textSecondary">ALREADY PAID</ThemedText>
-                <ThemedText type="smallBold" style={{ color: theme.success }}>{formatAmount(paidThisCycle)}</ThemedText>
-              </View>
-              <View style={styles.summaryRow}>
-                <ThemedText type="caption" themeColor="textSecondary">REMAINING</ThemedText>
-                <ThemedText type="defaultBold" style={{ color: theme.accent }}>{formatAmount(remainingAmount)}</ThemedText>
-              </View>
-            </View>
-          )}
+        {remainingAmount !== null && paidThisCycle > 0 ? (
+          <StatStrip
+            items={[
+              { label: 'Bill', value: formatAmount(reminder.amount ?? 0) },
+              { label: 'Paid', value: formatAmount(paidThisCycle), tone: 'success' },
+              { label: 'Left', value: formatAmount(Math.max(0, remainingAmount)) },
+            ]}
+          />
+        ) : null}
 
-          {/* Amount */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">PAYMENT AMOUNT</ThemedText>
-            <TextInput
+        {isFullyCovered ? (
+          <Card variant="muted">
+            <ThemedText type="small" themeColor="textSecondary">
+              This bill is fully paid for the current cycle. Nothing more to record.
+            </ThemedText>
+          </Card>
+        ) : (
+          <>
+            <AmountField
+              label="Amount paid"
               value={amountText}
-              onChangeText={(v) => { setAmountText(v.replace(/[^0-9.]/g, '')); setError(''); }}
-              placeholder="0.00"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="decimal-pad"
-              accessibilityLabel="Payment amount"
-              style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+              onChangeText={(value) => {
+                setAmountText(value);
+                setAmountError('');
+                setSubmitError('');
+              }}
+              symbol={country.symbol.trim()}
+              helper={amountHelper}
+              error={amountError}
             />
-            {reminder.isVariableAmount ? (
-              <ThemedText type="caption" themeColor="textSecondary">This is a variable bill. Enter the exact amount paid.</ThemedText>
-            ) : remainingAmount !== null && paidThisCycle > 0 && remainingAmount > 0 ? (
-              <ThemedText type="caption" themeColor="textSecondary">The remaining balance is prefilled. You can pay only part of it.</ThemedText>
-            ) : isFullyCovered ? (
-              <ThemedText type="caption" themeColor="danger">This bill is already fully paid for the current cycle.</ThemedText>
-            ) : null}
-          </View>
 
-          {/* Record as Expense Toggle */}
-          <View style={styles.field}>
-            <View style={styles.dueDateHeader}>
-              <View style={styles.toggleLabelCopy}>
-                <ThemedText type="smallBold">Record as an expense</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">
-                  Automatically add this payment to your expense ledger and budgets
-                </ThemedText>
-              </View>
-              <Switch
+            <View style={styles.field}>
+              <ThemedText type="smallBold">Payment date</ThemedText>
+              <DatePicker value={paidDate} onChange={setPaidDate} label="Payment date" />
+            </View>
+
+            <Card padded={false}>
+              <SwitchRow
+                label="Record as an expense"
+                description="Adds this payment to your expenses and budgets."
                 value={recordAsExpense}
                 onValueChange={setRecordAsExpense}
-                accessibilityLabel="Record as an expense"
-                trackColor={{ false: theme.cardMuted, true: theme.accent }}
               />
-            </View>
-          </View>
+            </Card>
 
-          {/* Paid Date */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">PAYMENT DATE</ThemedText>
-            <DatePicker value={paidDate} onChange={setPaidDate} label="Payment date" />
-          </View>
-
-          {/* Note */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">NOTE (OPTIONAL)</ThemedText>
-            <TextInput
+            <FormField
+              label="Note"
               value={note}
               onChangeText={setNote}
-              placeholder="Transaction ref, receipt note..."
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel="Payment note"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
+              placeholder="Transaction ref or receipt note"
+              helper="Optional"
+              maxLength={200}
             />
-          </View>
+          </>
+        )}
 
-          {error ? <ThemedText type="caption" themeColor="danger">{error}</ThemedText> : null}
+        {submitError ? (
+          <ThemedText type="caption" themeColor="danger" accessibilityLiveRegion="polite">
+            {submitError}
+          </ThemedText>
+        ) : null}
 
-          <Pressable
-            onPress={handlePay}
-            disabled={!isValid || isSubmitting}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid || isSubmitting, busy: isSubmitting }}
-            style={({ pressed }) => [
-              styles.saveButton,
-              { backgroundColor: theme.accentFill },
-              pressed && styles.pressed,
-              (!isValid || isSubmitting) && styles.saveButtonDisabled,
-            ]}>
-            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>
-              {isFullyCovered ? 'Fully Paid' : isSubmitting ? 'Saving…' : 'Confirm Payment ✓'}
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel"
-            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
-          </Pressable>
-        </View>
-      </ScrollView>
+        {isFullyCovered ? (
+          <Button label="Done" onPress={() => router.back()} />
+        ) : (
+          <>
+            <Button label="Confirm payment" onPress={handlePay} loading={isSubmitting} />
+            <Button label="Cancel" variant="ghost" onPress={() => router.back()} />
+          </>
+        )}
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contentContainer: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  headerBox: { gap: 4, paddingBottom: Spacing.one },
-  summaryBox: { gap: Spacing.one, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, padding: Spacing.three },
-  summaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.two, padding: Spacing.four },
+  centerText: { textAlign: 'center' },
+  intro: { gap: Spacing.half },
   field: { gap: Spacing.one },
-  input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, fontSize: 16 },
-  amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  toggleLabelCopy: { flex: 1, gap: 2, paddingRight: Spacing.two },
-  saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
-  saveButtonDisabled: { opacity: 0.4 },
-  cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
-  pressed: { opacity: 0.7 },
 });

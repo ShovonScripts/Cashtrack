@@ -1,44 +1,15 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  TextInput,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 
+import { Card, CardDivider } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
-import { MaxContentWidth, Palette, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { AmountField, Button, Chip, FormField, Screen, SegmentedControl, SwitchRow } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
+import { usePreferences } from '@/context/expense-context';
 import type { FinancialReminder, FinancialReminderDraft, ReminderCategory, ReminderRepeatType } from '@/types/reminder';
-
-const CATEGORIES: ReminderCategory[] = [
-  'Bills',
-  'EMI',
-  'Loan',
-  'Rent',
-  'Credit Card',
-  'Insurance',
-  'Subscription',
-  'Education',
-  'Tax',
-  'Utilities',
-  'Other',
-];
-
-const REPEAT_TYPES: { label: string; value: ReminderRepeatType }[] = [
-  { label: 'One-time', value: 'one-time' },
-  { label: 'Weekly', value: 'weekly' },
-  { label: 'Monthly', value: 'monthly' },
-  { label: 'Yearly', value: 'yearly' },
-];
-
-const ALARM_TIME_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
+import { BILL_CATEGORIES, BILL_REPEAT_TYPES, validateBillForm, type BillFormErrors } from '@/utils/bill-form';
 
 type BillReminderFormProps = {
   initial?: FinancialReminder;
@@ -47,341 +18,242 @@ type BillReminderFormProps = {
   onSubmit: (draft: FinancialReminderDraft) => Promise<void>;
 };
 
+const numberText = (value: number | null | undefined) => (value !== null && value !== undefined ? String(value) : '');
+
+/** The Add and Edit bill / reminder form. */
 export function BillReminderForm({ initial, paidThisCycle = 0, submitLabel, onSubmit }: BillReminderFormProps) {
-  const theme = useTheme();
+  const { country, formatAmount } = usePreferences();
+  const symbol = country.symbol.trim();
 
   const [title, setTitle] = useState(() => initial?.title ?? '');
   const [isVariableAmount, setIsVariableAmount] = useState(() => initial?.isVariableAmount ?? false);
-  const [amountText, setAmountText] = useState(() =>
-    initial?.amount !== null && initial?.amount !== undefined ? String(initial.amount) : '',
-  );
+  const [amountText, setAmountText] = useState(() => numberText(initial?.amount));
   const [category, setCategory] = useState<ReminderCategory>(() => initial?.category ?? 'Bills');
   const [dueDate, setDueDate] = useState(() => (initial ? new Date(initial.dueDate) : new Date()));
   const [repeatType, setRepeatType] = useState<ReminderRepeatType>(() => initial?.repeatType ?? 'monthly');
   const [notes, setNotes] = useState(() => initial?.notes ?? '');
-
   const [isAlarm, setIsAlarm] = useState(() => initial?.isAlarm ?? false);
   const [alarmTime, setAlarmTime] = useState(() => initial?.alarmTime ?? '09:00');
+  const [totalAmountText, setTotalAmountText] = useState(() => numberText(initial?.totalAmount));
+  const [totalInstallmentsText, setTotalInstallmentsText] = useState(() => numberText(initial?.totalInstallments));
 
-  const [totalAmountText, setTotalAmountText] = useState(() =>
-    initial?.totalAmount !== null && initial?.totalAmount !== undefined ? String(initial.totalAmount) : '',
-  );
-  const [totalInstallmentsText, setTotalInstallmentsText] = useState(() =>
-    initial?.totalInstallments !== null && initial?.totalInstallments !== undefined
-      ? String(initial.totalInstallments)
-      : '',
-  );
-
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<BillFormErrors>({});
+  const [submitError, setSubmitError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const parsedAmount = amountText.trim() === '' ? NaN : Number(amountText);
-  const isValid =
-    title.trim().length > 0 &&
-    (isVariableAmount || (!Number.isNaN(parsedAmount) && Number.isFinite(parsedAmount) && parsedAmount > 0));
+  const clearError = (field: keyof BillFormErrors) => {
+    setSubmitError('');
+    if (errors[field]) setErrors(({ [field]: _removed, ...rest }) => rest);
+  };
 
   const handleSave = async () => {
     if (isSubmitting) return;
-    if (!isValid) {
-      setError('Please provide a valid bill name and amount.');
-      return;
-    }
-    if (!isVariableAmount && paidThisCycle > 0 && parsedAmount <= paidThisCycle + 0.005) {
-      setError('The amount must be greater than what has already been paid this cycle.');
-      return;
-    }
-    if (isAlarm && !ALARM_TIME_PATTERN.test(alarmTime.trim())) {
-      setError('Enter the alarm time as HH:MM using 24-hour time, for example 09:00.');
-      return;
-    }
-
-    const isEmi = category === 'EMI';
-    const totalAmount = isEmi && totalAmountText.trim() ? Number(totalAmountText) : null;
-    const totalInstallments = isEmi && totalInstallmentsText.trim() ? Number(totalInstallmentsText) : null;
+    const { errors: found, parsed } = validateBillForm(
+      {
+        title,
+        isVariableAmount,
+        amount: amountText,
+        category,
+        isAlarm,
+        alarmTime,
+        totalAmount: totalAmountText,
+        totalInstallments: totalInstallmentsText,
+      },
+      paidThisCycle,
+    );
+    setErrors(found);
+    if (!parsed) return;
 
     setIsSubmitting(true);
-    setError('');
+    setSubmitError('');
     try {
       await onSubmit({
-        title: title.trim().slice(0, 60),
-        amount: isVariableAmount ? null : parsedAmount,
+        title: parsed.title,
+        amount: parsed.amount,
         isVariableAmount,
         category,
         dueDate: dueDate.toISOString(),
         repeatType,
         notes: notes.trim().slice(0, 200),
-        totalAmount: Number.isFinite(totalAmount) ? totalAmount : null,
-        installmentAmount: isVariableAmount ? null : parsedAmount,
-        totalInstallments: Number.isInteger(totalInstallments) ? totalInstallments : null,
+        totalAmount: parsed.totalAmount,
+        installmentAmount: parsed.amount,
+        totalInstallments: parsed.totalInstallments,
         isAlarm,
-        alarmTime: isAlarm ? alarmTime.trim() : null,
+        alarmTime: parsed.alarmTime,
       });
-
       router.back();
     } catch (err) {
       console.error('[cashtrack] Failed to save bill reminder', err);
-      setError(err instanceof Error && err.message ? err.message : 'Could not save this bill. Please try again.');
+      setSubmitError(err instanceof Error && err.message ? err.message : 'Could not save this bill. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const paidInstallments = initial?.paidInstallments ?? 0;
 
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
-      <ScrollView
-        contentContainerStyle={styles.contentContainer}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag">
-        <View style={styles.container}>
-          {/* Bill Title */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">BILL / REMINDER NAME</ThemedText>
-            <TextInput
-              value={title}
-              onChangeText={(v) => { setTitle(v); setError(''); }}
-              placeholder="e.g. Internet Bill or Home EMI"
-              placeholderTextColor={theme.textSecondary}
-              autoCapitalize="sentences"
-              accessibilityLabel="Bill name"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
+      <Screen topInset={false}>
+        <FormField
+          label="Bill or reminder name"
+          value={title}
+          onChangeText={(value) => {
+            setTitle(value);
+            clearError('title');
+          }}
+          placeholder="e.g. Internet bill or Home EMI"
+          autoCapitalize="sentences"
+          maxLength={60}
+          error={errors.title}
+        />
 
-          {/* Amount & Variable Toggle */}
-          <View style={styles.field}>
-            <View style={styles.dueDateHeader}>
-              <ThemedText type="caption" themeColor="textSecondary">AMOUNT</ThemedText>
-              <View style={styles.variableRow}>
-                <ThemedText type="caption" themeColor="textSecondary">Amount varies</ThemedText>
-                <Switch
-                  value={isVariableAmount}
-                  onValueChange={(val) => { setIsVariableAmount(val); setError(''); }}
-                  accessibilityLabel="Amount varies"
-                  trackColor={{ false: theme.cardMuted, true: theme.accent }}
-                />
-              </View>
-            </View>
-            {!isVariableAmount && (
-              <TextInput
-                value={amountText}
-                onChangeText={(v) => { setAmountText(v.replace(/[^0-9.]/g, '')); setError(''); }}
-                placeholder="0.00"
-                placeholderTextColor={theme.textSecondary}
-                keyboardType="decimal-pad"
-                accessibilityLabel="Bill amount"
-                style={[styles.input, styles.amountInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-              />
-            )}
-            {!isVariableAmount && paidThisCycle > 0 && (
+        <Card padded={false}>
+          <SwitchRow
+            label="Amount varies"
+            description="Turn on for bills that change each time, like electricity."
+            value={isVariableAmount}
+            onValueChange={(value) => {
+              setIsVariableAmount(value);
+              clearError('amount');
+            }}
+          />
+        </Card>
+
+        {!isVariableAmount ? (
+          <AmountField
+            label="Amount"
+            value={amountText}
+            onChangeText={(value) => {
+              setAmountText(value);
+              clearError('amount');
+            }}
+            symbol={symbol}
+            helper={paidThisCycle > 0 ? `Already paid this cycle: ${formatAmount(paidThisCycle)}` : undefined}
+            error={errors.amount}
+          />
+        ) : null}
+
+        <View style={styles.field}>
+          <ThemedText type="smallBold">Category</ThemedText>
+          <View style={styles.chips}>
+            {BILL_CATEGORIES.map((cat) => (
+              <Chip key={cat} label={cat} selected={category === cat} onPress={() => setCategory(cat)} />
+            ))}
+          </View>
+        </View>
+
+        {category === 'EMI' ? (
+          <Card variant="muted" style={styles.group}>
+            <View style={styles.groupHeader}>
+              <ThemedText type="smallBold">Loan details</ThemedText>
               <ThemedText type="caption" themeColor="textSecondary">
-                Already paid this cycle: {paidThisCycle.toFixed(2)}
+                Optional. Used to track how many installments are left.
               </ThemedText>
-            )}
-          </View>
-
-          {/* Category */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">CATEGORY</ThemedText>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScroll}>
-              {CATEGORIES.map((cat) => {
-                const selected = category === cat;
-                return (
-                  <Pressable
-                    key={cat}
-                    onPress={() => setCategory(cat)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    style={[
-                      styles.chip,
-                      {
-                        backgroundColor: selected ? theme.accentFill : theme.cardMuted,
-                        borderColor: selected ? theme.accentFill : theme.border,
-                      },
-                    ]}>
-                    <ThemedText type="smallBold" style={{ color: selected ? Palette.white : theme.textSecondary }}>
-                      {cat}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* EMI Specific Fields */}
-          {category === 'EMI' && (
-            <View style={[styles.emiCard, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-              <ThemedText type="defaultBold">EMI Loan Details (Optional)</ThemedText>
-              <View style={styles.rowFields}>
-                <View style={[styles.field, styles.flex1]}>
-                  <ThemedText type="caption" themeColor="textSecondary">TOTAL LOAN</ThemedText>
-                  <TextInput
-                    value={totalAmountText}
-                    onChangeText={(v) => setTotalAmountText(v.replace(/[^0-9.]/g, ''))}
-                    placeholder="120000"
-                    placeholderTextColor={theme.textSecondary}
-                    keyboardType="decimal-pad"
-                    accessibilityLabel="Total loan amount"
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
-                  />
-                </View>
-                <View style={[styles.field, styles.flex1]}>
-                  <ThemedText type="caption" themeColor="textSecondary">INSTALLMENTS</ThemedText>
-                  <TextInput
-                    value={totalInstallmentsText}
-                    onChangeText={(v) => setTotalInstallmentsText(v.replace(/[^0-9]/g, ''))}
-                    placeholder="12"
-                    placeholderTextColor={theme.textSecondary}
-                    keyboardType="number-pad"
-                    accessibilityLabel="Total installments count"
-                    style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
-                  />
-                </View>
-              </View>
-              {initial && (initial.paidInstallments ?? 0) > 0 && (
-                <ThemedText type="caption" themeColor="textSecondary">
-                  Installments paid: {initial.paidInstallments}
-                  {initial.totalInstallments ? ` of ${initial.totalInstallments}` : ''}
-                </ThemedText>
-              )}
             </View>
-          )}
+            <AmountField
+              label="Total loan"
+              value={totalAmountText}
+              onChangeText={(value) => {
+                setTotalAmountText(value);
+                clearError('totalAmount');
+              }}
+              symbol={symbol}
+              error={errors.totalAmount}
+            />
+            <FormField
+              label="Number of installments"
+              value={totalInstallmentsText}
+              onChangeText={(value) => {
+                setTotalInstallmentsText(value.replace(/[^0-9]/g, ''));
+                clearError('totalInstallments');
+              }}
+              placeholder="12"
+              keyboardType="number-pad"
+              maxLength={4}
+              error={errors.totalInstallments}
+              helper={
+                paidInstallments > 0
+                  ? `Paid so far: ${paidInstallments}${initial?.totalInstallments ? ` of ${initial.totalInstallments}` : ''}`
+                  : undefined
+              }
+            />
+          </Card>
+        ) : null}
 
-          {/* Due Date */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">DUE DATE</ThemedText>
-            <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />
-          </View>
+        <View style={styles.field}>
+          <ThemedText type="smallBold">Due date</ThemedText>
+          <DatePicker value={dueDate} onChange={setDueDate} label="Due date" />
+        </View>
 
-          {/* High-Priority Alarm Mode Toggle */}
-          <View style={[styles.alarmCard, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-            <View style={styles.dueDateHeader}>
-              <View style={{ flex: 1, gap: 2 }}>
-                <ThemedText type="defaultBold">🚨 High-Priority Alarm Mode</ThemedText>
-                <ThemedText type="caption" themeColor="textSecondary">Ring high-importance alarm notification on due date</ThemedText>
-              </View>
-              <Switch
-                value={isAlarm}
-                onValueChange={(value) => { setIsAlarm(value); setError(''); }}
-                accessibilityLabel="High-priority alarm mode"
-                trackColor={{ false: theme.border, true: theme.accent }}
-              />
-            </View>
-            {isAlarm && (
-              <View style={styles.alarmTimeRow}>
-                <ThemedText type="smallBold">Exact Alarm Time</ThemedText>
-                <TextInput
+        <View style={styles.field}>
+          <ThemedText type="smallBold">Repeat</ThemedText>
+          <SegmentedControl label="Repeat" value={repeatType} onChange={setRepeatType} options={BILL_REPEAT_TYPES} />
+        </View>
+
+        <Card padded={false}>
+          <SwitchRow
+            label="Alarm on the due date"
+            description="Rings a high-priority alert instead of a quiet notification."
+            value={isAlarm}
+            onValueChange={(value) => {
+              setIsAlarm(value);
+              clearError('alarmTime');
+            }}
+          />
+          {isAlarm ? (
+            <>
+              <CardDivider />
+              <View style={styles.inset}>
+                <FormField
+                  label="Alarm time"
                   value={alarmTime}
-                  onChangeText={(value) => { setAlarmTime(value); setError(''); }}
+                  onChangeText={(value) => {
+                    setAlarmTime(value);
+                    clearError('alarmTime');
+                  }}
                   placeholder="09:00"
-                  placeholderTextColor={theme.textSecondary}
                   keyboardType="numbers-and-punctuation"
                   maxLength={5}
-                  accessibilityLabel="Exact alarm time"
-                  style={[styles.input, styles.alarmTimeInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.background }]}
+                  helper="24-hour time, for example 09:00."
+                  error={errors.alarmTime}
                 />
               </View>
-            )}
-          </View>
+            </>
+          ) : null}
+        </Card>
 
-          {/* Repeat / Recurrence */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">REPEAT FREQUENCY</ThemedText>
-            <View style={styles.typeRow}>
-              {REPEAT_TYPES.map((rep) => {
-                const selected = repeatType === rep.value;
-                return (
-                  <Pressable
-                    key={rep.value}
-                    onPress={() => setRepeatType(rep.value)}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    style={[
-                      styles.typeButton,
-                      {
-                        backgroundColor: selected ? theme.accentMuted : theme.cardMuted,
-                        borderColor: selected ? theme.accent : theme.border,
-                      },
-                    ]}>
-                    <ThemedText type="caption" style={{ fontWeight: '700', color: selected ? theme.accent : theme.textSecondary }} numberOfLines={1}>
-                      {rep.label}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
+        <FormField
+          label="Notes"
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Account number, website or reference"
+          helper="Optional"
+          maxLength={200}
+          multiline
+        />
 
-          {/* Notes */}
-          <View style={styles.field}>
-            <ThemedText type="caption" themeColor="textSecondary">NOTES (OPTIONAL)</ThemedText>
-            <TextInput
-              value={notes}
-              onChangeText={setNotes}
-              placeholder="Account number, website, or reference"
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel="Bill notes"
-              multiline
-              style={[styles.input, styles.noteInput, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
+        {submitError ? (
+          <ThemedText type="caption" themeColor="danger" accessibilityLiveRegion="polite">
+            {submitError}
+          </ThemedText>
+        ) : null}
 
-          {error ? <ThemedText type="caption" themeColor="danger">{error}</ThemedText> : null}
-
-          <Pressable
-            onPress={handleSave}
-            disabled={!isValid || isSubmitting}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: !isValid || isSubmitting, busy: isSubmitting }}
-            style={({ pressed }) => [
-              styles.saveButton,
-              { backgroundColor: theme.accentFill },
-              pressed && styles.pressed,
-              (!isValid || isSubmitting) && styles.saveButtonDisabled,
-            ]}>
-            <ThemedText type="defaultBold" style={styles.saveText}>
-              {isSubmitting ? 'Saving…' : submitLabel}
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            onPress={() => router.back()}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel"
-            style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" themeColor="textSecondary">Cancel</ThemedText>
-          </Pressable>
-        </View>
-      </ScrollView>
+        <Button label={submitLabel} onPress={handleSave} loading={isSubmitting} />
+        <Button label="Cancel" variant="ghost" onPress={() => router.back()} />
+      </Screen>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  contentContainer: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
   field: { gap: Spacing.one },
-  variableRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.large, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, fontSize: 16 },
-  amountInput: { fontSize: 22, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  chipScroll: { gap: Spacing.two, paddingVertical: Spacing.one },
-  chip: { height: 44, paddingHorizontal: Spacing.three, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
-  emiCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth },
-  alarmCard: { gap: Spacing.two, padding: Spacing.three, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth },
-  alarmTimeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: Spacing.one },
-  alarmTimeInput: { width: 100, textAlign: 'center', paddingVertical: Spacing.two },
-  rowFields: { flexDirection: 'row', gap: Spacing.two },
-  flex1: { flex: 1 },
-  typeRow: { flexDirection: 'row', gap: Spacing.two },
-  typeButton: { flex: 1, height: 44, borderWidth: StyleSheet.hairlineWidth, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center', paddingHorizontal: Spacing.one },
-  dueDateHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  noteInput: { minHeight: 70, textAlignVertical: 'top' },
-  saveButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.three, borderRadius: Radius.medium, marginTop: Spacing.two },
-  saveButtonDisabled: { opacity: 0.4 },
-  saveText: { color: Palette.white },
-  cancelButton: { alignItems: 'center', justifyContent: 'center', paddingVertical: Spacing.two },
-  pressed: { opacity: 0.7 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  group: { gap: Spacing.three },
+  groupHeader: { gap: Spacing.half },
+  inset: { padding: Spacing.three },
 });

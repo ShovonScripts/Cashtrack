@@ -20,6 +20,8 @@ export const POT_TYPES: readonly {
   suggestedPercent: string;
   /** Stored on the goal and shown on its card. */
   icon: string;
+  /** Shown on the pot type picker. */
+  glyph: string;
 }[] = [
   {
     label: 'General',
@@ -27,6 +29,7 @@ export const POT_TYPES: readonly {
     detail: 'For short-term buys, gadgets or a general cash reserve. Add money any time.',
     suggestedPercent: '10',
     icon: 'piggy-bank',
+    glyph: 'piggy-bank-outline',
   },
   {
     label: 'Junior',
@@ -34,6 +37,7 @@ export const POT_TYPES: readonly {
     detail: 'A long-term pot for your children: school, activities or a future gift.',
     suggestedPercent: '5',
     icon: 'teddy-bear',
+    glyph: 'baby-face-outline',
   },
   {
     label: 'Emergency',
@@ -41,6 +45,7 @@ export const POT_TYPES: readonly {
     detail: 'A safety net for the unexpected. Experts suggest 3 to 6 months of living costs.',
     suggestedPercent: '15',
     icon: 'shield-check',
+    glyph: 'shield-check-outline',
   },
   {
     label: 'Milestone',
@@ -48,6 +53,7 @@ export const POT_TYPES: readonly {
     detail: 'For a big target with a deadline, such as a trip or a vehicle.',
     suggestedPercent: '10',
     icon: 'star-shooting',
+    glyph: 'star-shooting-outline',
   },
 ];
 

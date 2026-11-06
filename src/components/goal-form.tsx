@@ -1,11 +1,14 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { ThemedText } from '@/components/themed-text';
 import { AmountField, Button, Chip, FormField, Screen, SegmentedControl } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import type { GlyphName } from '@/constants/icons';
+import { IconSize, MinTouchTarget, PressFeedback, Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { usePreferences } from '@/context/expense-context';
 import { useGoals } from '@/context/goal-context';
 import type { AllocationType, GoalFrequency } from '@/types/goal';
@@ -82,6 +85,7 @@ export function GoalForm({
   onSubmit,
   onCancel,
 }: GoalFormProps) {
+  const theme = useTheme();
   const { goals } = useGoals();
   const { country } = usePreferences();
   const initial = initialValues ?? EMPTY;
@@ -158,12 +162,39 @@ export function GoalForm({
       <Screen topInset={false}>
         <View style={styles.field}>
           <ThemedText type="smallBold">Pot type</ThemedText>
-          <SegmentedControl
-            label="Pot type"
-            value={potType}
-            onChange={selectPot}
-            options={POT_TYPES.map((p) => ({ value: p.value, label: p.label }))}
-          />
+          <View accessibilityRole="radiogroup" accessibilityLabel="Pot type" style={styles.potGrid}>
+            {POT_TYPES.map((p) => {
+              const selected = potType === p.value;
+              return (
+                <Pressable
+                  key={p.value}
+                  onPress={() => selectPot(p.value)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={p.label}
+                  accessibilityState={{ checked: selected }}
+                  style={({ pressed }) => [
+                    styles.potTile,
+                    {
+                      backgroundColor: selected ? theme.accentFill : theme.cardMuted,
+                      borderColor: selected ? theme.accentFill : theme.border,
+                    },
+                    pressed && PressFeedback,
+                  ]}>
+                  <MaterialCommunityIcons
+                    name={p.glyph as GlyphName}
+                    size={IconSize.md}
+                    color={selected ? theme.onBrand : theme.textSecondary}
+                  />
+                  <ThemedText
+                    type="smallBold"
+                    numberOfLines={1}
+                    style={[styles.flex, { color: selected ? theme.onBrand : theme.text }]}>
+                    {p.label}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </View>
           <ThemedText type="caption" themeColor="textSecondary">
             {potMeta(potType).detail}
           </ThemedText>
@@ -294,4 +325,17 @@ const styles = StyleSheet.create({
   field: { gap: Spacing.one },
   group: { gap: Spacing.three },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  potGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  // Two per row: half the width minus half the gap, so labels never truncate on narrow phones.
+  potTile: {
+    flexBasis: '47%',
+    flexGrow: 1,
+    minHeight: MinTouchTarget + Spacing.two,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Radius.medium,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
 });

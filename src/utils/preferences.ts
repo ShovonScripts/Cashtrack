@@ -5,6 +5,14 @@ import type { GenderOption, ThemeMode, UserPreferences } from '../types/preferen
 
 const GENDER_OPTIONS: GenderOption[] = ['woman', 'man', 'other', ''];
 
+/** Places that use Fahrenheit day to day. Everywhere else uses Celsius. */
+const FAHRENHEIT_COUNTRIES = new Set(['US', 'PR', 'GU', 'VI', 'AS', 'MP', 'LR', 'MM', 'BS', 'BZ', 'KY', 'PW', 'FM', 'MH']);
+
+/** The unit people in a country expect when they have not chosen one. */
+export function defaultTemperatureUnit(countryCode: string): 'C' | 'F' {
+  return FAHRENHEIT_COUNTRIES.has(countryCode) ? 'F' : 'C';
+}
+
 function isUnsafeKey(key: string): boolean {
   return key === '__proto__' || key === 'constructor' || key === 'prototype';
 }
@@ -74,9 +82,13 @@ export function sanitizePreferences(value: unknown): UserPreferences {
     ? candidate.themeMode
     : 'system';
 
-  const temperatureUnit = candidate.temperatureUnit === 'C' || candidate.temperatureUnit === 'F'
-    ? candidate.temperatureUnit
-    : 'F';
+  // Older saves stored 'F' for everyone without anyone choosing it, so only a
+  // unit the person picked is kept; otherwise it follows the country.
+  const temperatureUnitChosen = candidate.temperatureUnitChosen === true
+    && (candidate.temperatureUnit === 'C' || candidate.temperatureUnit === 'F');
+  const temperatureUnit = temperatureUnitChosen
+    ? (candidate.temperatureUnit as 'C' | 'F')
+    : defaultTemperatureUnit(countryCode);
 
   const coverPhotoUri = typeof rawProfile.coverPhotoUri === 'string' ? rawProfile.coverPhotoUri : undefined;
   const profilePhotoUri = typeof rawProfile.profilePhotoUri === 'string' ? rawProfile.profilePhotoUri : undefined;
@@ -110,6 +122,7 @@ export function sanitizePreferences(value: unknown): UserPreferences {
     hasCompletedOnboarding,
     themeMode,
     temperatureUnit,
+    temperatureUnitChosen,
     firstDayOfWeek,
     enableBillReminders,
     enableBudgetAlerts,

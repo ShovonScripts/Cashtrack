@@ -95,7 +95,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       },
       {
         type: 'note',
-        text: 'Open the walkthrough again from **Profile & settings → Data & Privacy → Replay App Walkthrough**.',
+        text: 'Open the walkthrough again from **Profile & Settings → Data → Replay the walkthrough**.',
       },
       { type: 'heading', text: 'Choose your country and currency' },
       {
@@ -133,7 +133,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         type: 'steps',
         items: [
           'Open **More**.',
-          'Tap **Budget Caps & Limits**.',
+          'Tap **Category Limits**.',
           'Find a category, such as Food.',
           'Enter a monthly amount in **Set monthly cap**.',
           'Tap **Save**.',
@@ -263,7 +263,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          'Filter chips: **All**, **Finances**, **Utility Tools**, **Insights & Analytics**, and **Preferences**.',
+          'Filter chips: **All**, **Money**, **Insights**, **Tools**, and **Settings**.',
           'Sections: **UTILITY TOOLS**, **FINANCIAL MANAGEMENT**, **INTELLIGENCE & REPORTS**, and **PREFERENCES & SYSTEM**.',
           'The moon/sun button in the top-right toggles the theme.',
         ],
@@ -370,7 +370,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     blocks: [
       {
         type: 'paragraph',
-        text: 'Open **More → Budget Caps & Limits**. The main card is labeled **SPENDING CAPS & BUDGETS**.',
+        text: 'Open **More → Category Limits**. The main card is labeled **SPENDING CAPS & BUDGETS**.',
       },
       { type: 'heading', text: 'Set a category cap' },
       {
@@ -407,7 +407,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Budget alerts' },
       {
         type: 'paragraph',
-        text: 'Enable **Budget Caps** in **Profile & settings → Alerts** and allow notifications. CashTrack can alert you at 80%, 100%, and over the cap. Alerts escalate only upward. Editing or deleting an expense does not trigger a lower-level alert.',
+        text: 'Enable **Budget warnings** in **Profile & Settings → Alerts** and allow notifications. CashTrack can alert you at 80%, 100%, and over the cap. Alerts escalate only upward. Editing or deleting an expense does not trigger a lower-level alert.',
       },
       { type: 'heading', text: 'Important behavior' },
       {
@@ -661,7 +661,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       },
       {
         type: 'note',
-        text: 'The calendar always uses Sunday as the first day of the week, regardless of the **First Day of Week** preference.',
+        text: 'The calendar always uses Sunday as the first day of the week, regardless of the **Week starts on** preference.',
       },
       { type: 'heading', text: 'Subscriptions and recurring hub' },
       {
@@ -720,7 +720,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'All-time CSV from Profile' },
       {
         type: 'paragraph',
-        text: 'Open **Profile & settings → Data & Privacy → Export CSV Spreadsheet**. This exports your full recorded expense ledger, not just one month. The columns are the same as the monthly CSV.',
+        text: 'Open **Profile & Settings → Data → Export transactions**. This exports your full recorded expense ledger, not just one month. The columns are the same as the monthly CSV.',
       },
     ],
   },
@@ -828,75 +828,75 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         type: 'paragraph',
         text: 'Open **More → Profile & Preferences**, or tap your profile on Home. The screen is titled **Profile & settings**.',
       },
-      { type: 'heading', text: 'Identity' },
+      { type: 'heading', text: 'Profile' },
       {
         type: 'bullets',
         items: [
           'Profile photo and banner image.',
-          '**Nickname**, **Financial Goal / Bio**, **Age**, and **Gender** (Woman, Man, or Other).',
+          '**Name**, **Money goal or short bio**, **Age**, and **Gender** (Woman, Man, Other, or Not set). Tap your photo to change or remove it, and the banner to pick a preset or your own photo.',
           '**Private** badge.',
-          'Stats: **Logged**, **Currency**, **Pots**, and **Tags** (custom categories).',
+          'Counts: **Transactions**, **Savings pots**, and **My categories**.',
         ],
       },
       {
         type: 'paragraph',
-        text: 'If you leave the nickname blank, the app displays **CashTrack User**. If you leave the bio blank, it displays a private/offline message.',
+        text: 'If you leave the name blank, the header shows **Your profile** with a tip to add your details.',
       },
       {
         type: 'paragraph',
-        text: 'Tap the banner or edit control to open **Choose Banner Preset**. Presets are **Emerald Wealth**, **Cosmic Dark**, **Golden Luxury**, **Cyber Dusk**, and **Ocean Serenity**. You can also upload a custom photo.',
+        text: 'Tap the banner to open **Banner**. Presets are **Emerald Wealth**, **Cosmic Dark**, **Golden Luxury**, **Cyber Dusk**, and **Ocean Serenity**. You can also choose **Upload my own photo**.',
       },
       {
         type: 'paragraph',
-        text: 'The **Setup: N%** progress is based on six items: name, profile photo, cover/banner, bio, age, and gender.',
+        text: 'The **Profile N% complete** bar is based on six items: name, profile photo, banner, bio, age, and gender. It disappears at 100%.',
       },
       { type: 'heading', text: 'Save profile changes' },
       {
         type: 'paragraph',
-        text: 'When you change identity details, a floating bar appears with **Unsaved Changes**, **Save updates**, **Discard**, and **Save**. Age must be a whole number from 1 to 120.',
+        text: 'When you change your profile, a bar appears at the bottom with **Discard** and **Save**. If you try to leave without saving, CashTrack asks whether to discard your changes. Age must be a whole number from 1 to 120. Settings and Alerts apply straight away and need no Save.',
       },
       { type: 'heading', text: 'Preferences' },
       {
         type: 'bullets',
         items: [
-          '**App Theme & Styling** — Auto, Light, or Dark.',
-          '**Privacy & Security** — App Lock.',
+          '**Appearance → Theme** — Auto, Light, or Dark.',
+          '**Security** — App Lock.',
           '**Country & Currency** — changes the currency label, not existing amounts.',
-          '**Temperature Unit** — °F or °C.',
-          '**First Day of Week** — Mon or Sun.',
+          '**Temperature** — °C or °F. Until you choose, it follows your country.',
+          '**Week starts on** — Monday or Sunday.',
         ],
       },
       {
         type: 'note',
-        text: 'The First Day of Week setting affects weekly summaries and reports. The bill calendar still starts on Sunday.',
+        text: 'The **Week starts on** setting affects weekly summaries and reports. The bill calendar still starts on Sunday.',
       },
       { type: 'heading', text: 'Alerts' },
       {
         type: 'bullets',
         items: [
-          '**Bill Reminders** — upcoming bills and EMIs.',
-          '**Budget Caps** — 80% and 100% cap warnings.',
-          '**Daily Check-in** — a daily reminder.',
-          '**Daily Motivation** — daily quote notifications.',
-          '**Quote on Launch** — a full-screen quote each time you open the app. On by default; needs no notification permission.',
-          '**Test Alarm Sound** — sends a test notification after 5 seconds.',
+          '**Bill reminders** — upcoming bills and EMIs.',
+          '**Budget warnings** — 80% and 100% cap warnings.',
+          '**Daily check-in** — a daily reminder.',
+          '**Morning quote** — a money quote at 8:00 AM.',
+          '**Quote when the app opens** — a full-screen quote each time you open the app. On by default; needs no notification permission.',
+          '**Send a test alarm** — sends a test notification after 5 seconds.',
         ],
       },
       {
         type: 'paragraph',
         text: 'Each toggle asks for notification permission when needed. If permission is denied, CashTrack shows a message directing you to device settings.',
       },
-      { type: 'heading', text: 'Data & Privacy' },
+      { type: 'heading', text: 'Data' },
       {
         type: 'bullets',
         items: [
-          '**Export CSV Spreadsheet** — full recorded expense ledger.',
-          '**Back Up All Data** — JSON file with photos and receipts.',
-          '**Restore From Backup** — native app only.',
-          '**Replay App Walkthrough**.',
+          '**Export transactions** — full recorded expense ledger.',
+          '**Back up everything** — JSON file with photos and receipts.',
+          '**Restore from a backup** — native app only.',
+          '**Replay the walkthrough**.',
           '**User Manual** — this searchable guide.',
           '**About CashTrack**.',
-          '**Danger Zone → Wipe All Local Data**.',
+          '**Danger zone → Erase all data**.',
         ],
       },
       { type: 'heading', text: 'About' },
@@ -967,7 +967,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          'Open **Profile & settings → Data & Privacy → Export CSV Spreadsheet**.',
+          'Open **Profile & Settings → Data → Export transactions**.',
           'Exports all recorded expenses.',
           'Columns: **Date, Category, Amount, Currency, Memo**.',
           'On the web, the file downloads. On iOS/Android, the share/save sheet opens.',
@@ -980,7 +980,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Create a full backup' },
       {
         type: 'paragraph',
-        text: 'Open **Profile & settings → Data & Privacy → Back Up All Data**. The backup is a JSON file named like CashTrack_Backup_YYYY-MM-DD.json.',
+        text: 'Open **Profile & Settings → Data → Back up everything**. The backup is a JSON file named like CashTrack_Backup_YYYY-MM-DD.json.',
       },
       {
         type: 'bullets',
@@ -1001,7 +1001,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'steps',
         items: [
-          'Open **Profile & settings → Data & Privacy → Restore From Backup**.',
+          'Open **Profile & Settings → Data → Restore from a backup**.',
           'Choose a CashTrack backup file.',
           'Review the preview: expenses, income, debts, pots, bills, and notes.',
           'Tap **Replace All Data** to confirm.',
@@ -1014,13 +1014,13 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Replay the walkthrough' },
       {
         type: 'paragraph',
-        text: 'Open **Profile & settings → Data & Privacy → Replay App Walkthrough**. This opens the onboarding tour again. It does not delete your data.',
+        text: 'Open **Profile & Settings → Data → Replay the walkthrough**. This opens the onboarding tour again. It does not delete your data.',
       },
-      { type: 'heading', text: 'Wipe all local data' },
+      { type: 'heading', text: 'Erase all data' },
       {
         type: 'steps',
         items: [
-          'Open **Profile & settings → Data & Privacy → Danger Zone → Wipe All Local Data**.',
+          'Open **Profile & Settings → Data → Danger zone → Erase all data**.',
           'Confirm **Reset All Local Data?**',
           'Confirm **Final Confirmation** and tap **Wipe Everything**.',
         ],
@@ -1045,7 +1045,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Bill reminders' },
       {
         type: 'paragraph',
-        text: 'When **Bill Reminders** is enabled and notifications are allowed, CashTrack schedules:',
+        text: 'When **Bill reminders** is enabled and notifications are allowed, CashTrack schedules:',
       },
       {
         type: 'bullets',
@@ -1059,12 +1059,12 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Budget alerts' },
       {
         type: 'paragraph',
-        text: 'When **Budget Caps** is enabled and notifications are allowed, CashTrack can alert you at 80%, 100%, and over-limit.',
+        text: 'When **Budget warnings** is enabled and notifications are allowed, CashTrack can alert you at 80%, 100%, and over-limit.',
       },
       { type: 'heading', text: 'Daily check-in and motivation' },
       {
         type: 'paragraph',
-        text: 'When enabled, CashTrack sends a **Daily Check-in** reminder to review your money and a **Daily Motivation** financial quote notification.',
+        text: 'When enabled, CashTrack sends a **Daily check-in** reminder to review your money and a **Morning quote** notification.',
       },
       { type: 'heading', text: 'Quote on launch' },
       {
@@ -1074,14 +1074,14 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'Tap anywhere to continue. On Android, the back button also continues.',
           'If App Lock is on, the quote appears right after you unlock.',
           'You get a different quote from the one you saw last time.',
-          'Turn it off in **Profile & settings → Alerts → Quote on Launch**.',
+          'Turn it off in **Profile & Settings → Alerts → Quote when the app opens**.',
         ],
       },
       { type: 'heading', text: 'Test alarm' },
       {
         type: 'bullets',
         items: [
-          'Open **Profile & settings → Alerts → Test Alarm Sound**.',
+          'Open **Profile & Settings → Alerts → Send a test alarm**.',
           'CashTrack schedules a test notification after 5 seconds.',
           'Turn off Silent mode to hear it.',
           'On Android, the high-priority alarm channel uses maximum importance and vibration.',
@@ -1107,7 +1107,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'Find CashTrack.',
           'Allow notifications, sound, and alarms.',
           'Check Silent mode and Do Not Disturb.',
-          'Return to **Profile & settings → Alerts** and use **Test Alarm Sound**.',
+          'Return to **Profile & Settings → Alerts** and use **Send a test alarm**.',
         ],
       },
     ],
@@ -1145,7 +1145,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          'The last onboarding step, and **Profile & settings → Data & privacy → Stay in touch**, let you join the CashTrack list. It is optional; the app works the same if you skip it.',
+          'The last onboarding step, and **Profile & Settings → Data → Stay in touch**, let you join the CashTrack list. It is optional; the app works the same if you skip it.',
           'If you join, CashTrack sends only what you type (name, email, and phone if given), whether you want updates, your country, and the app version and platform.',
           'Your money records are never sent.',
           'Updates are only sent if you tick the box. It starts unticked.',
@@ -1193,7 +1193,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         items: [
           'Allow notifications for CashTrack in device settings.',
           'Turn off Silent mode and Do Not Disturb.',
-          'Use **Test Alarm Sound** in Profile → Alerts.',
+          'Use **Send a test alarm** in Profile & Settings → Alerts.',
           'Test in a development or production build rather than Expo Go.',
           'On Android, check exact-alarm permission and battery optimization.',
         ],
@@ -1231,7 +1231,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'The bill calendar starts on Sunday' },
       {
         type: 'paragraph',
-        text: 'This is expected. The bill calendar is always Sunday-first, even if **First Day of Week** is set to Monday.',
+        text: 'This is expected. The bill calendar is always Sunday-first, even if **Week starts on** is set to Monday.',
       },
       { type: 'heading', text: 'I cannot find an expense' },
       {
@@ -1266,7 +1266,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'On the old phone, create a full backup.',
           'Save the JSON file somewhere you can access from the new phone.',
           'Install CashTrack on the new phone.',
-          'Use **Restore From Backup**.',
+          'Use **Restore from a backup**.',
           'Confirm **Replace All Data**.',
         ],
       },
@@ -1284,7 +1284,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         items: [
           '**Budget caps are not month-specific** — a category cap is a single persistent monthly limit. Setting a new cap replaces the old one for all future months.',
           '**Receipt attachment UI is missing** — receipt photos can be stored and displayed, but the add/edit screens do not provide a button to attach, replace, or remove one.',
-          '**Bill calendar is Sunday-first** — it ignores the **First Day of Week** preference.',
+          '**Bill calendar is Sunday-first** — it ignores the **Week starts on** preference.',
           '**Period report exports are limited** — daily reports are PDF only, monthly reports are PDF and CSV, and weekly/yearly reports are on-screen only.',
           '**App Lock has no separate PIN** — it relies entirely on the device’s screen lock, Face ID, fingerprint, or passcode.',
           '**Restore is native-only** — restore from backup is not available on the web. Backups can still be created and exported on the web.',
@@ -1317,19 +1317,19 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           ['Add a bill', 'Center + → Add Bill / Reminder'],
           ['Add a debt', 'Center + → Add Debt / Loan'],
           ['Create a pot', 'Center + → New Savings Pot'],
-          ['Set a budget cap', 'More → Budget Caps & Limits'],
+          ['Set a budget cap', 'More → Category Limits'],
           ['View reports', 'Analytics tab'],
           ['Export monthly PDF/CSV', 'Analytics → Export & Downloads'],
-          ['Export all expenses as CSV', 'Profile & settings → Data & Privacy'],
-          ['Back up everything', 'Profile & settings → Data & Privacy → Back Up All Data'],
-          ['Restore a backup', 'Profile & settings → Data & Privacy → Restore From Backup'],
+          ['Export all expenses as CSV', 'Profile & Settings → Data'],
+          ['Back up everything', 'Profile & Settings → Data → Back up everything'],
+          ['Restore a backup', 'Profile & Settings → Data → Restore from a backup'],
           ['Change theme', 'More moon/sun button or Profile → Preferences'],
           ['Change currency', 'More → Country & Currency'],
           ['Enable App Lock', 'Profile → Preferences → App Lock'],
-          ['Test notifications', 'Profile → Alerts → Test Alarm Sound'],
-          ['Replay onboarding', 'Profile → Data & Privacy → Replay App Walkthrough'],
-          ['Open the user manual', 'More → User Manual & Help or Profile → Data & Privacy → User Manual'],
-          ['Wipe all data', 'Profile → Data & Privacy → Danger Zone'],
+          ['Test notifications', 'Profile & Settings → Alerts → Send a test alarm'],
+          ['Replay onboarding', 'Profile & Settings → Data → Replay the walkthrough'],
+          ['Open the user manual', 'More → User Manual, or Profile & Settings → Data → User Manual'],
+          ['Erase all data', 'Profile & Settings → Data → Danger zone'],
         ],
       },
       { type: 'heading', text: 'Where things live' },
@@ -1342,7 +1342,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           ['Monthly analytics', 'Analytics tab'],
           ['All tools and settings', 'Menu tab'],
           ['Income', 'More → Income Streams'],
-          ['Budgets', 'More → Budget Caps & Limits'],
+          ['Budgets', 'More → Category Limits'],
           ['Spending advisor', 'More → Spending Advisor'],
           ['Pots and goals', 'More → Savings Goals & Pots'],
           ['Debts', 'More → Debts & IOUs'],
@@ -1357,7 +1357,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           ['World clocks', 'More → World Clocks'],
           ['Weather', 'Home → Weather slide or More → Weather'],
           ['Profile and settings', 'More → Profile & Preferences'],
-          ['About', 'Profile → Data & Privacy → About CashTrack'],
+          ['About', 'Profile & Settings → Data → About CashTrack'],
         ],
       },
       { type: 'heading', text: 'Default values' },
@@ -1383,12 +1383,12 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           'I know my selected country and currency.',
           'I have set budget caps for the categories I care about.',
           'I have enabled bill reminders if I want alerts.',
-          'I have tested **Test Alarm Sound**.',
+          'I have tested **Send a test alarm**.',
           'I have enabled App Lock if I want device authentication.',
           'I have created a recent full backup.',
           'I store backups somewhere safe and private.',
           'I understand that restore replaces all data on the device.',
-          'I understand that Wipe All Local Data cannot be undone.',
+          'I understand that Erase all data cannot be undone.',
         ],
       },
     ],

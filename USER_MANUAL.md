@@ -81,7 +81,7 @@ The first time you open CashTrack, the welcome walkthrough appears.
 2. Use **Next** to move forward, **Back** to return, or **Skip** to close the walkthrough.
 3. Tap **Get Started** on the last slide.
 
-You can open the walkthrough again later from **Profile & settings → Data & Privacy → Replay App Walkthrough**.
+You can open the walkthrough again later from **Profile & Settings → Data → Replay the walkthrough**.
 
 ### 2.2 Choose your country and currency
 
@@ -108,7 +108,7 @@ You can also tap **Add expense** on the Daily Cost card on the Home screen, or u
 ### 2.4 Set your first budget
 
 1. Open **Menu Hub**.
-2. Tap **Budget Caps & Limits**.
+2. Tap **Category Limits**.
 3. Find a category, such as Food.
 4. Enter a monthly amount in **Set monthly cap**.
 5. Tap **Save**.
@@ -388,7 +388,7 @@ When you add or edit an expense, CashTrack compares the projected category total
 
 ### 5.4 Budget alerts
 
-Enable **Budget Caps** in **Profile & settings → Alerts** and allow notifications.
+Enable **Budget warnings** in **Profile & Settings → Alerts** and allow notifications.
 
 CashTrack can alert you when a category reaches:
 
@@ -659,7 +659,7 @@ The **Renewal Calendar** shows a monthly grid with bills on their due dates.
 - Tap a day to see its bills.
 - Tap a bill to open its payment screen.
 
-The calendar always uses Sunday as the first day of the week, regardless of the **First Day of Week** preference.
+The calendar always uses Sunday as the first day of the week, regardless of the **Week starts on** preference.
 
 ### 9.7 Subscriptions and recurring hub
 
@@ -748,7 +748,7 @@ Weekly and yearly period reports do not have an export button. Use the monthly P
 
 ### 10.5 All-time CSV from Profile
 
-Open **Profile & settings → Data & Privacy → Export CSV Spreadsheet**.
+Open **Profile & Settings → Data → Export transactions**.
 
 This exports your full recorded expense ledger, not just one month. The columns are the same as the monthly CSV.
 
@@ -836,98 +836,45 @@ Open **Menu Hub → Profile & Preferences**, or tap your profile on Home.
 
 The screen is titled **Profile & settings**.
 
-### 12.1 Identity
+### 12.1 Profile
 
-The **Identity** tab contains:
+The header shows your banner, photo, name, a **Private** badge, and three counts: **Transactions**, **Savings pots**, and **My categories**.
 
-- Profile photo
-- Banner image
-- **Nickname**
-- **Financial Goal / Bio**
-- **Age**
-- **Gender** — Woman, Man, or Other
-- **Private** badge
-- Stats: **Logged**, **Currency**, **Pots**, **Tags** (custom categories)
+- Tap your **photo** to choose a new one or **Remove photo**.
+- Tap the **banner** to pick a preset (**Emerald Wealth**, **Cosmic Dark**, **Golden Luxury**, **Cyber Dusk**, **Ocean Serenity**) or **Upload my own photo**.
+- While your profile is not finished, a **Profile N% complete** bar shows progress across six items: name, photo, banner, bio, age, and gender.
 
-If you leave the nickname blank, the app displays **CashTrack User**. If you leave the bio blank, it displays a private/offline message.
-
-#### Banner
-
-Tap the banner or the edit control to open **Choose Banner Preset**.
-
-- Presets: **Emerald Wealth**, **Cosmic Dark**, **Golden Luxury**, **Cyber Dusk**, **Ocean Serenity**
-- **Upload Custom Photo**
-
-Choosing a preset or photo replaces the current banner.
-
-#### Profile completion
-
-The **Setup: N%** progress is based on six items:
-
-1. Name
-2. Profile photo
-3. Cover/banner
-4. Bio
-5. Age
-6. Gender
+The **Profile** tab contains **Name**, **Money goal or short bio**, **Age**, and **Gender** (Woman, Man, Other, or Not set). All are optional and stay on your phone.
 
 ### 12.2 Save profile changes
 
-When you change identity details, a floating bar appears with:
+When you change your profile, a bar appears at the bottom with **Discard** and **Save**. If you try to leave without saving, CashTrack asks whether to discard your changes; photos you picked but did not save are removed. Age must be a whole number from 1 to 120.
 
-- **Unsaved Changes**
-- **Save updates**
-- **Discard**
-- **Save**
+The Settings and Alerts tabs apply straight away and need no Save.
 
-Tap **Save** to apply the changes. Age must be a whole number from 1 to 120.
+### 12.3 Settings
 
-### 12.3 Preferences
-
-The **Preferences** tab contains:
-
-**App Theme & Styling**
-
-- **Auto** — follows the device theme
-- **Light**
-- **Dark**
-
-**Privacy & Security**
-
-- **App Lock** — see [App Lock](#13-app-lock)
-
-**Country & Regional Format**
-
-- **Country & Currency** — changes the currency label, not existing amounts
-- **Temperature Unit** — **°F** or **°C**
-- **First Day of Week** — **Mon** or **Sun**
-
-The First Day of Week setting affects weekly summaries and reports. The bill calendar still starts on Sunday.
+- **Appearance → Theme**: **Auto** (follows your phone), **Light**, or **Dark**.
+- **Security → App Lock**: see [App Lock](#13-app-lock).
+- **Region and formats**:
+  - **Country & Currency**: changes the currency label, not existing amounts.
+  - **Temperature**: **°C** or **°F**. Until you choose, it follows your country (°F in the US).
+  - **Week starts on**: **Monday** or **Sunday**. Affects weekly totals and the year progress card. The bill calendar still starts on Sunday.
 
 ### 12.4 Alerts
 
-The **Alerts** tab contains:
+- **Money reminders**: **Bill reminders**, **Budget warnings** (80% and 100% of a category limit), **Daily check-in**.
+- **Motivation**: **Morning quote** (8:00 AM) and **Quote when the app opens** (needs no notification permission).
+- **Send a test alarm**: a test notification arrives after 5 seconds.
 
-- **Bill Reminders** — upcoming bills and EMIs
-- **Budget Caps** — 80% and 100% cap warnings
-- **Daily Check-in** — a daily reminder
-- **Daily Motivation** — daily quote notifications
-- **Quote on Launch** — a full-screen quote each time you open the app (on by default; needs no notification permission)
-- **Test Alarm Sound** — sends a test notification after 5 seconds
+Turning a reminder on asks for notification permission. If you refuse, the switch stays off and CashTrack explains how to allow it in Settings.
 
-Each toggle asks for notification permission when needed. If permission is denied, CashTrack shows a message directing you to device settings.
+### 12.5 Data
 
-### 12.5 Data & Privacy
-
-The **Data & Privacy** tab contains:
-
-- **Export CSV Spreadsheet** — full recorded expense ledger
-- **Back Up All Data** — JSON file with photos and receipts
-- **Restore From Backup** — native app only
-- **Replay App Walkthrough**
-- **User Manual** — searchable in-app guide
-- **About CashTrack**
-- **Danger Zone → Wipe All Local Data**
+- **Stay in touch**: the optional sign-up.
+- **Your data**: **Export transactions** (CSV), **Back up everything** (one file with photos and receipts), **Restore from a backup** (phone app only).
+- **Help and info**: **Replay the walkthrough**, **User Manual**, **About CashTrack**, **Privacy Policy**.
+- **Danger zone → Erase all data**: asks twice, and cannot be undone.
 
 See [Backup, Restore, and Data](#14-backup-restore-and-data).
 
@@ -986,7 +933,7 @@ CashTrack is local-only. There is no automatic cloud backup. Make a backup befor
 
 ### 14.1 Export expenses as CSV
 
-**Profile & settings → Data & Privacy → Export CSV Spreadsheet**
+**Profile & Settings → Data → Export transactions**
 
 - Exports all recorded expenses.
 - Columns: **Date, Category, Amount, Currency, Memo**.
@@ -997,7 +944,7 @@ CSV is for spreadsheets and analysis. It does not include income, pots, debts, b
 
 ### 14.2 Create a full backup
 
-**Profile & settings → Data & Privacy → Back Up All Data**
+**Profile & Settings → Data → Back up everything**
 
 The backup is a JSON file named like `CashTrack_Backup_YYYY-MM-DD.json`.
 
@@ -1019,7 +966,7 @@ Save the file somewhere safe.
 
 ### 14.3 Restore a backup
 
-**Profile & settings → Data & Privacy → Restore From Backup**
+**Profile & Settings → Data → Restore from a backup**
 
 1. Choose a CashTrack backup file.
 2. Review the preview: expenses, income, debts, pots, bills, and notes.
@@ -1033,13 +980,13 @@ Restore **replaces everything currently on the device** with the backup. It cann
 
 ### 14.4 Replay the walkthrough
 
-**Profile & settings → Data & Privacy → Replay App Walkthrough**
+**Profile & Settings → Data → Replay the walkthrough**
 
 This opens the onboarding tour again. It does not delete your data.
 
 ### 14.5 Wipe all local data
 
-**Profile & settings → Data & Privacy → Danger Zone → Wipe All Local Data**
+**Profile & Settings → Data → Danger zone → Erase all data**
 
 CashTrack asks twice:
 
@@ -1068,14 +1015,14 @@ If **High-Priority Alarm Mode** is on and an exact alarm time is set, the due-da
 
 ### 15.2 Budget alerts
 
-When **Budget Caps** is enabled and notifications are allowed, CashTrack can alert you at 80%, 100%, and over-limit.
+When **Budget warnings** is enabled and notifications are allowed, CashTrack can alert you at 80%, 100%, and over-limit.
 
 ### 15.3 Daily check-in and motivation
 
 When enabled, CashTrack sends:
 
-- **Daily Check-in** — a daily reminder to review your money
-- **Daily Motivation** — a daily financial quote notification
+- **Daily check-in** — a daily reminder to review your money
+- **Morning quote** — a money quote at 8:00 AM
 
 **Quote on launch**
 
@@ -1083,11 +1030,11 @@ When enabled, CashTrack sends:
 - Tap anywhere to continue. On Android, the back button also continues.
 - If App Lock is on, the quote appears right after you unlock.
 - You get a different quote from the one you saw last time.
-- Turn it off in **Profile & settings → Alerts → Quote on Launch**.
+- Turn it off in **Profile & Settings → Alerts → Quote when the app opens**.
 
 ### 15.4 Test alarm
 
-**Profile & settings → Alerts → Test Alarm Sound**
+**Profile & Settings → Alerts → Send a test alarm**
 
 CashTrack schedules a test notification after 5 seconds.
 
@@ -1111,7 +1058,7 @@ If notifications do not arrive:
 2. Find CashTrack.
 3. Allow notifications, sound, and alarms.
 4. Check Silent mode and Do Not Disturb.
-5. Return to **Profile & settings → Alerts** and use **Test Alarm Sound**.
+5. Return to **Profile & Settings → Alerts** and use **Send a test alarm**.
 
 ---
 
@@ -1133,7 +1080,7 @@ CashTrack does not create an account and does not upload your financial records 
 
 **Stay in touch (optional)**
 
-- The last onboarding step, and **Profile & settings → Data & privacy → Stay in touch**, let you join the CashTrack list. It is optional; the app works the same if you skip it.
+- The last onboarding step, and **Profile & Settings → Data → Stay in touch**, let you join the CashTrack list. It is optional; the app works the same if you skip it.
 - If you join, CashTrack sends only what you type (name, email, and phone if given), whether you want updates, your country, and the app version and platform.
 - Your money records are never sent.
 - Updates are only sent if you tick the box. It starts unticked.
@@ -1185,7 +1132,7 @@ The converter uses live rates when available and falls back to cached or offline
 
 - Allow notifications for CashTrack in device settings.
 - Turn off Silent mode and Do Not Disturb.
-- Use **Test Alarm Sound** in Profile → Alerts.
+- Use **Send a test alarm** in Profile & Settings → Alerts.
 - Test in a development or production build rather than Expo Go.
 - On Android, check exact-alarm permission and battery optimization.
 
@@ -1215,7 +1162,7 @@ This is expected. Budget caps are saved per category and reused each month until
 
 ### The bill calendar starts on Sunday
 
-This is expected. The bill calendar is always Sunday-first, even if **First Day of Week** is set to Monday.
+This is expected. The bill calendar is always Sunday-first, even if **Week starts on** is set to Monday.
 
 ### I cannot find an expense
 
@@ -1241,7 +1188,7 @@ Most deletions cannot be undone. Restore a backup if you have one. This is why r
 1. On the old phone, create a full backup.
 2. Save the JSON file somewhere you can access from the new phone.
 3. Install CashTrack on the new phone.
-4. Use **Restore From Backup**.
+4. Use **Restore from a backup**.
 5. Confirm **Replace All Data**.
 
 ---
@@ -1260,7 +1207,7 @@ Receipt photos can be stored and displayed, but the current add/edit screens do 
 
 ### Bill calendar is Sunday-first
 
-The bill calendar ignores the **First Day of Week** preference and always starts on Sunday.
+The bill calendar ignores the **Week starts on** preference and always starts on Sunday.
 
 ### Period report exports are limited
 
@@ -1325,14 +1272,14 @@ Contributions are tracked inside the pot. They do not automatically reduce your 
 | Set a budget cap | **Menu Hub → Budget Caps & Limits** |
 | View reports | **Analytics** tab |
 | Export monthly PDF/CSV | **Analytics → Export & Downloads** |
-| Export all expenses as CSV | **Profile & settings → Data & Privacy** |
-| Back up everything | **Profile & settings → Data & Privacy → Back Up All Data** |
-| Restore a backup | **Profile & settings → Data & Privacy → Restore From Backup** |
+| Export all expenses as CSV | **Profile & Settings → Data** |
+| Back up everything | **Profile & Settings → Data → Back up everything** |
+| Restore a backup | **Profile & Settings → Data → Restore from a backup** |
 | Change theme | **Menu Hub** moon/sun button or **Profile → Preferences** |
 | Change currency | **Menu Hub → Country & Currency** |
 | Enable App Lock | **Profile → Preferences → App Lock** |
-| Test notifications | **Profile → Alerts → Test Alarm Sound** |
-| Replay onboarding | **Profile → Data & Privacy → Replay App Walkthrough** |
+| Test notifications | **Profile & Settings → Alerts → Send a test alarm** |
+| Replay onboarding | **Profile → Data & Privacy → Replay the walkthrough** |
 | Open the user manual | **Menu Hub → User Manual & Help** or **Profile → Data & Privacy → User Manual** |
 | Wipe all data | **Profile → Data & Privacy → Danger Zone** |
 
@@ -1381,7 +1328,7 @@ Contributions are tracked inside the pot. They do not automatically reduce your 
 - [ ] I know my selected country and currency.
 - [ ] I have set budget caps for the categories I care about.
 - [ ] I have enabled bill reminders if I want alerts.
-- [ ] I have tested **Test Alarm Sound**.
+- [ ] I have tested **Send a test alarm**.
 - [ ] I have enabled App Lock if I want device authentication.
 - [ ] I have created a recent full backup.
 - [ ] I store backups somewhere safe and private.

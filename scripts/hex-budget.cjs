@@ -11,7 +11,9 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const DIRS = ['src/app', 'src/components'];
-const HEX = /#[0-9A-Fa-f]{6}\b/g;
+// 6-digit colours, and 8-digit ones with alpha ('#159A8C1E'), which a plain
+// 6-digit pattern misses because the alpha digits break the word boundary.
+const HEX = /#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?\b/g;
 
 function walk(dir, acc = []) {
   for (const name of fs.readdirSync(dir)) {

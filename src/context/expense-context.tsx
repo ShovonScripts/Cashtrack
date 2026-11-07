@@ -17,6 +17,7 @@ import { formatCurrency } from '@/utils/expense';
 import { mergeExpenseChanges } from '@/utils/expense-draft';
 import { roundMoney } from '@/utils/money';
 import { DEFAULT_PREFERENCES, type UserPreferences, type UserProfile } from '@/types/preferences';
+import { defaultTemperatureUnit } from '@/utils/preferences';
 import { backupUnreadableExpenses, loadExpenses, saveExpenses } from '@/storage/expense-storage';
 import { backupUnreadablePreferences, loadPreferences, savePreferences } from '@/storage/preferences-storage';
 import { loadAppLockFlag, saveAppLockFlag } from '@/storage/app-lock-storage';
@@ -454,7 +455,12 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setCountryCode = useCallback((countryCode: CountryCode) => {
-    setPreferences((current) => ({ ...current, countryCode }));
+    setPreferences((current) => ({
+      ...current,
+      countryCode,
+      // Follow the new country's unit unless the person picked one.
+      temperatureUnit: current.temperatureUnitChosen ? current.temperatureUnit : defaultTemperatureUnit(countryCode),
+    }));
   }, []);
 
   const country = useMemo(() => getCountry(preferences.countryCode), [preferences.countryCode]);
@@ -580,7 +586,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setTemperatureUnit = useCallback((unit: 'F' | 'C') => {
-    setPreferences((current) => ({ ...current, temperatureUnit: unit }));
+    setPreferences((current) => ({ ...current, temperatureUnit: unit, temperatureUnitChosen: true }));
   }, []);
 
   const setFirstDayOfWeek = useCallback((day: 'monday' | 'sunday') => {
@@ -741,7 +747,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     themeMode,
     setThemeMode,
     toggleThemeMode,
-    temperatureUnit: preferences.temperatureUnit ?? 'F',
+    temperatureUnit: preferences.temperatureUnit ?? defaultTemperatureUnit(preferences.countryCode),
     setTemperatureUnit,
     firstDayOfWeek: preferences.firstDayOfWeek ?? 'monday',
     setFirstDayOfWeek,

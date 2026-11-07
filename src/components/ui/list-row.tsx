@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Badge, type BadgeTone } from '@/components/ui/badge';
@@ -18,6 +18,11 @@ type ListRowProps = {
   badgeTone?: BadgeTone;
   onPress: () => void;
   accessibilityHint?: string;
+  /** Shows a spinner instead of the chevron and ignores taps, e.g. while exporting. */
+  busy?: boolean;
+  disabled?: boolean;
+  /** Icon at the end instead of the chevron: 'share' for actions that hand a file to another app. */
+  trailing?: IconConcept | GlyphName;
 };
 
 /** A tappable row with an icon badge, title, optional subtitle and chevron. */
@@ -30,16 +35,21 @@ export function ListRow({
   badgeTone = 'neutral',
   onPress,
   accessibilityHint,
+  busy = false,
+  disabled = false,
+  trailing = 'next',
 }: ListRowProps) {
   const theme = useTheme();
 
   return (
     <Pressable
       onPress={onPress}
+      disabled={busy || disabled}
       accessibilityRole="button"
+      accessibilityState={{ busy, disabled: busy || disabled }}
       accessibilityLabel={badge ? `${title}, ${badge}` : title}
       accessibilityHint={accessibilityHint ?? subtitle}
-      style={({ pressed }) => [styles.row, pressed && PressFeedback]}>
+      style={({ pressed }) => [styles.row, disabled && styles.disabled, pressed && PressFeedback]}>
       <View style={[styles.iconBadge, { backgroundColor: withAlpha(color, 0.12) }]}>
         <Icon name={icon} size="md" color={color} />
       </View>
@@ -61,7 +71,7 @@ export function ListRow({
           </ThemedText>
         ) : null}
       </View>
-      <Icon name="next" size="md" color={theme.textSecondary} />
+      {busy ? <ActivityIndicator color={color} /> : <Icon name={trailing} size="md" color={theme.textSecondary} />}
     </Pressable>
   );
 }
@@ -85,4 +95,5 @@ const styles = StyleSheet.create({
   copy: { flex: 1, gap: Spacing.half },
   titleLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   title: { flexShrink: 1 },
+  disabled: { opacity: 0.5 },
 });

@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { ThemedText } from '@/components/themed-text';
-import { FeatureColors, Radius, Spacing } from '@/constants/theme';
+import { FeatureColors, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { CalculatorTool } from './tools/CalculatorTool';
 import { NotesTool } from './tools/NotesTool';
@@ -115,7 +115,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressedCard,
                   ]}>
-                  <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
+                  <View style={[styles.iconBox, { backgroundColor: withAlpha(FeatureColors.emerald, 0.08) }]}>
                     <MaterialCommunityIcons name="cash" size={24} color={FeatureColors.emerald} />
                   </View>
                   <View style={styles.cardTextContainer}>
@@ -166,7 +166,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressedCard,
                   ]}>
-                  <View style={[styles.iconBox, { backgroundColor: '#4F46E515' }]}>
+                  <View style={[styles.iconBox, { backgroundColor: withAlpha(FeatureColors.indigo, 0.08) }]}>
                     <MaterialCommunityIcons name="calendar-blank-outline" size={24} color="#4F46E5" />
                   </View>
                   <View style={styles.cardTextContainer}>
@@ -183,7 +183,7 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
                     { backgroundColor: theme.cardMuted, borderColor: theme.border },
                     pressed && styles.pressedCard,
                   ]}>
-                  <View style={[styles.iconBox, { backgroundColor: '#05966915' }]}>
+                  <View style={[styles.iconBox, { backgroundColor: withAlpha(FeatureColors.emerald, 0.08) }]}>
                     <MaterialCommunityIcons name="checkbox-marked-outline" size={24} color={FeatureColors.emerald} />
                   </View>
                   <View style={styles.cardTextContainer}>

@@ -12,7 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useFinancialReminders, type ReminderWithDerivedStatus } from '@/context/financial-reminders-context';
 import { usePreferences } from '@/context/expense-context';
 import { getReminderRemainingAmount, hasPartialPayment } from '@/utils/reminder-payment';
-import { Brand, Radius, Spacing } from '@/constants/theme';
+import { Brand, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { formatDate } from '@/utils/expense';
 import { confirmAction, confirmDelete, notify } from '@/utils/confirm';
@@ -295,7 +295,7 @@ function BillCard({ reminder, formatAmount }: { reminder: ReminderWithDerivedSta
             )}
 
             {reminder.isAlarm && (
-              <View style={[styles.badgePill, { backgroundColor: '#0152F518', flexDirection: 'row', alignItems: 'center', gap: 3 }]}>
+              <View style={[styles.badgePill, { backgroundColor: withAlpha(Brand.primary, 0.09), flexDirection: 'row', alignItems: 'center', gap: 3 }]}>
                 <MaterialCommunityIcons name="alarm" size={11} color={Brand.primary} />
                 <ThemedText type="caption" style={{ color: Brand.primary, fontWeight: '800', fontSize: 11 }}>
                   {reminder.alarmTime ? `Alarm ${reminder.alarmTime}` : 'Alarm'}

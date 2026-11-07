@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Elevation, FeatureColors, glow, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, Elevation, FeatureColors, glow, Palette, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
   clearCompletedTodos,
@@ -532,7 +532,7 @@ export function TodoTool({ variant = 'compact' }: TodoToolProps) {
                       <Text style={[styles.badgeText, { color: theme.textSecondary }]}>{cObj.label}</Text>
                     </View>
                     {dueInfo && !item.completed && (
-                      <View style={[styles.badge, { backgroundColor: dueInfo.isOverdue ? '#E11D481E' : dueInfo.isToday ? '#D977061E' : theme.cardMuted }]}>
+                      <View style={[styles.badge, { backgroundColor: dueInfo.isOverdue ? withAlpha(FeatureColors.crimson, 0.12) : dueInfo.isToday ? withAlpha(FeatureColors.amber, 0.12) : theme.cardMuted }]}>
                         <MaterialCommunityIcons
                           name={dueInfo.isOverdue ? 'alert-circle-outline' : 'calendar-blank-outline'}
                           size={10}

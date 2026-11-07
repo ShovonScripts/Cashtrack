@@ -28,6 +28,8 @@ export type UserPreferences = {
   hasCompletedOnboarding: boolean;
   themeMode: ThemeMode;
   temperatureUnit: 'F' | 'C';
+  /** True once the person picks °C or °F. Until then the unit follows the country. */
+  temperatureUnitChosen?: boolean;
   firstDayOfWeek?: FirstDayOfWeek;
   enableBillReminders?: boolean;
   enableBudgetAlerts?: boolean;
@@ -51,7 +53,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   notifiedDebts: {},
   hasCompletedOnboarding: false,
   themeMode: 'system',
-  temperatureUnit: 'F',
+  temperatureUnit: 'C',
+  temperatureUnitChosen: false,
   firstDayOfWeek: 'monday',
   enableBillReminders: true,
   enableBudgetAlerts: true,

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, FeatureColors, glow, Palette, Radius, Spacing } from '@/constants/theme';
+import { Brand, FeatureColors, glow, Palette, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme } from '@/hooks/use-theme';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   alertPillTag: {
-    backgroundColor: '#E11D481C',
+    backgroundColor: withAlpha(FeatureColors.crimson, 0.11),
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: Radius.small,

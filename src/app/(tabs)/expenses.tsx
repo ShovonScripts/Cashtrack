@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card, CardDivider } from '@/components/card';
+import { Card } from '@/components/card';
 import { CategoryChips, type CategoryFilter } from '@/components/category-chips';
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
@@ -13,9 +13,10 @@ import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
 import { Button, ScreenHeader, SearchField, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
-import { Elevation, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { getCategoryColor } from '@/constants/categories';
+import { Elevation, MaxContentWidth, Radius, Spacing, tintedShadow, withAlpha } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
+import { useIsDark, useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
 import type { Expense } from '@/types/expense';
 
@@ -80,6 +81,7 @@ export default function ExpensesScreen() {
   );
   const { categories, formatAmount } = usePreferences();
   const theme = useTheme();
+  const isDark = useIsDark();
   const now = useNow(60_000);
 
   const [query, setQuery] = useState('');
@@ -183,12 +185,22 @@ export default function ExpensesScreen() {
             </ThemedText>
           </View>
         )}
-        renderItem={({ item, index, section }) => (
-          <Card padded={false} style={styles.itemCard}>
-            <ExpenseListItem expense={item} onSwipeDelete={canUndoDelete(item) ? requestDelete : undefined} />
-            {index < section.data.length - 1 && <CardDivider />}
-          </Card>
-        )}
+        ItemSeparatorComponent={ItemGap}
+        renderItem={({ item }) => {
+          // Each card glows faintly in its category's colour.
+          const accent = getCategoryColor(item.category);
+          return (
+            <Card
+              padded={false}
+              elevated={false}
+              style={[
+                styles.itemCard,
+                { boxShadow: tintedShadow(accent, isDark), borderColor: withAlpha(accent, isDark ? 0.4 : 0.22) },
+              ]}>
+              <ExpenseListItem expense={item} onSwipeDelete={canUndoDelete(item) ? requestDelete : undefined} />
+            </Card>
+          );
+        }}
       />
 
       {/* Floating Action Button (FAB) for adding expense */}
@@ -208,6 +220,11 @@ export default function ExpensesScreen() {
       </Pressable>
     </View>
   );
+}
+
+/** Room between transaction cards so each tinted shadow can show. */
+function ItemGap() {
+  return <View style={styles.itemGap} />;
 }
 
 const styles = StyleSheet.create({
@@ -255,6 +272,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 11,
   },
+  itemGap: { height: Spacing.two },
   itemCard: {
     borderRadius: Radius.medium,
   },

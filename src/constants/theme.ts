@@ -313,6 +313,17 @@ export function glow(color: string, strength: 'soft' | 'strong' = 'soft'): strin
   return `0 3px 8px ${withAlpha(color, near)}, 0 12px 28px ${withAlpha(color, far)}`;
 }
 
+/**
+ * Soft shadow tinted with an accent, for lists where every card carries its
+ * own colour (Transactions: the category colour). Lighter than `glow`, so a
+ * whole screen of them stays calm. On dark mode the tint shows as a faint
+ * halo, which is what separates the cards there. Pass a 6-digit hex colour.
+ */
+export function tintedShadow(color: string, isDark = false): string {
+  const [near, far] = isDark ? [0.22, 0.2] : [0.14, 0.2];
+  return `0 1px 3px ${withAlpha(color, near)}, 0 6px 16px ${withAlpha(color, far)}`;
+}
+
 /** Press feedback shared by tappable cards and tiles: a slight sink, never a flash. */
 export const PressFeedback = {
   opacity: 0.94,

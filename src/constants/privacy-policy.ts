@@ -22,7 +22,7 @@ export type PolicySection = {
 
 export const PRIVACY_APP_NAME = 'CashTrack';
 /** ISO date the policy last changed. */
-export const PRIVACY_UPDATED = '2026-11-06';
+export const PRIVACY_UPDATED = '2026-11-07';
 /**
  * Public copy of this policy (docs/privacy-policy.html served by GitHub Pages
  * from the /docs folder of main). This URL goes into the store listings, and the
@@ -117,6 +117,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
           ['City name for weather', 'Your phone\'s geocoder, or BigDataCloud (bigdatacloud.com) as a fallback', 'The same location coordinates'],
           ['Currency converter', 'ExchangeRate-API (open.er-api.com)', 'Nothing about you; it downloads public rates'],
           ['World clock photos', 'Wikimedia (wikimedia.org)', 'Nothing about you; it downloads public images'],
+          ['Photo of your area (World Clocks)', 'Wikipedia (wikipedia.org)', 'The name of your city or time-zone city, only when it is not one of the built-in cities, to find its photo'],
           ['Stay in touch', 'Google Apps Script and Google Sheets', 'The sign-up details listed above, only if you join'],
         ],
       },
@@ -129,7 +130,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
       {
         type: 'bullets',
         items: [
-          'Location: asked for only to show local weather. Your location is not stored by us. You can deny it and the rest of the app works.',
+          'Location: asked for only to show local weather, and to name your area on the World Clocks page when you tap Find my area. Your location is not stored, on your device or by us. You can deny it and the rest of the app works; World Clocks then uses your time zone.',
           'Photos: to choose a profile or cover picture, or attach a receipt. Chosen photos stay on your device.',
           'Notifications and exact alarms: to remind you about bills and timers. Reminders are scheduled on your device; we do not send push messages.',
           'Biometrics: to unlock the app with your fingerprint or face, if you turn on app lock.',

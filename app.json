@@ -71,7 +71,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow CashTrack to access your location for local weather updates."
+          "locationWhenInUsePermission": "Allow CashTrack to use your location for local weather and to name your area on World Clocks."
         }
       ],
       [

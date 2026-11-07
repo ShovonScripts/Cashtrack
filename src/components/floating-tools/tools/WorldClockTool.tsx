@@ -8,19 +8,20 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { ThemedText } from '@/components/themed-text';
-import { Elevation, Palette, Radius, Spacing } from '@/constants/theme';
+import { Elevation, OnPhotoColors, Palette, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
 import { CITY_PHOTO_HEADERS, getCityPhoto } from '@/constants/city-photos';
 import { getTimeDifference } from '@/utils/world-clock';
+import { LocalTimeCard } from '@/components/world-clock/local-time-card';
 
 const CUSTOM_CLOCKS_KEY = '@cashtrack_user_world_clocks';
 const DEFAULT_SELECTED_IDS = ['nyc', 'london', 'tokyo', 'sydney', 'dubai', 'paris'];
 
-const PHOTO_TEXT = Palette.white;
-const PHOTO_TEXT_MUTED = 'rgba(255, 255, 255, 0.82)';
+const PHOTO_TEXT = OnPhotoColors.text;
+const PHOTO_TEXT_MUTED = OnPhotoColors.muted;
 
 type CityClockCardProps = {
   city: WorldCity;
@@ -204,27 +205,9 @@ export function WorldClockTool() {
     );
   });
 
-  const localTime = getFormattedTimeForZone(undefined, now);
-
   return (
     <View style={styles.container}>
-      {/* Master Hero Banner */}
-      <View style={[styles.heroBanner, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-        <View style={styles.heroLeft}>
-          <View style={[styles.heroIconBox, { backgroundColor: `${theme.accent}20` }]}>
-            <MaterialCommunityIcons name="clock-digital" size={22} color={theme.accent} />
-          </View>
-          <View>
-            <ThemedText type="caption" themeColor="textSecondary">LOCAL DEVICE TIME</ThemedText>
-            <ThemedText type="defaultBold" style={[styles.heroTime, { color: theme.text }]}>
-              {localTime.timeStr} <ThemedText type="smallBold" style={{ color: theme.accent }}>{localTime.ampm}</ThemedText>
-            </ThemedText>
-          </View>
-        </View>
-        <ThemedText type="caption" themeColor="textSecondary" style={styles.heroDate}>
-          {localTime.dateStr}
-        </ThemedText>
-      </View>
+      <LocalTimeCard now={now} />
 
       {/* Action Header */}
       <View style={styles.headerRow}>
@@ -271,11 +254,6 @@ export function WorldClockTool() {
         </View>
       )}
 
-      {activeCities.length > 0 && (
-        <ThemedText type="caption" themeColor="textSecondary" style={styles.credit}>
-          City photos from Wikipedia and Wikimedia Commons, used under their free licences.
-        </ThemedText>
-      )}
 
       {/* Add City Modal */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
@@ -380,33 +358,6 @@ const styles = StyleSheet.create({
   container: {
     gap: Spacing.three,
   },
-  heroBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  heroLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  heroIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  heroTime: {
-    fontSize: 18,
-    fontVariant: ['tabular-nums'],
-  },
-  heroDate: {
-    fontWeight: '700',
-  },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -436,12 +387,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...Elevation.low,
   },
-  credit: {
-    textAlign: 'center',
-    fontSize: 11,
-  },
   cityCardPhoto: {
-    backgroundColor: '#1B2230',
+    backgroundColor: OnPhotoColors.fallback,
     borderColor: 'transparent',
   },
   iosGlassWrap: {

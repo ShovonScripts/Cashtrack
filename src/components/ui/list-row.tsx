@@ -1,21 +1,21 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { MinTouchTarget, Radius, Spacing, withAlpha } from '@/constants/theme';
+import { Badge, type BadgeTone } from '@/components/ui/badge';
+import { Icon } from '@/components/ui/icon';
+import type { GlyphName, IconConcept } from '@/constants/icons';
+import { BadgeSize, MinTouchTarget, PressFeedback, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-
-type IconName = keyof typeof MaterialCommunityIcons.glyphMap;
 
 type ListRowProps = {
   title: string;
   subtitle?: string;
-  icon: IconName;
+  icon: IconConcept | GlyphName;
   /** Accent colour for the icon badge. */
   color: string;
-  /** Short status text shown beside the title, such as "3 overdue". */
+  /** Short live status shown beside the title, such as "3 overdue". Never a fixed label. */
   badge?: string;
-  badgeColor?: string;
+  badgeTone?: BadgeTone;
   onPress: () => void;
   accessibilityHint?: string;
 };
@@ -27,22 +27,21 @@ export function ListRow({
   icon,
   color,
   badge,
-  badgeColor,
+  badgeTone = 'neutral',
   onPress,
   accessibilityHint,
 }: ListRowProps) {
   const theme = useTheme();
-  const tint = badgeColor ?? color;
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={badge ? `${title}, ${badge}` : title}
-      accessibilityHint={accessibilityHint}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      accessibilityHint={accessibilityHint ?? subtitle}
+      style={({ pressed }) => [styles.row, pressed && PressFeedback]}>
       <View style={[styles.iconBadge, { backgroundColor: withAlpha(color, 0.12) }]}>
-        <MaterialCommunityIcons name={icon} size={20} color={color} />
+        <Icon name={icon} size="md" color={color} />
       </View>
       <View style={styles.copy}>
         <View style={styles.titleLine}>
@@ -50,14 +49,9 @@ export function ListRow({
             {title}
           </ThemedText>
           {badge ? (
-            <View
-              style={[
-                styles.badge,
-                { backgroundColor: withAlpha(tint, 0.12), borderColor: withAlpha(tint, 0.25) },
-              ]}>
-              <ThemedText type="caption" style={[styles.badgeText, { color: tint }]}>
-                {badge}
-              </ThemedText>
+            // Wrapped so the pill centres on the title line (Badge pins itself to the start).
+            <View>
+              <Badge label={badge} tone={badgeTone} />
             </View>
           ) : null}
         </View>
@@ -67,36 +61,28 @@ export function ListRow({
           </ThemedText>
         ) : null}
       </View>
-      <MaterialCommunityIcons name="chevron-right" size={20} color={theme.textSecondary} />
+      <Icon name="next" size="md" color={theme.textSecondary} />
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: MinTouchTarget + Spacing.two,
+    minHeight: MinTouchTarget + Spacing.three,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
     paddingHorizontal: Spacing.three,
-    paddingVertical: 10,
+    paddingVertical: Spacing.two,
   },
-  pressed: { opacity: 0.75 },
   iconBadge: {
-    width: 36,
-    height: 36,
+    width: BadgeSize.md,
+    height: BadgeSize.md,
     borderRadius: Radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  copy: { flex: 1, gap: 1 },
-  titleLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  copy: { flex: 1, gap: Spacing.half },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   title: { flexShrink: 1 },
-  badge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  badgeText: { fontWeight: '800' },
 });

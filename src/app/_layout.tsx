@@ -259,12 +259,12 @@ function Navigation() {
         <Stack.Screen name="bills/calendar" options={{ title: 'Bills Calendar' }} />
         <Stack.Screen name="subscriptions" options={{ title: 'Subscriptions' }} />
         <Stack.Screen name="daily-report" options={{ title: 'Daily Report' }} />
-        <Stack.Screen name="profile" options={{ title: 'Profile & settings' }} />
+        <Stack.Screen name="profile" options={{ title: 'Profile & Settings' }} />
         <Stack.Screen name="app-lock" options={{ title: 'App Lock' }} />
-        <Stack.Screen name="country" options={{ title: 'Country & currency' }} />
-        <Stack.Screen name="categories" options={{ title: 'Manage categories' }} />
-        <Stack.Screen name="budgets" options={{ title: 'Category limits' }} />
-        <Stack.Screen name="advisor" options={{ title: 'Spending advisor' }} />
+        <Stack.Screen name="country" options={{ title: 'Country & Currency' }} />
+        <Stack.Screen name="categories" options={{ title: 'Manage Categories' }} />
+        <Stack.Screen name="budgets" options={{ title: 'Category Limits' }} />
+        <Stack.Screen name="advisor" options={{ title: 'Spending Advisor' }} />
         <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
         <Stack.Screen name="world-clock" options={{ title: 'World Clocks' }} />
         <Stack.Screen name="calculator" options={{ title: 'Calculator' }} />

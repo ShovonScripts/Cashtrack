@@ -130,6 +130,19 @@ Object.entries(noteTints).forEach(([name, tint]) => {
   });
 });
 
+// Sky gradients behind the World Clocks "Your time" card. Keep in sync with SkyColors in theme.ts.
+const skyStops = {
+  dawn: ['#3B2667', '#B4456A'],
+  day: ['#0152F5', '#00109D'],
+  dusk: ['#7A2E0E', '#3B0764'],
+  night: ['#030A2B', '#0B2A80'],
+};
+Object.entries(skyStops).forEach(([phase, stops]) => {
+  stops.forEach((stop, i) => {
+    colorPairs.push({ Mode: 'Both', Context: `white on ${phase} sky stop ${i + 1}`, Text: '#FFFFFF', Surface: stop, Min: 4.5 });
+  });
+});
+
 let failed = false;
 const tableData = colorPairs.map((p) => {
   const ratio = contrastRatio(p.Text, p.Surface);

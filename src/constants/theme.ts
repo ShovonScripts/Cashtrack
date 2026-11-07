@@ -219,6 +219,31 @@ export const FeatureColors = {
 } as const;
 
 /**
+ * Text and controls drawn over photos (World Clocks cards). The scrim darkens
+ * any photo from top to bottom so white text passes contrast on bright skies.
+ */
+export const OnPhotoColors = {
+  text: '#FFFFFF',
+  muted: 'rgba(255, 255, 255, 0.84)',
+  glass: 'rgba(255, 255, 255, 0.16)',
+  glassEdge: 'rgba(255, 255, 255, 0.30)',
+  scrim: ['rgba(8, 12, 24, 0.25)', 'rgba(8, 12, 24, 0.55)', 'rgba(8, 12, 24, 0.85)'],
+  /** Under a photo while it loads, or when the photo fails. */
+  fallback: '#1B2230',
+} as const;
+
+/**
+ * Sky gradients for the "Your time" card when there is no photo, by part of
+ * the day. Every stop is dark enough for white text (checked in contrast-check.cjs).
+ */
+export const SkyColors = {
+  dawn: ['#3B2667', '#B4456A'],
+  day: ['#0152F5', '#00109D'],
+  dusk: ['#7A2E0E', '#3B0764'],
+  night: ['#030A2B', '#0B2A80'],
+} as const;
+
+/**
  * Note paper tints, one per `NoteColor` except `default`, which has no tint
  * and uses the theme's own card (list) and background (editor). `edge` is the
  * card outline. Text on every tint is checked by scripts/contrast-check.cjs:

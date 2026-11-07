@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import type { ReactElement, ReactNode } from 'react';
+import { ScrollView, StyleSheet, View, type RefreshControlProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedView } from '@/components/themed-view';
@@ -16,6 +16,8 @@ type ScreenProps = {
   contentStyle?: StyleProp<ViewStyle>;
   /** Page colour when it is not the theme background, such as a tinted note. */
   backgroundColor?: string;
+  /** Pull to refresh, for scrolling screens that load live data. */
+  refreshControl?: ReactElement<RefreshControlProps>;
 };
 
 /**
@@ -29,6 +31,7 @@ export function Screen({
   topInset = true,
   contentStyle,
   backgroundColor,
+  refreshControl,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const bottom = tabInset ? BottomTabInset + Spacing.six : Spacing.four;
@@ -45,7 +48,8 @@ export function Screen({
         <ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottom }]}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          refreshControl={refreshControl}>
           {column}
         </ScrollView>
       ) : (

@@ -814,16 +814,15 @@ Currency conversion does not change your app's accounting currency. To change th
 
 ### 11.6 Weather & Insights
 
-Tap the Weather slide on Home, or open **Menu Hub → Weather & Insights**.
+Tap the Weather slide on Home, or open **More → Weather & Insights**.
 
-- Shows current conditions and location.
-- **Night View** or **Day View**
-- **SMART MONEY & WEATHER** / **Today's insight**
-- **24-HOUR FORECAST**
-- **5-DAY FORECAST**
-- Rain, humidity, wind, and high/low metrics
+- Shows current conditions, your city, and when the reading was updated.
+- **Today's money tip**, matched to the weather
+- **Next 24 hours** and **5-day forecast**
+- **Right now**: rain chance, humidity, wind, and where the current temperature sits in today's range
+- Temperatures follow your °C / °F choice; wind shows in mph when you use °F.
 
-Location permission is needed for live weather. If weather cannot be loaded, CashTrack shows sample data and an offline banner. Pull down to retry.
+Live weather needs location permission and a connection. Without them, CashTrack says so and offers a button to turn on location or try again; it never shows made-up weather. A reading is reused for 15 minutes, and refreshes when you come back to the app. Pull down to refresh.
 
 ### 11.7 Calendar
 
@@ -1166,13 +1165,13 @@ The About screen states that CashTrack contains no ads, analytics trackers, or t
 
 ## 17. Troubleshooting and FAQ
 
-### The app shows sample weather
+### Weather says "Turn on location" or "Weather unavailable"
 
 Live weather needs location permission and a network connection.
 
-1. Allow location access for CashTrack.
-2. Pull down on the Weather screen to retry.
-3. If weather still fails, sample data is shown with an offline banner.
+1. Open **More → Weather & Insights** and tap **Use my location**, or allow location for CashTrack in your phone's settings.
+2. If you are offline, the last reading is shown with how old it is.
+3. Pull down on the Weather screen to retry when you are back online.
 
 ### Currency rates look old or say offline
 

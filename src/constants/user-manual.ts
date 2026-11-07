@@ -799,16 +799,16 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         type: 'bullets',
         items: [
           'Tap the Weather slide on Home, or open **More → Weather & Insights**.',
-          'Shows current conditions and location.',
-          '**Night View** or **Day View**.',
-          '**SMART MONEY & WEATHER** or **Today’s insight**.',
-          '**24-HOUR FORECAST** and **5-DAY FORECAST**.',
-          'Rain, humidity, wind, and high/low metrics.',
+          'Shows current conditions, your city, and when the reading was updated.',
+          '**Today’s money tip**, matched to the weather.',
+          '**Next 24 hours** and **5-day forecast**.',
+          '**Right now**: rain chance, humidity, wind, and where the current temperature sits in today’s range.',
+          'Temperatures follow your °C / °F choice; wind shows in mph when you use °F.',
         ],
       },
       {
         type: 'note',
-        text: 'Location permission is needed for live weather. If weather cannot be loaded, CashTrack shows sample data and an offline banner. Pull down to retry.',
+        text: 'Live weather needs location permission and a connection. Without them, CashTrack says so and offers a button to turn on location or try again; it never shows made-up weather. A reading is reused for 15 minutes, and refreshes when you come back to the app. Pull down to refresh.',
       },
       { type: 'heading', text: 'Calendar' },
       {
@@ -1177,10 +1177,10 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     icon: 'help-circle-outline',
     color: '#5077C8',
     blocks: [
-      { type: 'heading', text: 'The app shows sample weather' },
+      { type: 'heading', text: 'Weather says “Turn on location” or “Weather unavailable”' },
       {
         type: 'paragraph',
-        text: 'Live weather needs location permission and a network connection. Allow location access, pull down on the Weather screen to retry, and if weather still fails, sample data is shown with an offline banner.',
+        text: 'Live weather needs location permission and a network connection. Open **More → Weather & Insights** and tap **Use my location**, or allow location for CashTrack in your phone’s settings. If you are offline, the last reading is shown with how old it is; pull down to retry when you are back online.',
       },
       { type: 'heading', text: 'Currency rates look old or say offline' },
       {

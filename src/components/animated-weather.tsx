@@ -60,7 +60,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       );
     }
 
-    if (conditionType === 'partly-sunny' || conditionType === 'cloudy' || conditionType === 'rainy' || conditionType === 'snow' || conditionType === 'thunderstorm') {
+    if (conditionType === 'partly-sunny' || conditionType === 'partly-cloudy-night' || conditionType === 'cloudy' || conditionType === 'rainy' || conditionType === 'snow' || conditionType === 'thunderstorm') {
       cloudOffset.value = withRepeat(
         withSequence(
           withTiming(6, { duration: 2500, easing: Easing.inOut(Easing.quad) }),
@@ -158,6 +158,15 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <MaterialCommunityIcons name="weather-night" size={iconSize} color="#E0E7FF" />
+        </View>
+      );
+
+    case 'partly-cloudy-night':
+      return (
+        <View style={[styles.container, containerStyle]}>
+          <Animated.View style={cloudAnimatedStyle}>
+            <MaterialCommunityIcons name="weather-night-partly-cloudy" size={iconSize} color="#E0E7FF" />
+          </Animated.View>
         </View>
       );
 

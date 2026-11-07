@@ -5,7 +5,8 @@ import {
   getWeatherConditionDetails,
   getFinancialWeatherTip,
   getWeatherBackgroundColor,
-  DEFAULT_WEATHER_DATA,
+  formatTemperature,
+  parseOpenMeteo,
   fetchLiveWeatherData,
   type WeatherConditionType,
 } from '../src/utils/weather.ts';
@@ -27,7 +28,7 @@ describe('Weather utility service', () => {
     // Partly Cloudy
     assert.strictEqual(getWeatherConditionDetails(1, false).type, 'partly-sunny');
     assert.strictEqual(getWeatherConditionDetails(2, false).type, 'partly-sunny');
-    assert.strictEqual(getWeatherConditionDetails(3, true).type, 'partly-sunny');
+    assert.strictEqual(getWeatherConditionDetails(3, true).type, 'partly-cloudy-night');
 
     // Foggy & Misty
     assert.strictEqual(getWeatherConditionDetails(45, false).type, 'cloudy');
@@ -100,6 +101,7 @@ describe('Weather utility service', () => {
       'sunny',
       'clear-night',
       'partly-sunny',
+      'partly-cloudy-night',
       'cloudy',
       'rainy',
       'snow',
@@ -115,48 +117,12 @@ describe('Weather utility service', () => {
     assert.ok(getWeatherBackgroundColor('unknown' as WeatherConditionType).startsWith('rgba('));
   });
 
-  it('provides comprehensive default fallback weather data with hourly & daily forecasts', () => {
-    assert.strictEqual(typeof DEFAULT_WEATHER_DATA.tempC, 'number');
-    assert.strictEqual(typeof DEFAULT_WEATHER_DATA.tempMaxC, 'number');
-    assert.strictEqual(typeof DEFAULT_WEATHER_DATA.tempMinC, 'number');
-    assert.ok(DEFAULT_WEATHER_DATA.tempMaxC >= DEFAULT_WEATHER_DATA.tempMinC);
-
-    assert.ok(typeof DEFAULT_WEATHER_DATA.financialTip === 'string');
-    assert.ok(DEFAULT_WEATHER_DATA.financialTip.length > 0);
-
-    // Verify 24-Hour hourly forecast structure
-    assert.ok(Array.isArray(DEFAULT_WEATHER_DATA.hourlyForecast));
-    assert.strictEqual(DEFAULT_WEATHER_DATA.hourlyForecast.length, 8);
-    DEFAULT_WEATHER_DATA.hourlyForecast.forEach((item) => {
-      assert.ok(typeof item.time === 'string');
-      assert.ok(typeof item.hourLabel === 'string');
-      assert.ok(typeof item.tempC === 'number');
-      assert.ok(typeof item.rainProbability === 'number');
-      assert.ok(typeof item.weatherCode === 'number');
-      assert.ok(typeof item.conditionType === 'string');
-      assert.ok(typeof item.isNight === 'boolean');
-    });
-
-    // Verify 5-Day forecast structure
-    assert.ok(Array.isArray(DEFAULT_WEATHER_DATA.dailyForecast));
-    assert.strictEqual(DEFAULT_WEATHER_DATA.dailyForecast.length, 5);
-    DEFAULT_WEATHER_DATA.dailyForecast.forEach((item) => {
-      assert.ok(typeof item.date === 'string');
-      assert.ok(typeof item.dayName === 'string');
-      assert.ok(typeof item.tempMaxC === 'number');
-      assert.ok(typeof item.tempMinC === 'number');
-      assert.ok(typeof item.rainProbability === 'number');
-      assert.ok(typeof item.weatherCode === 'number');
-      assert.ok(typeof item.condition === 'string');
-      assert.ok(typeof item.conditionType === 'string');
-    });
-  });
-
   it('returns valid high-res background image URLs for each weather condition including clear-night', () => {
     const conditions: WeatherConditionType[] = [
       'sunny',
       'clear-night',
       'partly-sunny',
+      'partly-cloudy-night',
       'cloudy',
       'rainy',
       'snow',
@@ -177,8 +143,8 @@ describe('Weather utility service', () => {
   it('safely handles fetchLiveWeatherData execution when native location service is unavailable', async () => {
     // Calling fetchLiveWeatherData in node test environment without location permission options
     const result = await fetchLiveWeatherData();
-    // Should return null gracefully without throwing an unhandled rejection
-    assert.strictEqual(result, null);
+    // No location module in node: an honest status, never made-up weather.
+    assert.ok(result.status === 'unsupported' || result.status === 'offline');
   });
 
   it('sorts WORLD_CITIES alphabetically by city name with Local Time at index 0', () => {

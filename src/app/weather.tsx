@@ -1,678 +1,348 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { useTheme, useIsDark } from '@/hooks/use-theme';
-import { usePreferences } from '@/context/expense-context';
-import { ThemedText } from '@/components/themed-text';
-import { Card } from '@/components/card';
-import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
 import { AnimatedWeather } from '@/components/animated-weather';
-import { WeatherBackground } from '@/components/weather-background';
+import { Card, CardDivider } from '@/components/card';
 import { WeatherWorldClocks } from '@/components/dashboard/WeatherWorldClocks';
-import { FeatureColors, Palette } from '@/constants/theme';
+import { EmptyState } from '@/components/empty-state';
+import { ThemedText } from '@/components/themed-text';
+import { Icon, ProgressMeter, Screen, Section, SkeletonList } from '@/components/ui';
+import { WeatherBackground } from '@/components/weather-background';
+import type { GlyphName } from '@/constants/icons';
+import { BadgeSize, FeatureColors, OnPhotoColors, Radius, Spacing, withAlpha } from '@/constants/theme';
+import { usePreferences } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
+import { useTheme } from '@/hooks/use-theme';
+import { useWeather, type WeatherStatus } from '@/hooks/use-weather';
+import { formatTemperature, getFinancialWeatherTip, type TemperatureUnit, type WeatherData } from '@/utils/weather';
+
+/** "just now", "12 min ago", "3 h ago". */
+function updatedAgo(fetchedAt: number, now: Date): string {
+  const minutes = Math.max(0, Math.round((now.getTime() - fetchedAt) / 60_000));
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} min ago`;
+  return `${Math.round(minutes / 60)} h ago`;
+}
 
 export default function WeatherScreen() {
   const theme = useTheme();
   const { temperatureUnit } = usePreferences();
-  const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
+  const { data: weather, status, refreshing, refresh } = useWeather();
+  const [pulled, setPulled] = useState(false);
 
-  const isDark = useIsDark();
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    const data = await fetchLiveWeatherData({ requestPermission: true });
-    if (data) {
-      setWeather(data);
-      setIsOffline(false);
-    } else {
-      setIsOffline(true);
-    }
-    setRefreshing(false);
+  const onRefresh = async () => {
+    setPulled(true);
+    await refresh();
+    setPulled(false);
   };
-
-  useEffect(() => {
-    let isMounted = true;
-    void fetchLiveWeatherData().then((data) => {
-      if (!isMounted) return;
-      if (data) {
-        setWeather(data);
-        setIsOffline(false);
-      } else {
-        setIsOffline(true);
-      }
-    });
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const formatTemp = (tempC: number) => {
-    if (temperatureUnit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°F`;
-    }
-    return `${Math.round(tempC)}°C`;
-  };
-
-  const formatTempNum = (tempC: number) => {
-    if (temperatureUnit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°`;
-    }
-    return `${Math.round(tempC)}°`;
-  };
-
-  // Calculate global min and max across 5-day forecast for the visual temp bar
-  const weekMin = Math.min(...weather.dailyForecast.map((d) => d.tempMinC), weather.tempMinC);
-  const weekMax = Math.max(...weather.dailyForecast.map((d) => d.tempMaxC), weather.tempMaxC);
-  const weekSpan = Math.max(1, weekMax - weekMin);
-
-  // Dynamic Theme Colors for Light & Dark mode
-  const hourlyPillBg = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.03)';
-  const hourlyPillBorder = isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.08)';
-  const hourlyActiveBg = isDark ? 'rgba(56, 189, 248, 0.22)' : 'rgba(56, 189, 248, 0.15)';
-  const rainBadgeBg = isDark ? 'rgba(56, 189, 248, 0.22)' : 'rgba(14, 165, 233, 0.14)';
-  const rainBadgeColor = isDark ? FeatureColors.skyLight : FeatureColors.sky;
-  const gaugeTrackBg = isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)';
-  const tempBarTrackBg = isDark ? 'rgba(255, 255, 255, 0.20)' : 'rgba(0, 0, 0, 0.08)';
-  const forecastMaxColor = isDark ? FeatureColors.lime : '#16A34A';
-  const insightCardBg = isDark ? theme.card : '#FEFCE8';
-  const insightBorderColor = isDark ? 'rgba(250, 204, 21, 0.25)' : 'rgba(245, 158, 11, 0.35)';
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.background }]}
-      contentContainerStyle={styles.content}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={theme.accent} />
-      }
-    >
-      {/* HERO WEATHER CARD */}
-      <View style={styles.heroCard}>
+    <Screen
+      topInset={false}
+      refreshControl={<RefreshControl refreshing={pulled && refreshing} onRefresh={onRefresh} tintColor={theme.accent} />}>
+      {weather ? (
+        <LiveWeather weather={weather} status={status} unit={temperatureUnit} />
+      ) : status === 'loading' ? (
+        <SkeletonList rows={4} label="Loading the weather" />
+      ) : (
+        <NoWeather status={status} busy={refreshing} onRetry={() => void refresh()} />
+      )}
+
+      <Section title="Home screen clocks" subtitle="The two clocks on the Home weather card. Tap one to change it.">
+        <Card>
+          <WeatherWorldClocks />
+        </Card>
+      </Section>
+    </Screen>
+  );
+}
+
+function NoWeather({ status, busy, onRetry }: { status: WeatherStatus; busy: boolean; onRetry: () => void }) {
+  const copy =
+    status === 'no-permission'
+      ? {
+          title: 'See your local weather',
+          message: 'CashTrack uses your location only to fetch the forecast. Your location is not stored.',
+          action: 'Use my location',
+          icon: 'map-marker-outline' as const,
+        }
+      : status === 'unsupported'
+        ? { title: 'Weather not available', message: 'Live weather needs location, which this device does not offer.', action: undefined, icon: 'cloud-question-outline' as const }
+        : { title: 'Weather unavailable', message: 'We could not reach the forecast service. Check your connection.', action: 'Try again', icon: 'cloud-off-outline' as const };
+
+  return (
+    <Card>
+      <EmptyState
+        title={copy.title}
+        message={busy ? 'Getting your weather…' : copy.message}
+        icon={copy.icon}
+        actionLabel={busy ? undefined : copy.action}
+        onAction={copy.action ? onRetry : undefined}
+      />
+    </Card>
+  );
+}
+
+function LiveWeather({ weather, status, unit }: { weather: WeatherData; status: WeatherStatus; unit: TemperatureUnit }) {
+  const theme = useTheme();
+  const now = useNow(60_000);
+  const t = (c: number, withUnit = true) => formatTemperature(c, unit, withUnit);
+  const stale = status !== 'live';
+  const wind = unit === 'F' ? `${Math.round(weather.windSpeedKmH * 0.621371)} mph` : `${weather.windSpeedKmH} km/h`;
+  const span = Math.max(1, weather.tempMaxC - weather.tempMinC);
+  const nowInRange = (weather.tempC - weather.tempMinC) / span;
+
+  const weekMin = Math.min(weather.tempMinC, ...weather.dailyForecast.map((d) => d.tempMinC));
+  const weekMax = Math.max(weather.tempMaxC, ...weather.dailyForecast.map((d) => d.tempMaxC));
+  const weekSpan = Math.max(1, weekMax - weekMin);
+
+  return (
+    <>
+      {/* Hero: photo for the condition, with the reading on top. */}
+      <View
+        style={styles.hero}
+        accessible
+        accessibilityRole="summary"
+        accessibilityLabel={`${weather.locationName}: ${t(weather.tempC)}, ${weather.condition}. High ${t(weather.tempMaxC)}, low ${t(
+          weather.tempMinC,
+        )}. Updated ${updatedAgo(weather.fetchedAt, now)}.`}>
         <WeatherBackground conditionType={weather.conditionType} />
-        <View style={styles.heroOverlay}>
-          <View style={styles.topBadgesRow}>
-            <View style={styles.locationBadge}>
-              <MaterialCommunityIcons name="map-marker" size={13} color={FeatureColors.skyLight} />
-              <ThemedText style={styles.badgeText}>{weather.locationName}</ThemedText>
+        <View style={styles.heroBody}>
+          <View style={styles.heroTop}>
+            <View style={styles.glassPill}>
+              <Icon name="map-marker" size="sm" color={OnPhotoColors.text} />
+              <ThemedText type="smallBold" numberOfLines={1} style={styles.onPhoto}>
+                {weather.locationName}
+              </ThemedText>
             </View>
-            <View style={styles.timeBadge}>
-              <View style={[styles.liveDot, { backgroundColor: weather.isNight ? '#C084FC' : '#FBBF24' }]} />
-              <ThemedText style={styles.badgeText}>{weather.isNight ? 'Night View' : 'Day View'}</ThemedText>
+            <View style={styles.glassPill}>
+              <Icon name={stale ? 'cloud-off-outline' : 'update'} size="sm" color={OnPhotoColors.text} />
+              <ThemedText type="caption" style={styles.onPhoto}>
+                {stale ? `Offline · ${updatedAgo(weather.fetchedAt, now)}` : `Updated ${updatedAgo(weather.fetchedAt, now)}`}
+              </ThemedText>
             </View>
           </View>
 
           <View style={styles.heroCenter}>
-            <AnimatedWeather conditionType={weather.conditionType} size={54} />
-            <ThemedText style={styles.giantTemp}>{formatTemp(weather.tempC)}</ThemedText>
-            <ThemedText style={styles.conditionText}>{weather.condition}</ThemedText>
-            <View style={styles.highLowPill}>
-              <ThemedText style={styles.highText}>↑ {formatTemp(weather.tempMaxC)}</ThemedText>
-              <ThemedText style={styles.highLowDivider}>•</ThemedText>
-              <ThemedText style={styles.lowText}>↓ {formatTemp(weather.tempMinC)}</ThemedText>
+            <AnimatedWeather conditionType={weather.conditionType} size={56} />
+            <ThemedText type="hero" style={[styles.onPhoto, styles.heroTemp]}>
+              {t(weather.tempC)}
+            </ThemedText>
+            <ThemedText type="default" style={styles.onPhotoMuted}>
+              {weather.condition}
+            </ThemedText>
+            <View style={styles.glassPill}>
+              <ThemedText type="smallBold" style={styles.onPhoto}>
+                H {t(weather.tempMaxC, false)}
+              </ThemedText>
+              <ThemedText type="small" style={styles.onPhotoMuted}>
+                ·
+              </ThemedText>
+              <ThemedText type="smallBold" style={styles.onPhoto}>
+                L {t(weather.tempMinC, false)}
+              </ThemedText>
             </View>
           </View>
         </View>
       </View>
 
-      {isOffline && (
-        <Card style={[styles.offlineBanner, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-          <MaterialCommunityIcons name="cloud-off-outline" size={16} color={theme.textSecondary} />
-          <ThemedText type="caption" themeColor="textSecondary" style={styles.offlineBannerText}>
-             Live weather unavailable. Showing sample data — pull down to retry with location access.
+      {/* Money tip that matches today's weather. */}
+      <Card style={styles.tipCard}>
+        <View style={[styles.tipIcon, { backgroundColor: withAlpha(FeatureColors.gold, 0.16) }]}>
+          <Icon name="lightbulb-on-outline" size="md" color={FeatureColors.amber} />
+        </View>
+        <View style={styles.flex}>
+          <ThemedText type="smallBold">Today&apos;s money tip</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {getFinancialWeatherTip(weather.tempC, weather.rainProbability, weather.conditionType, weather.isNight, unit)}
           </ThemedText>
-        </Card>
-      )}
-
-      {/* SMART MONEY INSIGHT — ATTACHED TO THE WEATHER COVER */}
-      <Card style={[styles.insightCard, { backgroundColor: insightCardBg, borderColor: insightBorderColor }]}>
-        <View style={styles.insightHeaderRow}>
-          <View style={styles.insightIconCircle}>
-            <MaterialCommunityIcons name="lightbulb-on-outline" size={16} color="#D97706" />
-          </View>
-          <View style={styles.insightHeaderCopy}>
-            <ThemedText style={styles.insightEyebrow}>SMART MONEY & WEATHER</ThemedText>
-            <ThemedText type="defaultBold" style={styles.insightTitle}>Today&apos;s insight</ThemedText>
-          </View>
         </View>
-        <ThemedText style={styles.insightBody}>{weather.financialTip}</ThemedText>
       </Card>
 
-      {/* WORLD CLOCKS - EDIT THE TWO CLOCKS PINNED TO THE HOME BANNER */}
-      <Card style={styles.clockCardSection}>
-        <View style={styles.clockSectionHeader}>
-          <View style={styles.clockSectionTitleRow}>
-            <MaterialCommunityIcons name="web" size={16} color={rainBadgeColor} />
-            <ThemedText style={styles.clockSectionTitle}>WORLD CLOCKS</ThemedText>
-          </View>
-          <ThemedText style={styles.clockSectionHint}>Tap to edit</ThemedText>
-        </View>
-        <WeatherWorldClocks />
-      </Card>
-
-      {/* 24-HOUR HOURLY FORECAST CAROUSEL */}
-      <Card style={styles.hourlyCard}>
-        <View style={styles.hourlyHeaderRow}>
-          <View style={styles.hourlyHeaderLeft}>
-            <MaterialCommunityIcons name="clock" size={16} color={rainBadgeColor} />
-            <ThemedText style={styles.hourlyHeaderTitle}>24-HOUR FORECAST</ThemedText>
-          </View>
-          <ThemedText style={styles.hourlyHeaderBadge}>Hourly</ThemedText>
-        </View>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.hourlyScrollContent}
-        >
-          {weather.hourlyForecast.map((hour, idx) => (
-            <View
-              key={hour.time || idx}
-              style={[
-                styles.hourlyPill,
-                { backgroundColor: hourlyPillBg, borderColor: hourlyPillBorder },
-                idx === 0 && { backgroundColor: hourlyActiveBg, borderColor: rainBadgeColor, borderWidth: 1.5 },
-              ]}
-            >
-              <ThemedText style={[styles.hourlyLabel, idx === 0 && { color: rainBadgeColor, fontWeight: '800' }]}>
-                {hour.hourLabel}
-              </ThemedText>
-              <View style={styles.hourlyIconBox}>
-                <AnimatedWeather conditionType={hour.conditionType} size={24} />
-              </View>
-              <View style={styles.hourlyRainSlot}>
-                {hour.rainProbability > 10 ? (
-                  <View style={[styles.hourlyRainBadge, { backgroundColor: rainBadgeBg }]}>
-                    <MaterialCommunityIcons name="umbrella" size={9} color={rainBadgeColor} />
-                    <ThemedText style={[styles.hourlyRainText, { color: rainBadgeColor }]}>{hour.rainProbability}%</ThemedText>
-                  </View>
-                ) : null}
-              </View>
-              <ThemedText style={[styles.hourlyTemp, idx === 0 && { color: rainBadgeColor, fontWeight: '800' }]}>
-                {formatTempNum(hour.tempC)}
-              </ThemedText>
-            </View>
-          ))}
-        </ScrollView>
-      </Card>
-
-      {/* METRICS GRID WITH PROGRESS GAUGE BARS */}
-      <View style={styles.metricsGrid}>
-        <Card style={styles.metricCard}>
-          <View style={styles.metricHeader}>
-            <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(56, 189, 248, 0.15)' }]}>
-              <MaterialCommunityIcons name="umbrella" size={18} color={FeatureColors.cyan} />
-            </View>
-            <ThemedText style={styles.metricLabel}>RAIN CHANCE</ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={styles.metricValue}>{weather.rainProbability}%</ThemedText>
-          <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(5, weather.rainProbability))}%`, backgroundColor: FeatureColors.cyan }]} />
-          </View>
-        </Card>
-
-        <Card style={styles.metricCard}>
-          <View style={styles.metricHeader}>
-            <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-              <MaterialCommunityIcons name="water" size={18} color={FeatureColors.blue} />
-            </View>
-            <ThemedText style={styles.metricLabel}>HUMIDITY</ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={styles.metricValue}>{weather.humidity}%</ThemedText>
-          <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(5, weather.humidity))}%`, backgroundColor: FeatureColors.blue }]} />
-          </View>
-        </Card>
-
-        <Card style={styles.metricCard}>
-          <View style={styles.metricHeader}>
-            <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(168, 85, 247, 0.15)' }]}>
-              <MaterialCommunityIcons name="creation" size={18} color="#A855F7" />
-            </View>
-            <ThemedText style={styles.metricLabel}>WIND SPEED</ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={styles.metricValue}>{weather.windSpeedKmH} km/h</ThemedText>
-          <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: `${Math.min(100, Math.max(10, (weather.windSpeedKmH / 50) * 100))}%`, backgroundColor: '#A855F7' }]} />
-          </View>
-        </Card>
-
-        <Card style={styles.metricCard}>
-          <View style={styles.metricHeader}>
-            <View style={[styles.metricIconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-              <MaterialCommunityIcons name="thermometer" size={18} color={FeatureColors.amber} />
-            </View>
-            <ThemedText style={styles.metricLabel}>DAILY RANGE</ThemedText>
-          </View>
-          <ThemedText type="defaultBold" style={styles.metricValue}>{formatTempNum(weather.tempMinC)} - {formatTempNum(weather.tempMaxC)}</ThemedText>
-          <View style={[styles.gaugeTrack, { backgroundColor: gaugeTrackBg }]}>
-            <View style={[styles.gaugeFill, { width: '80%', backgroundColor: FeatureColors.amber }]} />
-          </View>
-        </Card>
-      </View>
-
-      {/* APPLE-WEATHER STYLE 5-DAY FORECAST CARD */}
-      <Card style={styles.forecastCard}>
-        <View style={styles.forecastHeaderRow}>
-          <MaterialCommunityIcons name="calendar" size={16} color={rainBadgeColor} />
-          <ThemedText type="defaultBold" style={styles.forecastTitle}>5-DAY FORECAST</ThemedText>
-        </View>
-
-        {weather.dailyForecast.map((item, index) => {
-          const leftPercent = Math.max(0, Math.min(100, ((item.tempMinC - weekMin) / weekSpan) * 100));
-          const rightPercent = Math.max(0, Math.min(100, ((item.tempMaxC - weekMin) / weekSpan) * 100));
-          const widthPercent = Math.max(18, rightPercent - leftPercent);
-
-          return (
-            <View key={item.date || index} style={[styles.forecastRow, index < weather.dailyForecast.length - 1 && styles.forecastDivider]}>
-              <ThemedText style={styles.dayNameText} numberOfLines={1}>{item.dayName}</ThemedText>
-              <View style={styles.weatherIconBox}>
-                <AnimatedWeather conditionType={item.conditionType} size={24} />
-              </View>
-
-              <View style={styles.rainPillSlot}>
-                {item.rainProbability > 10 ? (
-                  <View style={[styles.rainPill, { backgroundColor: rainBadgeBg }]}>
-                    <MaterialCommunityIcons name="umbrella" size={9} color={rainBadgeColor} />
-                    <ThemedText style={[styles.rainPillText, { color: rainBadgeColor }]}>{item.rainProbability}%</ThemedText>
-                  </View>
-                ) : null}
-              </View>
-
-              <ThemedText style={styles.forecastMinTemp}>{formatTempNum(item.tempMinC)}</ThemedText>
-
-              {/* VISUAL TEMPERATURE RANGE BAR */}
-              <View style={[styles.tempBarTrack, { backgroundColor: tempBarTrackBg }]}>
+      {weather.hourlyForecast.length > 0 ? (
+        <Section title="Next 24 hours">
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hourly}>
+            {weather.hourlyForecast.map((hour, index) => {
+              const isNow = index === 0;
+              return (
                 <View
+                  key={hour.time}
+                  accessible
+                  accessibilityLabel={`${hour.hourLabel}, ${t(hour.tempC)}, ${hour.rainProbability}% chance of rain`}
                   style={[
-                    styles.tempBarFill,
+                    styles.hourPill,
                     {
-                      left: `${leftPercent}%`,
-                      width: `${widthPercent}%`,
-                      backgroundColor: rainBadgeColor,
+                      backgroundColor: isNow ? theme.accentMuted : theme.card,
+                      borderColor: isNow ? theme.accent : theme.cardBorder,
                     },
-                  ]}
-                />
-              </View>
+                  ]}>
+                  <ThemedText type="caption" style={{ color: isNow ? theme.accent : theme.textSecondary }}>
+                    {hour.hourLabel}
+                  </ThemedText>
+                  <AnimatedWeather conditionType={hour.conditionType} size={26} />
+                  <ThemedText type="micro" style={[styles.rainText, { color: theme.info, opacity: hour.rainProbability > 0 ? 1 : 0 }]}>
+                    {hour.rainProbability}%
+                  </ThemedText>
+                  <ThemedText type="defaultBold" style={isNow ? { color: theme.accent } : undefined}>
+                    {t(hour.tempC, false)}
+                  </ThemedText>
+                </View>
+              );
+            })}
+          </ScrollView>
+        </Section>
+      ) : null}
 
-              <ThemedText style={[styles.forecastMaxTemp, { color: forecastMaxColor }]}>{formatTempNum(item.tempMaxC)}</ThemedText>
-            </View>
-          );
-        })}
-      </Card>
-    </ScrollView>
+      <Section title="Right now">
+        <View style={styles.metrics}>
+          <Metric
+            icon="umbrella-outline"
+            color={FeatureColors.cyan}
+            label="Rain chance"
+            value={`${weather.rainProbability}%`}
+            fill={weather.rainProbability / 100}
+          />
+          <Metric
+            icon="water-outline"
+            color={FeatureColors.blue}
+            label="Humidity"
+            value={weather.humidity === null ? 'Not given' : `${weather.humidity}%`}
+            fill={(weather.humidity ?? 0) / 100}
+          />
+          <Metric
+            icon="weather-windy"
+            color={FeatureColors.violet}
+            label="Wind"
+            value={wind}
+            // 60 km/h is a strong breeze; anything above fills the bar.
+            fill={weather.windSpeedKmH / 60}
+          />
+          <Metric
+            icon="thermometer"
+            color={FeatureColors.amber}
+            label="Today's range"
+            value={`${t(weather.tempMinC, false)} – ${t(weather.tempMaxC, false)}`}
+            // Where the current temperature sits between today's low and high.
+            fill={nowInRange}
+            valueText={`Now ${t(weather.tempC)}, between ${t(weather.tempMinC)} and ${t(weather.tempMaxC)}`}
+          />
+        </View>
+      </Section>
+
+      {weather.dailyForecast.length > 0 ? (
+        <Section title="5-day forecast">
+          <Card padded={false}>
+            {weather.dailyForecast.map((day, index) => {
+              const left = ((day.tempMinC - weekMin) / weekSpan) * 100;
+              const width = Math.max(8, ((day.tempMaxC - day.tempMinC) / weekSpan) * 100);
+              return (
+                <View key={day.date}>
+                  {index > 0 ? <CardDivider /> : null}
+                  <View
+                    style={styles.dayRow}
+                    accessible
+                    accessibilityLabel={`${day.dayName}: ${day.condition}, low ${t(day.tempMinC)}, high ${t(day.tempMaxC)}, ${
+                      day.rainProbability
+                    }% chance of rain`}>
+                    <ThemedText type="smallBold" numberOfLines={1} style={styles.dayName}>
+                      {day.dayName}
+                    </ThemedText>
+                    <AnimatedWeather conditionType={day.conditionType} size={24} />
+                    <ThemedText type="caption" style={[styles.dayRain, { color: theme.info, opacity: day.rainProbability > 0 ? 1 : 0 }]}>
+                      {day.rainProbability}%
+                    </ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.dayTemp}>
+                      {t(day.tempMinC, false)}
+                    </ThemedText>
+                    <View style={[styles.rangeTrack, { backgroundColor: theme.backgroundElement }]}>
+                      <View style={[styles.rangeFill, { left: `${left}%`, width: `${Math.min(width, 100 - left)}%` }]} />
+                    </View>
+                    <ThemedText type="smallBold" style={styles.dayTemp}>
+                      {t(day.tempMaxC, false)}
+                    </ThemedText>
+                  </View>
+                </View>
+              );
+            })}
+          </Card>
+        </Section>
+      ) : null}
+
+      <ThemedText type="caption" themeColor="textSecondary" style={styles.footnote}>
+        Pull down to refresh. Forecast by Open-Meteo.
+      </ThemedText>
+    </>
+  );
+}
+
+type MetricProps = {
+  icon: GlyphName;
+  color: string;
+  label: string;
+  value: string;
+  fill: number;
+  valueText?: string;
+};
+
+function Metric({ icon, color, label, value, fill, valueText }: MetricProps) {
+  return (
+    <Card style={styles.metric}>
+      <View style={styles.metricHead}>
+        <View style={[styles.metricIcon, { backgroundColor: withAlpha(color, 0.14) }]}>
+          <Icon name={icon} size="sm" color={color} />
+        </View>
+        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1} style={styles.flex}>
+          {label}
+        </ThemedText>
+      </View>
+      <ThemedText type="subtitle" numberOfLines={1}>
+        {value}
+      </ThemedText>
+      <ProgressMeter fill={fill} color={color} label={label} valueText={valueText ?? value} />
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    padding: 16,
-    gap: 16,
-    paddingBottom: 32,
-  },
-  heroCard: {
-    height: 255,
-    borderRadius: 24,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFill,
-    padding: 20,
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(0, 0, 0, 0.38)',
-  },
-  topBadgesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  locationBadge: {
+  flex: { flex: 1 },
+  hero: { minHeight: 280, borderRadius: Radius.xlarge, overflow: 'hidden', backgroundColor: OnPhotoColors.fallback },
+  heroBody: { flex: 1, padding: Spacing.four, justifyContent: 'space-between', gap: Spacing.three },
+  heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: Spacing.two },
+  heroCenter: { alignItems: 'center', gap: Spacing.one },
+  heroTemp: { fontWeight: '800' },
+  glassPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.50)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+    gap: Spacing.one,
+    flexShrink: 1,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(0, 0, 0, 0.42)',
   },
-  timeBadge: {
-    flexDirection: 'row',
+  onPhoto: { color: OnPhotoColors.text },
+  onPhotoMuted: { color: OnPhotoColors.muted },
+  tipCard: { flexDirection: 'row', gap: Spacing.three, alignItems: 'flex-start' },
+  tipIcon: { width: BadgeSize.md, height: BadgeSize.md, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
+  hourly: { gap: Spacing.two, paddingVertical: Spacing.half },
+  hourPill: {
+    width: 72,
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.50)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
+    gap: Spacing.one,
+    paddingVertical: Spacing.three,
+    borderRadius: Radius.large,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  liveDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-  },
-  badgeText: {
-    color: Palette.white,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  heroCenter: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-  },
-  giantTemp: {
-    color: Palette.white,
-    fontSize: 48,
-    fontWeight: '800',
-    letterSpacing: -1,
-    lineHeight: 54,
-    marginTop: 8,
-  },
-  conditionText: {
-    color: 'rgba(255, 255, 255, 0.95)',
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  highLowPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: 999,
-    marginTop: 8,
-  },
-  highText: {
-    color: FeatureColors.lime,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  highLowDivider: {
-    color: 'rgba(255, 255, 255, 0.35)',
-    fontSize: 12,
-  },
-  lowText: {
-    color: FeatureColors.skyLight,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  hourlyCard: {
-    padding: 16,
-    gap: 12,
-    borderRadius: 22,
-  },
-  hourlyHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 2,
-  },
-  hourlyHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  hourlyHeaderTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    opacity: 0.8,
-  },
-  hourlyHeaderBadge: {
-    fontSize: 11,
-    fontWeight: '600',
-    opacity: 0.5,
-  },
-  hourlyScrollContent: {
-    gap: 10,
-    paddingVertical: 2,
-  },
-  hourlyPill: {
-    width: 78,
-    height: 128,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 4,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  hourlyLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    opacity: 0.9,
-  },
-  hourlyIconBox: {
-    height: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  hourlyRainSlot: {
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  hourlyRainBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
-    borderRadius: 8,
-  },
-  hourlyRainText: {
-    fontSize: 11,
-    fontWeight: '800',
-    includeFontPadding: false,
-  },
-  hourlyTemp: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  metricCard: {
-    width: '48%',
-    flexGrow: 1,
-    padding: 14,
-    gap: 8,
-    borderRadius: 20,
-  },
-  metricHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  metricIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metricLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    opacity: 0.65,
-  },
-  metricValue: {
-    fontSize: 18,
-  },
-  gaugeTrack: {
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginTop: 2,
-  },
-  gaugeFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
-  insightCard: {
-    marginTop: -10,
-    marginHorizontal: 4,
-    padding: 16,
-    gap: 12,
-    borderRadius: 22,
-    borderWidth: 1,
-    zIndex: 2,
-  },
-  insightHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  insightIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.16)',
-  },
-  insightHeaderCopy: {
-    flex: 1,
-    gap: 1,
-  },
-  insightEyebrow: {
-    color: '#D97706',
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-  },
-  insightTitle: {
-    fontSize: 16,
-    lineHeight: 19,
-  },
-  insightBody: {
-    fontSize: 16,
-    lineHeight: 21.5,
-    opacity: 0.9,
-  },
-  clockCardSection: {
-    padding: 16,
-    gap: 12,
-    borderRadius: 22,
-  },
-  clockSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  clockSectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  clockSectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    opacity: 0.8,
-  },
-  clockSectionHint: {
-    fontSize: 11,
-    fontWeight: '600',
-    opacity: 0.5,
-  },
-  forecastCard: {
-    padding: 16,
-    gap: 12,
-    borderRadius: 22,
-  },
-  forecastHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  forecastTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    opacity: 0.8,
-  },
-  forecastRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    gap: 6,
-  },
-  forecastDivider: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(150, 150, 150, 0.18)',
-  },
-  dayNameText: {
-    width: 85,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  weatherIconBox: {
-    width: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  rainPillSlot: {
-    width: 52,
-    alignItems: 'center',
-  },
-  rainPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  rainPillText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  forecastMinTemp: {
-    width: 32,
-    fontSize: 14,
-    fontWeight: '600',
-    opacity: 0.6,
-    textAlign: 'right',
-  },
-  tempBarTrack: {
-    flex: 1,
-    height: 5,
-    borderRadius: 2.5,
-    position: 'relative',
-    overflow: 'hidden',
-    marginHorizontal: 8,
-  },
-  tempBarFill: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    borderRadius: 2.5,
-  },
-  forecastMaxTemp: {
-    width: 32,
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'left',
-  },
-  offlineBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 12,
-  },
-  offlineBannerText: {
-    flex: 1,
-  },
+  rainText: { fontWeight: '700' },
+  metrics: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  metric: { flexBasis: '47%', flexGrow: 1, gap: Spacing.two },
+  metricHead: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  metricIcon: { width: BadgeSize.sm, height: BadgeSize.sm, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
+  dayRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, minHeight: 52, paddingHorizontal: Spacing.three },
+  dayName: { width: 76 },
+  dayRain: { width: 34, textAlign: 'right', fontWeight: '700' },
+  dayTemp: { width: 30, textAlign: 'center' },
+  rangeTrack: { flex: 1, height: Spacing.one + 2, borderRadius: Radius.pill, overflow: 'hidden' },
+  rangeFill: { position: 'absolute', top: 0, bottom: 0, borderRadius: Radius.pill, backgroundColor: FeatureColors.amber },
+  footnote: { textAlign: 'center' },
 });

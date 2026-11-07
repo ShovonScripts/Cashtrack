@@ -33,12 +33,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
-import { Brand, Elevation, FeatureColors, glow, Palette, Radius } from '@/constants/theme';
+import { Brand, Elevation, FeatureColors, glow, OnPhotoColors, Palette, Radius, Spacing, Typography } from '@/constants/theme';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
 import { getQuoteOfTheDay } from '@/constants/quotes';
-import { fetchLiveWeatherData, DEFAULT_WEATHER_DATA, type WeatherData } from '@/utils/weather';
+import { formatTemperature } from '@/utils/weather';
+import { useWeather, type WeatherStatus } from '@/hooks/use-weather';
 import { getYearProgress } from '@/utils/year-progress';
 import { getMonthlySpendTotals } from '@/utils/monthly-spend';
 import { AnimatedWeather } from '@/components/animated-weather';
@@ -52,6 +53,24 @@ const SWIPE_HINT_KEY = '@cashtrack_cover_swipe_hint_seen';
 const VERTICAL_SPRING = { damping: 24, stiffness: 200, mass: 0.9 } as const;
 const SLIDE_LABELS = ['Cover', 'Weather', 'Daily wisdom'] as const;
 const MONTH_SHORT = new Intl.DateTimeFormat('en', { month: 'short' });
+
+/** What the weather slide says when there is no live reading. */
+function weatherMessage(status: WeatherStatus): {
+  title: string;
+  detail: string;
+  icon: 'map-marker-off-outline' | 'cloud-off-outline' | 'weather-partly-cloudy' | 'cloud-question-outline';
+} {
+  switch (status) {
+    case 'no-permission':
+      return { title: 'Live weather', detail: 'Tap to turn on location and see your local weather.', icon: 'map-marker-off-outline' };
+    case 'offline':
+      return { title: 'Weather unavailable', detail: 'No connection right now. Tap to try again.', icon: 'cloud-off-outline' };
+    case 'unsupported':
+      return { title: 'Weather', detail: 'Live weather is not available on this device.', icon: 'cloud-question-outline' };
+    default:
+      return { title: 'Getting your weather…', detail: 'This takes a moment.', icon: 'weather-partly-cloudy' };
+  }
+}
 
 interface FacebookCoverHeaderProps {
   profile: UserProfile;
@@ -83,7 +102,8 @@ export function FacebookCoverHeader({
     [expenses, progress.year]
   );
 
-  const [weather, setWeather] = useState<WeatherData>(DEFAULT_WEATHER_DATA);
+  // Shared live reading; null until it arrives. Never replaced with sample numbers.
+  const { data: weather, status: weatherStatus } = useWeather();
 
   const handleShareCard = async (quote: { quote: string; author: string }) => {
     try {
@@ -182,14 +202,6 @@ export function FacebookCoverHeader({
   }, [activeIndex, autoSlideKey, screenWidth, verticalPage, reducedMotion]);
 
   useEffect(() => {
-    async function loadWeather() {
-      const data = await fetchLiveWeatherData();
-      setWeather(data ?? DEFAULT_WEATHER_DATA);
-    }
-    void loadWeather();
-  }, []);
-
-  useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     AsyncStorage.getItem(SWIPE_HINT_KEY)
       .then((seen) => {
@@ -256,16 +268,8 @@ export function FacebookCoverHeader({
 
   const currentQuote = getQuoteOfTheDay(now);
 
-  const formatTemp = (tempC: number) => {
-    if (temperatureUnit === 'F') {
-      return `${Math.round((tempC * 9) / 5 + 32)}°F`;
-    }
-    return `${Math.round(tempC)}°C`;
-  };
-
-  const displayTemp = formatTemp(weather.tempC);
-  const displayHigh = formatTemp(weather.tempMaxC);
-  const displayLow = formatTemp(weather.tempMinC);
+  const formatTemp = (tempC: number) => formatTemperature(tempC, temperatureUnit);
+  const weatherNote = weatherMessage(weatherStatus);
 
   const greeting = progress.greetingLabel;
 
@@ -509,55 +513,82 @@ export function FacebookCoverHeader({
             router.push('/weather');
           }}
           accessibilityRole="button"
-          accessibilityLabel={`Weather for ${weather.locationName}, ${displayTemp}, ${weather.condition}. World clocks. Opens Weather and Insights.`}
+          accessibilityLabel={
+            weather
+              ? `Weather for ${weather.locationName}, ${formatTemp(weather.tempC)}, ${weather.condition}. World clocks. Opens Weather and Insights.`
+              : `${weatherNote.title}. ${weatherNote.detail} Opens Weather and Insights.`
+          }
           style={[styles.slideCard, { width: screenWidth }]}>
-          <WeatherBackground conditionType={weather.conditionType} />
+          {weather ? (
+            <WeatherBackground conditionType={weather.conditionType} />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: OnPhotoColors.fallback }]} />
+          )}
 
-          <View style={[styles.cardInner, { paddingTop: topPadding }]}>
-            <View style={styles.topRowBadge}>
-              {/* Extra Forecast Pills */}
-              <View style={styles.metricsRow}>
-                <View style={styles.metricPill}>
-                  <MaterialCommunityIcons name="umbrella" size={11} color="#60a5fa" />
-                  <Text style={styles.metricText}>{weather.rainProbability}%</Text>
+          {weather ? (
+            <>
+
+            <View style={[styles.cardInner, { paddingTop: topPadding }]}>
+              <View style={styles.topRowBadge}>
+                {/* Extra Forecast Pills */}
+                <View style={styles.metricsRow}>
+                  <View style={styles.metricPill}>
+                    <MaterialCommunityIcons name="umbrella" size={11} color="#60a5fa" />
+                    <Text style={styles.metricText}>{weather.rainProbability}%</Text>
+                  </View>
+                  <View style={styles.metricPill}>
+                    <MaterialCommunityIcons name="water" size={11} color={FeatureColors.skyLight} />
+                    <Text style={styles.metricText}>{weather.humidity === null ? '—' : `${weather.humidity}%`}</Text>
+                  </View>
                 </View>
-                <View style={styles.metricPill}>
-                  <MaterialCommunityIcons name="water" size={11} color={FeatureColors.skyLight} />
-                  <Text style={styles.metricText}>{weather.humidity}%</Text>
+
+                <View style={styles.outlookPill}>
+                  <MaterialCommunityIcons name="map-marker" size={12} color={FeatureColors.skyLight} />
+                  <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
                 </View>
               </View>
 
-              <View style={styles.outlookPill}>
-                <MaterialCommunityIcons name="map-marker" size={12} color={FeatureColors.skyLight} />
-                <Text style={styles.outlookText} numberOfLines={1}>{weather.locationName}</Text>
+              <View style={styles.weatherClockRow}>
+                <View style={styles.weatherMainColumn}>
+                  <View style={styles.weatherIconTempRow}>
+                    <AnimatedWeather conditionType={weather.conditionType} size={40} />
+                    <Text style={styles.giantTempCompact}>{formatTemp(weather.tempC)}</Text>
+                  </View>
+                  <Text style={styles.whiteSubtext} numberOfLines={1}>{weather.condition}</Text>
+                  <View style={styles.highLowBox}>
+                    <Text style={styles.highText}>H: {formatTemp(weather.tempMaxC)}</Text>
+                    <Text style={styles.lowText}>L: {formatTemp(weather.tempMinC)}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.clockDivider} />
+
+                <View style={styles.clockColumn}>
+                  <DualClockWidget variant="compact" />
+                </View>
+              </View>
+
+              <View style={styles.slideHint}>
+                <MaterialCommunityIcons name="information-outline" size={11} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.slideHintText}>Tap card for details</Text>
               </View>
             </View>
-
-            <View style={styles.weatherClockRow}>
-              <View style={styles.weatherMainColumn}>
-                <View style={styles.weatherIconTempRow}>
-                  <AnimatedWeather conditionType={weather.conditionType} size={40} />
-                  <Text style={styles.giantTempCompact}>{displayTemp}</Text>
+            </>
+          ) : (
+            <View style={[styles.cardInner, { paddingTop: topPadding }]}>
+              <View style={styles.weatherClockRow}>
+                <View style={[styles.weatherMainColumn, styles.weatherEmpty]}>
+                  <MaterialCommunityIcons name={weatherNote.icon} size={28} color={OnPhotoColors.text} />
+                  <Text style={styles.weatherEmptyTitle}>{weatherNote.title}</Text>
+                  <Text style={styles.weatherEmptyText}>{weatherNote.detail}</Text>
                 </View>
-                <Text style={styles.whiteSubtext} numberOfLines={1}>{weather.condition}</Text>
-                <View style={styles.highLowBox}>
-                  <Text style={styles.highText}>H: {displayHigh}</Text>
-                  <Text style={styles.lowText}>L: {displayLow}</Text>
+                <View style={styles.clockDivider} />
+                <View style={styles.clockColumn}>
+                  <DualClockWidget variant="compact" />
                 </View>
               </View>
-
-              <View style={styles.clockDivider} />
-
-              <View style={styles.clockColumn}>
-                <DualClockWidget variant="compact" />
-              </View>
             </View>
-
-            <View style={styles.slideHint}>
-              <MaterialCommunityIcons name="information-outline" size={11} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.slideHintText}>Tap card for details</Text>
-            </View>
-          </View>
+          )}
         </TouchableOpacity>
 
         {/* SLIDE 3: DAILY WISDOM QUOTE CARD (Reference Style) */}
@@ -1012,6 +1043,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
   },
+  weatherEmpty: { gap: Spacing.one },
+  weatherEmptyTitle: { ...Typography.subtitle, color: OnPhotoColors.text, fontWeight: '700' },
+  weatherEmptyText: { ...Typography.caption, color: OnPhotoColors.muted },
   slideHint: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -208,6 +208,15 @@ export default function MenuScreen() {
         route: '/world-clock',
         keywords: 'time zone city clock',
       },
+      {
+        id: 'weather',
+        title: 'Weather & Insights',
+        subtitle: 'Forecast and a money tip for today',
+        icon: 'weather-partly-cloudy',
+        color: FeatureColors.skyLight,
+        route: '/weather',
+        keywords: 'weather forecast rain temperature wind humidity',
+      },
     ],
     settings: [
       {

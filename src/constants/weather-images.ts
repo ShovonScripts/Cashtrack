@@ -9,6 +9,9 @@ export const WEATHER_BACKGROUND_IMAGES: Record<WeatherConditionType, string> = {
     'https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=1000&auto=format&fit=crop',
   'clear-night':
     'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1000&auto=format&fit=crop',
+  // Night sky photo: a few clouds at night still read as night.
+  'partly-cloudy-night':
+    'https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?q=80&w=1000&auto=format&fit=crop',
   'partly-sunny':
     'https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=1000&auto=format&fit=crop',
   cloudy:

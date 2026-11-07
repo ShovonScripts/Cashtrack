@@ -117,6 +117,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
           ['City name for weather', 'Your phone\'s geocoder, or BigDataCloud (bigdatacloud.com) as a fallback', 'The same location coordinates'],
           ['Currency converter', 'ExchangeRate-API (open.er-api.com)', 'Nothing about you; it downloads public rates'],
           ['World clock photos', 'Wikimedia (wikimedia.org)', 'Nothing about you; it downloads public images'],
+          ['Weather background photos', 'Unsplash (unsplash.com)', 'Nothing about you; it downloads public images'],
           ['Photo of your area (World Clocks)', 'Wikipedia (wikipedia.org)', 'The name of your city or time-zone city, only when it is not one of the built-in cities, to find its photo'],
           ['Stay in touch', 'Google Apps Script and Google Sheets', 'The sign-up details listed above, only if you join'],
         ],

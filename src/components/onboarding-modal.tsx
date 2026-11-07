@@ -5,7 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { StayInTouchForm } from '@/components/signup/stay-in-touch-form';
-import { SpendlyLogo } from '@/components/spendly-logo';
+import { CashTrackLogo } from '@/components/cashtrack-logo';
 import { ThemedText } from '@/components/themed-text';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { usePreferences } from '@/context/expense-context';
@@ -238,7 +238,7 @@ export function OnboardingModal({ visible, onClose }: OnboardingModalProps) {
         <View style={[styles.container, { backgroundColor: theme.card, borderColor: theme.border }]}>
           {/* Header Bar */}
           <View style={styles.header}>
-            <SpendlyLogo />
+            <CashTrackLogo />
             <Pressable
               onPress={onClose}
               accessibilityRole="button"

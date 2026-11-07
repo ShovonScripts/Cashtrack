@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { SectionList, Pressable, StyleSheet, TextInput, View, Platform } from 'react-native';
+import { SectionList, Pressable, StyleSheet, View, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,7 +10,7 @@ import { CategoryChips, type CategoryFilter } from '@/components/category-chips'
 import { EmptyState } from '@/components/empty-state';
 import { ExpenseListItem } from '@/components/expense-list-item';
 import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
-import { Button, ScreenHeader, StatStrip } from '@/components/ui';
+import { Button, ScreenHeader, SearchField, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import { Elevation, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
@@ -116,36 +116,12 @@ export default function ExpensesScreen() {
           <View style={styles.headerBlock}>
             <ScreenHeader title="Transactions" subtitle="Search and filter your spending" />
 
-            {/* Search Input Bar */}
-            <View style={[styles.searchField, { borderColor: theme.border, backgroundColor: theme.cardMuted }]}>
-              <MaterialCommunityIcons name="magnify" size={20} color={theme.textSecondary} style={styles.searchIcon} />
-              <TextInput
-                value={query}
-                onChangeText={(text) => {
-                  setQuery(text);
-                }}
-                placeholder="Search note, category or amount…"
-                placeholderTextColor={theme.textSecondary}
-                autoCorrect={false}
-                autoCapitalize="none"
-                returnKeyType="search"
-                accessibilityLabel="Search expenses"
-                style={[styles.searchInput, { color: theme.text }]}
-              />
-              {query.length > 0 && (
-                <Pressable
-                  onPress={() => {
-                    triggerHaptic();
-                    setQuery('');
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Clear search text"
-                  hitSlop={8}
-                  style={styles.clearSearch}>
-                  <MaterialCommunityIcons name="close-circle" size={18} color={theme.textSecondary} />
-                </Pressable>
-              )}
-            </View>
+            <SearchField
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search note, category or amount…"
+              label="Search expenses"
+            />
 
             {/* Category Filter Pills */}
             <CategoryChips
@@ -261,29 +237,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     ...Elevation.high,
     zIndex: 10,
-  },
-  searchField: {
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.medium,
-    paddingHorizontal: Spacing.three,
-  },
-  searchIcon: {
-    marginEnd: 8,
-  },
-  searchInput: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 8,
-    fontSize: 14,
-  },
-  clearSearch: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   sectionHeaderRow: {
     flexDirection: 'row',

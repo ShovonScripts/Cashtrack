@@ -7,7 +7,7 @@ import { useTheme } from '@/hooks/use-theme';
 /**
  * Compact CashTrack wordmark for the navigation header.
  */
-export function SpendlyLogo() {
+export function CashTrackLogo() {
   const theme = useTheme();
 
   return (

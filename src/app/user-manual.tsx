@@ -359,9 +359,6 @@ export default function UserManualScreen() {
           <ThemedText type="caption" themeColor="textSecondary">
             CashTrack 1.0.0 · local-first personal finance
           </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            CashTrack and Spendly refer to the same app.
-          </ThemedText>
         </View>
       </ScrollView>
     </ThemedView>

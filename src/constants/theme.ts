@@ -218,6 +218,20 @@ export const FeatureColors = {
   crimson: '#E11D48',
 } as const;
 
+/**
+ * Note paper tints, one per `NoteColor` except `default`, which has no tint
+ * and uses the theme's own card (list) and background (editor). `edge` is the
+ * card outline. Text on every tint is checked by scripts/contrast-check.cjs:
+ * update its copy when you change these.
+ */
+export const NoteColors = {
+  red: { light: '#FEE2E2', dark: '#3F1515', edge: 'rgba(239, 68, 68, 0.35)' },
+  blue: { light: '#E0F2FE', dark: '#102A43', edge: 'rgba(59, 130, 246, 0.35)' },
+  green: { light: '#DCFCE7', dark: '#064E3B', edge: 'rgba(16, 185, 129, 0.35)' },
+  yellow: { light: '#FEF9C3', dark: '#422006', edge: 'rgba(245, 158, 11, 0.35)' },
+  purple: { light: '#F3E8FF', dark: '#2E1065', edge: 'rgba(139, 92, 246, 0.35)' },
+} as const;
+
 /** Type scale. `ThemedText` types map onto these sizes. */
 export const Typography = {
   micro: { fontSize: 11, lineHeight: 14 },

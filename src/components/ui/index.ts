@@ -10,6 +10,7 @@ export { ListRow } from './list-row';
 export { ProgressMeter } from './progress-meter';
 export { Screen } from './screen';
 export { ScreenHeader } from './screen-header';
+export { SearchField } from './search-field';
 export { SegmentedControl } from './segmented-control';
 export { Section } from './section';
 export { Sheet } from './sheet';

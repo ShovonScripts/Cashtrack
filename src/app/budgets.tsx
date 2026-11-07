@@ -86,7 +86,7 @@ export default function BudgetsScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.container}>
-        {/* Spendly Multi-Tone Glass Hero Section */}
+        {/* CashTrack Multi-Tone Glass Hero Section */}
         <View style={styles.heroGlassCard}>
           <View pointerEvents="none" style={styles.primaryBlueOrb} />
           <View pointerEvents="none" style={styles.brightCyanOrb} />

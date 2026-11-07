@@ -1282,7 +1282,6 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          '**Branding** — most of the app uses CashTrack. The About screen and logo use Spendly. They are the same app.',
           '**Budget caps are not month-specific** — a category cap is a single persistent monthly limit. Setting a new cap replaces the old one for all future months.',
           '**Receipt attachment UI is missing** — receipt photos can be stored and displayed, but the add/edit screens do not provide a button to attach, replace, or remove one.',
           '**Bill calendar is Sunday-first** — it ignores the **First Day of Week** preference.',

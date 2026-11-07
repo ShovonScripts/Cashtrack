@@ -63,7 +63,7 @@ export default function AdvisorScreen() {
           </ThemedText>
         </View>
 
-        {/* Multi-Tone Spendly Brand Glass Hero Card */}
+        {/* Multi-Tone CashTrack Brand Glass Hero Card */}
         <View style={styles.intelligenceHeroGlass}>
           <View pointerEvents="none" style={styles.primaryBlueOrb} />
           <View pointerEvents="none" style={styles.brightCyanOrb} />

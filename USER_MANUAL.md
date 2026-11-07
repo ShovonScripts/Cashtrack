@@ -4,8 +4,6 @@
 
 A local-first personal finance app for iOS, Android, and the web.
 
-> **A note on the name:** Most of the app, including the home screen and app icon, calls the product **CashTrack**. Some About/legal copy and the logo call it **Spendly**. They refer to the same app.
-
 ---
 
 ## Contents
@@ -1252,10 +1250,6 @@ Most deletions cannot be undone. Restore a backup if you have one. This is why r
 ## 18. Current Limitations
 
 These are known behaviors in CashTrack 1.0.0. They are documented so you can plan around them.
-
-### Branding
-
-Most of the app uses **CashTrack**. The About screen and logo use **Spendly**. They are the same app.
 
 ### Budget caps are not month-specific
 

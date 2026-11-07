@@ -96,7 +96,7 @@ export default function CategoriesScreen() {
           </ThemedText>
         </View>
 
-        {/* Spendly Multi-Tone Glass Hero Header */}
+        {/* CashTrack Multi-Tone Glass Hero Header */}
         <View style={styles.heroGlassCard}>
           <View pointerEvents="none" style={styles.primaryBlueOrb} />
           <View pointerEvents="none" style={styles.brightCyanOrb} />

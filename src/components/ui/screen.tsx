@@ -14,13 +14,22 @@ type ScreenProps = {
   /** Pad for the status bar. Turn off on pushed pages, whose native header already does. */
   topInset?: boolean;
   contentStyle?: StyleProp<ViewStyle>;
+  /** Page colour when it is not the theme background, such as a tinted note. */
+  backgroundColor?: string;
 };
 
 /**
  * Standard page shell: themed background, safe-area top padding, a centred
  * column capped at `MaxContentWidth`, and consistent gutters.
  */
-export function Screen({ children, scroll = true, tabInset = false, topInset = true, contentStyle }: ScreenProps) {
+export function Screen({
+  children,
+  scroll = true,
+  tabInset = false,
+  topInset = true,
+  contentStyle,
+  backgroundColor,
+}: ScreenProps) {
   const insets = useSafeAreaInsets();
   const bottom = tabInset ? BottomTabInset + Spacing.six : Spacing.four;
 
@@ -31,7 +40,7 @@ export function Screen({ children, scroll = true, tabInset = false, topInset = t
   );
 
   return (
-    <ThemedView style={styles.root}>
+    <ThemedView style={[styles.root, backgroundColor ? { backgroundColor } : null]}>
       {scroll ? (
         <ScrollView
           contentContainerStyle={[styles.scrollContent, { paddingBottom: bottom }]}

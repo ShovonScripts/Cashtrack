@@ -11,6 +11,7 @@ import {
   Button,
   Chip,
   FormField,
+  SearchField,
   Icon,
   IconButton,
   ListRow,
@@ -65,6 +66,7 @@ export default function StyleGuideScreen() {
   const isDark = useIsDark();
   const [chip, setChip] = useState('Food');
   const [name, setName] = useState('');
+  const [search, setSearch] = useState('');
   const [amount, setAmount] = useState('');
   const [repeat, setRepeat] = useState<'weekly' | 'monthly' | 'yearly'>('monthly');
   const [alerts, setAlerts] = useState(true);
@@ -210,6 +212,7 @@ export default function StyleGuideScreen() {
 
         <Section title="Form fields" subtitle="Label above, helper or error below.">
           <View style={styles.stack}>
+            <SearchField value={search} onChangeText={setSearch} placeholder="Search" label="Search example" />
             <FormField label="Note" value={name} onChangeText={setName} placeholder="What was it for?" helper="Optional" />
             <AmountField label="Amount" value={amount} onChangeText={setAmount} symbol="৳" error={amount === '0' ? 'Enter more than zero.' : undefined} />
             <SegmentedControl

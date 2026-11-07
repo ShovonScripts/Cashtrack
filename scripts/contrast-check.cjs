@@ -115,6 +115,21 @@ Object.entries(brandTokens).forEach(([tokName, tokHex]) => {
   });
 });
 
+// Note paper tints. Keep in sync with NoteColors in src/constants/theme.ts.
+const noteTints = {
+  red: { light: '#FEE2E2', dark: '#3F1515' },
+  blue: { light: '#E0F2FE', dark: '#102A43' },
+  green: { light: '#DCFCE7', dark: '#064E3B' },
+  yellow: { light: '#FEF9C3', dark: '#422006' },
+  purple: { light: '#F3E8FF', dark: '#2E1065' },
+};
+Object.entries(noteTints).forEach(([name, tint]) => {
+  ['text', 'textSecondary'].forEach((tok) => {
+    colorPairs.push({ Mode: 'Light', Context: `${tok} on note ${name}`, Text: lightTokens[tok], Surface: tint.light, Min: 4.5 });
+    colorPairs.push({ Mode: 'Dark', Context: `${tok} on note ${name}`, Text: darkTokens[tok], Surface: tint.dark, Min: 4.5 });
+  });
+});
+
 let failed = false;
 const tableData = colorPairs.map((p) => {
   const ratio = contrastRatio(p.Text, p.Surface);

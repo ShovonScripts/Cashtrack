@@ -5,18 +5,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/card';
 import { CategoryChips, type CategoryFilter } from '@/components/category-chips';
 import { EmptyState } from '@/components/empty-state';
-import { ExpenseListItem } from '@/components/expense-list-item';
+import { ExpenseCard } from '@/components/expense-card';
 import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
 import { Button, ScreenHeader, SearchField, StatStrip } from '@/components/ui';
 import { ThemedText } from '@/components/themed-text';
 import { useExpenses, usePreferences } from '@/context/expense-context';
-import { getCategoryColor } from '@/constants/categories';
-import { Elevation, MaxContentWidth, Radius, Spacing, tintedShadow, withAlpha } from '@/constants/theme';
+import { Elevation, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useNow } from '@/hooks/use-now';
-import { useIsDark, useTheme } from '@/hooks/use-theme';
+import { useTheme } from '@/hooks/use-theme';
 import { filterExpenses, sortByDateDesc, sumAmounts } from '@/utils/expense';
 import type { Expense } from '@/types/expense';
 
@@ -81,7 +79,6 @@ export default function ExpensesScreen() {
   );
   const { categories, formatAmount } = usePreferences();
   const theme = useTheme();
-  const isDark = useIsDark();
   const now = useNow(60_000);
 
   const [query, setQuery] = useState('');
@@ -186,21 +183,9 @@ export default function ExpensesScreen() {
           </View>
         )}
         ItemSeparatorComponent={ItemGap}
-        renderItem={({ item }) => {
-          // Each card glows faintly in its category's colour.
-          const accent = getCategoryColor(item.category);
-          return (
-            <Card
-              padded={false}
-              elevated={false}
-              style={[
-                styles.itemCard,
-                { boxShadow: tintedShadow(accent, isDark), borderColor: withAlpha(accent, isDark ? 0.4 : 0.22) },
-              ]}>
-              <ExpenseListItem expense={item} onSwipeDelete={canUndoDelete(item) ? requestDelete : undefined} />
-            </Card>
-          );
-        }}
+        renderItem={({ item }) => (
+          <ExpenseCard expense={item} onSwipeDelete={canUndoDelete(item) ? requestDelete : undefined} />
+        )}
       />
 
       {/* Floating Action Button (FAB) for adding expense */}
@@ -273,9 +258,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   itemGap: { height: Spacing.two },
-  itemCard: {
-    borderRadius: Radius.medium,
-  },
   emptyResult: {
     alignItems: 'center',
     gap: Spacing.two,

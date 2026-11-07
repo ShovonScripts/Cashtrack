@@ -2,9 +2,9 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Card, CardDivider } from '@/components/card';
+import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
-import { ExpenseListItem } from '@/components/expense-list-item';
+import { ExpenseCard } from '@/components/expense-card';
 import { canUndoDelete, useUndoDelete } from '@/context/undo-delete-context';
 import { MoneySummaryCard } from '@/components/dashboard/money-summary-card';
 import { OnboardingModal } from '@/components/onboarding-modal';
@@ -232,8 +232,8 @@ export default function DashboardScreen() {
           </ScrollView>
         )}
 
-        <Card padded={false}>
-          {filteredRecent.length === 0 ? (
+        {filteredRecent.length === 0 ? (
+          <Card padded={false}>
             <EmptyState
               title="No transactions"
               message={selectedFilterCategory === 'All' ? "Add your first expense and it will show up here." : `No expenses found in "${selectedFilterCategory}".`}
@@ -242,39 +242,39 @@ export default function DashboardScreen() {
               actionLabel={allExpenses.length === 0 ? 'Add expense' : undefined}
               onAction={allExpenses.length === 0 ? () => router.push('/add-expense') : undefined}
             />
-          ) : (
-            <>
-              {filteredRecent.map((expense, index) => (
-                <View key={expense.id}>
-                  {index > 0 && <CardDivider />}
-                  <ExpenseListItem expense={expense} onSwipeDelete={canUndoDelete(expense) ? requestDelete : undefined} />
-                </View>
-              ))}
-              {expenses.length > 0 && (
-                <>
-                  <CardDivider />
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="See all transactions"
-                    onPress={() => {
-                      triggerHaptic();
-                      router.push('/(tabs)/expenses');
-                    }}
-                    style={({ pressed }) => [
-                      styles.seeAllCardFooter,
-                      { backgroundColor: theme.cardMuted },
-                      pressed && styles.pressed,
-                    ]}>
-                    <ThemedText type="smallBold" style={{ color: theme.accent }}>
-                      See all transactions
-                    </ThemedText>
-                    <MaterialCommunityIcons name="arrow-right" size={16} color={theme.accent} />
-                  </Pressable>
-                </>
-              )}
-            </>
-          )}
-        </Card>
+          </Card>
+        ) : (
+          // Each transaction is its own card, glowing in its category colour (same as Transactions).
+          <View style={styles.recentList}>
+            {filteredRecent.map((expense) => (
+              <ExpenseCard
+                key={expense.id}
+                expense={expense}
+                onSwipeDelete={canUndoDelete(expense) ? requestDelete : undefined}
+              />
+            ))}
+            {expenses.length > 0 && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="See all transactions"
+                onPress={() => {
+                  triggerHaptic();
+                  router.push('/(tabs)/expenses');
+                }}
+                style={({ pressed }) => [
+                  styles.seeAllCardFooter,
+                  styles.seeAllButton,
+                  { backgroundColor: theme.accentMuted },
+                  pressed && styles.pressed,
+                ]}>
+                <ThemedText type="smallBold" style={{ color: theme.accent }}>
+                  See all transactions
+                </ThemedText>
+                <MaterialCommunityIcons name="arrow-right" size={16} color={theme.accent} />
+              </Pressable>
+            )}
+          </View>
+        )}
 
 
         {/* 4. Money snapshot and weekly spending */}
@@ -420,6 +420,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  recentList: { gap: Spacing.two },
+  seeAllButton: { borderRadius: Radius.medium, minHeight: 44 },
   seeAllCardFooter: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -227,9 +227,19 @@ export const OnPhotoColors = {
   muted: 'rgba(255, 255, 255, 0.84)',
   glass: 'rgba(255, 255, 255, 0.16)',
   glassEdge: 'rgba(255, 255, 255, 0.30)',
+  /** Dark pill behind small text on a busy photo. */
+  shade: 'rgba(0, 0, 0, 0.42)',
   scrim: ['rgba(8, 12, 24, 0.25)', 'rgba(8, 12, 24, 0.55)', 'rgba(8, 12, 24, 0.85)'],
   /** Under a photo while it loads, or when the photo fails. */
   fallback: '#1B2230',
+} as const;
+
+/** Hues of the animated weather icons (sun and rain use FeatureColors). */
+export const WeatherIconColors = {
+  moon: '#E0E7FF',
+  cloud: '#94A3B8',
+  storm: '#A855F7',
+  rainDrop: '#60A5FA',
 } as const;
 
 /**
@@ -336,6 +346,8 @@ export const IconSize = {
   md: 20,
   lg: 24,
   xl: 32,
+  /** The one big condition icon on a weather hero. */
+  display: 56,
 } as const;
 
 /** Square badge behind an icon: compact row, standard row, large tile. */

@@ -14,7 +14,7 @@ import Animated, {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import type { WeatherConditionType } from '@/utils/weather';
-import { FeatureColors } from '@/constants/theme';
+import { FeatureColors, WeatherIconColors } from '@/constants/theme';
 
 interface AnimatedWeatherProps {
   conditionType: WeatherConditionType;
@@ -157,7 +157,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
     case 'clear-night':
       return (
         <View style={[styles.container, containerStyle]}>
-          <MaterialCommunityIcons name="weather-night" size={iconSize} color="#E0E7FF" />
+          <MaterialCommunityIcons name="weather-night" size={iconSize} color={WeatherIconColors.moon} />
         </View>
       );
 
@@ -165,7 +165,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <MaterialCommunityIcons name="weather-night-partly-cloudy" size={iconSize} color="#E0E7FF" />
+            <MaterialCommunityIcons name="weather-night-partly-cloudy" size={iconSize} color={WeatherIconColors.moon} />
           </Animated.View>
         </View>
       );
@@ -175,7 +175,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
         <View style={[styles.container, containerStyle]}>
           <MaterialCommunityIcons name="white-balance-sunny" size={iconSize * 0.75} color={FeatureColors.amber} style={{ position: 'absolute', top: -2, right: -2 }} />
           <Animated.View style={cloudAnimatedStyle}>
-            <MaterialCommunityIcons name="cloud" size={iconSize * 0.85} color="#94A3B8" />
+            <MaterialCommunityIcons name="cloud" size={iconSize * 0.85} color={WeatherIconColors.cloud} />
           </Animated.View>
         </View>
       );
@@ -184,7 +184,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
       return (
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={cloudAnimatedStyle}>
-            <MaterialCommunityIcons name="weather-cloudy" size={iconSize} color="#94A3B8" />
+            <MaterialCommunityIcons name="weather-cloudy" size={iconSize} color={WeatherIconColors.cloud} />
           </Animated.View>
         </View>
       );
@@ -216,7 +216,7 @@ export function AnimatedWeather({ conditionType, size = 48 }: AnimatedWeatherPro
         <View style={[styles.container, containerStyle]}>
           <Animated.View style={[styles.flashOverlay, flashStyle]} />
           <Animated.View style={cloudAnimatedStyle}>
-            <MaterialCommunityIcons name="weather-lightning-rainy" size={iconSize} color="#A855F7" />
+            <MaterialCommunityIcons name="weather-lightning-rainy" size={iconSize} color={WeatherIconColors.storm} />
           </Animated.View>
         </View>
       );
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     width: 2.5,
     height: 7,
     borderRadius: 1.5,
-    backgroundColor: '#60A5FA',
+    backgroundColor: WeatherIconColors.rainDrop,
   },
   flashOverlay: {
     position: 'absolute',

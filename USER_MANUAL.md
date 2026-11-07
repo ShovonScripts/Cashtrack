@@ -812,9 +812,9 @@ Open **Menu Hub → Currency Converter** or use the floating tools menu.
 
 Currency conversion does not change your app's accounting currency. To change the accounting currency, use **Menu Hub → Country & Currency**.
 
-### 11.6 Weather & Insights
+### 11.6 Weather
 
-Tap the Weather slide on Home, or open **More → Weather & Insights**.
+Tap the Weather slide on Home, or open **More → Weather**.
 
 - Shows current conditions, your city, and when the reading was updated.
 - **Today's money tip**, matched to the weather
@@ -1169,7 +1169,7 @@ The About screen states that CashTrack contains no ads, analytics trackers, or t
 
 Live weather needs location permission and a network connection.
 
-1. Open **More → Weather & Insights** and tap **Use my location**, or allow location for CashTrack in your phone's settings.
+1. Open **More → Weather** and tap **Use my location**, or allow location for CashTrack in your phone's settings.
 2. If you are offline, the last reading is shown with how old it is.
 3. Pull down on the Weather screen to retry when you are back online.
 
@@ -1358,7 +1358,7 @@ Contributions are tracked inside the pot. They do not automatically reduce your 
 | Stopwatch | **Menu Hub → Stopwatch & Timer** |
 | Currency converter | **Menu Hub → Currency Converter** |
 | World clocks | **Menu Hub → World Clocks** |
-| Weather | **Home → Weather slide** or **Menu Hub → Weather & Insights** |
+| Weather | **Home → Weather slide** or **Menu Hub → Weather** |
 | Profile and settings | **Menu Hub → Profile & Preferences** |
 | About | **Profile → Data & Privacy → About CashTrack** |
 

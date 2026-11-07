@@ -315,59 +315,132 @@ export function parseOpenMeteo(data: OpenMeteoResponse, locationName: string, fe
 /** Why there is (or is not) live weather. Screens show a message for each, never made-up numbers. */
 export type WeatherResult =
   | { status: 'live'; data: WeatherData }
+  /** Not allowed yet; asking will show the system prompt. */
   | { status: 'no-permission' }
+  /** Denied for good; only the phone's Settings can allow it now. */
+  | { status: 'blocked' }
+  /** Allowed, but Location is switched off on the phone. */
+  | { status: 'location-off' }
+  /** Location is on but the phone could not get a fix in time. */
+  | { status: 'no-fix' }
+  /** The forecast service could not be reached. */
   | { status: 'offline' }
   | { status: 'unsupported' };
+
+/** Rejects after `ms`, so a stuck native call can never freeze the weather. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
 
 /**
  * Live weather from Open-Meteo for the phone's location.
  *
  * Permission is only requested when the caller says the request came from a
  * deliberate user action. Automatic loads use an existing grant and otherwise
- * report `no-permission`, so the app never prompts on launch.
+ * report `no-permission`, so the app never prompts on launch. Every native
+ * call has a time limit, so the result always arrives within about 30 seconds.
  */
-export async function fetchLiveWeatherData(options: { requestPermission?: boolean } = {}): Promise<WeatherResult> {
-  let Location: typeof import('expo-location');
+type LocationApi = typeof import('expo-location');
+
+/** Test seams: a fake location module, a fake network, and shorter time limits. */
+export type WeatherDeps = {
+  location?: Pick<
+    LocationApi,
+    | 'getForegroundPermissionsAsync'
+    | 'requestForegroundPermissionsAsync'
+    | 'hasServicesEnabledAsync'
+    | 'getLastKnownPositionAsync'
+    | 'getCurrentPositionAsync'
+    | 'reverseGeocodeAsync'
+    | 'Accuracy'
+  >;
+  fetchJson?: (url: string) => Promise<unknown>;
+  /** Multiplies every time limit; tests use a small number. */
+  timeScale?: number;
+};
+
+export async function fetchLiveWeatherData(
+  options: { requestPermission?: boolean } = {},
+  deps: WeatherDeps = {},
+): Promise<WeatherResult> {
+  let Location: NonNullable<WeatherDeps['location']>;
   try {
-    Location = await import('expo-location');
+    Location = deps.location ?? (await import('expo-location'));
+  } catch {
+    return { status: 'unsupported' };
+  }
+  const getJson = deps.fetchJson ?? fetchJson;
+  const ms = (value: number) => value * (deps.timeScale ?? 1);
+
+  // 1. Permission.
+  try {
+    let permission = await withTimeout(Location.getForegroundPermissionsAsync(), ms(5000));
+    if (permission.status !== 'granted' && options.requestPermission && permission.canAskAgain) {
+      // No time limit: this waits for the person to answer the system prompt.
+      permission = await Location.requestForegroundPermissionsAsync();
+    }
+    if (permission.status !== 'granted') {
+      return { status: permission.canAskAgain ? 'no-permission' : 'blocked' };
+    }
   } catch {
     return { status: 'unsupported' };
   }
 
+  // 2. Location switched on? (Not every platform can tell; assume yes if unsure.)
+  const servicesOn = await withTimeout(Location.hasServicesEnabledAsync(), ms(5000)).catch(() => true);
+  if (!servicesOn) return { status: 'location-off' };
+
+  // 3. Position: a recent fix, else a fresh one, else any fix the phone remembers.
+  const position =
+    (await withTimeout(Location.getLastKnownPositionAsync({ maxAge: 15 * 60_000 }), ms(5000)).catch(() => null)) ??
+    (await withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }), ms(15_000)).catch(() => null)) ??
+    (await withTimeout(Location.getLastKnownPositionAsync(), ms(5000)).catch(() => null));
+  if (!position) return { status: 'no-fix' };
+  const { latitude, longitude } = position.coords;
+
+  // 4. Forecast.
+  let raw: OpenMeteoResponse;
   try {
-    let { status } = await Location.getForegroundPermissionsAsync();
-    if (status !== 'granted' && options.requestPermission) {
-      status = (await Location.requestForegroundPermissionsAsync()).status;
-    }
-    if (status !== 'granted') return { status: 'no-permission' };
-
-    // A fix from the last 15 minutes is plenty for weather and saves battery.
-    const position =
-      (await Location.getLastKnownPositionAsync({ maxAge: 15 * 60_000 })) ??
-      (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
-    const { latitude, longitude } = position.coords;
-
-    const raw = (await fetchJson(
+    raw = (await getJson(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,weathercode,windspeed_10m,is_day&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto`
     )) as OpenMeteoResponse;
-
-    const locationName = await resolveCityName(Location, latitude, longitude);
-    const data = parseOpenMeteo(raw, locationName, Date.now());
-    return data ? { status: 'live', data } : { status: 'offline' };
   } catch {
     return { status: 'offline' };
   }
+
+  // 5. City name (never blocks the weather for long).
+  const locationName = await withTimeout(resolveCityName(Location, latitude, longitude, getJson, ms), ms(12_000)).catch(() => 'Your location');
+  const data = parseOpenMeteo(raw, locationName, Date.now());
+  return data ? { status: 'live', data } : { status: 'offline' };
 }
 
-async function resolveCityName(Location: typeof import('expo-location'), latitude: number, longitude: number): Promise<string> {
+async function resolveCityName(
+  Location: Pick<LocationApi, 'reverseGeocodeAsync'>,
+  latitude: number,
+  longitude: number,
+  getJson: (url: string) => Promise<unknown>,
+  ms: (value: number) => number,
+): Promise<string> {
   try {
-    const [place] = await Location.reverseGeocodeAsync({ latitude, longitude });
+    const [place] = await withTimeout(Location.reverseGeocodeAsync({ latitude, longitude }), ms(6000));
     const city = place?.city || place?.subregion || place?.region;
     if (city) return city;
   } catch {}
 
   try {
-    const geo = (await fetchJson(
+    const geo = (await getJson(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
     )) as { city?: string; locality?: string; principalSubdivision?: string };
     const city = geo.city || geo.locality || geo.principalSubdivision;

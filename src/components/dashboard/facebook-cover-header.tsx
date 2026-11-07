@@ -58,11 +58,17 @@ const MONTH_SHORT = new Intl.DateTimeFormat('en', { month: 'short' });
 function weatherMessage(status: WeatherStatus): {
   title: string;
   detail: string;
-  icon: 'map-marker-off-outline' | 'cloud-off-outline' | 'weather-partly-cloudy' | 'cloud-question-outline';
+  icon: 'map-marker-off-outline' | 'cloud-off-outline' | 'weather-partly-cloudy' | 'cloud-question-outline' | 'crosshairs-question';
 } {
   switch (status) {
     case 'no-permission':
       return { title: 'Live weather', detail: 'Tap to turn on location and see your local weather.', icon: 'map-marker-off-outline' };
+    case 'blocked':
+      return { title: 'Location not allowed', detail: 'Tap to allow location for live weather.', icon: 'map-marker-off-outline' };
+    case 'location-off':
+      return { title: 'Location is off', detail: 'Tap to turn on location for live weather.', icon: 'map-marker-off-outline' };
+    case 'no-fix':
+      return { title: 'Finding your location', detail: 'Could not get a fix yet. Tap to try again.', icon: 'crosshairs-question' };
     case 'offline':
       return { title: 'Weather unavailable', detail: 'No connection right now. Tap to try again.', icon: 'cloud-off-outline' };
     case 'unsupported':
@@ -515,8 +521,8 @@ export function FacebookCoverHeader({
           accessibilityRole="button"
           accessibilityLabel={
             weather
-              ? `Weather for ${weather.locationName}, ${formatTemp(weather.tempC)}, ${weather.condition}. World clocks. Opens Weather and Insights.`
-              : `${weatherNote.title}. ${weatherNote.detail} Opens Weather and Insights.`
+              ? `Weather for ${weather.locationName}, ${formatTemp(weather.tempC)}, ${weather.condition}. World clocks. Opens Weather.`
+              : `${weatherNote.title}. ${weatherNote.detail} Opens Weather.`
           }
           style={[styles.slideCard, { width: screenWidth }]}>
           {weather ? (

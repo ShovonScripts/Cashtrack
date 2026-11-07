@@ -265,7 +265,7 @@ function Navigation() {
         <Stack.Screen name="categories" options={{ title: 'Manage Categories' }} />
         <Stack.Screen name="budgets" options={{ title: 'Category Limits' }} />
         <Stack.Screen name="advisor" options={{ title: 'Spending Advisor' }} />
-        <Stack.Screen name="weather" options={{ title: 'Weather & Insights' }} />
+        <Stack.Screen name="weather" options={{ title: 'Weather' }} />
         <Stack.Screen name="world-clock" options={{ title: 'World Clocks' }} />
         <Stack.Screen name="calculator" options={{ title: 'Calculator' }} />
         <Stack.Screen name="stopwatch" options={{ title: 'Stopwatch & Timer' }} />

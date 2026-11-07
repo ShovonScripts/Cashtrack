@@ -794,11 +794,11 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         type: 'note',
         text: 'Currency conversion does not change your app’s accounting currency. To change the accounting currency, use **More → Country & Currency**.',
       },
-      { type: 'heading', text: 'Weather & Insights' },
+      { type: 'heading', text: 'Weather' },
       {
         type: 'bullets',
         items: [
-          'Tap the Weather slide on Home, or open **More → Weather & Insights**.',
+          'Tap the Weather slide on Home, or open **More → Weather**.',
           'Shows current conditions, your city, and when the reading was updated.',
           '**Today’s money tip**, matched to the weather.',
           '**Next 24 hours** and **5-day forecast**.',
@@ -1180,7 +1180,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       { type: 'heading', text: 'Weather says “Turn on location” or “Weather unavailable”' },
       {
         type: 'paragraph',
-        text: 'Live weather needs location permission and a network connection. Open **More → Weather & Insights** and tap **Use my location**, or allow location for CashTrack in your phone’s settings. If you are offline, the last reading is shown with how old it is; pull down to retry when you are back online.',
+        text: 'Live weather needs location permission and a network connection. Open **More → Weather** and tap **Use my location**, or allow location for CashTrack in your phone’s settings. If you are offline, the last reading is shown with how old it is; pull down to retry when you are back online.',
       },
       { type: 'heading', text: 'Currency rates look old or say offline' },
       {
@@ -1355,7 +1355,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
           ['Stopwatch', 'More → Stopwatch & Timer'],
           ['Currency converter', 'More → Currency Converter'],
           ['World clocks', 'More → World Clocks'],
-          ['Weather', 'Home → Weather slide or More → Weather & Insights'],
+          ['Weather', 'Home → Weather slide or More → Weather'],
           ['Profile and settings', 'More → Profile & Preferences'],
           ['About', 'Profile → Data & Privacy → About CashTrack'],
         ],

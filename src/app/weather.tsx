@@ -9,11 +9,11 @@ import { ThemedText } from '@/components/themed-text';
 import { Icon, ProgressMeter, Screen, Section, SkeletonList } from '@/components/ui';
 import { WeatherBackground } from '@/components/weather-background';
 import type { GlyphName } from '@/constants/icons';
-import { BadgeSize, FeatureColors, OnPhotoColors, Radius, Spacing, withAlpha } from '@/constants/theme';
+import { BadgeSize, FeatureColors, IconSize, MinTouchTarget, OnPhotoColors, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { usePreferences } from '@/context/expense-context';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
-import { useWeather, type WeatherStatus } from '@/hooks/use-weather';
+import { fixLocationAccess, useWeather, type WeatherStatus } from '@/hooks/use-weather';
 import { formatTemperature, getFinancialWeatherTip, type TemperatureUnit, type WeatherData } from '@/utils/weather';
 
 /** "just now", "12 min ago", "3 h ago". */
@@ -22,6 +22,29 @@ function updatedAgo(fetchedAt: number, now: Date): string {
   if (minutes < 1) return 'just now';
   if (minutes < 60) return `${minutes} min ago`;
   return `${Math.round(minutes / 60)} h ago`;
+}
+
+/** Wind in words, from the Beaufort scale (km/h). */
+function windFeel(kmh: number): string {
+  if (kmh < 2) return 'Calm';
+  if (kmh < 12) return 'Light breeze';
+  if (kmh < 29) return 'Moderate breeze';
+  if (kmh < 50) return 'Strong wind';
+  return 'Gale. Take care outside';
+}
+
+function rainFeel(percent: number): string {
+  if (percent < 20) return 'Unlikely';
+  if (percent < 50) return 'Possible';
+  if (percent < 75) return 'Likely. Take an umbrella';
+  return 'Very likely';
+}
+
+function humidityFeel(percent: number): string {
+  if (percent < 30) return 'Dry';
+  if (percent < 60) return 'Comfortable';
+  if (percent < 80) return 'Humid';
+  return 'Very humid';
 }
 
 export default function WeatherScreen() {
@@ -49,35 +72,80 @@ export default function WeatherScreen() {
       )}
 
       <Section title="Home screen clocks" subtitle="The two clocks on the Home weather card. Tap one to change it.">
-        <Card>
-          <WeatherWorldClocks />
-        </Card>
+        <WeatherWorldClocks />
       </Section>
     </Screen>
   );
 }
 
+type NoWeatherCopy = {
+  title: string;
+  message: string;
+  action?: string;
+  /** `settings` sends the person to fix location; `retry` loads again (and may show the prompt). */
+  kind?: 'retry' | 'settings';
+  icon: 'map-marker-outline' | 'map-marker-off-outline' | 'crosshairs-question' | 'cloud-off-outline' | 'cloud-question-outline';
+};
+
+function noWeatherCopy(status: WeatherStatus): NoWeatherCopy {
+  switch (status) {
+    case 'no-permission':
+      return {
+        title: 'See your local weather',
+        message: 'CashTrack uses your location only to fetch the forecast. Your location is not stored.',
+        action: 'Use my location',
+        kind: 'retry',
+        icon: 'map-marker-outline',
+      };
+    case 'blocked':
+      return {
+        title: 'Location is not allowed',
+        message: 'You turned off location for CashTrack. Allow it in Settings to see your local weather.',
+        action: 'Open settings',
+        kind: 'settings',
+        icon: 'map-marker-off-outline',
+      };
+    case 'location-off':
+      return {
+        title: 'Location is switched off',
+        message: 'Turn on Location on your phone so CashTrack can find your local weather.',
+        action: 'Turn on location',
+        kind: 'settings',
+        icon: 'map-marker-off-outline',
+      };
+    case 'no-fix':
+      return {
+        title: 'Could not find your location',
+        message: 'Your phone did not get a location in time. Try again, ideally near a window or outdoors.',
+        action: 'Try again',
+        kind: 'retry',
+        icon: 'crosshairs-question',
+      };
+    case 'unsupported':
+      return { title: 'Weather not available', message: 'Live weather needs location, which this device does not offer.', icon: 'cloud-question-outline' };
+    default:
+      return {
+        title: 'Weather unavailable',
+        message: 'We could not reach the forecast service. Check your internet connection.',
+        action: 'Try again',
+        kind: 'retry',
+        icon: 'cloud-off-outline',
+      };
+  }
+}
+
 function NoWeather({ status, busy, onRetry }: { status: WeatherStatus; busy: boolean; onRetry: () => void }) {
-  const copy =
-    status === 'no-permission'
-      ? {
-          title: 'See your local weather',
-          message: 'CashTrack uses your location only to fetch the forecast. Your location is not stored.',
-          action: 'Use my location',
-          icon: 'map-marker-outline' as const,
-        }
-      : status === 'unsupported'
-        ? { title: 'Weather not available', message: 'Live weather needs location, which this device does not offer.', action: undefined, icon: 'cloud-question-outline' as const }
-        : { title: 'Weather unavailable', message: 'We could not reach the forecast service. Check your connection.', action: 'Try again', icon: 'cloud-off-outline' as const };
+  const copy = noWeatherCopy(status);
+  const act = copy.kind === 'settings' ? () => void fixLocationAccess(status) : onRetry;
 
   return (
     <Card>
       <EmptyState
-        title={copy.title}
-        message={busy ? 'Getting your weather…' : copy.message}
+        title={busy ? 'Getting your weather…' : copy.title}
+        message={busy ? 'Finding your location and the forecast. This can take a few seconds.' : copy.message}
         icon={copy.icon}
         actionLabel={busy ? undefined : copy.action}
-        onAction={copy.action ? onRetry : undefined}
+        onAction={copy.action ? act : undefined}
       />
     </Card>
   );
@@ -124,7 +192,7 @@ function LiveWeather({ weather, status, unit }: { weather: WeatherData; status: 
           </View>
 
           <View style={styles.heroCenter}>
-            <AnimatedWeather conditionType={weather.conditionType} size={56} />
+            <AnimatedWeather conditionType={weather.conditionType} size={IconSize.display} />
             <ThemedText type="hero" style={[styles.onPhoto, styles.heroTemp]}>
               {t(weather.tempC)}
             </ThemedText>
@@ -179,7 +247,7 @@ function LiveWeather({ weather, status, unit }: { weather: WeatherData; status: 
                   <ThemedText type="caption" style={{ color: isNow ? theme.accent : theme.textSecondary }}>
                     {hour.hourLabel}
                   </ThemedText>
-                  <AnimatedWeather conditionType={hour.conditionType} size={26} />
+                  <AnimatedWeather conditionType={hour.conditionType} size={IconSize.lg} />
                   <ThemedText type="micro" style={[styles.rainText, { color: theme.info, opacity: hour.rainProbability > 0 ? 1 : 0 }]}>
                     {hour.rainProbability}%
                   </ThemedText>
@@ -201,21 +269,22 @@ function LiveWeather({ weather, status, unit }: { weather: WeatherData; status: 
             label="Rain chance"
             value={`${weather.rainProbability}%`}
             fill={weather.rainProbability / 100}
+            note={rainFeel(weather.rainProbability)}
           />
           <Metric
             icon="water-outline"
             color={FeatureColors.blue}
             label="Humidity"
             value={weather.humidity === null ? 'Not given' : `${weather.humidity}%`}
-            fill={(weather.humidity ?? 0) / 100}
+            fill={weather.humidity === null ? undefined : weather.humidity / 100}
+            note={weather.humidity === null ? 'The forecast did not include it' : humidityFeel(weather.humidity)}
           />
           <Metric
             icon="weather-windy"
             color={FeatureColors.violet}
             label="Wind"
             value={wind}
-            // 60 km/h is a strong breeze; anything above fills the bar.
-            fill={weather.windSpeedKmH / 60}
+            note={windFeel(weather.windSpeedKmH)}
           />
           <Metric
             icon="thermometer"
@@ -225,6 +294,7 @@ function LiveWeather({ weather, status, unit }: { weather: WeatherData; status: 
             // Where the current temperature sits between today's low and high.
             fill={nowInRange}
             valueText={`Now ${t(weather.tempC)}, between ${t(weather.tempMinC)} and ${t(weather.tempMaxC)}`}
+            note={`Now ${t(weather.tempC)}`}
           />
         </View>
       </Section>
@@ -247,7 +317,7 @@ function LiveWeather({ weather, status, unit }: { weather: WeatherData; status: 
                     <ThemedText type="smallBold" numberOfLines={1} style={styles.dayName}>
                       {day.dayName}
                     </ThemedText>
-                    <AnimatedWeather conditionType={day.conditionType} size={24} />
+                    <AnimatedWeather conditionType={day.conditionType} size={IconSize.lg} />
                     <ThemedText type="caption" style={[styles.dayRain, { color: theme.info, opacity: day.rainProbability > 0 ? 1 : 0 }]}>
                       {day.rainProbability}%
                     </ThemedText>
@@ -280,11 +350,14 @@ type MetricProps = {
   color: string;
   label: string;
   value: string;
-  fill: number;
+  /** 0 to 1. Leave out when there is no meaningful scale. */
+  fill?: number;
   valueText?: string;
+  /** Plain-words reading, such as "Light breeze". */
+  note?: string;
 };
 
-function Metric({ icon, color, label, value, fill, valueText }: MetricProps) {
+function Metric({ icon, color, label, value, fill, valueText, note }: MetricProps) {
   return (
     <Card style={styles.metric}>
       <View style={styles.metricHead}>
@@ -298,7 +371,12 @@ function Metric({ icon, color, label, value, fill, valueText }: MetricProps) {
       <ThemedText type="subtitle" numberOfLines={1}>
         {value}
       </ThemedText>
-      <ProgressMeter fill={fill} color={color} label={label} valueText={valueText ?? value} />
+      {fill !== undefined ? <ProgressMeter fill={fill} color={color} label={label} valueText={valueText ?? value} /> : null}
+      {note ? (
+        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>
+          {note}
+        </ThemedText>
+      ) : null}
     </Card>
   );
 }
@@ -318,7 +396,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
     borderRadius: Radius.pill,
-    backgroundColor: 'rgba(0, 0, 0, 0.42)',
+    backgroundColor: OnPhotoColors.shade,
   },
   onPhoto: { color: OnPhotoColors.text },
   onPhotoMuted: { color: OnPhotoColors.muted },
@@ -326,7 +404,8 @@ const styles = StyleSheet.create({
   tipIcon: { width: BadgeSize.md, height: BadgeSize.md, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
   hourly: { gap: Spacing.two, paddingVertical: Spacing.half },
   hourPill: {
-    width: 72,
+    minWidth: 72,
+    paddingHorizontal: Spacing.two,
     alignItems: 'center',
     gap: Spacing.one,
     paddingVertical: Spacing.three,
@@ -338,11 +417,12 @@ const styles = StyleSheet.create({
   metric: { flexBasis: '47%', flexGrow: 1, gap: Spacing.two },
   metricHead: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   metricIcon: { width: BadgeSize.sm, height: BadgeSize.sm, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  dayRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, minHeight: 52, paddingHorizontal: Spacing.three },
-  dayName: { width: 76 },
-  dayRain: { width: 34, textAlign: 'right', fontWeight: '700' },
-  dayTemp: { width: 30, textAlign: 'center' },
-  rangeTrack: { flex: 1, height: Spacing.one + 2, borderRadius: Radius.pill, overflow: 'hidden' },
+  // Columns size to their text (no fixed widths) so large text never clips.
+  dayRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, minHeight: MinTouchTarget + Spacing.two, paddingHorizontal: Spacing.three },
+  dayName: { flex: 1, minWidth: 64 },
+  dayRain: { minWidth: 36, textAlign: 'right', fontWeight: '700' },
+  dayTemp: { minWidth: 34, textAlign: 'center' },
+  rangeTrack: { flex: 1.2, height: Spacing.one + 2, borderRadius: Radius.pill, overflow: 'hidden' },
   rangeFill: { position: 'absolute', top: 0, bottom: 0, borderRadius: Radius.pill, backgroundColor: FeatureColors.amber },
   footnote: { textAlign: 'center' },
 });

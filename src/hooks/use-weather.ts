@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 
 import { fetchLiveWeatherData, type WeatherData, type WeatherResult } from '@/utils/weather';
 
@@ -54,6 +54,25 @@ function subscribe(listener: () => void) {
   return () => {
     listeners.delete(listener);
   };
+}
+
+/**
+ * Helps the person fix a location problem. Android can switch Location on
+ * from a system dialog; otherwise (or if they decline) open the app's
+ * Settings page. Coming back to the app reloads the weather by itself.
+ */
+export async function fixLocationAccess(status: WeatherStatus): Promise<void> {
+  if (status === 'location-off' && Platform.OS === 'android') {
+    try {
+      const Location = await import('expo-location');
+      await Location.enableNetworkProviderAsync();
+      await load(true);
+      return;
+    } catch {
+      // Declined or unavailable: fall through to Settings.
+    }
+  }
+  await Linking.openSettings();
 }
 
 /** Shared live weather for Home and the Weather page. */

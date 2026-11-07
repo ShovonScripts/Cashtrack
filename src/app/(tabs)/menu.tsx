@@ -210,7 +210,7 @@ export default function MenuScreen() {
       },
       {
         id: 'weather',
-        title: 'Weather & Insights',
+        title: 'Weather',
         subtitle: 'Forecast and a money tip for today',
         icon: 'weather-partly-cloudy',
         color: FeatureColors.skyLight,

@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View, Platform, Text } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
+import { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Card, CardDivider } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { FeatureColors, Radius, Spacing } from '@/constants/theme';
+import { Icon, IconButton, ListRow, SearchField, Sheet } from '@/components/ui';
+import { MinTouchTarget, PressFeedback, Spacing, Typography } from '@/constants/theme';
+import { WORLD_CITIES, type WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
 import { useNow } from '@/hooks/use-now';
-import { useTheme, useIsDark } from '@/hooks/use-theme';
-import { WORLD_CITIES, WorldCity, getFormattedTimeForZone } from '@/constants/world-timezones';
+import { useTheme } from '@/hooks/use-theme';
+import { triggerHaptic } from '@/utils/motion';
 
 const WEATHER_CLOCKS_KEY = '@cashtrack_weather_world_clocks';
 const DEFAULT_WEATHER_CLOCKS = ['local', 'london'];
@@ -46,14 +47,18 @@ async function saveWeatherClocks(ids: string[]) {
   } catch {}
 }
 
+/** "3:41:07" -> "3:41". */
+const hoursMinutes = (timeStr: string) => timeStr.slice(0, timeStr.lastIndexOf(':'));
+const zoneOf = (city: WorldCity) => (city.id === 'local' ? undefined : city.timeZone);
+
+/** The clocks pinned to the Home weather card: tap a row to change it, add up to four. */
 export function WeatherWorldClocks() {
   const theme = useTheme();
-  const isDark = useIsDark();
-
   const [cityIds, setCityIds] = useState<string[]>(cachedWeatherClocks);
-  const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const now = useNow(1000);
+  const [search, setSearch] = useState('');
+  const now = useNow(60_000);
 
   useEffect(() => {
     const listener = () => setCityIds(cachedWeatherClocks);
@@ -64,283 +69,168 @@ export function WeatherWorldClocks() {
     };
   }, []);
 
-  const openPicker = (index?: number) => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setEditingIndex(index ?? null);
-    setPickerModalVisible(true);
+  const openPicker = (index: number | null) => {
+    triggerHaptic();
+    setEditingIndex(index);
+    setSearch('');
+    setPickerOpen(true);
   };
 
-  const handleSelectCity = async (city: WorldCity) => {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
+  const selectCity = async (city: WorldCity) => {
+    triggerHaptic();
     if (editingIndex !== null && editingIndex < cityIds.length) {
       const updated = [...cityIds];
       updated[editingIndex] = city.id;
       await saveWeatherClocks(updated);
-    } else {
-      if (!cityIds.includes(city.id) && cityIds.length < MAX_WEATHER_CLOCKS) {
-        await saveWeatherClocks([...cityIds, city.id]);
-      }
+    } else if (!cityIds.includes(city.id) && cityIds.length < MAX_WEATHER_CLOCKS) {
+      await saveWeatherClocks([...cityIds, city.id]);
     }
-    setPickerModalVisible(false);
+    setPickerOpen(false);
   };
 
-  const handleRemoveCity = async (cityId: string) => {
+  const removeCity = async (cityId: string) => {
     if (cityIds.length <= 1) return;
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    const updated = cityIds.filter((id) => id !== cityId);
-    await saveWeatherClocks(updated);
+    triggerHaptic();
+    await saveWeatherClocks(cityIds.filter((id) => id !== cityId));
   };
 
   const activeCities = cityIds
     .map((id) => WORLD_CITIES.find((c) => c.id === id))
     .filter((c): c is WorldCity => Boolean(c));
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.clocksGrid}>
-        {activeCities.map((city, index) => {
-          const timeInfo = getFormattedTimeForZone(city.id === 'local' ? undefined : city.timeZone, now);
-          const accentColor = index % 2 === 0 ? (isDark ? FeatureColors.lime : '#16A34A') : (isDark ? FeatureColors.skyLight : FeatureColors.sky);
+  const query = search.trim().toLowerCase();
+  const choices = WORLD_CITIES.filter(
+    (c) => !query || c.cityName.toLowerCase().includes(query) || c.countryName.toLowerCase().includes(query),
+  );
 
+  return (
+    <>
+      <Card padded={false}>
+        {activeCities.map((city, index) => {
+          const time = getFormattedTimeForZone(zoneOf(city), now);
           return (
-            <Pressable
-              key={`${city.id}-${index}`}
-              onPress={() => openPicker(index)}
-              accessibilityRole="button"
-              accessibilityLabel={`Clock for ${city.cityName}. Tap to change.`}
-              style={({ pressed }) => [
-                styles.clockCard,
-                { backgroundColor: theme.cardMuted, borderColor: theme.border },
-                pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-              ]}>
-              <View style={styles.clockTopRow}>
-                <Text style={[styles.clockLabel, { color: theme.textSecondary }]} numberOfLines={1}>
-                  {city.flag} {city.cityName.toUpperCase()}
-                </Text>
-                {cityIds.length > 1 && (
-                  <Pressable
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      void handleRemoveCity(city.id);
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Remove ${city.cityName}`}
-                    hitSlop={12}>
-                    <MaterialCommunityIcons name="close-circle" size={14} color={theme.textSecondary} />
-                  </Pressable>
-                )}
+            <View key={`${city.id}-${index}`}>
+              {index > 0 ? <CardDivider /> : null}
+              <View style={styles.row}>
+                <Pressable
+                  onPress={() => openPicker(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${city.cityName}, ${hoursMinutes(time.timeStr)} ${time.ampm}, ${time.dateStr}`}
+                  accessibilityHint="Choose a different city for this clock"
+                  style={({ pressed }) => [styles.rowMain, pressed && PressFeedback]}>
+                  <ThemedText style={styles.flag}>{city.flag}</ThemedText>
+                  <View style={styles.copy}>
+                    <ThemedText type="smallBold" numberOfLines={1}>
+                      {city.cityName}
+                    </ThemedText>
+                    <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+                      {time.dateStr}
+                    </ThemedText>
+                  </View>
+                  <View style={styles.time}>
+                    <ThemedText type="subtitle" style={styles.digits}>
+                      {hoursMinutes(time.timeStr)}
+                    </ThemedText>
+                    <ThemedText type="caption" style={{ color: theme.accent }}>
+                      {time.ampm}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+                {cityIds.length > 1 ? (
+                  <IconButton icon="close" label={`Remove ${city.cityName} clock`} onPress={() => void removeCity(city.id)} />
+                ) : null}
               </View>
-              <View style={styles.timeRow}>
-                <Text style={[styles.timeText, { color: theme.text }]} numberOfLines={1}>
-                  {timeInfo.timeStr}
-                </Text>
-                <Text style={[styles.ampmText, { color: accentColor }]}>
-                  {timeInfo.ampm}
-                </Text>
-              </View>
-              <Text style={[styles.dateText, { color: theme.textSecondary }]} numberOfLines={1}>
-                {timeInfo.dateStr}
-              </Text>
-            </Pressable>
+            </View>
           );
         })}
 
-        {cityIds.length < MAX_WEATHER_CLOCKS && (
-          <Pressable
-            onPress={() => openPicker()}
-            accessibilityRole="button"
-            accessibilityLabel="Add world clock"
-            style={({ pressed }) => [
-              styles.addClockCard,
-              { backgroundColor: theme.cardMuted, borderColor: theme.border },
-              pressed && { opacity: 0.8, transform: [{ scale: 0.98 }] },
-            ]}>
-            <MaterialCommunityIcons name="plus" size={22} color={theme.accent} />
-            <Text style={[styles.addClockText, { color: theme.accent }]}>
-              Add Clock ({cityIds.length}/{MAX_WEATHER_CLOCKS})
-            </Text>
-          </Pressable>
-        )}
-      </View>
+        {cityIds.length < MAX_WEATHER_CLOCKS ? (
+          <>
+            <CardDivider />
+            <ListRow
+              title="Add a clock"
+              subtitle={`${cityIds.length} of ${MAX_WEATHER_CLOCKS} used`}
+              icon="add"
+              color={theme.accent}
+              onPress={() => openPicker(null)}
+            />
+          </>
+        ) : null}
+      </Card>
 
-      {/* City Selector Modal */}
-      <Modal
-        visible={pickerModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setPickerModalVisible(false)}>
-        <View style={styles.backdrop}>
-          <Pressable
-            style={styles.backdropPressable}
-            onPress={() => setPickerModalVisible(false)}
-            accessibilityRole="button"
-            accessibilityLabel="Close city picker"
-          />
-          <View style={[styles.modalContainer, { backgroundColor: theme.card, borderColor: theme.border }]}>
-            <View style={styles.modalHeader}>
-              <ThemedText type="subtitle">
-                {editingIndex !== null ? 'Change World Clock' : `Add World Clock (Max ${MAX_WEATHER_CLOCKS})`}
-              </ThemedText>
-              <Pressable
-                onPress={() => setPickerModalVisible(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close city picker"
-                style={[styles.closeBtn, { backgroundColor: theme.cardMuted }]}>
-                <MaterialCommunityIcons name="close" size={18} color={theme.text} />
-              </Pressable>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
-              {WORLD_CITIES.map((city) => {
-                const added = cityIds.includes(city.id);
-                const cityTime = getFormattedTimeForZone(city.id === 'local' ? undefined : city.timeZone, now);
-                return (
+      <Sheet
+        visible={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        title={editingIndex !== null ? 'Change clock' : 'Add a clock'}>
+        <SearchField value={search} onChangeText={setSearch} placeholder="Search city or country" label="Search city or country" />
+        {choices.length === 0 ? (
+          <ThemedText type="small" themeColor="textSecondary" style={styles.noMatch}>
+            No city matches “{search.trim()}”.
+          </ThemedText>
+        ) : (
+          <Card padded={false} elevated={false}>
+            {choices.map((city, index) => {
+              const pinned = cityIds.includes(city.id);
+              const disabled = pinned && editingIndex === null;
+              const time = getFormattedTimeForZone(zoneOf(city), now);
+              return (
+                <View key={city.id}>
+                  {index > 0 ? <CardDivider /> : null}
                   <Pressable
-                    key={city.id}
-                    onPress={() => handleSelectCity(city)}
-                    disabled={added && editingIndex === null}
+                    onPress={() => void selectCity(city)}
+                    disabled={disabled}
                     accessibilityRole="button"
-                    accessibilityLabel={`Select ${city.cityName}, ${city.countryName}`}
-                    style={[
-                      styles.cityRow,
-                      {
-                        backgroundColor: added ? `${theme.accent}15` : theme.cardMuted,
-                        borderColor: added ? theme.accent : theme.border,
-                        opacity: added && editingIndex === null ? 0.6 : 1,
-                      },
-                    ]}>
-                    <View style={styles.cityLeft}>
-                      <ThemedText style={styles.flagEmoji}>{city.flag}</ThemedText>
-                      <View>
-                        <ThemedText type="defaultBold">{city.cityName}</ThemedText>
-                        <ThemedText type="caption" themeColor="textSecondary">{city.countryName}</ThemedText>
-                      </View>
+                    accessibilityLabel={`${city.cityName}, ${city.countryName}, ${hoursMinutes(time.timeStr)} ${time.ampm}`}
+                    accessibilityState={{ disabled, selected: pinned }}
+                    style={({ pressed }) => [styles.choice, disabled && styles.disabled, pressed && PressFeedback]}>
+                    <ThemedText style={styles.flag}>{city.flag}</ThemedText>
+                    <View style={styles.copy}>
+                      <ThemedText type="smallBold" numberOfLines={1}>
+                        {city.cityName}
+                      </ThemedText>
+                      <ThemedText type="caption" themeColor="textSecondary" numberOfLines={1}>
+                        {city.countryName}
+                      </ThemedText>
                     </View>
-                    <ThemedText type="smallBold" style={{ color: theme.accent }}>
-                      {cityTime.timeStr} {cityTime.ampm}
+                    <ThemedText type="small" themeColor="textSecondary" style={styles.digits}>
+                      {hoursMinutes(time.timeStr)} {time.ampm}
                     </ThemedText>
+                    {pinned ? <Icon name="check" size="md" color={theme.accent} /> : null}
                   </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-    </View>
+                </View>
+              );
+            })}
+          </Card>
+        )}
+      </Sheet>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-  },
-  clocksGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  clockCard: {
+  row: { flexDirection: 'row', alignItems: 'center', paddingEnd: Spacing.one },
+  rowMain: {
     flex: 1,
-    minWidth: '47%',
-    borderWidth: 1,
-    borderRadius: Radius.medium,
-    padding: 10,
-    gap: 3,
-  },
-  addClockCard: {
-    flex: 1,
-    minWidth: '47%',
-    minHeight: 80,
-    borderWidth: 1,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    padding: 12,
-  },
-  addClockText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  clockTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  clockLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.25,
-    flex: 1,
-    marginEnd: 4,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 3,
-  },
-  timeText: {
-    fontSize: 18,
-    fontWeight: '800',
-    fontVariant: ['tabular-nums'],
-    letterSpacing: 0.2,
-  },
-  ampmText: {
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  dateText: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  backdropPressable: {
-    ...StyleSheet.absoluteFill,
-  },
-  modalContainer: {
-    borderTopLeftRadius: Radius.xlarge,
-    borderTopRightRadius: Radius.xlarge,
-    borderWidth: StyleSheet.hairlineWidth,
-    padding: Spacing.four,
-    maxHeight: '75%',
-    gap: Spacing.three,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  closeBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalScroll: {
-    gap: Spacing.two,
-    paddingBottom: Spacing.four,
-  },
-  cityRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.three,
-    borderRadius: Radius.medium,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  cityLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
+    minHeight: MinTouchTarget + Spacing.three,
+    paddingStart: Spacing.three,
+    paddingEnd: Spacing.two,
+    paddingVertical: Spacing.two,
   },
-  flagEmoji: {
-    fontSize: 22,
+  flag: { ...Typography.title },
+  copy: { flex: 1, gap: Spacing.half },
+  time: { flexDirection: 'row', alignItems: 'baseline', gap: Spacing.one },
+  digits: { fontVariant: ['tabular-nums'] },
+  choice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    minHeight: MinTouchTarget + Spacing.two,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
   },
+  disabled: { opacity: 0.5 },
+  noMatch: { textAlign: 'center', paddingVertical: Spacing.four },
 });

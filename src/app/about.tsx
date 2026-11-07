@@ -1,13 +1,15 @@
 import Constants from 'expo-constants';
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { ExternalLink } from '@/components/external-link';
 import { CashTrackLogo } from '@/components/cashtrack-logo';
 import { ThemedText } from '@/components/themed-text';
-import { Icon, Screen, Section } from '@/components/ui';
+import { Icon, ListRow, Screen, Section } from '@/components/ui';
 import type { GlyphName } from '@/constants/icons';
+import { SUPPORT_EMAIL } from '@/constants/privacy-policy';
+import { notify } from '@/utils/confirm';
 import { BadgeSize, MinTouchTarget, PressFeedback, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -77,6 +79,23 @@ export default function AboutScreen() {
               <Icon name="chevron-right" size="md" color={theme.textSecondary} />
             </Pressable>
           </Link>
+        </Card>
+      </Section>
+
+      <Section title="Help and feedback" subtitle="Questions, problems, ideas, or a request to delete your data.">
+        <Card padded={false}>
+          <ListRow
+            title="Email support"
+            subtitle={SUPPORT_EMAIL}
+            icon="email-outline"
+            color={theme.accent}
+            accessibilityHint="Opens your email app with a new message to CashTrack support"
+            onPress={() =>
+              void Linking.openURL(
+                `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(`CashTrack support (version ${APP_VERSION}, ${Platform.OS})`)}`,
+              ).catch(() => notify('No email app found', `Write to ${SUPPORT_EMAIL} from any email app.`))
+            }
+          />
         </Card>
       </Section>
 

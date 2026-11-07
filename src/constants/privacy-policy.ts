@@ -29,8 +29,10 @@ export const PRIVACY_UPDATED = '2026-11-07';
  * sign-up form links to it because it is shown inside a modal.
  */
 export const PRIVACY_POLICY_URL = 'https://shovonscripts.github.io/Cashtrack/privacy-policy.html';
+/** The one support address: help with the app, privacy questions and deletion requests. */
+export const SUPPORT_EMAIL = 'mr.nasir.online@gmail.com';
 /** Where people send privacy questions and deletion requests. */
-export const PRIVACY_CONTACT_EMAIL = 'jishovon@gmail.com';
+export const PRIVACY_CONTACT_EMAIL = SUPPORT_EMAIL;
 
 export const PRIVACY_SUMMARY = [
   'Your money records (expenses, income, budgets, bills, debts, goals, notes) stay on your phone. We never receive them.',

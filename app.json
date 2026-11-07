@@ -59,7 +59,9 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#00109D",
-          "sounds": ["./assets/sounds/quick_alarm.wav"]
+          "sounds": [
+            "./assets/sounds/quick_alarm.wav"
+          ]
         }
       ],
       [
@@ -94,7 +96,8 @@
           }
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

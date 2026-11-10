@@ -7,9 +7,15 @@ import { getRemainingBalance, summarizeDebts } from '@/utils/debt';
 export function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: number) => string }) {
   const { goals } = useGoals();
   const activeGoals = goals.filter((g) => !g.isCompleted);
-  const totalSaved = goals.reduce((sum, g) => sum + g.contributedAmount, 0);
-  const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0);
-  const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((totalSaved / totalTarget) * 100)) : 0;
+  // Same totals as the pots page: active pots only.
+  const totalSaved = activeGoals.reduce((sum, g) => sum + g.contributedAmount, 0);
+  const totalTarget = activeGoals.reduce((sum, g) => sum + g.targetAmount, 0);
+  // Progress counts only money in pots that have a target, so open-ended pots cannot inflate it.
+  const savedTowardTargets = activeGoals.reduce(
+    (sum, g) => sum + (g.targetAmount > 0 ? Math.min(g.contributedAmount, g.targetAmount) : 0),
+    0,
+  );
+  const overallProgress = totalTarget > 0 ? Math.min(100, Math.round((savedTowardTargets / totalTarget) * 100)) : 0;
   const potCountLabel = `${activeGoals.length} active ${activeGoals.length === 1 ? 'pot' : 'pots'}`;
 
   return (

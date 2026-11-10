@@ -52,6 +52,8 @@ type GoalFormProps = {
   initialValues?: GoalFormInitial;
   /** Leave this pot out of the "other pots already auto-save" total (editing). */
   excludeGoalId?: string;
+  /** The deadline the pot already has (editing); keeping it is allowed even if it has passed. */
+  savedDeadline?: Date | null;
   /** New pots fill in a name and a suggested percentage when the type changes. */
   suggestOnTypeChange?: boolean;
   submitLabel: string;
@@ -80,6 +82,7 @@ const EMPTY: GoalFormInitial = {
 export function GoalForm({
   initialValues,
   excludeGoalId,
+  savedDeadline,
   suggestOnTypeChange = false,
   submitLabel,
   onSubmit,
@@ -132,6 +135,7 @@ export function GoalForm({
     const { errors: found, parsed } = validateGoalForm(
       { title, targetAmount, allocationType, allocationPercent },
       committedPercent,
+      { deadline: isFlexible ? null : deadlineDate, savedDeadline },
     );
     setErrors(found);
     if (!parsed) return;
@@ -282,7 +286,19 @@ export function GoalForm({
           <>
             <View style={styles.field}>
               <ThemedText type="smallBold">Deadline</ThemedText>
-              <DatePicker value={deadlineDate} onChange={setDeadlineDate} label="Deadline" />
+              <DatePicker
+                value={deadlineDate}
+                onChange={(date) => {
+                  setDeadlineDate(date);
+                  clearError('deadline');
+                }}
+                label="Deadline"
+              />
+              {errors.deadline ? (
+                <ThemedText type="caption" themeColor="danger" accessibilityLiveRegion="polite">
+                  {errors.deadline}
+                </ThemedText>
+              ) : null}
             </View>
 
             <View style={styles.field}>

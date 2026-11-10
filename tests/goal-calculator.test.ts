@@ -207,3 +207,22 @@ test('goal calculator - scenario 10: recovery contribution and overdue goals', (
   assert.strictEqual(recovery.remainingAmount, 50000);
   assert.strictEqual(recovery.monthlyRequired > 0, true);
 });
+
+test('goal calculator - a new pot spreads the target over every period, not one fewer', () => {
+  const start = new Date(2026, 10, 10, 9, 0);
+  const base = {
+    targetAmount: 6000,
+    startDate: start.toISOString(),
+    deadlineDate: new Date(2027, 4, 10, 9, 0).toISOString(),
+    currentAmount: 0,
+  };
+  const anHourLater = new Date(2026, 10, 10, 10, 0);
+  assert.strictEqual(calculateGoalProgress({ ...base, frequency: 'monthly', today: anHourLater }).frequencyRequired, 1000);
+  assert.strictEqual(calculateGoalProgress({ ...base, frequency: 'monthly', today: new Date(2026, 10, 10) }).frequencyRequired, 1000);
+  // Twenty days in, the first month has not finished yet.
+  assert.strictEqual(calculateGoalProgress({ ...base, frequency: 'monthly', today: new Date(2026, 10, 30, 10, 0) }).frequencyRequired, 1000);
+  // A month and a day in, five months are left.
+  assert.strictEqual(calculateGoalProgress({ ...base, frequency: 'monthly', today: new Date(2026, 11, 11, 10, 0) }).frequencyRequired, 1200);
+  const twoYears = { ...base, deadlineDate: new Date(2028, 10, 10, 9, 0).toISOString() };
+  assert.strictEqual(calculateGoalProgress({ ...twoYears, frequency: 'yearly', today: anHourLater }).frequencyRequired, 3000);
+});

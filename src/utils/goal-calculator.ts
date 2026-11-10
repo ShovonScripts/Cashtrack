@@ -40,9 +40,44 @@ function getFrequencyPeriods(frequency: GoalFrequency, start: Date, deadline: Da
     case 'half-yearly':
       return Math.max(1, Math.ceil(months / 6));
     case 'yearly':
-      return Math.max(1, Math.round(months / 12));
+      return Math.max(1, Math.ceil(months / 12));
     default:
       return Math.max(1, months);
+  }
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Whole calendar months from `start` to `end`; a month counts only once it has fully passed. */
+function getFullMonths(start: Date, end: Date): number {
+  let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+  const anniversary = new Date(start);
+  anniversary.setMonth(start.getMonth() + months);
+  if (anniversary.getTime() > end.getTime()) months -= 1;
+  return Math.max(0, months);
+}
+
+/**
+ * Saving periods that have fully passed since the start. A pot that is an hour
+ * old has completed none, so the first period's share is never skipped.
+ */
+function getCompletedPeriods(frequency: GoalFrequency, start: Date, today: Date): number {
+  const elapsedMs = today.getTime() - start.getTime();
+  if (elapsedMs <= 0) return 0;
+  switch (frequency) {
+    case 'daily':
+      return Math.floor(elapsedMs / DAY_MS);
+    case 'weekly':
+      return Math.floor(elapsedMs / (7 * DAY_MS));
+    case 'quarterly':
+      return Math.floor(getFullMonths(start, today) / 3);
+    case 'half-yearly':
+      return Math.floor(getFullMonths(start, today) / 6);
+    case 'yearly':
+      return Math.floor(getFullMonths(start, today) / 12);
+    case 'monthly':
+    default:
+      return getFullMonths(start, today);
   }
 }
 
@@ -91,7 +126,7 @@ export function calculateGoalProgress({
   const isCompleted = hasTarget && actualProgress >= roundedTarget;
 
   const totalPeriods = getFrequencyPeriods(frequency, start, deadline, totalDays);
-  const elapsedPeriods = today <= start ? 0 : Math.min(totalPeriods, getFrequencyPeriods(frequency, start, today, elapsedDays));
+  const elapsedPeriods = Math.min(totalPeriods, getCompletedPeriods(frequency, start, today));
   const remainingPeriods = Math.max(1, totalPeriods - elapsedPeriods);
 
   // Requirements calculations

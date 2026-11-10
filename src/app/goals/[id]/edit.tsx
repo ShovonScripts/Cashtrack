@@ -39,6 +39,7 @@ export default function EditGoalScreen() {
     <GoalForm
       key={goal.id}
       excludeGoalId={goal.id}
+      savedDeadline={goal.deadlineDate ? new Date(goal.deadlineDate) : null}
       submitLabel="Save changes"
       initialValues={{
         title: goal.title,

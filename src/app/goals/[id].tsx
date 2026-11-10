@@ -15,6 +15,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
 import { calculateGoalProgress } from '@/utils/goal-calculator';
 import { formatDate } from '@/utils/expense';
+import { roundMoney } from '@/utils/money';
 import { confirmDelete } from '@/utils/confirm';
 import type { GoalContribution, GoalFrequency } from '@/types/goal';
 
@@ -55,7 +56,7 @@ export default function GoalDetailScreen() {
   if (!goal) {
     return (
       <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
-        <ThemedText type="subtitle">Goal not found</ThemedText>
+        <ThemedText type="subtitle">Pot not found</ThemedText>
         <Pressable
           onPress={() => router.back()}
           accessibilityRole="button"
@@ -288,9 +289,15 @@ export default function GoalDetailScreen() {
             {QUICK_AMOUNTS.map((amt) => (
                 <Pressable
                   key={amt}
-                  onPress={() => setContribAmount(String(amt))}
+                  onPress={() => {
+                    setContribAmount((current) => {
+                      const base = Number(current);
+                      return String(roundMoney((Number.isFinite(base) ? base : 0) + amt));
+                    });
+                    setMessage('');
+                  }}
                   accessibilityRole="button"
-                  accessibilityLabel={`Use ${formatAmount(amt)}`}
+                  accessibilityLabel={`Add ${formatAmount(amt)} to the amount`}
                   style={({ pressed }) => [styles.quickChip, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
                 <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>+{amt}</ThemedText>
               </Pressable>

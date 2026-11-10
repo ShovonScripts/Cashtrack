@@ -131,10 +131,10 @@ You can also use the **+** button → **Add Bill / Reminder**.
 1. Tap the **+** button.
 2. Tap **New Savings Pot**.
 3. Choose a pot category: General, Junior, Emergency, or Milestone.
-4. Enter a pot title.
+4. Enter a pot name.
 5. Enter a target amount, or leave it blank for an open-ended pot.
-6. Choose an allocation rule and frequency.
-7. Tap **Create Savings Pot**.
+6. Choose how you save, then a deadline and saving pace.
+7. Tap **Create pot**.
 
 ### 2.7 Record money you lent or borrowed
 
@@ -453,41 +453,41 @@ If you create a pot with **Auto-Save %**, CashTrack allocates that percentage of
 
 ## 7. Savings Pots and Goals
 
-Open **Menu Hub → Savings Goals & Pots**.
+Open **More → Money Plan & Pots**.
 
 ### 7.1 The pots screen
 
-The top card shows:
+The top strip shows:
 
-- **ACTIVE SAVED**
-- **ACTIVE TARGETS**
+- **Active saved**
+- **Active targets**
 
-Filter tabs:
+Filter chips:
 
-- **active**
-- **completed**
-- **all**
+- **Active**
+- **Completed**
+- **All**
 
-Each tab shows its count. Tap **+ New pot** to create a pot.
+Each chip shows its count. Tap the **+** button in the header to create a pot.
 
 ### 7.2 Create a pot
 
-The screen is titled **Create Savings Pot**.
+The screen is titled **Create Pot / Goal**.
 
-1. Choose a savings category:
+1. Choose a **Pot type**:
    - **General** — everyday cash buffer and flexible goals
    - **Junior** — kids, education, and family futures
    - **Emergency** — a safety net for unexpected events
    - **Milestone** — vacations, vehicles, and big purchases
-2. Enter a **Pot Title**.
-3. Enter a **Target Amount**, or leave it blank for an open-ended pot.
-4. Choose a **Savings Allocation Rule**:
-   - **Auto-Save %** — save a percentage of earnings automatically
-   - **Flexible Stash** — add cash anytime with no fixed rules
-   - **Manual Only** — contribute only when you choose
-5. If you choose Auto-Save %, set the percentage.
-6. Choose a frequency: Monthly, Weekly, Daily, Quarterly, Half-Yearly, or Yearly.
-7. Tap **Create Savings Pot**.
+2. Enter a **Pot name**.
+3. Enter a **Target amount**, or leave it blank for an open-ended pot.
+4. Choose **How you save**:
+   - **Auto-save** — a share of every income you record goes into the pot
+   - **Flexible** — no rules, no deadline; add money whenever you like
+   - **Manual** — you add money yourself, paced towards a deadline
+5. If you choose Auto-save, set the share of each income (%).
+6. For Auto-save and Manual, pick a **Deadline** after today and a **Saving pace**: Daily, Weekly, Monthly, Quarterly, Half-yearly, or Yearly.
+7. Tap **Create pot**.
 
 Auto-Save percentages across all active pots cannot exceed 100% of income.
 
@@ -510,7 +510,7 @@ Tap a pot to see:
 
 ### 7.4 Add a contribution
 
-1. Enter an amount.
+1. Enter an amount, or tap the quick chips (+100, +500, and so on). Each tap adds to the amount.
 2. Tap **Contribute**.
 
 If the contribution reaches the target, the pot is marked complete.
@@ -1294,7 +1294,7 @@ Contributions are tracked inside the pot. They do not automatically reduce your 
 | Income | **Menu Hub → Income Streams** |
 | Budgets | **Menu Hub → Budget Caps & Limits** |
 | Spending advisor | **Menu Hub → Spending Advisor** |
-| Pots and goals | **Menu Hub → Savings Goals & Pots** |
+| Pots and goals | **More → Money Plan & Pots** |
 | Debts | **Menu Hub → Debts & IOUs** |
 | Bills | **Menu Hub → Bills & Reminders** |
 | Bill calendar | **Menu Hub → Bill & Renewal Calendar** |

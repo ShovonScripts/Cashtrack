@@ -89,7 +89,17 @@ export type GoalFormValues = {
   allocationPercent: string;
 };
 
-export type GoalFormErrors = Partial<Record<'title' | 'targetAmount' | 'allocationPercent', string>>;
+export type GoalFormErrors = Partial<Record<'title' | 'targetAmount' | 'allocationPercent' | 'deadline', string>>;
+
+export type DeadlineCheck = {
+  /** The chosen deadline, or null when the pot has none (flexible). */
+  deadline: Date | null;
+  /** The deadline the pot already had (editing). Keeping it unchanged is always allowed. */
+  savedDeadline?: Date | null;
+  today?: Date;
+};
+
+const dayKey = (date: Date) => date.getFullYear() * 10_000 + date.getMonth() * 100 + date.getDate();
 
 export type ParsedGoalForm = {
   title: string;
@@ -104,6 +114,7 @@ export type ParsedGoalForm = {
 export function validateGoalForm(
   values: GoalFormValues,
   committedPercent: number,
+  deadlineCheck?: DeadlineCheck,
 ): { errors: GoalFormErrors; parsed: ParsedGoalForm | null } {
   const errors: GoalFormErrors = {};
   const title = values.title.trim();
@@ -122,6 +133,15 @@ export function validateGoalForm(
       errors.allocationPercent = 'Enter a percentage from 1 to 100.';
     } else if (committedPercent + allocationPercent > 100) {
       errors.allocationPercent = `That makes ${roundPercent(committedPercent + allocationPercent)}% of every income. Lower this pot or another one to stay within 100%.`;
+    }
+  }
+
+  const deadline = deadlineCheck?.deadline;
+  if (deadline) {
+    const saved = deadlineCheck.savedDeadline;
+    const unchanged = saved ? dayKey(saved) === dayKey(deadline) : false;
+    if (!unchanged && dayKey(deadline) <= dayKey(deadlineCheck.today ?? new Date())) {
+      errors.deadline = 'Pick a deadline after today.';
     }
   }
 

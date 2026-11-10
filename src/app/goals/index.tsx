@@ -11,7 +11,9 @@ import { LoadErrorState } from '@/components/load-error-state';
 import { Spacing } from '@/constants/theme';
 import { useGoals } from '@/context/goal-context';
 import { usePreferences } from '@/context/expense-context';
+import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
+import { sortPotsForList } from '@/utils/pot-display';
 
 type FilterTab = 'active' | 'completed' | 'all';
 
@@ -20,11 +22,13 @@ export default function GoalsOverviewScreen() {
   const { goals, isLoading, goalLoadError, reloadGoals } = useGoals();
   const { formatAmount } = usePreferences();
   const [tab, setTab] = useState<FilterTab>('active');
+  const now = useNow(60_000);
 
   const activeGoals = goals.filter((g) => !g.isCompleted);
   const completedGoals = goals.filter((g) => g.isCompleted);
 
-  const filtered = goals.filter((g) => {
+  // Overdue and behind pots first, so the ones that need money are seen first.
+  const filtered = sortPotsForList(goals, now).filter((g) => {
     if (tab === 'active') return !g.isCompleted;
     if (tab === 'completed') return g.isCompleted;
     return true;
@@ -32,10 +36,10 @@ export default function GoalsOverviewScreen() {
 
   const totalPlanned = activeGoals.reduce((sum, g) => sum + g.targetAmount, 0);
   const totalSaved = activeGoals.reduce((sum, g) => sum + g.contributedAmount, 0);
-  const emptyTitle = goals.length === 0 ? 'No financial pots yet' : tab === 'completed' ? 'No completed pots yet' : 'No active pots';
+  const emptyTitle = goals.length === 0 ? 'No pots yet' : tab === 'completed' ? 'No completed pots yet' : 'No active pots';
   const emptyMessage =
     goals.length === 0
-      ? 'Plan ahead for travel, investments, or major purchases by creating your first pot.'
+      ? 'Save towards a trip, an emergency fund or a big purchase. Create your first pot to start.'
       : tab === 'completed'
         ? 'Pots you fully fund will appear here.'
         : 'Every pot is fully funded. Create another or check the completed tab.';

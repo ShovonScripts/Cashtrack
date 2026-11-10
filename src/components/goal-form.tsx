@@ -24,7 +24,10 @@ import {
   type GoalFormErrors,
   type PotChoice,
 } from '@/utils/goal-form';
+import { calculateGoalProgress } from '@/utils/goal-calculator';
+import { formatDate } from '@/utils/expense';
 import { triggerHaptic } from '@/utils/motion';
+import { FREQUENCY_UNIT } from '@/utils/pot-display';
 
 export type GoalFormResult = {
   title: string;
@@ -54,6 +57,9 @@ type GoalFormProps = {
   excludeGoalId?: string;
   /** The deadline the pot already has (editing); keeping it is allowed even if it has passed. */
   savedDeadline?: Date | null;
+  /** Editing: when the pot started and what is already in it, for the pace hint. */
+  startDate?: string;
+  savedAmount?: number;
   /** New pots fill in a name and a suggested percentage when the type changes. */
   suggestOnTypeChange?: boolean;
   submitLabel: string;
@@ -72,7 +78,8 @@ const EMPTY: GoalFormInitial = {
   title: '',
   targetAmount: '',
   potType: 'piggy_bank',
-  allocationType: 'percentage',
+  // Manual is the least surprising start: nothing moves until you add money.
+  allocationType: 'manual',
   allocationPercent: '10',
   frequency: 'monthly',
   deadlineDate: defaultDeadline(),
@@ -83,6 +90,8 @@ export function GoalForm({
   initialValues,
   excludeGoalId,
   savedDeadline,
+  startDate,
+  savedAmount = 0,
   suggestOnTypeChange = false,
   submitLabel,
   onSubmit,
@@ -90,10 +99,13 @@ export function GoalForm({
 }: GoalFormProps) {
   const theme = useTheme();
   const { goals } = useGoals();
-  const { country } = usePreferences();
+  const { country, formatAmount } = usePreferences();
   const initial = initialValues ?? EMPTY;
 
-  const [title, setTitle] = useState(initial.title);
+  // A new pot starts with the suggested name for the selected type, as if it had been tapped.
+  const [title, setTitle] = useState(
+    !initialValues && suggestOnTypeChange ? `${potMeta(initial.potType).label} Savings` : initial.title,
+  );
   const [targetAmount, setTargetAmount] = useState(initial.targetAmount);
   const [potType, setPotType] = useState<PotChoice>(initial.potType);
   const [allocationType, setAllocationType] = useState<AllocationType>(initial.allocationType);
@@ -113,6 +125,26 @@ export function GoalForm({
   const isFlexible = allocationType === 'flexible';
   const totalPercent = roundPercent(committedPercent + (isAutoSave ? Number(allocationPercent) || 0 : 0));
   const rule = ALLOCATION_RULES.find((r) => r.value === allocationType) ?? ALLOCATION_RULES[0];
+  const targetNumber = Number(targetAmount);
+  const hasTarget = targetAmount.trim() !== '' && Number.isFinite(targetNumber) && targetNumber > 0;
+  // A deadline and pace only mean something when there is a target to pace towards.
+  const showSchedule = !isFlexible && hasTarget;
+  const paceHint = showSchedule ? describePace() : null;
+
+  function describePace(): string | null {
+    const today = new Date();
+    if (deadlineDate.getTime() <= today.getTime()) return null;
+    const calc = calculateGoalProgress({
+      targetAmount: targetNumber,
+      startDate: startDate ?? today.toISOString(),
+      deadlineDate: deadlineDate.toISOString(),
+      currentAmount: savedAmount,
+      frequency,
+      today,
+    });
+    if (calc.remainingAmount <= 0) return 'This pot already has enough to reach the target.';
+    return `About ${formatAmount(calc.frequencyRequired)} per ${FREQUENCY_UNIT[frequency]} to reach it by ${formatDate(deadlineDate.toISOString())}.`;
+  }
 
   const clearError = (field: keyof GoalFormErrors) => {
     setSubmitError('');
@@ -135,7 +167,7 @@ export function GoalForm({
     const { errors: found, parsed } = validateGoalForm(
       { title, targetAmount, allocationType, allocationPercent },
       committedPercent,
-      { deadline: isFlexible ? null : deadlineDate, savedDeadline },
+      { deadline: showSchedule ? deadlineDate : null, savedDeadline },
     );
     setErrors(found);
     if (!parsed) return;
@@ -149,7 +181,7 @@ export function GoalForm({
         icon: potMeta(potType).icon,
         allocationType,
         frequency,
-        deadlineDate: isFlexible ? null : deadlineDate.toISOString(),
+        deadlineDate: showSchedule ? deadlineDate.toISOString() : null,
       });
     } catch {
       setSubmitError('Could not save the pot. Please try again.');
@@ -282,7 +314,13 @@ export function GoalForm({
           </Card>
         ) : null}
 
-        {!isFlexible ? (
+        {!isFlexible && !hasTarget ? (
+          <ThemedText type="caption" themeColor="textSecondary">
+            Add a target amount to set a deadline and a saving pace.
+          </ThemedText>
+        ) : null}
+
+        {showSchedule ? (
           <>
             <View style={styles.field}>
               <ThemedText type="smallBold">Deadline</ThemedText>
@@ -317,7 +355,7 @@ export function GoalForm({
                 ))}
               </View>
               <ThemedText type="caption" themeColor="textSecondary">
-                Used to work out how much to put in each period to reach the target by the deadline.
+                {paceHint ?? 'Used to work out how much to put in each period to reach the target by the deadline.'}
               </ThemedText>
             </View>
           </>

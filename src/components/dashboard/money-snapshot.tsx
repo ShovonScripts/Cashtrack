@@ -30,7 +30,7 @@ export function MoneyPlanSummaryCard({ formatAmount }: { formatAmount: (amount: 
       ]}
       onPress={() => router.push('/goals')}
       accessibilityLabel={`Money plan and pots. ${formatAmount(totalSaved)} saved of ${formatAmount(totalTarget)}. ${potCountLabel}. ${overallProgress}% saved.`}
-      accessibilityHint="Opens the savings goals and pots page"
+      accessibilityHint="Opens Money Plan & Pots"
       actionLabel="Add pot"
       onActionPress={() => router.push('/goals/add')}
     />

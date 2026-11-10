@@ -112,7 +112,7 @@ export function getSmartFinancialIntelligence({
   if (healthStatus === 'Overspending') {
     smartTip = 'You are currently spending more than your recorded income. Try reviewing discretionary categories.';
   } else if (healthStatus === 'Excellent') {
-    smartTip = `Great job! You're saving ${savingsRate}% of your income. Consider allocating surplus to your financial pots.`;
+    smartTip = `Great job! You're saving ${savingsRate}% of your income. Consider moving the surplus into one of your pots.`;
   } else if (projectedMonthSpend > totalIncome && totalIncome > 0) {
     smartTip = `At your current daily burn rate (${Math.round(dailyBurnRate)}/day), your projected monthly spending exceeds your income.`;
   } else {

@@ -1,70 +1,71 @@
-import { useLocalSearchParams, router } from 'expo-router';
+import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
 
-import { Card } from '@/components/card';
+import { Card, CardDivider } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
 import { GoalCompletionModal } from '@/components/goal-completion-modal';
+import { AddMoneySheet } from '@/components/pots/add-money-sheet';
+import { PotSavingsChart } from '@/components/pots/pot-savings-chart';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Radius, Spacing } from '@/constants/theme';
-import { useGoals } from '@/context/goal-context';
+import { Badge, Button, Icon, IconButton, ProgressMeter, Screen, Section, SkeletonList } from '@/components/ui';
+import type { GlyphName } from '@/constants/icons';
+import { Radius, Spacing } from '@/constants/theme';
 import { usePreferences } from '@/context/expense-context';
+import { useGoals, type GoalWithProgress } from '@/context/goal-context';
 import { useNow } from '@/hooks/use-now';
+import { usePotDelete } from '@/hooks/use-pot-delete';
 import { useTheme } from '@/hooks/use-theme';
-import { withAlpha } from '@/utils/color';
-import { calculateGoalProgress } from '@/utils/goal-calculator';
+import type { GoalContribution } from '@/types/goal';
 import { formatDate } from '@/utils/expense';
-import { roundMoney } from '@/utils/money';
-import { confirmDelete } from '@/utils/confirm';
-import type { GoalContribution, GoalFrequency } from '@/types/goal';
+import { calculateGoalProgress } from '@/utils/goal-calculator';
+import {
+  FREQUENCY_UNIT,
+  isAutoSaveContribution,
+  isOpenEndedPot,
+  nextMilestone,
+  overdueDays,
+  potGlyph,
+  potStatus,
+  potTypeLabel,
+  ruleLabel,
+} from '@/utils/pot-display';
 
-const QUICK_AMOUNTS = [100, 500, 1000, 5000];
+/** Long histories show the newest entries first and fold the rest away. */
+const HISTORY_PREVIEW = 10;
 
-const FREQUENCY_LABELS: Record<GoalFrequency, string> = {
-  daily: 'day',
-  weekly: 'week',
-  monthly: 'month',
-  quarterly: 'quarter',
-  'half-yearly': 'half-year',
-  yearly: 'year',
-};
-
-export default function GoalDetailScreen() {
+export default function PotDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const theme = useTheme();
-  const { goals, addContribution, deleteContribution, deleteGoal, isLoading } = useGoals();
+  const colors = useTheme();
+  const { goals, isLoading, addContribution } = useGoals();
   const { formatAmount } = usePreferences();
+  const { deletePot, deletePotContribution } = usePotDelete();
   const now = useNow(60_000);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [showAllHistory, setShowAllHistory] = useState(false);
 
   const goal = goals.find((g) => g.id === id);
-  const [contribAmount, setContribAmount] = useState('');
-  const [contribNote, setContribNote] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState('');
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   if (!goal && isLoading) {
     return (
-      <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four, gap: Spacing.two }]}>
-        <ActivityIndicator color={theme.accent} size="large" />
-        <ThemedText type="small" themeColor="textSecondary">Loading pot…</ThemedText>
-      </View>
+      <Screen topInset={false}>
+        <SkeletonList rows={3} label="Loading pot" />
+      </Screen>
     );
   }
 
   if (!goal) {
     return (
-      <View style={[styles.content, { justifyContent: 'center', alignItems: 'center', padding: Spacing.four }]}>
-        <ThemedText type="subtitle">Pot not found</ThemedText>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Back to Pots"
-          style={{ marginTop: Spacing.three }}>
-          <ThemedText type="smallBold" style={{ color: theme.accent }}>← Back to Pots</ThemedText>
-        </Pressable>
-      </View>
+      <Screen topInset={false}>
+        <EmptyState
+          title="Pot not found"
+          message="This pot no longer exists."
+          icon="piggy-bank-outline"
+          actionLabel="Back to pots"
+          onAction={() => router.back()}
+        />
+      </Screen>
     );
   }
 
@@ -76,447 +77,306 @@ export default function GoalDetailScreen() {
     frequency: goal.frequency,
     today: now,
   });
-
-  const handleAddContribution = async () => {
-    const parsed = Number(contribAmount);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setMessage('Please enter a valid contribution amount.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setMessage('');
-
-    try {
-      await addContribution({
-        goalId: goal.id,
-        amount: parsed,
-        note: contribNote,
-        date: new Date().toISOString(),
-      });
-      setContribAmount('');
-      setContribNote('');
-      setMessage('Contribution recorded.');
-
-      const nextTotal = goal.contributedAmount + parsed;
-      if (goal.targetAmount > 0 && nextTotal >= goal.targetAmount && !goal.isCompleted) {
-        setShowCompletionModal(true);
-      }
-    } catch {
-      setMessage('Could not save contribution. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDeleteGoal = () => {
-    confirmDelete(
-      'Delete financial pot?',
-      'This will permanently delete this pot and its contribution history.',
-      async () => {
-        await deleteGoal(goal.id);
-        router.back();
-      }
-    );
-  };
-
-  const isAhead = calc.aheadBehindAmount >= 0;
-  const isFlexible = goal.allocationType === 'flexible';
+  const status = potStatus(goal, now);
   const hasTarget = goal.targetAmount > 0;
-  const isOpenEnded = isFlexible || !hasTarget;
-  const deadline = goal.deadlineDate ? new Date(goal.deadlineDate) : null;
-  const overdueDays =
-    deadline && !goal.isCompleted && now.getTime() > deadline.getTime()
-      ? Math.max(1, Math.ceil((now.getTime() - deadline.getTime()) / 86_400_000))
-      : 0;
+  const openEnded = isOpenEndedPot(goal);
+  const late = overdueDays(goal, now);
+  const milestone = nextMilestone(goal.contributedAmount, goal.targetAmount);
+  const goEdit = () => router.push({ pathname: '/goals/[id]/edit', params: { id: goal.id } });
+
+  const saveMoney = async (amount: number, note: string) => {
+    await addContribution({ goalId: goal.id, amount, note, date: new Date().toISOString() });
+    if (hasTarget && !goal.isCompleted && goal.contributedAmount + amount >= goal.targetAmount) {
+      setShowCompletion(true);
+    }
+  };
+
+  const history = showAllHistory ? goal.contributions : goal.contributions.slice(0, HISTORY_PREVIEW);
+  const hasAutoSave = goal.contributions.some(isAutoSaveContribution);
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        <View style={styles.container}>
-        {/* Hero Card */}
-        <View style={[styles.hero, { backgroundColor: Brand.deep }]}>
-          <View style={styles.heroContent}>
-            <View style={styles.heroTopline}>
-              <ThemedText type="caption" style={styles.heroLabel}>
-                FINANCIAL POT · {isOpenEnded ? 'OPEN-ENDED' : goal.frequency.toUpperCase()}
-              </ThemedText>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.two }}>
-                <Pressable
-                  onPress={() => router.push({ pathname: '/goals/[id]/edit', params: { id: goal.id } })}
-                  style={styles.whitePillBtn}
-                  accessibilityRole="button"
-                  accessibilityLabel="Edit pot">
-                  <ThemedText type="smallBold" style={{ color: Brand.deep, fontSize: 11 }}>Edit</ThemedText>
-                </Pressable>
-                <View style={[styles.statusPill, { backgroundColor: goal.isCompleted ? withAlpha(theme.successOnBrand, 0.25) : 'rgba(255,255,255,0.15)' }]}>
-                  <ThemedText type="caption" style={{ color: goal.isCompleted ? theme.successOnBrand : theme.onBrand, fontWeight: '700' }}>
-                    {goal.isCompleted ? 'Completed' : isOpenEnded ? 'Open-ended' : 'Active'}
-                  </ThemedText>
-                </View>
-              </View>
-            </View>
-            <ThemedText type="subtitle" style={styles.heroTitle}>{goal.title}</ThemedText>
-            <View style={styles.heroSummaryRow}>
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>SAVED</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {formatAmount(goal.contributedAmount)}
-                </ThemedText>
-              </View>
-              <View style={styles.heroDivider} />
-              <View style={styles.heroStat}>
-                <ThemedText type="caption" style={styles.heroStatLabel}>TARGET</ThemedText>
-                <ThemedText type="hero" style={styles.heroStatVal} numberOfLines={1} adjustsFontSizeToFit>
-                  {hasTarget ? formatAmount(goal.targetAmount) : 'None'}
-                </ThemedText>
-              </View>
-            </View>
-          </View>
-          <View pointerEvents="none" style={styles.heroOrbLarge} />
-        </View>
+    <>
+      <Stack.Screen
+        options={{ headerRight: () => <IconButton icon="edit" label="Edit pot" onPress={goEdit} /> }}
+      />
+      <Screen topInset={false}>
+        <PotSummary goal={goal} status={status} formatAmount={formatAmount} />
 
-        {/* Progress & Targets Card */}
-        <Card style={styles.card}>
-          <View style={styles.sectionHeader}>
-            <ThemedText type="defaultBold">Progress breakdown</ThemedText>
-            <ThemedText type="subtitle" style={{ color: theme.accent }}>
-              {hasTarget ? `${Math.round(goal.progressPercent)}%` : 'No target'}
-            </ThemedText>
-          </View>
-
-          {hasTarget ? (
-            <View style={[styles.track, { backgroundColor: theme.backgroundElement }]}>
-              <View style={[styles.fill, { width: `${Math.min(100, goal.progressPercent)}%`, backgroundColor: goal.isCompleted ? theme.success : theme.accent }]} />
-            </View>
-          ) : null}
-
-          {!isOpenEnded && deadline ? (
-            <ThemedText type="caption" themeColor={overdueDays > 0 ? 'danger' : 'textSecondary'}>
-              {goal.isCompleted
-                ? `Completed · target date ${formatDate(goal.deadlineDate!)}`
-                : overdueDays > 0
-                  ? `Overdue by ${overdueDays} ${overdueDays === 1 ? 'day' : 'days'} · was due ${formatDate(goal.deadlineDate!)}`
-                  : `Due ${formatDate(goal.deadlineDate!)}`}
-            </ThemedText>
-          ) : null}
-
-          <View style={styles.metricsGrid}>
-            {isOpenEnded ? (
-              <>
-                <MetricItem label="Remaining" value={hasTarget ? formatAmount(calc.remainingAmount) : 'None'} />
-                <MetricItem label="Contributions" value={String(goal.contributions.length)} />
-              </>
-            ) : (
-              <>
-                <MetricItem label="Remaining" value={formatAmount(calc.remainingAmount)} />
-                <MetricItem
-                  label={overdueDays > 0 ? 'Deadline' : 'Time Left'}
-                  value={overdueDays > 0 ? `${overdueDays} ${overdueDays === 1 ? 'day' : 'days'} late` : `${calc.remainingDays} days`}
-                  valueColor={overdueDays > 0 ? theme.danger : undefined}
-                />
-                <MetricItem label="Expected by now" value={formatAmount(calc.expectedProgress)} />
-                <MetricItem
-                  label="Status"
-                  value={goal.isCompleted ? 'Completed' : isAhead ? 'Ahead' : 'Behind'}
-                  valueColor={goal.isCompleted ? theme.success : isAhead ? theme.accent : theme.danger}
-                />
-              </>
-            )}
-          </View>
-        </Card>
-
-        {/* Dynamic Recovery / Required Contributions */}
-        {!goal.isCompleted && !isFlexible && deadline && calc.remainingAmount > 0 && (
-          <Card style={styles.card}>
-            <ThemedText type="defaultBold">Required contributions</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              {overdueDays > 0
-                ? 'The target date has passed — the full remaining amount is due now.'
-                : 'Based on your remaining target and the time left.'}
-            </ThemedText>
-            <View style={styles.requiredRow}>
-              <RequiredBadge label={`Per ${FREQUENCY_LABELS[goal.frequency]}`} amount={formatAmount(calc.frequencyRequired)} />
-              <RequiredBadge
-                label={goal.frequency === 'monthly' ? 'Per week' : 'Per month'}
-                amount={formatAmount(goal.frequency === 'monthly' ? calc.weeklyRequired : calc.monthlyRequired)}
-              />
-            </View>
-          </Card>
-        )}
-
-        {/* Milestone Projections Card */}
         {hasTarget ? (
-          <Card style={styles.card}>
-            <ThemedText type="defaultBold">Milestone Projections</ThemedText>
-            <ThemedText type="caption" themeColor="textSecondary">
-              Target thresholds and progress breakdown.
-            </ThemedText>
-            <View style={{ gap: Spacing.two, marginTop: Spacing.one }}>
-              {[
-                { pct: 25, label: 'Quarter Goal (25%)' },
-                { pct: 50, label: 'Halfway Mark (50%)' },
-                { pct: 75, label: 'Three-Quarters (75%)' },
-                { pct: 100, label: 'Full Target (100%)' },
-              ].map((m) => {
-                const target = goal.targetAmount * (m.pct / 100);
-                const reached = goal.contributedAmount >= target;
-                return (
-                  <View key={m.pct} style={[styles.milestoneRow, { backgroundColor: theme.cardMuted, borderColor: theme.border }]}>
-                    <View style={styles.milestoneInfo}>
-                      <ThemedText type="smallBold">{m.label}</ThemedText>
-                      <ThemedText type="caption" themeColor="textSecondary">{formatAmount(target)}</ThemedText>
-                    </View>
-                    <View style={[styles.milestoneBadge, { backgroundColor: reached ? withAlpha(theme.success, 0.15) : theme.backgroundElement }]}>
-                      <ThemedText type="caption" style={{ color: reached ? theme.success : theme.textSecondary, fontWeight: '700' }}>
-                        {reached ? '✓ Reached' : `${Math.min(100, Math.round((goal.contributedAmount / target) * 100))}%`}
-                      </ThemedText>
-                    </View>
-                  </View>
-                );
-              })}
-            </View>
+          <Card style={styles.gap}>
+            <ProgressMeter
+              fill={goal.progressPercent / 100}
+              color={goal.isCompleted ? colors.success : colors.accent}
+              marker={!openEnded && !goal.isCompleted && calc.expectedProgress > 0 ? calc.expectedProgress / goal.targetAmount : undefined}
+              label={`${goal.title} progress, ${status.label}`}
+              valueText={`${Math.round(goal.progressPercent)} percent saved, ${formatAmount(calc.remainingAmount)} to go`}>
+              <View style={styles.meterRow}>
+                <ThemedText type="smallBold">{Math.round(goal.progressPercent)}% saved</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {goal.isCompleted ? 'Target reached' : `${formatAmount(calc.remainingAmount)} to go`}
+                </ThemedText>
+              </View>
+            </ProgressMeter>
+            <PaceLine goal={goal} aheadBehind={calc.aheadBehindAmount} openEnded={openEnded} late={late} formatAmount={formatAmount} />
+            {milestone && !goal.isCompleted ? (
+              <ThemedText type="caption" themeColor="textSecondary">
+                Next milestone: {milestone.percent}% at {formatAmount(milestone.amount)}
+              </ThemedText>
+            ) : null}
           </Card>
         ) : null}
 
-        {/* Add Contribution Form */}
-        <Card style={styles.card}>
-          <ThemedText type="defaultBold">Add contribution</ThemedText>
-          <View style={styles.quickChipsRow}>
-            {QUICK_AMOUNTS.map((amt) => (
-                <Pressable
-                  key={amt}
-                  onPress={() => {
-                    setContribAmount((current) => {
-                      const base = Number(current);
-                      return String(roundMoney((Number.isFinite(base) ? base : 0) + amt));
-                    });
-                    setMessage('');
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Add ${formatAmount(amt)} to the amount`}
-                  style={({ pressed }) => [styles.quickChip, { backgroundColor: theme.cardMuted, borderColor: theme.border }, pressed && styles.pressed]}>
-                <ThemedText type="caption" style={{ color: theme.accent, fontWeight: '700' }}>+{amt}</ThemedText>
-              </Pressable>
-            ))}
-          </View>
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Amount</ThemedText>
-            <TextInput
-              value={contribAmount}
-              onChangeText={(val) => { setContribAmount(val.replace(/[^0-9.]/g, '')); setMessage(''); }}
-              placeholder="0.00"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="decimal-pad"
-              accessibilityLabel="Contribution amount"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
-          <View style={styles.field}>
-            <ThemedText type="smallBold">Note <ThemedText type="caption" themeColor="textSecondary">(opt.)</ThemedText></ThemedText>
-            <TextInput
-              value={contribNote}
-              onChangeText={setContribNote}
-              placeholder="e.g. Monthly savings transfer"
-              placeholderTextColor={theme.textSecondary}
-              accessibilityLabel="Contribution note"
-              style={[styles.input, { borderColor: theme.border, color: theme.text, backgroundColor: theme.cardMuted }]}
-            />
-          </View>
-          {message ? <ThemedText type="caption" themeColor={message.includes('recorded') ? 'accent' : 'danger'}>{message}</ThemedText> : null}
-          <Pressable
-            onPress={handleAddContribution}
-            disabled={isSubmitting}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isSubmitting }}
-            style={({ pressed }) => [styles.submitBtn, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: Palette.white }}>Contribute</ThemedText>
-          </Pressable>
-        </Card>
+        <Button label="Add money" onPress={() => setSheetOpen(true)} />
 
-        {/* Savings Velocity & Contribution Chart */}
-        {goal.contributions.length > 0 && (
-          <ContributionChart contributions={goal.contributions} formatAmount={formatAmount} />
-        )}
-
-        {/* Contributions History */}
-        <View style={styles.sectionHeader}>
-          <ThemedText type="defaultBold">Contribution history</ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">{goal.contributions.length} entries</ThemedText>
-        </View>
-
-        {goal.contributions.length === 0 ? (
-          <Card style={styles.emptyCard}>
-            <EmptyState title="No contributions yet" message="Log your first savings contribution above." tone={theme.accent} icon="cash-plus" />
-          </Card>
-        ) : (
-          <View style={styles.list}>
-            {goal.contributions.map((c) => (
-              <ContributionItem
-                key={c.id}
-                contribution={c}
-                formatAmount={formatAmount}
-                onDelete={() => {
-                  confirmDelete('Delete contribution?', 'Are you sure you want to remove this contribution?', async () => {
-                    await deleteContribution(c.id);
-                  });
-                }}
+        {!openEnded && !goal.isCompleted && calc.remainingAmount > 0 ? (
+          <Section
+            title="Your plan"
+            subtitle={late > 0 ? 'The deadline has passed, so the rest is due now.' : 'To reach the target by the deadline.'}>
+            <Card padded={false}>
+              <DetailRow label={`Per ${FREQUENCY_UNIT[goal.frequency]}`} value={formatAmount(calc.frequencyRequired)} strong />
+              {goal.frequency !== 'monthly' && late === 0 ? (
+                <>
+                  <CardDivider />
+                  <DetailRow label="Per month" value={formatAmount(calc.monthlyRequired)} />
+                </>
+              ) : null}
+              <CardDivider />
+              <DetailRow label="Deadline" value={formatDate(goal.deadlineDate!)} />
+              <CardDivider />
+              <DetailRow
+                label={late > 0 ? 'Late by' : 'Time left'}
+                value={late > 0 ? plural(late, 'day') : plural(calc.remainingDays, 'day')}
+                tone={late > 0 ? 'danger' : undefined}
               />
-            ))}
-          </View>
-        )}
+            </Card>
+          </Section>
+        ) : null}
 
-        <Pressable
-          onPress={handleDeleteGoal}
-          accessibilityRole="button"
-          accessibilityLabel="Delete Pot or Goal"
-          style={({ pressed }) => [styles.deleteGoalBtn, pressed && styles.pressed]}>
-          <ThemedText type="smallBold" style={{ color: theme.danger }}>Delete Pot / Goal</ThemedText>
-        </Pressable>
-      </View>
+        {goal.contributions.length >= 2 ? (
+          <Section title="Savings over time">
+            <Card>
+              <PotSavingsChart contributions={goal.contributions} targetAmount={goal.targetAmount} formatAmount={formatAmount} />
+            </Card>
+          </Section>
+        ) : null}
 
+        <Section
+          title="History"
+          subtitle={hasAutoSave ? 'Auto-save entries follow their income. Edit or delete the income to change them.' : undefined}
+          action={
+            goal.contributions.length > 0 ? (
+              <ThemedText type="caption" themeColor="textSecondary">
+                {plural(goal.contributions.length, 'entry', 'entries')}
+              </ThemedText>
+            ) : undefined
+          }>
+          {goal.contributions.length === 0 ? (
+            <Card>
+              <EmptyState
+                title="Nothing saved yet"
+                message="Tap Add money to put your first amount in this pot."
+                icon="cash-plus"
+              />
+            </Card>
+          ) : (
+            <Card padded={false}>
+              {history.map((c, index) => (
+                <View key={c.id}>
+                  {index > 0 ? <CardDivider /> : null}
+                  <ContributionRow contribution={c} formatAmount={formatAmount} onDelete={() => deletePotContribution(c)} />
+                </View>
+              ))}
+            </Card>
+          )}
+          {goal.contributions.length > HISTORY_PREVIEW ? (
+            <Button
+              label={showAllHistory ? 'Show fewer' : `Show all ${goal.contributions.length}`}
+              variant="ghost"
+              onPress={() => setShowAllHistory((v) => !v)}
+            />
+          ) : null}
+        </Section>
+
+        <Button label="Delete pot" variant="danger" onPress={() => deletePot(goal, () => router.back())} />
+      </Screen>
+
+      <AddMoneySheet
+        visible={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        potTitle={goal.title}
+        remainingAmount={hasTarget ? calc.remainingAmount : 0}
+        onSave={saveMoney}
+      />
       <GoalCompletionModal
         goal={goal}
-        visible={showCompletionModal}
-        onClose={() => setShowCompletionModal(false)}
+        visible={showCompletion}
+        onClose={() => setShowCompletion(false)}
         formatAmount={formatAmount}
       />
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </>
   );
 }
 
-function ContributionChart({ contributions, formatAmount }: { contributions: GoalContribution[]; formatAmount: (amount: number) => string }) {
-  const theme = useTheme();
-  const sorted = [...contributions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  const maxAmt = Math.max(...sorted.map((c) => c.amount), 1);
+function plural(count: number, one: string, many = `${one}s`): string {
+  return `${count} ${count === 1 ? one : many}`;
+}
 
-  if (sorted.length === 0) return null;
-
+function PotSummary({
+  goal,
+  status,
+  formatAmount,
+}: {
+  goal: GoalWithProgress;
+  status: ReturnType<typeof potStatus>;
+  formatAmount: (amount: number) => string;
+}) {
+  const colors = useTheme();
+  const hasTarget = goal.targetAmount > 0;
   return (
-    <Card style={styles.card}>
-      <View style={styles.sectionHeader}>
-        <ThemedText type="defaultBold">Savings velocity trend</ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary">Accumulation over time</ThemedText>
+    <Card style={styles.gap}>
+      <View style={styles.titleRow}>
+        <View style={[styles.iconTile, { backgroundColor: colors.accentMuted }]}>
+          <Icon name={potGlyph(goal.potType) as GlyphName} size="lg" color={colors.accent} />
+        </View>
+        <View style={styles.flex}>
+          <ThemedText type="subtitle" numberOfLines={2}>
+            {goal.title}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            {potTypeLabel(goal.potType)} pot
+          </ThemedText>
+        </View>
       </View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chartScroll}>
-        {sorted.map((c) => {
-          const height = Math.max(12, (c.amount / maxAmt) * 64);
-          const dateStr = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(c.date));
-          return (
-            <View key={c.id} style={styles.chartColumn}>
-              <ThemedText type="caption" style={{ fontSize: 11, color: theme.textSecondary }} numberOfLines={1}>
-                {formatAmount(c.amount)}
-              </ThemedText>
-              <View style={[styles.barTrack, { backgroundColor: theme.backgroundElement }]}>
-                <View style={[styles.barFill, { height, backgroundColor: theme.accent }]} />
-              </View>
-              <ThemedText type="caption" style={{ fontSize: 11, color: theme.textSecondary }} numberOfLines={1}>
-                {dateStr}
-              </ThemedText>
-            </View>
-          );
-        })}
-      </ScrollView>
+      <View>
+        <ThemedText type="micro" themeColor="textSecondary" style={styles.eyebrow}>
+          SAVED
+        </ThemedText>
+        <ThemedText type="hero" numberOfLines={1} adjustsFontSizeToFit style={styles.tabular}>
+          {formatAmount(goal.contributedAmount)}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {hasTarget ? `of ${formatAmount(goal.targetAmount)} target` : 'No target: save as much as you like'}
+        </ThemedText>
+      </View>
+      <View style={styles.badges}>
+        <Badge label={status.label} tone={status.tone} />
+        <Badge label={ruleLabel(goal)} icon={goal.allocationType === 'percentage' ? 'lightning-bolt' : undefined} />
+      </View>
     </Card>
   );
 }
 
-function MetricItem({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
-  const theme = useTheme();
+function PaceLine({
+  goal,
+  aheadBehind,
+  openEnded,
+  late,
+  formatAmount,
+}: {
+  goal: GoalWithProgress;
+  aheadBehind: number;
+  openEnded: boolean;
+  late: number;
+  formatAmount: (amount: number) => string;
+}) {
+  if (goal.isCompleted) {
+    return (
+      <ThemedText type="caption" themeColor="success">
+        Well done: this pot reached its target.
+      </ThemedText>
+    );
+  }
+  if (openEnded) return null;
+  if (late > 0) {
+    return (
+      <ThemedText type="caption" themeColor="danger">
+        The deadline was {formatDate(goal.deadlineDate!)}. Move it in Edit, or add the rest now.
+      </ThemedText>
+    );
+  }
+  return aheadBehind >= 0 ? (
+    <ThemedText type="caption" themeColor="success">
+      {aheadBehind > 0 ? `${formatAmount(aheadBehind)} ahead of plan.` : 'Right on plan.'} The tick shows where you should be today.
+    </ThemedText>
+  ) : (
+    <ThemedText type="caption" themeColor="warning">
+      {formatAmount(Math.abs(aheadBehind))} behind plan. The tick shows where you should be today.
+    </ThemedText>
+  );
+}
+
+function DetailRow({
+  label,
+  value,
+  strong,
+  tone,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  tone?: 'danger';
+}) {
   return (
-    <View style={[styles.metricItem, { backgroundColor: theme.cardMuted }]}>
-      <ThemedText type="caption" themeColor="textSecondary">{label}</ThemedText>
-      <ThemedText type="defaultBold" style={[styles.metricVal, valueColor ? { color: valueColor } : undefined]} numberOfLines={1} adjustsFontSizeToFit>{value}</ThemedText>
+    <View style={styles.row}>
+      <ThemedText type="small" themeColor="textSecondary">
+        {label}
+      </ThemedText>
+      <ThemedText type={strong ? 'defaultBold' : 'smallBold'} themeColor={tone} style={styles.rowValue}>
+        {value}
+      </ThemedText>
     </View>
   );
 }
 
-function RequiredBadge({ label, amount }: { label: string; amount: string }) {
-  const theme = useTheme();
+function ContributionRow({
+  contribution,
+  formatAmount,
+  onDelete,
+}: {
+  contribution: GoalContribution;
+  formatAmount: (amount: number) => string;
+  onDelete: () => void;
+}) {
+  const auto = isAutoSaveContribution(contribution);
   return (
-    <View style={[styles.requiredBadge, { backgroundColor: theme.cardMuted }]}>
-      <ThemedText type="smallBold">{label}</ThemedText>
-      <ThemedText type="defaultBold" style={{ color: theme.accent }} numberOfLines={1} adjustsFontSizeToFit>{amount}</ThemedText>
-    </View>
-  );
-}
-
-function ContributionItem({ contribution, formatAmount, onDelete }: { contribution: GoalContribution; formatAmount: (amount: number) => string; onDelete: () => void }) {
-  const theme = useTheme();
-  return (
-    <View style={[styles.contribRow, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <View style={styles.contribCopy}>
-        <ThemedText type="defaultBold">{formatAmount(contribution.amount)}</ThemedText>
-        <ThemedText type="caption" themeColor="textSecondary">
-          {formatDate(contribution.date)}{contribution.note ? ` · ${contribution.note}` : ''}
+    <View style={styles.row}>
+      <View style={styles.flex}>
+        <View style={styles.amountLine}>
+          <ThemedText type="defaultBold" style={styles.tabular}>
+            {formatAmount(contribution.amount)}
+          </ThemedText>
+          {auto ? <Badge label="Auto-save" tone="success" icon="lightning-bolt" /> : null}
+        </View>
+        <ThemedText type="caption" themeColor="textSecondary" numberOfLines={2}>
+          {formatDate(contribution.date)}
+          {!auto && contribution.note ? ` · ${contribution.note}` : ''}
         </ThemedText>
       </View>
-      <Pressable onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete contribution" hitSlop={10} style={styles.deleteBtn}>
-        <MaterialCommunityIcons name="delete-outline" size={18} color={theme.textSecondary} />
-      </Pressable>
+      {auto ? null : (
+        <IconButton icon="delete" label={`Delete ${formatAmount(contribution.amount)} entry`} onPress={onDelete} />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { flexGrow: 1, paddingBottom: Spacing.five },
-  container: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: Spacing.four, gap: Spacing.three },
-  hero: {
-    backgroundColor: Brand.deep,
-    borderRadius: Radius.xlarge,
-    padding: Spacing.four,
-    overflow: 'hidden',
-    minHeight: 160,
-    justifyContent: 'center',
-  },
-  heroContent: { gap: Spacing.two, zIndex: 1 },
-  heroTopline: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  heroLabel: { color: 'rgba(255,255,255,0.7)', letterSpacing: 1 },
-  statusPill: { paddingHorizontal: Spacing.two, paddingVertical: 3, borderRadius: Radius.pill },
-  whitePillBtn: {
-    backgroundColor: Palette.white,
+  gap: { gap: Spacing.two },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  iconTile: { width: 48, height: 48, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
+  eyebrow: { letterSpacing: 1.2 },
+  tabular: { fontVariant: ['tabular-nums'] },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  meterRow: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two, flexWrap: 'wrap' },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
     paddingHorizontal: Spacing.three,
-    paddingVertical: 4,
-    borderRadius: Radius.pill,
+    minHeight: 52,
+    paddingVertical: Spacing.two,
   },
-  heroTitle: { color: Palette.white, fontSize: 22, lineHeight: 30 },
-  heroSummaryRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.half },
-  heroStat: { flex: 1, gap: Spacing.half },
-  heroStatLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 11 },
-  heroStatVal: { color: Palette.white, fontSize: 22, lineHeight: 28, fontVariant: ['tabular-nums'] },
-  heroDivider: { width: StyleSheet.hairlineWidth, height: 32, backgroundColor: 'rgba(255,255,255,0.2)' },
-  heroOrbLarge: { position: 'absolute', width: 220, height: 220, borderRadius: 110, right: -80, top: -90, backgroundColor: 'rgba(139,123,255,0.2)' },
-  card: { padding: Spacing.four, gap: Spacing.three },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  track: { height: 10, borderRadius: Radius.pill, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: Radius.pill },
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  metricItem: { width: '48%', flexGrow: 1, padding: Spacing.three, borderRadius: Radius.medium, gap: Spacing.half, alignItems: 'flex-start' },
-  metricVal: { fontSize: 16, lineHeight: 22, fontVariant: ['tabular-nums'] },
-  requiredRow: { gap: Spacing.two },
-  requiredBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: Spacing.three, paddingVertical: Spacing.two, borderRadius: Radius.medium },
-  quickChipsRow: { flexDirection: 'row', gap: Spacing.two },
-  quickChip: { flex: 1, height: 44, borderRadius: Radius.pill, borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
-  field: { gap: Spacing.one },
-  input: { minHeight: 46, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth, paddingHorizontal: Spacing.three, fontSize: 16 },
-  submitBtn: { minHeight: 46, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
-  emptyCard: { padding: Spacing.four, alignItems: 'center' },
-  list: { gap: Spacing.two },
-  contribRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.three, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
-  contribCopy: { flex: 1, gap: 2 },
-  deleteBtn: { padding: 4 },
-  deleteGoalBtn: { minHeight: 48, alignItems: 'center', justifyContent: 'center', marginTop: Spacing.one },
-  chartScroll: { gap: Spacing.three, paddingVertical: Spacing.one, alignItems: 'flex-end' },
-  chartColumn: { alignItems: 'center', gap: 4, width: 56 },
-  barTrack: { width: 16, height: 70, borderRadius: Radius.pill, justifyContent: 'flex-end', overflow: 'hidden' },
-  barFill: { width: '100%', borderRadius: Radius.pill },
-  milestoneRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: Spacing.two, borderRadius: Radius.medium, borderWidth: StyleSheet.hairlineWidth },
-  milestoneInfo: { gap: 2 },
-  milestoneBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: Radius.small },
-  pressed: { opacity: 0.75 },
+  rowValue: { flexShrink: 1, textAlign: 'right' },
+  amountLine: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, flexWrap: 'wrap' },
 });

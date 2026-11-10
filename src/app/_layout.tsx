@@ -244,9 +244,9 @@ function Navigation() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="income" options={{ title: 'Money In' }} />
         <Stack.Screen name="goals" options={{ title: 'Money Plan & Pots' }} />
-        <Stack.Screen name="goals/add" options={{ title: 'Create Pot / Goal', presentation: 'modal' }} />
-        <Stack.Screen name="goals/[id]" options={{ title: 'Goal Details' }} />
-        <Stack.Screen name="goals/[id]/edit" options={{ title: 'Edit Pot / Goal' }} />
+        <Stack.Screen name="goals/add" options={{ title: 'New Pot', presentation: 'modal' }} />
+        <Stack.Screen name="goals/[id]" options={{ title: 'Pot Details' }} />
+        <Stack.Screen name="goals/[id]/edit" options={{ title: 'Edit Pot' }} />
         <Stack.Screen name="debts" options={{ title: 'Lend & Borrow', headerRight: renderAddDebtButton }} />
         <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
         <Stack.Screen name="debts/[id]" options={{ title: 'Debt Details' }} />

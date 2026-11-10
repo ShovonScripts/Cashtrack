@@ -52,7 +52,7 @@ export default function AboutScreen() {
       <Section title="How CashTrack works" subtitle="Your complete financial command center.">
         <Card style={styles.stack}>
           <FeatureRow icon="cash-multiple" title="Cash Flow & Daily Cost" detail="Instantly track what you spend each day, month, and all-time, balanced against your incoming cash flow." />
-          <FeatureRow icon="piggy-bank" title="Savings Pots & Money Plan" detail="Create dedicated savings stashes (Emergency funds, milestones, junior pots) with automated pacing calculators." />
+          <FeatureRow icon="piggy-bank" title="Money Plan & Pots" detail="Save towards targets in pots (General, Junior, Emergency, Milestone), with auto-save from income and a pace to keep." />
           <FeatureRow icon="account-cash" title="Lend & Borrow Tracker" detail="Keep clear records of money you’ve lent to friends or borrowed, tracking your net debt at a glance." />
           <FeatureRow icon="calendar-clock" title="Bills & Reminders" detail="Never miss a rent, utility, or subscription renewal with advance alerts and one-tap payment tracking." />
           <FeatureRow icon="creation" title="Smart Spending Advisor" detail="Get early heads-ups when category spending trends over budget before you reach your limits." />

@@ -1,37 +1,35 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { EmptyState } from '@/components/empty-state';
 import { GoalForm } from '@/components/goal-form';
-import { ThemedText } from '@/components/themed-text';
-import { Button } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Screen, SkeletonList } from '@/components/ui';
 import { useGoals } from '@/context/goal-context';
-import { useTheme } from '@/hooks/use-theme';
 import { toPotChoice } from '@/utils/goal-form';
 
-export default function EditGoalScreen() {
+export default function EditPotScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const theme = useTheme();
   const { goals, isLoading, updateGoal } = useGoals();
   const goal = goals.find((g) => g.id === id);
 
   if (!goal && isLoading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={theme.accent} size="large" />
-        <ThemedText type="small" themeColor="textSecondary">
-          Loading pot…
-        </ThemedText>
-      </View>
+      <Screen topInset={false}>
+        <SkeletonList rows={3} label="Loading pot" />
+      </Screen>
     );
   }
 
   if (!goal) {
     return (
-      <View style={styles.centered}>
-        <ThemedText type="subtitle">Pot not found</ThemedText>
-        <Button label="Back to pots" variant="ghost" onPress={() => router.back()} />
-      </View>
+      <Screen topInset={false}>
+        <EmptyState
+          title="Pot not found"
+          message="This pot no longer exists."
+          icon="piggy-bank-outline"
+          actionLabel="Back to pots"
+          onAction={() => router.back()}
+        />
+      </Screen>
     );
   }
 
@@ -40,12 +38,14 @@ export default function EditGoalScreen() {
       key={goal.id}
       excludeGoalId={goal.id}
       savedDeadline={goal.deadlineDate ? new Date(goal.deadlineDate) : null}
+      startDate={goal.startDate}
+      savedAmount={goal.contributedAmount}
       submitLabel="Save changes"
       initialValues={{
         title: goal.title,
         targetAmount: goal.targetAmount > 0 ? String(goal.targetAmount) : '',
         potType: toPotChoice(goal.potType),
-        allocationType: goal.allocationType ?? 'percentage',
+        allocationType: goal.allocationType ?? 'manual',
         allocationPercent: goal.allocationPercent ? String(goal.allocationPercent) : '10',
         frequency: goal.frequency ?? 'monthly',
         deadlineDate: goal.deadlineDate ? new Date(goal.deadlineDate) : sixMonthsFromNow(),
@@ -69,7 +69,3 @@ function sixMonthsFromNow(): Date {
   date.setMonth(date.getMonth() + 6);
   return date;
 }
-
-const styles = StyleSheet.create({
-  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Spacing.two, padding: Spacing.four },
-});

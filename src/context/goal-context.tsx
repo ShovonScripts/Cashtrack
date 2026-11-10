@@ -47,6 +47,10 @@ type GoalContextValue = {
   addContribution: (draft: ContributionDraft) => Promise<GoalContribution>;
   deleteContribution: (id: string) => Promise<void>;
   getGoal: (id: string) => GoalWithProgress | undefined;
+  /** Hides a pot or contribution from every screen while its Undo toast is open. */
+  hidePendingDelete: (id: string) => void;
+  /** Shows it again (Undo tapped, or the real delete finished or failed). */
+  releasePendingDelete: (id: string) => void;
 };
 
 const GoalContext = createContext<GoalContextValue | undefined>(undefined);
@@ -69,6 +73,7 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [goalLoadError, setGoalLoadError] = useState(false);
   const [loadToken, setLoadToken] = useState(0);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<ReadonlySet<string>>(() => new Set());
   const now = useNow(60_000);
   const { registerResetHandler } = useExpenses();
 
@@ -133,8 +138,10 @@ export function GoalProvider({ children }: { children: ReactNode }) {
   const goals = useMemo<GoalWithProgress[]>(() => {
     const [year, month, day] = todayKey.split('-').map(Number);
     const today = new Date(year, month - 1, day);
-    return rawGoals.map((goal) => {
-      const goalContribs = contributions.filter((c) => c.goalId === goal.id);
+    const visibleContributions =
+      pendingDeleteIds.size === 0 ? contributions : contributions.filter((c) => !pendingDeleteIds.has(c.id));
+    return rawGoals.filter((goal) => !pendingDeleteIds.has(goal.id)).map((goal) => {
+      const goalContribs = visibleContributions.filter((c) => c.goalId === goal.id);
       const contributedAmount = sumMoney(goalContribs.map((c) => c.amount));
 
       const calc = calculateGoalProgress({
@@ -158,7 +165,20 @@ export function GoalProvider({ children }: { children: ReactNode }) {
         contributions: goalContribs,
       };
     });
-  }, [rawGoals, contributions, todayKey]);
+  }, [rawGoals, contributions, todayKey, pendingDeleteIds]);
+
+  const hidePendingDelete = useCallback((id: string) => {
+    setPendingDeleteIds((current) => new Set(current).add(id));
+  }, []);
+
+  const releasePendingDelete = useCallback((id: string) => {
+    setPendingDeleteIds((current) => {
+      if (!current.has(id)) return current;
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+  }, []);
 
   const addGoal = useCallback(async (draft: GoalDraft): Promise<MoneyGoal> => {
     const goal: MoneyGoal = {
@@ -240,8 +260,10 @@ export function GoalProvider({ children }: { children: ReactNode }) {
       addContribution,
       deleteContribution,
       getGoal,
+      hidePendingDelete,
+      releasePendingDelete,
     }),
-    [goals, contributions, isLoading, goalLoadError, reloadGoals, addGoal, updateGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal]
+    [goals, contributions, isLoading, goalLoadError, reloadGoals, addGoal, updateGoal, updateGoalStatus, deleteGoal, addContribution, deleteContribution, getGoal, hidePendingDelete, releasePendingDelete]
   );
 
   return <GoalContext.Provider value={value}>{children}</GoalContext.Provider>;

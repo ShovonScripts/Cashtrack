@@ -1,8 +1,9 @@
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
+import { Button } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/utils/color';
@@ -34,33 +35,27 @@ export function GoalCompletionModal({
           </View>
 
           <View style={styles.textGroup}>
-            <ThemedText type="subtitle" style={styles.title} accessibilityLiveRegion="polite">Goal Completed!</ThemedText>
+            <ThemedText type="subtitle" style={styles.title} accessibilityLiveRegion="polite">Pot complete!</ThemedText>
             <ThemedText type="defaultBold" style={{ color: theme.accent }}>{goal.title}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-              You planned it. You saved for it. You achieved it.
+              You planned it, you saved for it, and you reached it.
             </ThemedText>
           </View>
 
           <Card style={styles.statCard}>
             {goal.targetAmount > 0 ? (
               <View style={styles.statRow}>
-                <ThemedText type="small" themeColor="textSecondary">Target Amount</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">Target</ThemedText>
                 <ThemedText type="defaultBold">{formatAmount(goal.targetAmount)}</ThemedText>
               </View>
             ) : null}
             <View style={styles.statRow}>
-              <ThemedText type="small" themeColor="textSecondary">Total Saved</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">Saved</ThemedText>
               <ThemedText type="defaultBold" style={{ color: theme.success }}>{formatAmount(goal.contributedAmount)}</ThemedText>
             </View>
           </Card>
 
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Close goal completed celebration"
-            style={({ pressed }) => [styles.button, { backgroundColor: theme.accentFill }, pressed && styles.pressed]}>
-            <ThemedText type="defaultBold" style={{ color: theme.onBrand }}>Awesome</ThemedText>
-          </Pressable>
+          <Button label="Great" onPress={onClose} accessibilityLabel="Close the pot complete message" style={styles.button} />
         </View>
       </View>
     </Modal>
@@ -72,10 +67,9 @@ const styles = StyleSheet.create({
   container: { width: '100%', maxWidth: 420, borderRadius: Radius.large, borderWidth: StyleSheet.hairlineWidth, padding: Spacing.four, alignItems: 'center', gap: Spacing.three },
   badge: { width: 68, height: 68, borderRadius: Radius.pill, alignItems: 'center', justifyContent: 'center' },
   textGroup: { alignItems: 'center', gap: Spacing.half, textAlign: 'center' },
-  title: { fontSize: 22, lineHeight: 30, textAlign: 'center' },
+  title: { textAlign: 'center' },
   subtitle: { textAlign: 'center', maxWidth: 320, marginTop: Spacing.half },
   statCard: { width: '100%', gap: Spacing.two },
   statRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  button: { width: '100%', minHeight: 48, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
-  pressed: { opacity: 0.78 },
+  button: { alignSelf: 'stretch' },
 });

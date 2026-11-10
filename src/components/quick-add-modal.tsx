@@ -54,7 +54,7 @@ const QUICK_ACTIONS: QuickAction[] = [
   },
   {
     id: 'pot',
-    title: 'New Savings Pot',
+    title: 'New Pot',
     subtitle: 'Stash cash, target optional',
     icon: 'piggy-bank',
     color: '#9B51E0',

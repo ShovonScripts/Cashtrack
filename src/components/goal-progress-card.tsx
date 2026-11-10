@@ -1,12 +1,14 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { withAlpha } from '@/utils/color';
+import { Badge, Icon, ProgressMeter } from '@/components/ui';
+import type { GlyphName } from '@/constants/icons';
+import { PressFeedback, Radius, Spacing } from '@/constants/theme';
 import type { GoalWithProgress } from '@/context/goal-context';
+import { useNow } from '@/hooks/use-now';
+import { useTheme } from '@/hooks/use-theme';
+import { overdueDays, potGlyph, potStatus, ruleLabel } from '@/utils/pot-display';
 
 export function GoalProgressCard({
   goal,
@@ -18,86 +20,74 @@ export function GoalProgressCard({
   onPress: () => void;
 }) {
   const theme = useTheme();
-  const isFlexible = goal.allocationType === 'flexible';
+  const now = useNow(60_000);
+  const status = potStatus(goal, now);
   const hasTarget = goal.targetAmount > 0;
-  const isOpenEnded = isFlexible || !hasTarget;
-  const isAhead = goal.aheadBehindAmount >= 0;
+  const percent = Math.round(goal.progressPercent);
 
-  const potIcon = goal.potType === 'children' ? 'baby-face-outline' : goal.potType === 'emergency' ? 'shield-check-outline' : goal.potType === 'dream' ? 'star-shooting-outline' : 'piggy-bank';
+  // The one line that says what to do or how it is going, coloured by status.
+  const footer =
+    status.kind === 'completed'
+      ? { text: 'Target reached', color: 'success' as const }
+      : status.kind === 'open-ended'
+        ? { text: hasTarget ? `${formatAmount(Math.max(0, goal.targetAmount - goal.contributedAmount))} to go` : 'No target', color: 'textSecondary' as const }
+        : status.kind === 'overdue'
+          ? { text: lateText(overdueDays(goal, now)), color: 'danger' as const }
+          : status.kind === 'behind'
+            ? { text: `${formatAmount(Math.abs(goal.aheadBehindAmount))} behind`, color: 'warning' as const }
+            : { text: goal.aheadBehindAmount > 0 ? `${formatAmount(goal.aheadBehindAmount)} ahead` : 'On plan', color: 'success' as const };
 
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={
+      accessibilityLabel={[
+        goal.title,
         hasTarget
-          ? `${goal.title}, ${formatAmount(goal.contributedAmount)} saved of ${formatAmount(goal.targetAmount)}, ${Math.round(goal.progressPercent)} percent${goal.isCompleted ? ', completed' : ''}`
-          : `${goal.title}, ${formatAmount(goal.contributedAmount)} saved, open-ended pot`
-      }
-      accessibilityHint="Opens pot details"
-      style={({ pressed }) => [pressed && styles.pressed]}>
+          ? `${formatAmount(goal.contributedAmount)} saved of ${formatAmount(goal.targetAmount)}, ${percent} percent`
+          : `${formatAmount(goal.contributedAmount)} saved, no target`,
+        status.label,
+        ruleLabel(goal),
+        status.kind === 'completed' ? '' : footer.text,
+      ]
+        .filter(Boolean)
+        .join(', ')}
+      accessibilityHint="Opens the pot"
+      style={({ pressed }) => [pressed && PressFeedback]}>
       <Card style={styles.card}>
         <View style={styles.headerRow}>
-          <View style={[styles.iconBadge, { backgroundColor: theme.accentMuted }]}>
-            <MaterialCommunityIcons name={potIcon} size={20} color={theme.accent} />
+          <View style={[styles.iconTile, { backgroundColor: theme.accentMuted }]}>
+            <Icon name={potGlyph(goal.potType) as GlyphName} color={theme.accent} />
           </View>
           <View style={styles.titleGroup}>
-            <View style={styles.titleLine}>
-              <ThemedText type="defaultBold" numberOfLines={1} style={{ flex: 1 }}>{goal.title}</ThemedText>
-              {isFlexible ? (
-                <View style={[styles.badgePill, { backgroundColor: withAlpha(theme.info, 0.15) }]}>
-                  <MaterialCommunityIcons name="piggy-bank-outline" size={12} color={theme.info} />
-                  <ThemedText type="caption" style={{ color: theme.info, fontWeight: '700', fontSize: 11 }}>Flexible Stash</ThemedText>
-                </View>
-              ) : goal.allocationType === 'percentage' && goal.allocationPercent ? (
-                <View style={[styles.badgePill, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
-                  <MaterialCommunityIcons name="lightning-bolt" size={12} color={theme.success} />
-                  <ThemedText type="caption" style={{ color: theme.success, fontWeight: '700', fontSize: 11 }}>{goal.allocationPercent}% Auto-Save</ThemedText>
-                </View>
-              ) : null}
-            </View>
-            <ThemedText type="caption" themeColor="textSecondary" style={{ textTransform: 'capitalize' }}>
-              {isOpenEnded ? 'Open-ended savings stash' : `${goal.frequency} target · ${goal.isCompleted ? 'Completed' : isAhead ? 'On track / Ahead' : 'Behind target'}`}
+            <ThemedText type="defaultBold" numberOfLines={2}>
+              {goal.title}
             </ThemedText>
+            <View style={styles.badges}>
+              <Badge label={status.label} tone={status.tone} />
+              <Badge label={ruleLabel(goal)} icon={goal.allocationType === 'percentage' ? 'lightning-bolt' : undefined} />
+            </View>
           </View>
         </View>
 
         {hasTarget ? (
-          <View
-            style={[styles.track, { backgroundColor: theme.backgroundElement }]}
-            accessible
-            accessibilityRole="progressbar"
-            accessibilityValue={{ min: 0, max: 100, now: Math.round(goal.progressPercent) }}
-            accessibilityLabel={`Goal progress: ${Math.round(goal.progressPercent)} percent completed`}>
-            <View
-              style={[
-                styles.fill,
-                {
-                  width: `${Math.min(100, goal.progressPercent)}%`,
-                  backgroundColor: goal.isCompleted ? theme.success : theme.accent,
-                },
-              ]}
-            />
-          </View>
+          <ProgressMeter
+            fill={goal.progressPercent / 100}
+            color={goal.isCompleted ? theme.success : theme.accent}
+            label={`${goal.title} progress`}
+            valueText={`${percent} percent saved`}
+          />
         ) : null}
 
         <View style={styles.footerRow}>
-          <ThemedText type="smallBold">
-            {formatAmount(goal.contributedAmount)}{' '}
-            {hasTarget ? (
-              <ThemedText type="caption" themeColor="textSecondary">/ {formatAmount(goal.targetAmount)}</ThemedText>
-            ) : (
-              <ThemedText type="caption" themeColor="textSecondary">· No target</ThemedText>
-            )}
+          <ThemedText type="smallBold" style={styles.amount}>
+            {formatAmount(goal.contributedAmount)}
+            <ThemedText type="caption" themeColor="textSecondary">
+              {hasTarget ? ` of ${formatAmount(goal.targetAmount)} · ${percent}%` : ' saved'}
+            </ThemedText>
           </ThemedText>
-          <ThemedText type="caption" themeColor={goal.isCompleted ? 'accent' : 'textSecondary'}>
-            {goal.isCompleted
-              ? 'Goal achieved'
-              : isOpenEnded
-                ? 'Stashed safely'
-                : isAhead
-                  ? `+${formatAmount(goal.aheadBehindAmount)} ahead`
-                  : `${formatAmount(Math.abs(goal.aheadBehindAmount))} behind`}
+          <ThemedText type="caption" themeColor={footer.color} style={styles.footerNote}>
+            {footer.text}
           </ThemedText>
         </View>
       </Card>
@@ -105,15 +95,17 @@ export function GoalProgressCard({
   );
 }
 
+function lateText(days: number): string {
+  return `${days} ${days === 1 ? 'day' : 'days'} past deadline`;
+}
+
 const styles = StyleSheet.create({
-  card: { gap: Spacing.two },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
-  iconBadge: { width: 40, height: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
-  titleGroup: { flex: 1, gap: 2 },
-  titleLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.one },
-  badgePill: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: Radius.pill },
-  track: { height: 8, borderRadius: Radius.pill, overflow: 'hidden' },
-  fill: { height: '100%', borderRadius: Radius.pill },
-  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
-  pressed: { opacity: 0.78 },
+  card: { gap: Spacing.three },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: Spacing.three },
+  iconTile: { width: 40, height: 40, borderRadius: Radius.medium, alignItems: 'center', justifyContent: 'center' },
+  titleGroup: { flex: 1, gap: Spacing.one },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.one },
+  footerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, flexWrap: 'wrap' },
+  amount: { fontVariant: ['tabular-nums'], flexShrink: 1 },
+  footerNote: { textAlign: 'right' },
 });

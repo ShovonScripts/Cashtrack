@@ -129,7 +129,7 @@ You can also use the **+** button → **Add Bill / Reminder**.
 ### 2.6 Create your first savings pot
 
 1. Tap the **+** button.
-2. Tap **New Savings Pot**.
+2. Tap **New Pot**.
 3. Choose a pot category: General, Junior, Emergency, or Milestone.
 4. Enter a pot name.
 5. Enter a target amount, or leave it blank for an open-ended pot.
@@ -472,7 +472,7 @@ Each chip shows its count. Tap the **+** button in the header to create a pot.
 
 ### 7.2 Create a pot
 
-The screen is titled **Create Pot / Goal**.
+The screen is titled **New Pot**.
 
 1. Choose a **Pot type**:
    - **General** — everyday cash buffer and flexible goals
@@ -486,7 +486,7 @@ The screen is titled **Create Pot / Goal**.
    - **Flexible** — no rules, no deadline; add money whenever you like
    - **Manual** — you add money yourself, paced towards a deadline
 5. If you choose Auto-save, set the share of each income (%).
-6. For Auto-save and Manual, pick a **Deadline** after today and a **Saving pace**: Daily, Weekly, Monthly, Quarterly, Half-yearly, or Yearly.
+6. If the pot has a target and is not Flexible, pick a **Deadline** after today and a **Saving pace**: Daily, Weekly, Monthly, Quarterly, Half-yearly, or Yearly. The form shows about how much to save each period.
 7. Tap **Create pot**.
 
 Auto-Save percentages across all active pots cannot exceed 100% of income.
@@ -497,21 +497,24 @@ Tap a pot to see:
 
 - Saved amount
 - Target
-- Status: **Active**, **Open-ended**, or **Completed**
+- Status: **On track**, **Behind**, **Overdue**, **Open-ended**, or **Completed**
 - Progress percentage and bar
 - Remaining amount
-- Expected progress
-- Ahead/behind status
-- Milestones: 25%, 50%, 75%, and 100%
-- **Add contribution**
-- **Contribution history**
-- **Edit**
-- **Delete Pot / Goal**
+- A tick on the bar showing where you should be today
+- How far ahead or behind you are
+- The next milestone: 25%, 50%, 75%, or 100%
+- **Add money**
+- **Your plan**
+- **Savings over time**
+- **History**
+- **Edit** (pencil in the header)
+- **Delete pot**
 
 ### 7.4 Add a contribution
 
-1. Enter an amount, or tap the quick chips (+100, +500, and so on). Each tap adds to the amount.
-2. Tap **Contribute**.
+1. Open the pot and tap **Add money**.
+2. Enter an amount, or tap the quick chips (+100, +500, and so on). Each tap adds to the amount. **Rest of target** fills in what is left.
+3. Tap **Add money** in the sheet.
 
 If the contribution reaches the target, the pot is marked complete.
 
@@ -520,8 +523,8 @@ Contributions are tracked inside the pot. They are not automatically recorded as
 ### 7.5 Edit or delete a pot
 
 - **Edit** lets you change the pot's details and allocation.
-- **Delete Pot / Goal** permanently removes the pot and its contribution history.
-- Individual contributions can be deleted from the history.
+- **Delete pot** removes the pot and its history. Tap **Undo** on the message that appears to keep it.
+- Entries you added can be deleted from the history, also with Undo. **Auto-save** entries follow their income: edit or delete the income to change them.
 
 ---
 

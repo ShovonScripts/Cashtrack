@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/card';
@@ -68,17 +68,16 @@ export default function AboutScreen() {
               Because CashTrack is 100% local-only, it does not sync cloud backups automatically. Remember to save reports or export your data before changing devices.
             </ThemedText>
           </View>
-          <Link href="/privacy" asChild>
-            <Pressable
-              accessibilityRole="link"
-              style={({ pressed }) => [styles.policyLink, pressed && PressFeedback]}>
-              <Icon name="shield-lock-outline" size="md" />
-              <ThemedText type="smallBold" style={[styles.flex, { color: theme.accent }]}>
-                Read the full privacy policy
-              </ThemedText>
-              <Icon name="chevron-right" size="md" color={theme.textSecondary} />
-            </Pressable>
-          </Link>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => router.push('/privacy')}
+            style={({ pressed }) => [styles.policyLink, pressed && PressFeedback]}>
+            <Icon name="shield-lock-outline" size="md" />
+            <ThemedText type="smallBold" style={[styles.flex, { color: theme.accent }]}>
+              Read the full privacy policy
+            </ThemedText>
+            <Icon name="chevron-right" size="md" color={theme.textSecondary} />
+          </Pressable>
         </Card>
       </Section>
 
@@ -121,6 +120,19 @@ export default function AboutScreen() {
           Donations are securely processed by Buy Me a Coffee. CashTrack never receives your payment details.
         </ThemedText>
       </Card>
+
+      <Section title="Built by" subtitle="Independent developer.">
+        <Card padded={false}>
+          <ListRow
+            title="NAS Digital"
+            subtitle="https://nasdigital.uk"
+            icon="domain"
+            color={theme.accent}
+            accessibilityHint="Opens NAS Digital website"
+            onPress={() => void Linking.openURL('https://nasdigital.uk/')}
+          />
+        </Card>
+      </Section>
 
       <ThemedText type="caption" themeColor="textSecondary" style={styles.centered}>
         CashTrack · Version {APP_VERSION}

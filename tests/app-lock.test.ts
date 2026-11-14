@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 
 import {
@@ -103,5 +104,25 @@ describe('appLockErrorNeedsDeviceSetup', () => {
     assert.equal(appLockErrorNeedsDeviceSetup('not_available'), true);
     assert.equal(appLockErrorNeedsDeviceSetup('user_cancel'), false);
     assert.equal(appLockErrorNeedsDeviceSetup('lockout'), false);
+  });
+});
+
+describe('App Lock wiring', () => {
+  const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
+
+  it('ignores Android window blur and focus, which every in-app pop-up fires', () => {
+    const source = read('../src/context/app-lock-context.tsx');
+    assert.doesNotMatch(source, /addEventListener\(\s*['"](?:blur|focus)['"]/);
+  });
+
+  it('keeps full-app wrappers as real views so hiding the app never re-parents it', () => {
+    // A wrapper that is flattened while visible and real while hidden makes
+    // React Native move the whole app into it, which closes open pop-ups.
+    for (const path of [
+      '../src/components/app-lock/app-lock-gate.tsx',
+      '../src/components/launch-quote/use-launch-quote.tsx',
+    ]) {
+      assert.match(read(path), /collapsable=\{false\}/, `${path} must keep collapsable={false}`);
+    }
   });
 });

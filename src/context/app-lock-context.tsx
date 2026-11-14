@@ -280,17 +280,13 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const blurSubscription = Platform.OS === 'android'
-      ? AppState.addEventListener('blur', showCover)
-      : null;
-    const focusSubscription = Platform.OS === 'android'
-      ? AppState.addEventListener('focus', handleForeground)
-      : null;
+    // Android's window blur/focus events are deliberately not used. Every
+    // in-app pop-up (Modal, Alert, the biometric prompt) takes window focus and
+    // fires them, so opening Quick Add or Quick Tools flashed the privacy cover.
+    // The cover shows when the app really goes to the background instead.
 
     return () => {
       changeSubscription.remove();
-      blurSubscription?.remove();
-      focusSubscription?.remove();
     };
   }, [completeReturn]);
 

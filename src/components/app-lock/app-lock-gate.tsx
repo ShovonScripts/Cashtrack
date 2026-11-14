@@ -12,7 +12,15 @@ export function AppLockGate({ children }: { children: ReactNode }) {
 
   return (
     <View style={styles.container}>
+      {/*
+        collapsable={false} keeps this wrapper a real native view all the time.
+        Otherwise React Native drops it while nothing is hidden and creates it
+        when the lock or cover turns on, moving the whole app into it and back.
+        On Android that move detaches every view, so open pop-ups (Quick Add,
+        Quick Tools, sheets) close and the screen flickers.
+      */}
       <View
+        collapsable={false}
         style={[styles.container, obscured && styles.hidden]}
         pointerEvents={obscured ? 'none' : 'auto'}
         accessibilityElementsHidden={obscured}

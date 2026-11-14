@@ -31,7 +31,9 @@ export function LaunchQuoteLayer({ children, floating }: { children: ReactNode; 
   const covered = overlay !== null;
   return (
     <>
+      {/* Stays a real view so showing or hiding the quote never moves the app into a new parent (see AppLockGate). */}
       <View
+        collapsable={false}
         style={styles.fill}
         accessibilityElementsHidden={covered}
         importantForAccessibility={covered ? 'no-hide-descendants' : 'auto'}>

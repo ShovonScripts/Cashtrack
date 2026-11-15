@@ -1,5 +1,12 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
 import { Palette, Radius, Spacing } from '@/constants/theme';
@@ -23,6 +30,38 @@ const MONTH_SHORT = [
 ];
 const CHART_HEIGHT = 44;
 
+const MS_PER_DAY = 86_400_000;
+const MS_PER_HOUR = 3_600_000;
+const MS_PER_MINUTE = 60_000;
+const COUNTDOWN_ROTATE_MS = 7_000;
+const COUNTDOWN_FADE_OUT_MS = 150;
+const COUNTDOWN_FADE_IN_MS = 220;
+const COUNTDOWN_MODES = 3;
+const COUNTDOWN_FORMAT = new Intl.NumberFormat('en');
+
+/**
+ * The live "time left in the year" read-out that cycles through days, hours and
+ * minutes. Days use the same wording as the year track above so the two always
+ * agree; hours and minutes are derived from the exact time remaining
+ * (`daysLeftInYear` plus the fraction of today still to run).
+ */
+function formatCountdownLeft(progress: YearProgress, mode: number): string {
+  if (mode === 0) return formatDaysLeft(progress.daysLeftInYear);
+
+  const remainingMs = Math.max(
+    0,
+    (progress.daysLeftInYear + (1 - progress.dayProgress)) * MS_PER_DAY
+  );
+
+  if (mode === 1) {
+    const hours = Math.floor(remainingMs / MS_PER_HOUR);
+    return `${COUNTDOWN_FORMAT.format(hours)} ${hours === 1 ? 'hr' : 'hrs'} left`;
+  }
+
+  const minutes = Math.floor(remainingMs / MS_PER_MINUTE);
+  return `${COUNTDOWN_FORMAT.format(minutes)} ${minutes === 1 ? 'min' : 'mins'} left`;
+}
+
 type YearProgressPanelProps = {
   progress: YearProgress;
   /** Twelve calendar-month spend totals, January at index 0. */
@@ -45,10 +84,48 @@ export function YearProgressPanel({
   hidden = false,
 }: YearProgressPanelProps) {
   const [selectedMonth, setSelectedMonth] = useState(progress.monthNumber);
+  const [countdownMode, setCountdownMode] = useState(0);
+  const countdownOpacity = useSharedValue(1);
+  const countdownOffset = useSharedValue(0);
+  const reducedMotion = useReducedMotion();
 
   const maxSpend = Math.max(...monthlySpend, 1);
   const selectedSpend = monthlySpend[selectedMonth - 1] ?? 0;
   const selectedIsCurrent = selectedMonth === progress.monthNumber;
+
+  const advanceCountdown = useCallback(() => {
+    setCountdownMode((mode) => (mode + 1) % COUNTDOWN_MODES);
+  }, []);
+
+  const countdownStyle = useAnimatedStyle(() => ({
+    opacity: countdownOpacity.value,
+    transform: [{ translateY: countdownOffset.value }],
+  }));
+
+  // Cycle days → hours → minutes every 7 seconds, with a gentle rise-and-fade
+  // so the swap feels intentional rather than flickering. Paused while hidden
+  // or when the system asks for reduced motion.
+  useEffect(() => {
+    if (hidden || reducedMotion) return;
+
+    const timer = setInterval(() => {
+      countdownOpacity.value = withTiming(
+        0,
+        { duration: COUNTDOWN_FADE_OUT_MS },
+        (finished) => {
+          if (!finished) return;
+          countdownOffset.value = 4;
+          runOnJS(advanceCountdown)();
+          countdownOpacity.value = withTiming(1, { duration: COUNTDOWN_FADE_IN_MS });
+          countdownOffset.value = withTiming(0, { duration: COUNTDOWN_FADE_IN_MS });
+        }
+      );
+    }, COUNTDOWN_ROTATE_MS);
+
+    return () => clearInterval(timer);
+  }, [hidden, reducedMotion, advanceCountdown, countdownOffset, countdownOpacity]);
+
+  const countdownText = formatCountdownLeft(progress, countdownMode);
 
   return (
     <View
@@ -83,9 +160,15 @@ export function YearProgressPanel({
           <ThemedText type="small" style={styles.supportText} numberOfLines={1}>
             Day {progress.dayOfYear} · Week {progress.weekOfYear} of {progress.totalWeeksInYear}
           </ThemedText>
-          <ThemedText type="small" style={styles.supportLeft} numberOfLines={1}>
-            {formatDaysLeft(progress.daysLeftInYear)}
-          </ThemedText>
+          <Animated.View
+            style={[
+              styles.countdownWrap,
+              countdownStyle,
+            ]}>
+            <ThemedText type="small" style={styles.supportLeft} numberOfLines={1}>
+              {countdownText}
+            </ThemedText>
+          </Animated.View>
         </View>
       </View>
 
@@ -200,6 +283,10 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     color: 'rgba(255,255,255,0.86)',
     fontVariant: ['tabular-nums'],
+  },
+  countdownWrap: {
+    flexShrink: 0,
+    alignItems: 'flex-end',
   },
   supportLeft: {
     color: Palette.white,

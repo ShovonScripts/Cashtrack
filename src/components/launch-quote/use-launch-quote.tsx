@@ -6,9 +6,14 @@ import { LaunchQuoteOverlay } from '@/components/launch-quote/launch-quote-overl
 import { FINANCIAL_QUOTES } from '@/constants/quotes';
 import { useAppLock } from '@/context/app-lock-context';
 import { usePreferences } from '@/context/expense-context';
-import { readLastLaunchQuoteIndex, saveLastLaunchQuoteIndex } from '@/storage/launch-quote-storage';
+import {
+  readLastLaunchCountdownMode,
+  readLastLaunchQuoteIndex,
+  saveLastLaunchCountdownMode,
+  saveLastLaunchQuoteIndex,
+} from '@/storage/launch-quote-storage';
 import { getFirstName, pickLaunchQuoteIndex } from '@/utils/launch-quote';
-import { getGreeting, getGreetingLabel } from '@/utils/year-progress';
+import { COUNTDOWN_MODES, getGreeting, getGreetingLabel, getYearProgress } from '@/utils/year-progress';
 
 /**
  * Set once the launch quote has been decided for this JS session, so a remount
@@ -64,7 +69,7 @@ const styles = StyleSheet.create({
  * the user unlocks, never hidden behind the lock screen.
  */
 export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: ReactNode } {
-  const { showLaunchQuote, hasCompletedOnboarding, profile } = usePreferences();
+  const { showLaunchQuote, hasCompletedOnboarding, profile, firstDayOfWeek } = usePreferences();
   const { isLocked } = useAppLock();
   // Decided once from the values at launch; later changes apply next launch.
   // The first launch belongs to onboarding, and the setting can turn it off.
@@ -74,19 +79,26 @@ export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: Re
       : 'pending',
   );
   const [quoteIndex, setQuoteIndex] = useState<number | null>(null);
+  const [countdownMode, setCountdownMode] = useState(0);
 
   useEffect(() => {
     decidedThisSession = true;
     if (phase !== 'pending') return;
 
     let cancelled = false;
-    void readLastLaunchQuoteIndex().then((lastIndex) => {
-      if (cancelled) return;
-      const index = pickLaunchQuoteIndex(FINANCIAL_QUOTES.length, lastIndex);
-      setQuoteIndex(index);
-      setPhase('showing');
-      void saveLastLaunchQuoteIndex(index);
-    });
+    void Promise.all([readLastLaunchQuoteIndex(), readLastLaunchCountdownMode()]).then(
+      ([lastIndex, lastMode]) => {
+        if (cancelled) return;
+        const index = pickLaunchQuoteIndex(FINANCIAL_QUOTES.length, lastIndex);
+        // Show a different unit each opening: days, then hours, then minutes.
+        const mode = lastMode === null ? 0 : (lastMode + 1) % COUNTDOWN_MODES;
+        setQuoteIndex(index);
+        setCountdownMode(mode);
+        setPhase('showing');
+        void saveLastLaunchQuoteIndex(index);
+        void saveLastLaunchCountdownMode(mode);
+      }
+    );
     return () => {
       cancelled = true;
     };
@@ -103,6 +115,7 @@ export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: Re
   const greeting = firstName ? `${greetingLabel}, ${firstName}` : greetingLabel;
   // 'en' like every other date in the app, so a Bengali-locale phone does not get one stray Bengali date.
   const dateLabel = new Intl.DateTimeFormat('en', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
+  const yearProgress = getYearProgress(now, firstDayOfWeek);
 
   const visible = phase === 'showing' && quoteIndex !== null && !isLocked;
   const quote = quoteIndex !== null ? FINANCIAL_QUOTES[quoteIndex] : undefined;
@@ -118,6 +131,8 @@ export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: Re
           greeting={greeting}
           dateLabel={dateLabel}
           period={period}
+          progress={yearProgress}
+          countdownMode={countdownMode}
           onContinue={dismiss}
         />
       ) : null,

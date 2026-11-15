@@ -99,6 +99,7 @@ export function sanitizePreferences(value: unknown): UserPreferences {
   const enableBudgetAlerts = typeof candidate.enableBudgetAlerts === 'boolean' ? candidate.enableBudgetAlerts : true;
   const enableDailyReminder = typeof candidate.enableDailyReminder === 'boolean' ? candidate.enableDailyReminder : false;
   const enableDailyQuotes = typeof candidate.enableDailyQuotes === 'boolean' ? candidate.enableDailyQuotes : false;
+  const enableCalendarMoments = typeof candidate.enableCalendarMoments === 'boolean' ? candidate.enableCalendarMoments : false;
   const appLockEnabled = typeof candidate.appLockEnabled === 'boolean' ? candidate.appLockEnabled : false;
   const showExtras = typeof candidate.showExtras === 'boolean' ? candidate.showExtras : false;
   const showLaunchQuote = typeof candidate.showLaunchQuote === 'boolean' ? candidate.showLaunchQuote : true;
@@ -128,6 +129,7 @@ export function sanitizePreferences(value: unknown): UserPreferences {
     enableBudgetAlerts,
     enableDailyReminder,
     enableDailyQuotes,
+    enableCalendarMoments,
     appLockEnabled,
     showExtras,
     showLaunchQuote,

@@ -35,6 +35,8 @@ export type UserPreferences = {
   enableBudgetAlerts?: boolean;
   enableDailyReminder?: boolean;
   enableDailyQuotes?: boolean;
+  /** Gentle month-start/month-end and year milestone notifications. Off by default. */
+  enableCalendarMoments?: boolean;
   appLockEnabled?: boolean;
   /** Shows optional extras (world clocks in the More tab). Off by default. */
   showExtras?: boolean;
@@ -60,6 +62,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   enableBudgetAlerts: true,
   enableDailyReminder: false,
   enableDailyQuotes: false,
+  enableCalendarMoments: false,
   appLockEnabled: false,
   showExtras: false,
   showLaunchQuote: true,

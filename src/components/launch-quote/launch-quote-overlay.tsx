@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { FinancialQuote } from '@/constants/quotes';
 import { Fonts, LaunchQuoteColors, Radius, Spacing, Typography } from '@/constants/theme';
 import { getQuoteSizeRole } from '@/utils/launch-quote';
-import type { GreetingPeriod } from '@/utils/year-progress';
+import { formatCountdownLeft, type GreetingPeriod, type YearProgress } from '@/utils/year-progress';
 
 /** Taps this soon after the screen appears are ignored, so a stray touch from launching the app does not skip it. */
 const TAP_GUARD_MS = 450;
@@ -40,6 +40,8 @@ type Props = {
   greeting: string;
   dateLabel: string;
   period: GreetingPeriod;
+  progress: YearProgress;
+  countdownMode: number;
   onContinue: () => void;
 };
 
@@ -55,7 +57,7 @@ const PERIOD_ICON: Record<GreetingPeriod, keyof typeof MaterialCommunityIcons.gl
  * (or Android back) continues into the app. Always dark, with a soft animated
  * "night sky" in the brand blues; motion is dropped when Reduce Motion is on.
  */
-export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, onContinue }: Props) {
+export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progress, countdownMode, onContinue }: Props) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
@@ -182,7 +184,7 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, onConti
           },
         ]}
         accessibilityRole="button"
-        accessibilityLabel={`${greeting}. Quote: ${quote.quote}. By ${quote.author}.`}
+        accessibilityLabel={`${greeting}. Quote: ${quote.quote}. By ${quote.author}. Year ${progress.year}, ${progress.yearPercent} percent elapsed, ${formatCountdownLeft(progress, countdownMode)}.`}
         accessibilityHint="Double tap to continue to the app">
         {/* Greeting */}
         <Animated.View entering={enter(150, 600)} style={styles.header}>
@@ -231,12 +233,27 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, onConti
 
         {/* Continue hint */}
         <Animated.View entering={reduceMotion ? FadeIn.duration(200) : FadeIn.delay(1400).duration(700)} style={styles.footer}>
-          <Animated.View style={[styles.hintPill, hintStyle]}>
-            <MaterialCommunityIcons name="gesture-tap" size={16} color={LaunchQuoteColors.muted} />
-            <Text style={styles.hintText} maxFontSizeMultiplier={1.4}>
-              Tap anywhere to continue
-            </Text>
-          </Animated.View>
+          <View style={styles.yearStrip}>
+            <View style={styles.yearStripHeader}>
+              <Text style={styles.yearStripLabel} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+                {`YEAR ${progress.year} · ${progress.yearPercent}% ELAPSED`}
+              </Text>
+              <Text style={styles.yearStripLeft} maxFontSizeMultiplier={1.3}>
+                {formatCountdownLeft(progress, countdownMode)}
+              </Text>
+            </View>
+            <View style={styles.yearTrack}>
+              <View style={[styles.yearFill, { width: `${progress.yearPercent}%` }]} />
+            </View>
+          </View>
+          <View style={styles.hintWrap}>
+            <Animated.View style={[styles.hintPill, hintStyle]}>
+              <MaterialCommunityIcons name="gesture-tap" size={16} color={LaunchQuoteColors.muted} />
+              <Text style={styles.hintText} maxFontSizeMultiplier={1.4}>
+                Tap anywhere to continue
+              </Text>
+            </Animated.View>
+          </View>
         </Animated.View>
       </Pressable>
     </Animated.View>
@@ -347,6 +364,43 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   footer: {
+    alignSelf: 'stretch',
+    gap: Spacing.three,
+  },
+  yearStrip: {
+    gap: 6,
+  },
+  yearStripHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.two,
+  },
+  yearStripLabel: {
+    ...Typography.micro,
+    color: LaunchQuoteColors.muted,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    flexShrink: 1,
+  },
+  yearStripLeft: {
+    ...Typography.caption,
+    color: LaunchQuoteColors.text,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+  },
+  yearTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: LaunchQuoteColors.chip,
+    overflow: 'hidden',
+  },
+  yearFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: LaunchQuoteColors.author,
+  },
+  hintWrap: {
     alignItems: 'center',
   },
   hintPill: {

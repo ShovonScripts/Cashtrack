@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  COUNTDOWN_MODES,
+  formatCountdownLeft,
   formatDaysLeft,
   formatMonthsLeft,
   formatWeeksLeft,
@@ -157,4 +159,21 @@ test('left labels handle singular, plural and last unit', () => {
   assert.equal(formatDaysLeft(1), '1 day left');
   assert.equal(formatMonthsLeft(0), 'Last month');
   assert.equal(formatMonthsLeft(2), '2 months left');
+});
+
+test('countdown expresses the same remaining time in days, hours and minutes', () => {
+  const progress = getYearProgress(localDate(2026, 9, 21), 'monday');
+
+  assert.equal(formatCountdownLeft(progress, 0), '71 days left');
+  assert.equal(formatCountdownLeft(progress, 1), '1,716 hrs left');
+  assert.equal(formatCountdownLeft(progress, 2), '102,960 mins left');
+  assert.equal(COUNTDOWN_MODES, 3);
+});
+
+test('countdown shows a full day left at the start of December 31', () => {
+  const progress = getYearProgress(localDate(2026, 11, 31, 0), 'monday');
+
+  assert.equal(formatCountdownLeft(progress, 0), 'Last day');
+  assert.equal(formatCountdownLeft(progress, 1), '24 hrs left');
+  assert.equal(formatCountdownLeft(progress, 2), '1,440 mins left');
 });

@@ -52,6 +52,13 @@ const MONTH_LABEL = new Intl.DateTimeFormat('en', { month: 'long' });
 const MONTH_SHORT_LABEL = new Intl.DateTimeFormat('en', { month: 'short' });
 
 const MS_PER_DAY = 86_400_000;
+const MS_PER_HOUR = 3_600_000;
+const MS_PER_MINUTE = 60_000;
+
+/** Days, hours and minutes: the units the year countdown can show. */
+export const COUNTDOWN_MODES = 3;
+
+const COUNTDOWN_FORMAT = new Intl.NumberFormat('en');
 
 const GREETING_LABEL: Record<GreetingPeriod, string> = {
   morning: 'Good Morning',
@@ -194,6 +201,29 @@ export function formatWeeksLeft(weeks: number): string {
 export function formatDaysLeft(days: number): string {
   if (days <= 0) return 'Last day';
   return `${days} ${days === 1 ? 'day' : 'days'} left`;
+}
+
+/**
+ * Time left in the year, in one of three units. Days use the same wording as
+ * the year track so the two always agree; hours and minutes are derived from
+ * the exact time remaining (`daysLeftInYear` plus the fraction of today still
+ * to run).
+ */
+export function formatCountdownLeft(progress: YearProgress, mode: number): string {
+  if (mode === 0) return formatDaysLeft(progress.daysLeftInYear);
+
+  const remainingMs = Math.max(
+    0,
+    (progress.daysLeftInYear + (1 - progress.dayProgress)) * MS_PER_DAY
+  );
+
+  if (mode === 1) {
+    const hours = Math.floor(remainingMs / MS_PER_HOUR);
+    return `${COUNTDOWN_FORMAT.format(hours)} ${hours === 1 ? 'hr' : 'hrs'} left`;
+  }
+
+  const minutes = Math.floor(remainingMs / MS_PER_MINUTE);
+  return `${COUNTDOWN_FORMAT.format(minutes)} ${minutes === 1 ? 'min' : 'mins'} left`;
 }
 
 export function formatMonthsLeft(months: number): string {

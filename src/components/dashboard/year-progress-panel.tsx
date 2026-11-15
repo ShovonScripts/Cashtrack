@@ -11,7 +11,7 @@ import Animated, {
 import { ThemedText } from '@/components/themed-text';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { YearProgress } from '@/utils/year-progress';
-import { formatDaysLeft } from '@/utils/year-progress';
+import { COUNTDOWN_MODES, formatCountdownLeft, formatDaysLeft } from '@/utils/year-progress';
 
 const MONTH_LETTERS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
 const MONTH_SHORT = [
@@ -30,37 +30,9 @@ const MONTH_SHORT = [
 ];
 const CHART_HEIGHT = 44;
 
-const MS_PER_DAY = 86_400_000;
-const MS_PER_HOUR = 3_600_000;
-const MS_PER_MINUTE = 60_000;
 const COUNTDOWN_ROTATE_MS = 7_000;
 const COUNTDOWN_FADE_OUT_MS = 150;
 const COUNTDOWN_FADE_IN_MS = 220;
-const COUNTDOWN_MODES = 3;
-const COUNTDOWN_FORMAT = new Intl.NumberFormat('en');
-
-/**
- * The live "time left in the year" read-out that cycles through days, hours and
- * minutes. Days use the same wording as the year track above so the two always
- * agree; hours and minutes are derived from the exact time remaining
- * (`daysLeftInYear` plus the fraction of today still to run).
- */
-function formatCountdownLeft(progress: YearProgress, mode: number): string {
-  if (mode === 0) return formatDaysLeft(progress.daysLeftInYear);
-
-  const remainingMs = Math.max(
-    0,
-    (progress.daysLeftInYear + (1 - progress.dayProgress)) * MS_PER_DAY
-  );
-
-  if (mode === 1) {
-    const hours = Math.floor(remainingMs / MS_PER_HOUR);
-    return `${COUNTDOWN_FORMAT.format(hours)} ${hours === 1 ? 'hr' : 'hrs'} left`;
-  }
-
-  const minutes = Math.floor(remainingMs / MS_PER_MINUTE);
-  return `${COUNTDOWN_FORMAT.format(minutes)} ${minutes === 1 ? 'min' : 'mins'} left`;
-}
 
 type YearProgressPanelProps = {
   progress: YearProgress;

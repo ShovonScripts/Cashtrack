@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, Section, SwitchRow } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { usePreferences } from '@/context/expense-context';
+import { requestCalendarMomentPermissionsAsync } from '@/utils/calendar-moment-notifications';
 import { notify } from '@/utils/confirm';
 import { triggerHaptic } from '@/utils/motion';
 import { registerForBudgetNotificationsAsync } from '@/utils/notifications';
@@ -40,6 +41,8 @@ export function AlertsTab() {
     setEnableDailyReminder,
     enableDailyQuotes,
     setEnableDailyQuotes,
+    enableCalendarMoments,
+    setEnableCalendarMoments,
     showLaunchQuote,
     setShowLaunchQuote,
   } = usePreferences();
@@ -109,6 +112,24 @@ export function AlertsTab() {
         </Card>
       </Section>
 
+      <Section title="Calendar moments" subtitle="Gentle nudges tied to the calendar, not your money.">
+        <Card padded={false}>
+          <SwitchRow
+            label="Calendar moments"
+            description="First and last day of each month, plus year milestones"
+            value={enableCalendarMoments}
+            onValueChange={withPermission(
+              requestCalendarMomentPermissionsAsync,
+              'calendar moments',
+              setEnableCalendarMoments,
+            )}
+          />
+        </Card>
+        <ThemedText type="caption" themeColor="textSecondary" style={styles.momentNote}>
+          Month starts at 9:00 AM, month ends at 8:00 PM. The year countdown begins December 26.
+        </ThemedText>
+      </Section>
+
       <Section title="Check your sound" subtitle="Sends a test notification in 5 seconds.">
         <Button label="Send a test alarm" variant="secondary" onPress={() => void testAlarm()} loading={testing} />
       </Section>
@@ -122,4 +143,5 @@ export function AlertsTab() {
 
 const styles = StyleSheet.create({
   note: { textAlign: 'center', paddingHorizontal: Spacing.three },
+  momentNote: { paddingHorizontal: Spacing.three },
 });

@@ -15,6 +15,10 @@ import { IncomeProvider, useIncome } from '@/context/income-context';
 import { GoalProvider, useGoals } from '@/context/goal-context';
 import { FinancialRemindersProvider, useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme, useIsDark } from '@/hooks/use-theme';
+import {
+  cancelCalendarMomentNotificationsAsync,
+  scheduleUpcomingCalendarMomentsAsync,
+} from '@/utils/calendar-moment-notifications';
 import { confirmDelete, notify } from '@/utils/confirm';
 import { cancelQuoteNotificationsAsync, scheduleDailyQuoteNotificationsAsync } from '@/utils/quote-notifications';
 import { recoverPendingRestore } from '@/storage/backup-service';
@@ -45,7 +49,7 @@ function Navigation() {
     retrySave,
     reloadAllData,
   } = useExpenses();
-  const { enableDailyReminder, enableDailyQuotes } = usePreferences();
+  const { enableDailyReminder, enableDailyQuotes, enableCalendarMoments } = usePreferences();
   const {
     isLoading: debtLoading,
     debtLoadError,
@@ -90,6 +94,21 @@ function Navigation() {
   }, [enableDailyReminder]);
 
   useEffect(() => {
+    reminderQueueRef.current = reminderQueueRef.current
+      .catch(() => {})
+      .then(async () => {
+        if (enableCalendarMoments) {
+          await scheduleUpcomingCalendarMomentsAsync();
+        } else {
+          await cancelCalendarMomentNotificationsAsync();
+        }
+      })
+      .catch((error) => {
+        console.error('[cashtrack] Failed to update calendar moment notifications', error);
+      });
+  }, [enableCalendarMoments]);
+
+  useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
         if (enableDailyQuotes) {
@@ -103,10 +122,18 @@ function Navigation() {
             })
             .catch(() => {});
         }
+        if (enableCalendarMoments) {
+          reminderQueueRef.current = reminderQueueRef.current
+            .catch(() => {})
+            .then(async () => {
+              await scheduleUpcomingCalendarMomentsAsync();
+            })
+            .catch(() => {});
+        }
       }
     });
     return () => subscription.remove();
-  }, [enableDailyQuotes, enableDailyReminder]);
+  }, [enableDailyQuotes, enableDailyReminder, enableCalendarMoments]);
 
   // Hold the navigator until every store has hydrated, so the dashboard never
   // flashes zero balances before income/goals/bills arrive.

@@ -147,6 +147,8 @@ type PreferencesContextValue = {
   setEnableDailyReminder: (enabled: boolean) => void;
   enableDailyQuotes: boolean;
   setEnableDailyQuotes: (enabled: boolean) => void;
+  enableCalendarMoments: boolean;
+  setEnableCalendarMoments: (enabled: boolean) => void;
   appLockEnabled: boolean;
   setAppLockEnabled: (enabled: boolean) => void;
   showExtras: boolean;
@@ -609,6 +611,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, enableDailyQuotes: enabled }));
   }, []);
 
+  const setEnableCalendarMoments = useCallback((enabled: boolean) => {
+    setPreferences((current) => ({ ...current, enableCalendarMoments: enabled }));
+  }, []);
+
   const setShowExtras = useCallback((enabled: boolean) => {
     setPreferences((current) => ({ ...current, showExtras: enabled }));
   }, []);
@@ -759,6 +765,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableDailyReminder,
     enableDailyQuotes: preferences.enableDailyQuotes ?? false,
     setEnableDailyQuotes,
+    enableCalendarMoments: preferences.enableCalendarMoments ?? false,
+    setEnableCalendarMoments,
     appLockEnabled: preferences.appLockEnabled ?? false,
     setAppLockEnabled,
     showExtras: preferences.showExtras ?? false,
@@ -789,6 +797,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setEnableBudgetAlerts,
     setEnableDailyReminder,
     setEnableDailyQuotes,
+    setEnableCalendarMoments,
     setAppLockEnabled,
     setShowExtras,
     setShowLaunchQuote,

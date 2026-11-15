@@ -52,12 +52,13 @@ export function AlertsTab() {
     triggerHaptic();
     setTesting(true);
     try {
-      const scheduled = await scheduleTestAlarmNotificationAsync();
+      const result = await scheduleTestAlarmNotificationAsync();
+      const detail = result.scheduled
+        ? 'A test notification arrives in 5 seconds. Turn off silent mode to hear it.'
+        : 'Allow notifications for CashTrack in your phone’s Settings to hear the alarm.';
       notify(
-        scheduled ? 'Test alarm on its way' : 'Notifications are off',
-        scheduled
-          ? 'A test notification arrives in 5 seconds. Turn off silent mode to hear it.'
-          : 'Allow notifications for CashTrack in your phone’s Settings to hear the alarm.',
+        result.scheduled ? 'Test alarm on its way' : 'Notifications are off',
+        __DEV__ ? `${detail}\n\nChannel: ${result.channel}` : detail,
       );
     } finally {
       setTesting(false);

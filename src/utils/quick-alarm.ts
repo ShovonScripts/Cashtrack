@@ -62,12 +62,32 @@ async function readChannelState(): Promise<ChannelState> {
   return { id: FALLBACK_CHANNEL_ID, custom: false, attempt: 0 };
 }
 
+/**
+ * Android reports a channel's sound as "custom", "default", or null when the
+ * user/system silenced it. "missing" means no such channel exists, and
+ * undefined means the channel could not be inspected at all.
+ */
+async function channelSoundAsync(channelId: string): Promise<string | null | 'missing' | undefined> {
+  if (typeof NotificationsModule?.getNotificationChannelAsync !== 'function') return undefined;
+  try {
+    const channel = await NotificationsModule.getNotificationChannelAsync(channelId);
+    if (!channel) return 'missing';
+    return typeof channel.sound === 'string' ? channel.sound : null;
+  } catch (error) {
+    console.error('[cashtrack] Failed to read the quick alarm channel', error);
+    return 'missing';
+  }
+}
+
 /** Its own channel, so the user can tune quick-alarm sound apart from bill alarms. */
 async function ensureQuickAlarmChannelAsync(): Promise<void> {
   if (Platform.OS !== 'android' || !NotificationsModule?.setNotificationChannelAsync) return;
 
   const state = await readChannelState();
-  if (state.custom) {
+  const sound = await channelSoundAsync(state.id);
+
+  // A custom channel that can still make noise is the best we can do; keep it.
+  if (state.custom && (sound === 'custom' || sound === undefined)) {
     activeChannelId = state.id;
     return;
   }
@@ -82,7 +102,7 @@ async function ensureQuickAlarmChannelAsync(): Promise<void> {
   // reports the channel sound as "default" instead of "custom".
   const attempt = state.attempt + 1;
   const customId = `quick-alarms-s${attempt}`;
-  let next: ChannelState = { id: FALLBACK_CHANNEL_ID, custom: false, attempt };
+  let next: ChannelState | null = null;
   try {
     await NotificationsModule.setNotificationChannelAsync(customId, { ...channelOptions(), sound: ALARM_SOUND_FILE });
     const created = await NotificationsModule.getNotificationChannelAsync?.(customId);
@@ -91,13 +111,31 @@ async function ensureQuickAlarmChannelAsync(): Promise<void> {
     } else {
       await NotificationsModule.deleteNotificationChannelAsync?.(customId);
     }
-  } catch {}
-
-  if (!next.custom) {
-    try {
-      await NotificationsModule.setNotificationChannelAsync(FALLBACK_CHANNEL_ID, channelOptions());
-    } catch {}
+  } catch (error) {
+    console.error('[cashtrack] Failed to set up the quick alarm sound channel', error);
   }
+
+  if (!next) {
+    // Android locks a channel's sound in once it exists, so a channel the user
+    // (or the system) silenced can never be made loud again and needs a new id.
+    const fallbackSound = state.id.startsWith(FALLBACK_CHANNEL_ID) ? sound : await channelSoundAsync(FALLBACK_CHANNEL_ID);
+    const fallbackId =
+      fallbackSound === null ? `${FALLBACK_CHANNEL_ID}-s${attempt}` : FALLBACK_CHANNEL_ID;
+    if (fallbackSound !== 'default' && fallbackSound !== 'custom') {
+      try {
+        const created = await NotificationsModule.setNotificationChannelAsync(fallbackId, channelOptions());
+        // A missing sound here means the alarm can only buzz. Say so, because
+        // otherwise the timer just rings silently with no clue why.
+        if (!created || (created.sound !== 'default' && created.sound !== 'custom')) {
+          console.error('[cashtrack] Quick alarm channel has no sound', created);
+        }
+      } catch (error) {
+        console.error('[cashtrack] Failed to set up the quick alarm channel', error);
+      }
+    }
+    next = { id: fallbackId, custom: false, attempt };
+  }
+
   activeChannelId = next.id;
   AsyncStorage.setItem(CHANNEL_STATE_KEY, JSON.stringify(next)).catch(() => {});
 }

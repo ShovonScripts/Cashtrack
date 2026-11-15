@@ -113,6 +113,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const syncRef = useRef<boolean>(false);
   const hydratedRef = useRef<boolean>(false);
   const finishedRef = useRef<QuickAlarm[]>([]);
+  const backgroundRungRef = useRef<QuickAlarm[]>([]);
   const lastNotificationSecondRef = useRef<number | null>(null);
 
   const persistStopwatch = useCallback(() => {
@@ -218,6 +219,9 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!sw.running || seconds <= 0 || seconds % 5 !== 0) return;
+    // Updating the tray while the app is in the background keeps the process
+    // busy and fights the OS for no visible gain; the time refreshes on return.
+    if (AppState.currentState !== 'active') return;
     if (lastNotificationSecondRef.current === seconds) return;
     lastNotificationSecondRef.current = seconds;
     void updateNotification(seconds, true);
@@ -231,15 +235,22 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
 
     commitAlarms(active);
     setFinishedAlarms((prev) => [...prev, ...expired].slice(-MAX_ACTIVE_ALARMS));
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
 
     // Ring like a phone alarm, but only for timers that just ended: one that
     // finished minutes ago while the app was closed already rang via the OS.
     const fresh = expired.filter((alarm) => now - alarm.endAt < RING_WINDOW_MS);
     if (fresh.length > 0) {
-      setRingingIds((prev) => [...prev, ...fresh.map((alarm) => alarm.id)]);
-      // The in-app ring takes over from the system notification.
-      for (const alarm of fresh) void cancelQuickAlarmAsync(alarm.id);
+      if (AppState.currentState === 'active') {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        setRingingIds((prev) => [...prev, ...fresh.map((alarm) => alarm.id)]);
+        // The in-app ring takes over from the system notification.
+        for (const alarm of fresh) void cancelQuickAlarmAsync(alarm.id);
+      } else {
+        // In the background the system notification is the ringtone. Taking over
+        // here would cancel it and leave only in-app audio, which Android can
+        // mute once the app is no longer visible. Remember it for the return.
+        backgroundRungRef.current = [...backgroundRungRef.current, ...fresh];
+      }
     }
 
     const current = swRef.current;
@@ -261,15 +272,38 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeout);
   }, [alarms, sweepAlarms]);
 
+  /**
+   * Alarms that rang through the system notification while the app was in the
+   * background keep ringing in-app after the user returns, so Dismiss and
+   * Snooze stay reachable and the notification's tone is not left behind.
+   */
+  const takeOverBackgroundRinging = useCallback(() => {
+    const rang = backgroundRungRef.current;
+    if (rang.length === 0) return;
+    backgroundRungRef.current = [];
+
+    const now = Date.now();
+    for (const alarm of rang) void cancelQuickAlarmAsync(alarm.id);
+
+    const fresh = rang.filter((alarm) => now - alarm.endAt < RING_WINDOW_MS);
+    if (fresh.length === 0) return;
+    setRingingIds((prev) => {
+      const next = new Set(prev);
+      for (const alarm of fresh) next.add(alarm.id);
+      return [...next];
+    });
+  }, []);
+
   // Coming back to the app: timers were frozen, so catch up immediately.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state !== 'active') return;
       setSeconds(Math.floor(elapsedMs(swRef.current, Date.now()) / 1000));
       sweepAlarms();
+      takeOverBackgroundRinging();
     });
     return () => subscription.remove();
-  }, [sweepAlarms]);
+  }, [sweepAlarms, takeOverBackgroundRinging]);
 
   /* ---------- Stopwatch actions ---------- */
 

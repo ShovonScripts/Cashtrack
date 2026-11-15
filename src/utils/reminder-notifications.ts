@@ -80,21 +80,45 @@ export async function requestExactAlarmPermissionsAsync(): Promise<boolean> {
   }
 }
 
-const ALARM_CHANNEL_ID = 'reminder-alarms-channel';
+// Android locks a channel's sound in the moment it is created, so the id is
+// versioned. A channel that was ever made silent can never be made loud again.
+const ALARM_CHANNEL_ID = 'reminder-alarms-channel-v2';
 const TEST_ALARM_ID = 'reminder:test-alarm';
 
-export async function ensureAlarmChannelAsync(): Promise<void> {
-  if (Platform.OS !== 'android' || !NotificationsModule?.setNotificationChannelAsync) return;
+/**
+ * Creates the alarm channel and reports what the phone ended up with, so the
+ * test alarm can say why it stayed quiet instead of failing silently.
+ */
+async function configureAlarmChannelAsync(): Promise<string> {
+  if (Platform.OS !== 'android' || !NotificationsModule?.setNotificationChannelAsync) {
+    return 'channel API unavailable';
+  }
   try {
-    await NotificationsModule.setNotificationChannelAsync(ALARM_CHANNEL_ID, {
-      name: 'High Priority Bill Alarms',
-      importance: NotificationsModule.AndroidImportance.MAX,
+    const channel = await NotificationsModule.setNotificationChannelAsync(ALARM_CHANNEL_ID, {
+      name: 'Bill alarms',
+      importance: NotificationsModule.AndroidImportance?.MAX,
       vibrationPattern: [0, 1000, 500, 1000],
-      enableVibration: true,
+      enableVibrate: true,
       lightColor: '#0152F5',
-      lockscreenVisibility: NotificationsModule.AndroidNotificationVisibility.PUBLIC,
+      lockscreenVisibility: NotificationsModule.AndroidNotificationVisibility?.PUBLIC,
+      // Leaving `sound` out keeps the phone's own notification tone. On Android
+      // 8+ the channel's sound is the only one that can play, and a channel
+      // created without one is silent for good.
+      audioAttributes: {
+        usage: NotificationsModule.AndroidAudioUsage?.ALARM,
+        contentType: NotificationsModule.AndroidAudioContentType?.SONIFICATION,
+      },
     });
-  } catch {}
+    if (!channel) return 'channel not created';
+    return `${channel.id} · sound ${channel.sound ?? 'off'}`;
+  } catch (error) {
+    console.error('[cashtrack] Failed to set up the bill alarm channel', error);
+    return `channel failed: ${error instanceof Error ? error.message : String(error)}`;
+  }
+}
+
+export async function ensureAlarmChannelAsync(): Promise<void> {
+  await configureAlarmChannelAsync();
 }
 
 export async function cancelReminderNotificationsAsync(reminderId: string): Promise<void> {
@@ -214,15 +238,18 @@ export async function scheduleReminderNotificationsAsync(
 /**
  * Fires a one-off alarm notification after a few seconds so the user can
  * confirm that permissions, the high-priority channel and the sound all work.
+ * The channel report is used by the settings screen to explain a silent alarm.
  */
-export async function scheduleTestAlarmNotificationAsync(): Promise<boolean> {
-  if (Platform.OS === 'web' || !NotificationsModule) return false;
+export async function scheduleTestAlarmNotificationAsync(): Promise<{ scheduled: boolean; channel: string }> {
+  if (Platform.OS === 'web' || !NotificationsModule) {
+    return { scheduled: false, channel: 'notifications unavailable' };
+  }
 
   const hasPermission = await requestNotificationPermissionsAsync();
-  if (!hasPermission) return false;
+  if (!hasPermission) return { scheduled: false, channel: 'notifications are off' };
 
   await requestExactAlarmPermissionsAsync();
-  await ensureAlarmChannelAsync();
+  const channel = await configureAlarmChannelAsync();
 
   try {
     await NotificationsModule.cancelScheduledNotificationAsync(TEST_ALARM_ID);
@@ -243,8 +270,9 @@ export async function scheduleTestAlarmNotificationAsync(): Promise<boolean> {
         channelId: ALARM_CHANNEL_ID,
       },
     });
-    return true;
-  } catch {
-    return false;
+    return { scheduled: true, channel };
+  } catch (error) {
+    console.error('[cashtrack] Failed to schedule the test alarm', error);
+    return { scheduled: false, channel };
   }
 }

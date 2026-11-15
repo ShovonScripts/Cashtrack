@@ -185,6 +185,33 @@ object AlarmScheduler {
     manager.createNotificationChannel(channel)
   }
 
+  /**
+   * A channel for alarms another library posts (bill alarms). Uses the phone's
+   * own notification tone on the alarm volume. Android locks a channel's sound
+   * once created, so an existing channel is only renamed, never re-sounded.
+   */
+  fun ensureExternalAlarmChannel(context: Context, id: String, name: String, description: String): String? {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return "default"
+    val manager = notificationManager(context)
+    val channel = manager.getNotificationChannel(id)
+      ?: NotificationChannel(id, name, NotificationManager.IMPORTANCE_HIGH).apply {
+        setSound(
+          RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION) ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+          alarmAudio,
+        )
+        enableVibration(true)
+        vibrationPattern = longArrayOf(0, 1000, 500, 1000)
+        enableLights(true)
+        lightColor = Color.parseColor("#0152F5")
+        lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+      }
+    channel.name = name
+    channel.description = description
+    manager.createNotificationChannel(channel)
+    val sound = manager.getNotificationChannel(id)?.sound ?: return null
+    return if (sound == android.provider.Settings.System.DEFAULT_NOTIFICATION_URI) "default" else "custom"
+  }
+
   private fun smallIcon(context: Context): Int {
     val icon = context.resources.getIdentifier("notification_icon", "drawable", context.packageName)
     return if (icon != 0) icon else context.applicationInfo.icon

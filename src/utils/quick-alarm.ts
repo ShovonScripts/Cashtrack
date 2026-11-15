@@ -40,7 +40,7 @@ function channelOptions() {
   return {
     name: 'Quick Alarms & Timers',
     description: 'Rings when a stopwatch-page timer finishes.',
-    importance: NotificationsModule.AndroidImportance.MAX,
+    importance: NotificationsModule.AndroidImportance.HIGH,
     vibrationPattern: [0, 800, 400, 800, 400, 800, 400, 800, 400, 800],
     enableVibrate: true,
     bypassDnd: true,

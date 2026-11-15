@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { alarmPopup } from '@/utils/alarm-popup';
 import '@/utils/notification-handler';
 import type { FinancialReminder } from '@/types/reminder';
 import { getReminderRemainingAmount } from '@/utils/reminder-payment';
@@ -72,18 +73,36 @@ export async function requestExactAlarmPermissionsAsync(): Promise<boolean> {
 const ALARM_CHANNEL_ID = 'reminder-alarms-channel-v2';
 const TEST_ALARM_ID = 'reminder:test-alarm';
 
+const ALARM_CHANNEL_NAME = 'Bill alarms';
+const ALARM_CHANNEL_DESCRIPTION = 'Rings when a bill marked as an alarm is due.';
+
 /**
  * Creates the alarm channel and reports what the phone ended up with, so the
  * test alarm can say why it stayed quiet instead of failing silently.
  */
 async function configureAlarmChannelAsync(): Promise<string> {
-  if (Platform.OS !== 'android' || !NotificationsModule?.setNotificationChannelAsync) {
-    return 'channel API unavailable';
+  if (Platform.OS !== 'android') return 'channel API unavailable';
+
+  // Builds with the native alarm module create the channel directly:
+  // expo-notifications' setNotificationChannelAsync throws a native
+  // NullPointerException on some setups and leaves the channel missing.
+  if (alarmPopup) {
+    try {
+      const sound = alarmPopup.ensureAlarmChannel(ALARM_CHANNEL_ID, ALARM_CHANNEL_NAME, ALARM_CHANNEL_DESCRIPTION);
+      return `${ALARM_CHANNEL_ID} · sound ${sound ?? 'off'}`;
+    } catch (error) {
+      console.warn('[cashtrack] Native bill alarm channel setup failed, trying expo-notifications', error);
+    }
   }
+
+  if (!NotificationsModule?.setNotificationChannelAsync) return 'channel API unavailable';
   try {
     const channel = await NotificationsModule.setNotificationChannelAsync(ALARM_CHANNEL_ID, {
-      name: 'Bill alarms',
-      importance: NotificationsModule.AndroidImportance?.MAX,
+      name: ALARM_CHANNEL_NAME,
+      description: ALARM_CHANNEL_DESCRIPTION,
+      // HIGH is the loudest level a channel can have; Android documents MAX as
+      // unused for channels.
+      importance: NotificationsModule.AndroidImportance?.HIGH,
       vibrationPattern: [0, 1000, 500, 1000],
       enableVibrate: true,
       lightColor: '#0152F5',
@@ -99,7 +118,16 @@ async function configureAlarmChannelAsync(): Promise<string> {
     if (!channel) return 'channel not created';
     return `${channel.id} · sound ${channel.sound ?? 'off'}`;
   } catch (error) {
-    console.error('[cashtrack] Failed to set up the bill alarm channel', error);
+    // Android can create the channel and still fail while reporting it back to
+    // JS, so check whether it exists before calling this a failure.
+    const existing = await NotificationsModule.getNotificationChannelAsync?.(ALARM_CHANNEL_ID).catch(() => null);
+    if (existing) {
+      console.warn('[cashtrack] Bill alarm channel exists, but setting it up reported an error', error);
+      return `${existing.id} · sound ${existing.sound ?? 'off'}`;
+    }
+    // A warning, not an error: this is a known expo-notifications failure on
+    // builds without the native alarm module, and the app keeps working.
+    console.warn('[cashtrack] Failed to set up the bill alarm channel', error);
     return `channel failed: ${error instanceof Error ? error.message : String(error)}`;
   }
 }

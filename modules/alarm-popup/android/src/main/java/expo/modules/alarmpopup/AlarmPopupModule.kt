@@ -46,6 +46,16 @@ class AlarmPopupModule : Module() {
       AlarmStore.takeActions(context)
     }
 
+    /**
+     * Creates a loud alarm-style channel for notifications scheduled through
+     * expo-notifications (bill alarms). Done here because expo-notifications'
+     * own setNotificationChannelAsync fails on some setups.
+     * Returns the sound the phone ended up with: "default", "custom" or null (silent).
+     */
+    Function("ensureAlarmChannel") { id: String, name: String, description: String ->
+      AlarmScheduler.ensureExternalAlarmChannel(context, id, name, description)
+    }
+
     Function("canScheduleExactAlarms") {
       AlarmScheduler.canScheduleExact(context)
     }

@@ -14,6 +14,7 @@ type AlarmPopupNative = {
   getRingingIds(): string[];
   getScheduledIds(): string[];
   takeActions(): AlarmPopupAction[];
+  ensureAlarmChannel(id: string, name: string, description: string): 'default' | 'custom' | null;
   canScheduleExactAlarms(): boolean;
   canUseFullScreenIntent(): boolean;
   openFullScreenIntentSettings(): void;

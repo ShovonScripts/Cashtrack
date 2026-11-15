@@ -1,0 +1,37 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+  <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="android.permission.VIBRATE" />
+
+  <application>
+    <!-- Full-screen "time's up" pop-up, shown over the lock screen. Own task so
+         it never drags the rest of the app to the front. -->
+    <activity
+      android:name="expo.modules.alarmpopup.AlarmActivity"
+      android:exported="false"
+      android:excludeFromRecents="true"
+      android:launchMode="singleTask"
+      android:taskAffinity=""
+      android:showWhenLocked="true"
+      android:turnScreenOn="true"
+      android:screenOrientation="portrait"
+      android:theme="@android:style/Theme.Material.NoActionBar" />
+
+    <receiver
+      android:name="expo.modules.alarmpopup.AlarmReceiver"
+      android:exported="false" />
+
+    <!-- Alarms set with AlarmManager are wiped by a reboot or an app update. -->
+    <receiver
+      android:name="expo.modules.alarmpopup.AlarmRestoreReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

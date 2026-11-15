@@ -4,7 +4,16 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import { AppState, Platform } from 'react-native';
 
 import { startRinging, stopRinging } from '@/utils/alarm-ringer';
-import { cancelQuickAlarmAsync, prepareQuickAlarmsAsync, scheduleQuickAlarmAsync } from '@/utils/quick-alarm';
+import { alarmPopup, safely } from '@/utils/alarm-popup';
+import {
+  cancelQuickAlarmAsync,
+  fixAlarmHealthAsync,
+  getAlarmHealthAsync,
+  prepareQuickAlarmsAsync,
+  scheduleQuickAlarmAsync,
+  usesAlarmPopup,
+  type AlarmHealth,
+} from '@/utils/quick-alarm';
 import {
   MAX_ACTIVE_ALARMS,
   RING_WINDOW_MS,
@@ -14,6 +23,7 @@ import {
   elapsedMs,
   formatClock,
   makeLap,
+  mergeFinished,
   parseStoredAlarms,
   parseStoredStopwatch,
   splitAlarms,
@@ -52,6 +62,9 @@ type StopwatchContextType = {
   snoozeFinishedAlarm: (id: string) => Promise<StartAlarmResult>;
   saveTimer: (label: string, durationMs: number) => void;
   removeSavedTimer: (id: string) => void;
+  /** Android settings that make timers late or stop the pop-up. All true when fine. */
+  alarmHealth: AlarmHealth;
+  fixAlarmHealth: (problem: keyof AlarmHealth) => void;
 };
 
 const StopwatchContext = createContext<StopwatchContextType | undefined>(undefined);
@@ -105,6 +118,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const [ringingIds, setRingingIds] = useState<string[]>([]);
   const [savedTimers, setSavedTimers] = useState<SavedTimer[]>([]);
   const [syncStopwatch, setSyncStopwatchState] = useState<boolean>(false);
+  const [alarmHealth, setAlarmHealth] = useState<AlarmHealth>({ exactAlarms: true, fullScreen: true });
 
   // Refs mirror state so event handlers and timers always see the latest values.
   const swRef = useRef<SwState>(INITIAL_SW);
@@ -115,6 +129,8 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const finishedRef = useRef<QuickAlarm[]>([]);
   const backgroundRungRef = useRef<QuickAlarm[]>([]);
   const lastNotificationSecondRef = useRef<number | null>(null);
+  /** Hydration runs before syncNative exists; a ref lets it call the latest one. */
+  const syncNativeRef = useRef<() => void>(() => {});
 
   const persistStopwatch = useCallback(() => {
     if (!hydratedRef.current) return;
@@ -125,7 +141,12 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     if (!hydratedRef.current) return;
     AsyncStorage.setItem(
       ALARMS_KEY,
-      JSON.stringify({ active: alarmsRef.current, saved: savedRef.current, syncStopwatch: syncRef.current }),
+      JSON.stringify({
+        active: alarmsRef.current,
+        finished: finishedRef.current,
+        saved: savedRef.current,
+        syncStopwatch: syncRef.current,
+      }),
     ).catch(() => {});
   }, []);
 
@@ -149,15 +170,30 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     [persistAlarms],
   );
 
-  // Latest finished list for snooze, without making the callback depend on it.
-  useEffect(() => {
-    finishedRef.current = finishedAlarms;
-  }, [finishedAlarms]);
+  const commitFinished = useCallback(
+    (next: QuickAlarm[]) => {
+      finishedRef.current = next;
+      setFinishedAlarms(next);
+      persistAlarms();
+    },
+    [persistAlarms],
+  );
 
-  // One looping tone + vibration while anything is ringing.
+  const refreshAlarmHealth = useCallback(() => {
+    getAlarmHealthAsync()
+      .then((health) =>
+        setAlarmHealth((prev) =>
+          prev.exactAlarms === health.exactAlarms && prev.fullScreen === health.fullScreen ? prev : health,
+        ),
+      )
+      .catch(() => {});
+  }, []);
+
+  // One looping tone + vibration while anything is ringing. With the native
+  // pop-up alarm the phone is already ringing, so the app stays quiet.
   const isRinging = ringingIds.length > 0;
   useEffect(() => {
-    if (!isRinging) return;
+    if (!isRinging || usesAlarmPopup) return;
     void startRinging();
     return () => stopRinging();
   }, [isRinging]);
@@ -189,18 +225,23 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
         const { active, expired } = splitAlarms(storedAlarms.active, Date.now());
         alarmsRef.current = active;
         setAlarms(active);
-        setFinishedAlarms(expired.slice(-MAX_ACTIVE_ALARMS));
+        const finished = mergeFinished(storedAlarms.finished, expired);
+        finishedRef.current = finished;
+        setFinishedAlarms(finished);
         savedRef.current = storedAlarms.saved;
         setSavedTimers(storedAlarms.saved);
         syncRef.current = storedAlarms.syncStopwatch;
         setSyncStopwatchState(storedAlarms.syncStopwatch);
       }
       hydratedRef.current = true;
+      persistAlarms();
+      syncNativeRef.current();
+      refreshAlarmHealth();
     })();
     return () => {
       alive = false;
     };
-  }, []);
+  }, [persistAlarms, refreshAlarmHealth]);
 
   // Tick the visible seconds from the wall clock, so throttled or suspended
   // timers never lose elapsed time.
@@ -234,13 +275,19 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     if (expired.length === 0) return;
 
     commitAlarms(active);
-    setFinishedAlarms((prev) => [...prev, ...expired].slice(-MAX_ACTIVE_ALARMS));
+    commitFinished(mergeFinished(finishedRef.current, expired));
 
     // Ring like a phone alarm, but only for timers that just ended: one that
     // finished minutes ago while the app was closed already rang via the OS.
     const fresh = expired.filter((alarm) => now - alarm.endAt < RING_WINDOW_MS);
     if (fresh.length > 0) {
-      if (AppState.currentState === 'active') {
+      if (usesAlarmPopup) {
+        // The native alarm rings and pops up on its own; just show it as ringing.
+        if (AppState.currentState === 'active') {
+          void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+          setRingingIds((prev) => [...new Set([...prev, ...fresh.map((alarm) => alarm.id)])]);
+        }
+      } else if (AppState.currentState === 'active') {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         setRingingIds((prev) => [...prev, ...fresh.map((alarm) => alarm.id)]);
         // The in-app ring takes over from the system notification.
@@ -262,7 +309,49 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
       }
       commitSw({ ...current, laps });
     }
-  }, [commitAlarms, commitSw]);
+  }, [commitAlarms, commitFinished, commitSw]);
+
+  /**
+   * Catches up with the native pop-up alarm: Stop / Snooze pressed on the
+   * pop-up or its notification (possibly while the app was closed), and which
+   * alarms are still ringing.
+   */
+  const syncNative = useCallback(() => {
+    if (!alarmPopup || !hydratedRef.current) return;
+    sweepAlarms();
+
+    const actions = safely((n) => n.takeActions(), []);
+    let active = alarmsRef.current;
+    let finished = finishedRef.current;
+    for (const { id, action, endAt } of actions) {
+      const known = finished.find((alarm) => alarm.id === id) ?? active.find((alarm) => alarm.id === id);
+      finished = finished.filter((alarm) => alarm.id !== id);
+      if (action === 'snooze' && endAt) {
+        active = [
+          ...active.filter((alarm) => alarm.id !== id),
+          { id, label: known?.label ?? 'Timer', durationMs: SNOOZE_MS, endAt },
+        ];
+      }
+    }
+    if (actions.length > 0) {
+      commitAlarms(active);
+      commitFinished(finished);
+    }
+
+    const nativeRinging = new Set(safely((n) => n.getRingingIds(), [] as string[]));
+    const ringing = finished.filter((alarm) => nativeRinging.has(alarm.id)).map((alarm) => alarm.id);
+    setRingingIds((prev) => (prev.length === ringing.length && prev.every((id, i) => id === ringing[i]) ? prev : ringing));
+  }, [commitAlarms, commitFinished, sweepAlarms]);
+
+  useEffect(() => {
+    syncNativeRef.current = syncNative;
+  }, [syncNative]);
+
+  useEffect(() => {
+    if (!alarmPopup) return;
+    const subscription = alarmPopup.addListener('onAlarmChange', () => syncNativeRef.current());
+    return () => subscription.remove();
+  }, []);
 
   // Wake exactly when the next countdown ends.
   useEffect(() => {
@@ -300,10 +389,12 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
       if (state !== 'active') return;
       setSeconds(Math.floor(elapsedMs(swRef.current, Date.now()) / 1000));
       sweepAlarms();
-      takeOverBackgroundRinging();
+      if (usesAlarmPopup) syncNative();
+      else takeOverBackgroundRinging();
+      refreshAlarmHealth();
     });
     return () => subscription.remove();
-  }, [sweepAlarms, takeOverBackgroundRinging]);
+  }, [refreshAlarmHealth, sweepAlarms, syncNative, takeOverBackgroundRinging]);
 
   /* ---------- Stopwatch actions ---------- */
 
@@ -360,9 +451,10 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
       if (syncRef.current && !swRef.current.running) {
         commitSw({ ...swRef.current, running: true, startedAt: Date.now() });
       }
+      refreshAlarmHealth();
       return 'ok';
     },
-    [commitAlarms, commitSw],
+    [commitAlarms, commitSw, refreshAlarmHealth],
   );
 
   const cancelQuickAlarm = useCallback(
@@ -373,10 +465,17 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     [commitAlarms],
   );
 
-  const dismissFinishedAlarm = useCallback((id: string) => {
-    setFinishedAlarms((prev) => prev.filter((alarm) => alarm.id !== id));
-    setRingingIds((prev) => prev.filter((ringingId) => ringingId !== id));
-    void cancelQuickAlarmAsync(id);
+  const dismissFinishedAlarm = useCallback(
+    (id: string) => {
+      commitFinished(finishedRef.current.filter((alarm) => alarm.id !== id));
+      setRingingIds((prev) => prev.filter((ringingId) => ringingId !== id));
+      void cancelQuickAlarmAsync(id);
+    },
+    [commitFinished],
+  );
+
+  const fixAlarmHealth = useCallback((problem: keyof AlarmHealth) => {
+    void fixAlarmHealthAsync(problem);
   }, []);
 
   const snoozeFinishedAlarm = useCallback(
@@ -441,6 +540,8 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
         snoozeFinishedAlarm,
         saveTimer,
         removeSavedTimer,
+        alarmHealth,
+        fixAlarmHealth,
       }}>
       {children}
     </StopwatchContext.Provider>

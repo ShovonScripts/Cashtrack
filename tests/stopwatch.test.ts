@@ -9,6 +9,7 @@ import {
   formatLap,
   lapExtremes,
   makeLap,
+  mergeFinished,
   parseDuration,
   parseStoredAlarms,
   parseStoredStopwatch,
@@ -163,5 +164,26 @@ describe('stored data validation', () => {
     assert.equal(parsed?.saved.length, 1);
     assert.equal(parsed?.syncStopwatch, false);
     assert.equal(parseStoredAlarms('[]')?.active.length, 0);
+  });
+
+  test('parseStoredAlarms keeps finished alarms across restarts', () => {
+    const parsed = parseStoredAlarms(
+      JSON.stringify({
+        active: [],
+        finished: [{ id: 'f', label: 'Tea', durationMs: 60000, endAt: 5 }, { id: 'bad', endAt: 'x' }],
+      }),
+    );
+    assert.deepEqual(parsed?.finished.map((a) => a.id), ['f']);
+    // Data saved by older versions has no finished list.
+    assert.deepEqual(parseStoredAlarms('{"active":[]}')?.finished, []);
+  });
+
+  test('mergeFinished de-duplicates, sorts and caps', () => {
+    const alarm = (id: string, endAt: number): QuickAlarm => ({ id, label: id, durationMs: 1000, endAt });
+    const merged = mergeFinished([alarm('a', 3), alarm('b', 1)], [alarm('a', 3), alarm('c', 2)]);
+    assert.deepEqual(merged.map((a) => a.id), ['b', 'c', 'a']);
+    const many = Array.from({ length: 9 }, (_, i) => alarm(`x${i}`, i));
+    assert.equal(mergeFinished([], many).length, 5);
+    assert.equal(mergeFinished([], many)[0].id, 'x4');
   });
 });

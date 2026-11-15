@@ -124,6 +124,25 @@ function FinishedRow({
   );
 }
 
+/** A setting that stops timers from working properly, with a button to fix it. */
+function HealthWarning({ title, body, onFix }: { title: string; body: string; onFix: () => void }) {
+  const theme = useTheme();
+  return (
+    <View style={[styles.row, { backgroundColor: withAlpha(theme.warning, 0.12), borderColor: theme.warning }]}>
+      <View style={styles.rowTop}>
+        <MaterialCommunityIcons name="alert-outline" size={22} color={theme.warning} />
+        <View style={styles.rowCopy}>
+          <ThemedText type="smallBold">{title}</ThemedText>
+          <ThemedText type="caption" themeColor="textSecondary">
+            {body}
+          </ThemedText>
+        </View>
+      </View>
+      <Button label="Fix in settings" variant="secondary" onPress={onFix} />
+    </View>
+  );
+}
+
 function DigitField({
   label,
   value,
@@ -171,6 +190,8 @@ export function QuickAlarmPanel() {
     snoozeFinishedAlarm,
     saveTimer,
     removeSavedTimer,
+    alarmHealth,
+    fixAlarmHealth,
   } = useStopwatch();
 
   const [customOpen, setCustomOpen] = useState(false);
@@ -229,6 +250,21 @@ export function QuickAlarmPanel() {
           Rings your phone
         </ThemedText>
       </View>
+
+      {!alarmHealth.fullScreen && (
+        <HealthWarning
+          title="Pop-up alarms are off"
+          body="Allow full-screen notifications so a finished timer pops up on your screen, even when it is locked."
+          onFix={() => fixAlarmHealth('fullScreen')}
+        />
+      )}
+      {!alarmHealth.exactAlarms && (
+        <HealthWarning
+          title="Timers may ring late"
+          body="Allow Alarms & reminders so your phone rings exactly on time, even when CashTrack is closed."
+          onFix={() => fixAlarmHealth('exactAlarms')}
+        />
+      )}
 
       {finishedAlarms.map((alarm) => (
         <FinishedRow

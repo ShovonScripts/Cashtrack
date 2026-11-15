@@ -7,6 +7,7 @@ import {
   requestNotificationPermissionsAsync,
 } from '@/utils/reminder-notifications';
 
+import { alarmPopup, safely } from '@/utils/alarm-popup';
 import { QUICK_ALARM_ID_PREFIX } from '@/utils/stopwatch';
 
 export { QUICK_ALARM_MINUTES } from '@/utils/stopwatch';
@@ -165,12 +166,47 @@ export async function prepareQuickAlarmsAsync(): Promise<boolean> {
   const granted = await requestNotificationPermissionsAsync();
   if (!granted) return false;
   await askForExactAlarmOnceAsync();
-  await ensureQuickAlarmChannelAsync();
+  // The native pop-up alarm brings its own channel.
+  if (!alarmPopup) await ensureQuickAlarmChannelAsync();
   return true;
+}
+
+/** True when timers ring through the native full-screen pop-up (Android dev/production builds). */
+export const usesAlarmPopup = alarmPopup !== null;
+
+export type AlarmHealth = {
+  /** Android 12+ "Alarms & reminders". Without it a timer can ring a little late. */
+  exactAlarms: boolean;
+  /** Android 14+ "Full-screen notifications". Without it the alarm shows as a banner, not a pop-up. */
+  fullScreen: boolean;
+};
+
+export async function getAlarmHealthAsync(): Promise<AlarmHealth> {
+  if (Platform.OS !== 'android') return { exactAlarms: true, fullScreen: true };
+  const exactAlarms = alarmPopup
+    ? safely((n) => n.canScheduleExactAlarms(), true)
+    : await hasExactAlarmPermissionAsync().catch(() => true);
+  const fullScreen = safely((n) => n.canUseFullScreenIntent(), true);
+  return { exactAlarms, fullScreen };
+}
+
+/** Opens the Android settings screen that fixes the given problem. */
+export async function fixAlarmHealthAsync(problem: keyof AlarmHealth): Promise<void> {
+  if (problem === 'fullScreen') {
+    safely((n) => n.openFullScreenIntentSettings(), undefined);
+    return;
+  }
+  await requestExactAlarmPermissionsAsync().catch(() => {});
 }
 
 /** Schedules the phone to ring at `fireAt` (epoch ms). Returns false on failure. */
 export async function scheduleQuickAlarmAsync(alarmId: string, label: string, fireAt: number): Promise<boolean> {
+  if (alarmPopup) {
+    return safely((n) => {
+      n.schedule(alarmId, label, fireAt);
+      return true;
+    }, false);
+  }
   if (Platform.OS === 'web' || !NotificationsModule) return false;
   try {
     await NotificationsModule.scheduleNotificationAsync({
@@ -196,6 +232,9 @@ export async function scheduleQuickAlarmAsync(alarmId: string, label: string, fi
 }
 
 export async function cancelQuickAlarmAsync(alarmId: string): Promise<void> {
+  // Also cancel through expo-notifications: a timer set before this build may
+  // still be waiting there.
+  safely((n) => n.cancel(alarmId), undefined);
   if (Platform.OS === 'web' || !NotificationsModule) return;
   try {
     await NotificationsModule.cancelScheduledNotificationAsync(idFor(alarmId));

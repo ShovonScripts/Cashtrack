@@ -156,6 +156,13 @@ export function splitAlarms(
   return { active, expired };
 }
 
+/** Adds alarms to the finished list without duplicates, keeping the newest few. */
+export function mergeFinished(list: readonly QuickAlarm[], added: readonly QuickAlarm[]): QuickAlarm[] {
+  const byId = new Map<string, QuickAlarm>();
+  for (const alarm of [...list, ...added]) byId.set(alarm.id, alarm);
+  return [...byId.values()].sort((a, b) => a.endAt - b.endAt).slice(-MAX_ACTIVE_ALARMS);
+}
+
 export function defaultAlarmLabel(durationMs: number): string {
   return formatDurationLabel(durationMs);
 }
@@ -196,30 +203,39 @@ export function parseStoredStopwatch(raw: string | null): StoredStopwatch | null
   }
 }
 
-export type StoredAlarms = { active: QuickAlarm[]; saved: SavedTimer[]; syncStopwatch: boolean };
+export type StoredAlarms = {
+  active: QuickAlarm[];
+  /** Timers that rang and were not dismissed yet, so they survive the app being killed. */
+  finished: QuickAlarm[];
+  saved: SavedTimer[];
+  syncStopwatch: boolean;
+};
+
+const isQuickAlarm = (a: unknown): a is QuickAlarm => {
+  const v = a as Partial<QuickAlarm> | null;
+  return (
+    !!v &&
+    typeof v.id === 'string' &&
+    typeof v.label === 'string' &&
+    isFiniteNumber(v.durationMs) &&
+    isFiniteNumber(v.endAt)
+  );
+};
 
 export function parseStoredAlarms(raw: string | null): StoredAlarms | null {
   if (!raw) return null;
   try {
     const value = JSON.parse(raw) as Partial<StoredAlarms> | null;
     if (!value || typeof value !== 'object') return null;
-    const active = Array.isArray(value.active)
-      ? value.active.filter(
-          (a): a is QuickAlarm =>
-            !!a &&
-            typeof a.id === 'string' &&
-            typeof a.label === 'string' &&
-            isFiniteNumber(a.durationMs) &&
-            isFiniteNumber(a.endAt),
-        )
-      : [];
+    const active = Array.isArray(value.active) ? value.active.filter(isQuickAlarm) : [];
+    const finished = Array.isArray(value.finished) ? value.finished.filter(isQuickAlarm).slice(-MAX_ACTIVE_ALARMS) : [];
     const saved = Array.isArray(value.saved)
       ? value.saved.filter(
           (t): t is SavedTimer =>
             !!t && typeof t.id === 'string' && typeof t.label === 'string' && isFiniteNumber(t.durationMs),
         )
       : [];
-    return { active, saved: saved.slice(0, MAX_SAVED_TIMERS), syncStopwatch: value.syncStopwatch === true };
+    return { active, finished, saved: saved.slice(0, MAX_SAVED_TIMERS), syncStopwatch: value.syncStopwatch === true };
   } catch {
     return null;
   }

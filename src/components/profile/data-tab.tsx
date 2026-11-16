@@ -15,6 +15,7 @@ import { useExpenses, usePreferences } from '@/context/expense-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useGoals } from '@/context/goal-context';
 import { useIncome } from '@/context/income-context';
+import { reloadSavedQuotes } from '@/hooks/use-saved-quotes';
 import { BACKUP_MIME_TYPE, createBackup, pickBackupFile, restoreBackup } from '@/storage/backup-service';
 import { BackupParseError, parseBackup } from '@/utils/backup';
 import { confirmAction, notify } from '@/utils/confirm';
@@ -64,6 +65,7 @@ export function DataTab({ onErased, onReplayWalkthrough }: DataTabProps) {
     reloadIncome();
     reloadGoals();
     reloadReminders();
+    void reloadSavedQuotes();
   };
 
   const exportCsv = async () => {

@@ -29,6 +29,7 @@ function isBackupDataShape(value: unknown): value is BackupData {
     && isRecord(value.preferences)
     && isRecord(value.recurringSkips)
     && (value.todos === undefined || Array.isArray(value.todos))
+    && (value.savedQuotes === undefined || Array.isArray(value.savedQuotes))
   );
 }
 

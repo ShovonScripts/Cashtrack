@@ -3,7 +3,16 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef } from 'react';
-import { BackHandler, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import {
+  AccessibilityInfo,
+  BackHandler,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -16,12 +25,17 @@ import Animated, {
   withRepeat,
   withSequence,
   withTiming,
+  ZoomIn,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { FinancialQuote } from '@/constants/quotes';
 import { Fonts, LaunchQuoteColors, Radius, Spacing, Typography } from '@/constants/theme';
 import { getQuoteSizeRole } from '@/utils/launch-quote';
+import { CountdownCard, countdownSentence } from '@/components/launch-quote/countdown-tiles';
+import { useSavedQuotes } from '@/hooks/use-saved-quotes';
+import { notify } from '@/utils/confirm';
+import { shareQuote } from '@/utils/quote-share';
 import { formatCountdownLeft, type GreetingPeriod, type YearProgress } from '@/utils/year-progress';
 
 /** Taps this soon after the screen appears are ignored, so a stray touch from launching the app does not skip it. */
@@ -73,6 +87,25 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
     }, TAP_GUARD_MS);
     return () => clearTimeout(timer);
   }, []);
+
+  const { isSaved, toggle } = useSavedQuotes();
+  const saved = isSaved(quote.id);
+
+  const handleToggleSave = async () => {
+    try {
+      const nowSaved = await toggle(quote);
+      if (Platform.OS !== 'web') {
+        void Haptics.impactAsync(
+          nowSaved ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light,
+        ).catch(() => {});
+      }
+      AccessibilityInfo.announceForAccessibility(nowSaved ? 'Quote saved' : 'Removed from saved quotes');
+    } catch {
+      notify('Could not save', 'Your saved quotes could not be updated. Please try again.');
+    }
+  };
+
+  const handleShare = () => shareQuote(quote);
 
   const handleContinue = () => {
     if (continued.current || !tapReady.current) return;
@@ -184,8 +217,18 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
           },
         ]}
         accessibilityRole="button"
-        accessibilityLabel={`${greeting}. Quote: ${quote.quote}. By ${quote.author}. Year ${progress.year}, ${progress.yearPercent} percent elapsed, ${formatCountdownLeft(progress, countdownMode)}.`}
-        accessibilityHint="Double tap to continue to the app">
+        accessibilityLabel={`${greeting}. ${countdownSentence(progress)} Year ${progress.year}, ${progress.yearPercent} percent elapsed, ${formatCountdownLeft(progress, countdownMode)}. Quote of the day: ${quote.quote}. By ${quote.author}.${saved ? ' Saved.' : ''}`}
+        accessibilityHint="Double tap to continue to the app. Save and share are in the actions menu."
+        accessibilityActions={[
+          { name: 'activate' },
+          { name: 'save', label: saved ? 'Remove from saved quotes' : 'Save quote' },
+          { name: 'share', label: 'Share quote' },
+        ]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === 'save') void handleToggleSave();
+          else if (event.nativeEvent.actionName === 'share') void handleShare();
+          else handleContinue();
+        }}>
         {/* Greeting */}
         <Animated.View entering={enter(150, 600)} style={styles.header}>
           <View style={styles.greetingChip}>
@@ -203,57 +246,97 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
           </Text>
         </Animated.View>
 
-        {/* Quote */}
-        <View style={styles.quoteBlock}>
-          <Animated.View entering={reduceMotion ? FadeIn.duration(200) : FadeIn.delay(300).duration(900)}>
-            <MaterialCommunityIcons name="format-quote-open" size={64} color={LaunchQuoteColors.mark} style={styles.mark} />
-          </Animated.View>
+        {/* 1. Time left: watch-style countdown card */}
+        <Animated.View entering={enter(320, 650)} style={styles.countdownSection}>
+          <CountdownCard
+            progress={progress}
+            countdownText={formatCountdownLeft(progress, countdownMode)}
+            startDelay={reduceMotion ? 0 : 700}
+          />
+        </Animated.View>
 
-          <Animated.View entering={enter(480, 850)}>
-            <Text
-              style={[
-                styles.quoteText,
-                { fontSize: quoteType.fontSize, lineHeight: Math.round(quoteType.fontSize * 1.32) },
-              ]}
-              maxFontSizeMultiplier={1.3}
-              adjustsFontSizeToFit
-              minimumFontScale={0.7}
-              numberOfLines={9}>
-              {quote.quote}
+        {/* 2. Quote of the day */}
+        <View style={styles.quoteSection}>
+          <Animated.View entering={enter(1000, 600)} style={styles.sectionLabelRow}>
+            <MaterialCommunityIcons name="format-quote-open" size={16} color={LaunchQuoteColors.author} />
+            <Text style={styles.sectionLabel} maxFontSizeMultiplier={1.3} numberOfLines={1}>
+              QUOTE OF THE DAY
             </Text>
           </Animated.View>
 
-          <Animated.View entering={enter(900, 700)} style={styles.authorRow}>
-            <View style={styles.authorRule} />
-            <Text style={styles.authorText} maxFontSizeMultiplier={1.4} numberOfLines={1}>
-              {quote.author}
-            </Text>
+          <Animated.View entering={enter(1120, 800)} style={styles.quoteBody}>
+            <View style={styles.quoteAccent} />
+            <View style={styles.quoteColumn}>
+              <Text
+                style={[
+                  styles.quoteText,
+                  { fontSize: quoteType.fontSize, lineHeight: Math.round(quoteType.fontSize * 1.32) },
+                ]}
+                maxFontSizeMultiplier={1.3}
+                adjustsFontSizeToFit
+                minimumFontScale={0.7}
+                numberOfLines={8}>
+                {quote.quote}
+              </Text>
+              <View style={styles.authorRow}>
+                <View style={styles.authorRule} />
+                <Text style={styles.authorText} maxFontSizeMultiplier={1.4} numberOfLines={1}>
+                  {quote.author}
+                </Text>
+              </View>
+
+              {/* Own buttons: they take the tap, so it does not continue into the app. Screen readers use the actions on the screen button instead. */}
+              <View
+                style={styles.quoteActions}
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants">
+                <Pressable
+                  onPress={handleToggleSave}
+                  accessibilityRole="button"
+                  accessibilityLabel={saved ? 'Remove from saved quotes' : 'Save quote'}
+                  style={({ pressed }) => [
+                    styles.actionButton,
+                    saved && styles.actionButtonSaved,
+                    pressed && styles.actionButtonPressed,
+                  ]}>
+                  <Animated.View
+                    key={saved ? 'saved' : 'unsaved'}
+                    entering={reduceMotion ? undefined : ZoomIn.springify().damping(12)}>
+                    <MaterialCommunityIcons
+                      name={saved ? 'heart' : 'heart-outline'}
+                      size={18}
+                      color={saved ? LaunchQuoteColors.author : LaunchQuoteColors.muted}
+                    />
+                  </Animated.View>
+                  <Text style={[styles.actionText, saved && styles.actionTextSaved]} maxFontSizeMultiplier={1.3}>
+                    {saved ? 'Saved' : 'Save'}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleShare}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share quote"
+                  style={({ pressed }) => [styles.actionButton, pressed && styles.actionButtonPressed]}>
+                  <MaterialCommunityIcons name="share-variant" size={17} color={LaunchQuoteColors.muted} />
+                  <Text style={styles.actionText} maxFontSizeMultiplier={1.3}>
+                    Share
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
           </Animated.View>
         </View>
 
-        {/* Continue hint */}
-        <Animated.View entering={reduceMotion ? FadeIn.duration(200) : FadeIn.delay(1400).duration(700)} style={styles.footer}>
-          <View style={styles.yearStrip}>
-            <View style={styles.yearStripHeader}>
-              <Text style={styles.yearStripLabel} maxFontSizeMultiplier={1.3} numberOfLines={1}>
-                {`YEAR ${progress.year} · ${progress.yearPercent}% ELAPSED`}
-              </Text>
-              <Text style={styles.yearStripLeft} maxFontSizeMultiplier={1.3}>
-                {formatCountdownLeft(progress, countdownMode)}
-              </Text>
-            </View>
-            <View style={styles.yearTrack}>
-              <View style={[styles.yearFill, { width: `${progress.yearPercent}%` }]} />
-            </View>
-          </View>
-          <View style={styles.hintWrap}>
-            <Animated.View style={[styles.hintPill, hintStyle]}>
-              <MaterialCommunityIcons name="gesture-tap" size={16} color={LaunchQuoteColors.muted} />
-              <Text style={styles.hintText} maxFontSizeMultiplier={1.4}>
-                Tap anywhere to continue
-              </Text>
-            </Animated.View>
-          </View>
+        {/* 3. Continue hint */}
+        <Animated.View
+          entering={reduceMotion ? FadeIn.duration(200) : FadeIn.delay(1700).duration(700)}
+          style={styles.hintWrap}>
+          <Animated.View style={[styles.hintPill, hintStyle]}>
+            <MaterialCommunityIcons name="gesture-tap" size={16} color={LaunchQuoteColors.muted} />
+            <Text style={styles.hintText} maxFontSizeMultiplier={1.4}>
+              Tap anywhere to continue
+            </Text>
+          </Animated.View>
         </Animated.View>
       </Pressable>
     </Animated.View>
@@ -297,7 +380,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'space-between',
+    gap: Spacing.four,
   },
   header: {
     alignItems: 'flex-start',
@@ -329,13 +412,38 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     paddingLeft: 4,
   },
-  quoteBlock: {
-    gap: Spacing.three,
-    paddingVertical: Spacing.four,
+  countdownSection: {
+    alignSelf: 'stretch',
   },
-  mark: {
-    marginLeft: -10,
-    marginBottom: -Spacing.three,
+  // Takes the space between the countdown and the hint, quote centred in it.
+  quoteSection: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: Spacing.three,
+  },
+  sectionLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  sectionLabel: {
+    ...Typography.micro,
+    color: LaunchQuoteColors.text,
+    fontWeight: '800',
+    letterSpacing: 1.6,
+  },
+  quoteBody: {
+    flexDirection: 'row',
+    gap: Spacing.three,
+  },
+  quoteAccent: {
+    width: 3,
+    borderRadius: 2,
+    backgroundColor: LaunchQuoteColors.mark,
+  },
+  quoteColumn: {
+    flex: 1,
+    gap: Spacing.three,
   },
   quoteText: {
     color: LaunchQuoteColors.text,
@@ -347,7 +455,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three - 4,
-    marginTop: Spacing.two,
   },
   authorRule: {
     width: 32,
@@ -363,42 +470,36 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     flexShrink: 1,
   },
-  footer: {
-    alignSelf: 'stretch',
-    gap: Spacing.three,
-  },
-  yearStrip: {
-    gap: 6,
-  },
-  yearStripHeader: {
+  quoteActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  yearStripLabel: {
-    ...Typography.micro,
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: Radius.pill,
+    backgroundColor: LaunchQuoteColors.chip,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: LaunchQuoteColors.hairline,
+  },
+  actionButtonSaved: {
+    borderColor: LaunchQuoteColors.mark,
+  },
+  actionButtonPressed: {
+    opacity: 0.72,
+    transform: [{ scale: 0.97 }],
+  },
+  actionText: {
+    ...Typography.caption,
     color: LaunchQuoteColors.muted,
     fontWeight: '700',
-    letterSpacing: 1.4,
-    flexShrink: 1,
+    letterSpacing: 0.4,
   },
-  yearStripLeft: {
-    ...Typography.caption,
-    color: LaunchQuoteColors.text,
-    fontWeight: '700',
-    fontVariant: ['tabular-nums'],
-  },
-  yearTrack: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: LaunchQuoteColors.chip,
-    overflow: 'hidden',
-  },
-  yearFill: {
-    height: '100%',
-    borderRadius: 3,
-    backgroundColor: LaunchQuoteColors.author,
+  actionTextSaved: {
+    color: LaunchQuoteColors.author,
   },
   hintWrap: {
     alignItems: 'center',

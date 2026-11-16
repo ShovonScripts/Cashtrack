@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 
-import { getQuoteOfTheDay } from '@/constants/quotes';
+import { getDailyQuote, type QuoteTopic } from '@/constants/quotes';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -46,10 +46,15 @@ export async function cancelQuoteNotificationsAsync(): Promise<void> {
 /**
  * Schedules daily morning quote notifications for the next 14 days.
  * Morning time defaults to 8:00 AM.
- * Each scheduled notification uses getQuoteOfTheDay(targetDate) so that
- * the quote in the morning notification matches the quote on the cover slide.
+ * Each scheduled notification uses getDailyQuote(targetDate, topics), so the
+ * morning notification matches the opening screen and the Home cover. Call it
+ * again whenever the chosen topics change.
  */
-export async function scheduleDailyQuoteNotificationsAsync(morningHour: number = 8, morningMinute: number = 0): Promise<boolean> {
+export async function scheduleDailyQuoteNotificationsAsync(
+  topics: readonly QuoteTopic[] = [],
+  morningHour: number = 8,
+  morningMinute: number = 0,
+): Promise<boolean> {
   if (Platform.OS === 'web' || !NotificationsModule) return false;
 
   const { status } = await NotificationsModule.getPermissionsAsync();
@@ -69,7 +74,7 @@ export async function scheduleDailyQuoteNotificationsAsync(morningHour: number =
     if (targetDate <= now) continue;
 
     const dateKey = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}-${String(targetDate.getDate()).padStart(2, '0')}`;
-    const quote = getQuoteOfTheDay(targetDate);
+    const quote = getDailyQuote(targetDate, topics);
 
     try {
       await NotificationsModule.scheduleNotificationAsync({

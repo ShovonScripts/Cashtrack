@@ -96,14 +96,14 @@ export function AlertsTab() {
         <Card padded={false}>
           <SwitchRow
             label="Morning quote"
-            description="A money quote at 8:00 AM"
+            description="Today’s quote at 8:00 AM"
             value={enableDailyQuotes}
             onValueChange={withPermission(requestQuoteNotificationPermissionsAsync, 'the morning quote', setEnableDailyQuotes)}
           />
           <CardDivider />
           <SwitchRow
             label="Quote when the app opens"
-            description="A new quote each time you open CashTrack"
+            description="Today’s quote and your time-left countdown. Topics are in More › Quotes."
             value={showLaunchQuote}
             onValueChange={(on) => {
               triggerHaptic();

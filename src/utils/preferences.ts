@@ -1,4 +1,5 @@
 import { COUNTRIES } from '../constants/countries.ts';
+import { isQuoteTopic } from '../constants/quotes.ts';
 import { StorageParseError } from '../storage/storage-errors.ts';
 import { EXPENSE_CATEGORIES } from '../types/expense.ts';
 import type { GenderOption, ThemeMode, UserPreferences } from '../types/preferences.ts';
@@ -103,6 +104,9 @@ export function sanitizePreferences(value: unknown): UserPreferences {
   const appLockEnabled = typeof candidate.appLockEnabled === 'boolean' ? candidate.appLockEnabled : false;
   const showExtras = typeof candidate.showExtras === 'boolean' ? candidate.showExtras : false;
   const showLaunchQuote = typeof candidate.showLaunchQuote === 'boolean' ? candidate.showLaunchQuote : true;
+  const quoteTopics = Array.isArray(candidate.quoteTopics)
+    ? [...new Set(candidate.quoteTopics.filter(isQuoteTopic))]
+    : [];
 
   return {
     profile: {
@@ -133,5 +137,6 @@ export function sanitizePreferences(value: unknown): UserPreferences {
     appLockEnabled,
     showExtras,
     showLaunchQuote,
+    quoteTopics,
   };
 }

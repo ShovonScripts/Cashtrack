@@ -13,6 +13,7 @@ import { useDebts } from '@/context/debt-context';
 import { usePreferences } from '@/context/expense-context';
 import { useFinancialReminders } from '@/context/financial-reminders-context';
 import { useGoals } from '@/context/goal-context';
+import { useSavedQuotes } from '@/hooks/use-saved-quotes';
 import { useTheme } from '@/hooks/use-theme';
 import { triggerHaptic } from '@/utils/motion';
 
@@ -51,6 +52,7 @@ export default function MenuScreen() {
   const { goals } = useGoals();
   const { debts } = useDebts();
   const { reminders } = useFinancialReminders();
+  const { items: savedQuotes } = useSavedQuotes();
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
@@ -189,6 +191,17 @@ export default function MenuScreen() {
         color: FeatureColors.crimson,
         route: '/todo',
         keywords: 'todo task checklist',
+      },
+      {
+        id: 'quotes',
+        title: 'Quotes',
+        subtitle: 'Quote of the day and your saved quotes',
+        icon: 'format-quote-close-outline',
+        color: FeatureColors.lime,
+        route: '/quotes',
+        badge: savedQuotes.length > 0 ? `${savedQuotes.length} saved` : undefined,
+        badgeTone: 'neutral',
+        keywords: 'quote quotes motivation wisdom inspiration saved favourite favorite daily',
       },
       {
         id: 'stopwatch',

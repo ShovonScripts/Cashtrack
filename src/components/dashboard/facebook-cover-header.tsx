@@ -11,7 +11,6 @@ import {
   NativeSyntheticEvent,
   Pressable,
   ScrollView,
-  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -37,7 +36,10 @@ import { Brand, Elevation, FeatureColors, glow, OnPhotoColors, Palette, Radius, 
 import { useExpenses, usePreferences } from '@/context/expense-context';
 import type { UserProfile } from '@/types/preferences';
 import { getCoverSource } from '@/constants/cover-presets';
-import { getQuoteOfTheDay } from '@/constants/quotes';
+import { getDailyQuote, type FinancialQuote } from '@/constants/quotes';
+import { useSavedQuotes } from '@/hooks/use-saved-quotes';
+import { notify } from '@/utils/confirm';
+import { shareQuote } from '@/utils/quote-share';
 import { formatTemperature } from '@/utils/weather';
 import { useWeather, type WeatherStatus } from '@/hooks/use-weather';
 import { getYearProgress } from '@/utils/year-progress';
@@ -95,7 +97,7 @@ export function FacebookCoverHeader({
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { expenses } = useExpenses();
-  const { temperatureUnit, formatAmount, firstDayOfWeek } = usePreferences();
+  const { temperatureUnit, formatAmount, firstDayOfWeek, quoteTopics } = usePreferences();
   const [activeIndex, setActiveIndex] = useState(0);
   const [verticalPage, setVerticalPage] = useState(0);
   const [autoSlideKey, setAutoSlideKey] = useState(0);
@@ -111,14 +113,17 @@ export function FacebookCoverHeader({
   // Shared live reading; null until it arrives. Never replaced with sample numbers.
   const { data: weather, status: weatherStatus } = useWeather();
 
-  const handleShareCard = async (quote: { quote: string; author: string }) => {
+  const { isSaved, toggle: toggleSavedQuote } = useSavedQuotes();
+
+  const handleToggleSave = async (quote: FinancialQuote) => {
     try {
-      await Share.share({
-        message: `“${quote.quote}”\n— ${quote.author.toUpperCase()}\n\n💡 Daily Financial Wisdom via CashTrack\nhttps://nasdigital.uk`,
-        title: 'CashTrack Wisdom Card',
-      });
-    } catch (error) {
-      console.error('Error sharing quote:', error);
+      const nowSaved = await toggleSavedQuote(quote);
+      Haptics.impactAsync(
+        nowSaved ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light,
+      ).catch(() => {});
+      AccessibilityInfo.announceForAccessibility(nowSaved ? 'Quote saved' : 'Removed from saved quotes');
+    } catch {
+      notify('Could not save', 'Your saved quotes could not be updated. Please try again.');
     }
   };
 
@@ -272,7 +277,9 @@ export function FacebookCoverHeader({
     });
   };
 
-  const currentQuote = getQuoteOfTheDay(now);
+  // Same quote as the opening screen and the morning notification.
+  const currentQuote = getDailyQuote(now, quoteTopics);
+  const quoteSaved = isSaved(currentQuote.id);
 
   const formatTemp = (tempC: number) => formatTemperature(tempC, temperatureUnit);
   const weatherNote = weatherMessage(weatherStatus);
@@ -627,17 +634,33 @@ export function FacebookCoverHeader({
                   <Text style={styles.referenceAuthorTitle}>Daily Financial Wisdom</Text>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                    void handleShareCard(currentQuote);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel="Share quote card"
-                  style={styles.shareCardButton}>
-                  <MaterialCommunityIcons name="share-variant" size={15} color="#111827" />
-                  <Text style={styles.shareCardButtonText}>Share</Text>
-                </TouchableOpacity>
+                <View style={styles.quoteButtons}>
+                  <TouchableOpacity
+                    onPress={() => void handleToggleSave(currentQuote)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: quoteSaved }}
+                    accessibilityLabel={quoteSaved ? 'Remove from saved quotes' : 'Save quote'}
+                    hitSlop={8}
+                    style={[styles.shareCardButton, styles.saveCardButton]}>
+                    <MaterialCommunityIcons
+                      name={quoteSaved ? 'heart' : 'heart-outline'}
+                      size={16}
+                      color={quoteSaved ? FeatureColors.crimson : styles.shareCardButtonText.color}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      void shareQuote(currentQuote);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share quote card"
+                    hitSlop={8}
+                    style={styles.shareCardButton}>
+                    <MaterialCommunityIcons name="share-variant" size={15} color="#111827" />
+                    <Text style={styles.shareCardButtonText}>Share</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
 
@@ -1178,6 +1201,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
+  },
+  quoteButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  saveCardButton: {
+    paddingHorizontal: 7,
   },
   shareCardButtonText: {
     color: '#111827',

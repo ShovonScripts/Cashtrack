@@ -15,6 +15,7 @@ import { IncomeProvider, useIncome } from '@/context/income-context';
 import { GoalProvider, useGoals } from '@/context/goal-context';
 import { FinancialRemindersProvider, useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme, useIsDark } from '@/hooks/use-theme';
+import { resetSavedQuotesState } from '@/hooks/use-saved-quotes';
 import {
   cancelCalendarMomentNotificationsAsync,
   scheduleUpcomingCalendarMomentsAsync,
@@ -48,8 +49,18 @@ function Navigation() {
     saveError,
     retrySave,
     reloadAllData,
+    registerResetHandler,
   } = useExpenses();
-  const { enableDailyReminder, enableDailyQuotes, enableCalendarMoments } = usePreferences();
+  const { enableDailyReminder, enableDailyQuotes, enableCalendarMoments, quoteTopics } = usePreferences();
+
+  // "Erase all data" clears storage; drop the in-memory saved quotes with it.
+  useEffect(
+    () =>
+      registerResetHandler(async () => {
+        resetSavedQuotesState();
+      }),
+    [registerResetHandler],
+  );
   const {
     isLoading: debtLoading,
     debtLoadError,
@@ -73,10 +84,11 @@ function Navigation() {
       void cancelQuoteNotificationsAsync();
       return;
     }
-    void scheduleDailyQuoteNotificationsAsync().catch((error) => {
+    // Re-runs when the topics change, so the next 14 mornings match the new topics.
+    void scheduleDailyQuoteNotificationsAsync(quoteTopics).catch((error) => {
       console.error('[cashtrack] Failed to schedule daily quote notifications', error);
     });
-  }, [enableDailyQuotes]);
+  }, [enableDailyQuotes, quoteTopics]);
 
   useEffect(() => {
     reminderQueueRef.current = reminderQueueRef.current
@@ -112,7 +124,7 @@ function Navigation() {
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
         if (enableDailyQuotes) {
-          void scheduleDailyQuoteNotificationsAsync().catch(() => {});
+          void scheduleDailyQuoteNotificationsAsync(quoteTopics).catch(() => {});
         }
         if (enableDailyReminder) {
           reminderQueueRef.current = reminderQueueRef.current
@@ -133,7 +145,7 @@ function Navigation() {
       }
     });
     return () => subscription.remove();
-  }, [enableDailyQuotes, enableDailyReminder, enableCalendarMoments]);
+  }, [enableDailyQuotes, enableDailyReminder, enableCalendarMoments, quoteTopics]);
 
   // Hold the navigator until every store has hydrated, so the dashboard never
   // flashes zero balances before income/goals/bills arrive.
@@ -299,6 +311,7 @@ function Navigation() {
         <Stack.Screen name="currency" options={{ title: 'Currency Converter' }} />
         <Stack.Screen name="notes" options={{ title: 'Notes' }} />
         <Stack.Screen name="todo" options={{ title: 'To-Do List' }} />
+        <Stack.Screen name="quotes" options={{ title: 'Quotes' }} />
         <Stack.Screen name="notes-add" options={{ title: 'New Note', presentation: 'modal' }} />
         <Stack.Screen name="notes-edit" options={{ title: 'Edit Note', presentation: 'modal' }} />
         <Stack.Screen name="user-manual" options={{ title: 'User Manual' }} />

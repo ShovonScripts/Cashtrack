@@ -867,7 +867,7 @@ The Settings and Alerts tabs apply straight away and need no Save.
 ### 12.4 Alerts
 
 - **Money reminders**: **Bill reminders**, **Budget warnings** (80% and 100% of a category limit), **Daily check-in**.
-- **Motivation**: **Morning quote** (8:00 AM) and **Quote when the app opens** (needs no notification permission).
+- **Motivation**: **Morning quote** (today's quote at 8:00 AM) and **Quote when the app opens** (needs no notification permission). Quote topics are in **More → Quotes**.
 - **Send a test alarm**: a test notification arrives after 5 seconds.
 
 Turning a reminder on asks for notification permission. If you refuse, the switch stays off and CashTrack explains how to allow it in Settings.
@@ -1025,15 +1025,24 @@ When **Budget warnings** is enabled and notifications are allowed, CashTrack can
 When enabled, CashTrack sends:
 
 - **Daily check-in** — a daily reminder to review your money
-- **Morning quote** — a money quote at 8:00 AM
+- **Morning quote** — today's quote at 8:00 AM
 
 **Quote on launch**
 
-- Each time you open CashTrack (not when you return from the background), a motivational money quote fills the screen with a greeting and today's date.
-- Tap anywhere to continue. On Android, the back button also continues.
+- Each time you open CashTrack (not when you return from the background), a full screen shows a greeting, a **Time left** countdown (days and weeks left this month and this year) and the **Quote of the day**.
+- Everything shows the same quote all day: this screen, the quote slide on the Home cover and the morning notification. A new quote comes at midnight.
+- Tap **Save** to keep the quote, or **Share** to send it. Tap anywhere else to continue. On Android, the back button also continues.
 - If App Lock is on, the quote appears right after you unlock.
-- You get a different quote from the one you saw last time.
-- Turn it off in **Profile & Settings → Alerts → Quote when the app opens**.
+- Turn it off in **More → Quotes → settings** or **Profile & Settings → Alerts → Quote when the app opens**.
+
+**Quotes page**
+
+- Open **More → Tools → Quotes**. Today's quote is at the top.
+- **Explore** lists every quote. Search by words or author, or tap a topic such as Saving or Debt.
+- **Saved** lists the quotes you saved, newest first. Tap the heart again to remove one; **Undo** puts it back.
+- Long press any quote to copy it.
+- The settings button (top right) chooses the **Daily quote topics** your quote of the day comes from, and turns the opening quote and the morning quote on or off.
+- Saved quotes stay on your phone and are included in backups.
 
 ### 15.4 Test alarm
 

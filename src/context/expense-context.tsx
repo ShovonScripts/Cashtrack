@@ -13,6 +13,7 @@ import { AppState, Platform } from 'react-native';
 
 import { EXPENSE_CATEGORIES, type Expense, type ExpenseCategory, type ExpenseDraft } from '@/types/expense';
 import { getCountry, type CountryCode, type CountryOption } from '@/constants/countries';
+import type { QuoteTopic } from '@/constants/quotes';
 import { formatCurrency } from '@/utils/expense';
 import { mergeExpenseChanges } from '@/utils/expense-draft';
 import { roundMoney } from '@/utils/money';
@@ -155,7 +156,12 @@ type PreferencesContextValue = {
   setShowExtras: (enabled: boolean) => void;
   showLaunchQuote: boolean;
   setShowLaunchQuote: (enabled: boolean) => void;
+  /** Topics the daily quote is picked from. Empty means every topic. */
+  quoteTopics: readonly QuoteTopic[];
+  setQuoteTopics: (topics: QuoteTopic[]) => void;
 };
+
+const NO_QUOTE_TOPICS: readonly QuoteTopic[] = [];
 
 export const ExpenseContext = createContext<ExpenseContextValue | undefined>(undefined);
 export const PreferencesContext = createContext<PreferencesContextValue | undefined>(undefined);
@@ -623,6 +629,10 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setPreferences((current) => ({ ...current, showLaunchQuote: enabled }));
   }, []);
 
+  const setQuoteTopics = useCallback((topics: QuoteTopic[]) => {
+    setPreferences((current) => ({ ...current, quoteTopics: [...new Set(topics)] }));
+  }, []);
+
   const setAppLockEnabled = useCallback((enabled: boolean) => {
     setPreferences((current) => ({ ...current, appLockEnabled: enabled }));
   }, []);
@@ -773,6 +783,8 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setShowExtras,
     showLaunchQuote: preferences.showLaunchQuote ?? true,
     setShowLaunchQuote,
+    quoteTopics: preferences.quoteTopics ?? NO_QUOTE_TOPICS,
+    setQuoteTopics,
   }), [
     preferences,
     country,
@@ -801,6 +813,7 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
     setAppLockEnabled,
     setShowExtras,
     setShowLaunchQuote,
+    setQuoteTopics,
   ]);
 
   return (

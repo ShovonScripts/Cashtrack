@@ -11,6 +11,7 @@ import type {
 import type { IncomeRecord } from '@/types/income';
 import type { Note, NoteColor } from '@/types/note';
 import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
+import type { SavedQuote } from '@/types/saved-quote';
 import type { UserPreferences } from '@/types/preferences';
 import { sanitizePreferences } from './preferences.ts';
 import type {
@@ -45,6 +46,8 @@ export type BackupData = {
   preferences: UserPreferences;
   notes: Note[];
   todos?: TodoItem[];
+  /** Absent in backups made before saved quotes existed. */
+  savedQuotes?: SavedQuote[];
   debts: DebtRecord[];
   income: IncomeRecord[];
   goals: MoneyGoal[];
@@ -267,6 +270,17 @@ function parseTodo(raw: unknown, index: number): TodoItem {
   const completedAt = optionalDateStringOrNull(row.completedAt, `${label} completed date`);
   if (completedAt !== undefined && completedAt !== null) todo.completedAt = completedAt;
   return todo;
+}
+
+function parseSavedQuote(raw: unknown, index: number): SavedQuote {
+  const label = `Saved quote ${index + 1}`;
+  const row = asRecord(raw, label);
+  return {
+    id: asNonEmptyString(row.id, `${label} id`),
+    quote: asNonEmptyString(row.quote, `${label} text`),
+    author: asNonEmptyString(row.author, `${label} author`),
+    savedAt: asDateString(row.savedAt, `${label} saved date`),
+  };
 }
 
 function parseDebtPayment(raw: unknown, debtLabel: string, index: number): DebtPayment {
@@ -551,6 +565,9 @@ export function parseBackup(raw: string): BackupFile {
   const expenses = asArray(data.expenses, 'Expenses').map(parseExpense);
   const notes = asArray(data.notes, 'Notes').map(parseNote);
   const todos = data.todos === undefined ? [] : asArray(data.todos, 'Todos').map(parseTodo);
+  const savedQuotes = data.savedQuotes === undefined
+    ? []
+    : asArray(data.savedQuotes, 'Saved quotes').map(parseSavedQuote);
   const debts = asArray(data.debts, 'Debts').map(parseDebt);
   const income = asArray(data.income, 'Income').map(parseIncome);
   const goals = asArray(data.goals, 'Goals').map(parseGoal);
@@ -560,6 +577,7 @@ export function parseBackup(raw: string): BackupFile {
 
   assertUniqueIds(expenses, 'Expenses');
   assertUniqueIds(todos, 'Todos');
+  assertUniqueIds(savedQuotes, 'Saved quotes');
   assertUniqueIds(notes, 'Notes');
   assertUniqueIds(debts, 'Debts');
   assertUniqueIds(income, 'Income');
@@ -581,6 +599,8 @@ export function parseBackup(raw: string): BackupFile {
       expenses,
       preferences: parsePreferences(data.preferences),
       notes,
+      todos,
+      savedQuotes,
       debts,
       income,
       goals,

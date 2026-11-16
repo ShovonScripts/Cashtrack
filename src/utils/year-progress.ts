@@ -34,6 +34,11 @@ export type YearProgress = {
   dayOfMonth: number;
   daysInMonth: number;
   daysLeftInMonth: number;
+  /**
+   * Weeks still to start in this month after the current week, counted the
+   * same way as `weeksLeftInYear` so the two always agree.
+   */
+  weeksLeftInMonth: number;
   /** Full months left after the current month, 0..11. */
   monthsLeftInYear: number;
   /** Fraction of the current month already elapsed, 0..1. */
@@ -157,6 +162,9 @@ export function getYearProgress(
   const daysLeftInMonth = Math.max(0, daysInMonth - dayOfMonth);
   const monthsLeftInYear = 12 - monthNumber;
   const monthProgress = dayOfMonth / daysInMonth;
+  const nextWeekStartDay = dayOfMonth + week.daysLeftInWeek + 1;
+  const weeksLeftInMonth =
+    nextWeekStartDay > daysInMonth ? 0 : Math.floor((daysInMonth - nextWeekStartDay) / 7) + 1;
 
   const yearProgress = (dayOfYear - 1 + dayProgress) / daysInYear;
   const yearPercent = Math.min(100, Math.max(0, Math.floor(yearProgress * 100)));
@@ -183,6 +191,7 @@ export function getYearProgress(
     dayOfMonth,
     daysInMonth,
     daysLeftInMonth,
+    weeksLeftInMonth,
     monthsLeftInYear,
     monthProgress,
     quarter: Math.floor(monthIndex / 3) + 1,

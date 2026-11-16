@@ -108,6 +108,20 @@ test('a year cannot report negative weeks left', () => {
   }
 });
 
+test('weeks left in the month count weeks still to start, like the year count', () => {
+  const nov16 = getYearProgress(localDate(2026, 10, 16), 'monday');
+  assert.equal(nov16.daysLeftInMonth, 14);
+  assert.equal(nov16.weeksLeftInMonth, 2);
+  assert.equal(nov16.weeksLeftInYear, 6);
+  assert.equal(nov16.daysLeftInYear, 45);
+
+  assert.equal(getYearProgress(localDate(2026, 9, 21), 'monday').weeksLeftInMonth, 1);
+  assert.equal(getYearProgress(localDate(2026, 9, 21), 'sunday').weeksLeftInMonth, 1);
+  assert.equal(getYearProgress(localDate(2026, 11, 31), 'monday').weeksLeftInMonth, 0);
+  assert.equal(getYearProgress(localDate(2024, 1, 29), 'monday').weeksLeftInMonth, 0);
+  assert.equal(getYearProgress(localDate(2026, 10, 1), 'monday').weeksLeftInMonth, 5);
+});
+
 test('leap years are detected correctly', () => {
   assert.equal(isLeapYear(2024), true);
   assert.equal(isLeapYear(2025), false);

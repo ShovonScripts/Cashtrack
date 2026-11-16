@@ -155,6 +155,51 @@ describe('backup round trip', () => {
     assert.deepEqual(parsed.data.recurringSkips, { expense: { e1: ['2026-10'] }, income: {} });
   });
 
+  it('keeps to-dos and saved quotes through a round trip', () => {
+    const todo = {
+      id: 't1',
+      title: 'Pay rent',
+      completed: false,
+      priority: 'high' as const,
+      category: 'bills' as const,
+      createdAt: '2026-10-01T09:00:00.000Z',
+    };
+    const savedQuote = {
+      id: 'franklin-penny-saved',
+      quote: 'A penny saved is a penny earned.',
+      author: 'Benjamin Franklin',
+      savedAt: '2026-11-16T08:00:00.000Z',
+    };
+    const parsed = parseBackup(
+      serializeBackup(buildFile({ ...buildData(), todos: [todo], savedQuotes: [savedQuote] })),
+    );
+
+    assert.deepEqual(parsed.data.todos, [todo]);
+    assert.deepEqual(parsed.data.savedQuotes, [savedQuote]);
+  });
+
+  it('reads older backups without saved quotes as an empty list', () => {
+    const data = { ...buildData() };
+    delete data.savedQuotes;
+    delete data.todos;
+    const parsed = parseBackup(JSON.stringify(buildFile(data)));
+
+    assert.deepEqual(parsed.data.savedQuotes, []);
+    assert.deepEqual(parsed.data.todos, []);
+  });
+
+  it('rejects a saved quote without text or with a duplicate id', () => {
+    const good = { id: 'q1', quote: 'Q', author: 'A', savedAt: '2026-11-16T08:00:00.000Z' };
+    assert.throws(
+      () => parseBackup(JSON.stringify(buildFile({ ...buildData(), savedQuotes: [{ ...good, quote: ' ' }] }))),
+      /cannot be empty/i,
+    );
+    assert.throws(
+      () => parseBackup(JSON.stringify(buildFile({ ...buildData(), savedQuotes: [good, good] }))),
+      BackupParseError,
+    );
+  });
+
   it('defaults the current-cycle payment for older reminders', () => {
     const reminder = { ...buildData().reminders[0] };
     delete reminder.paidAmountCurrentCycle;

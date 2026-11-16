@@ -3,16 +3,11 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { StyleSheet, View } from 'react-native';
 
 import { LaunchQuoteOverlay } from '@/components/launch-quote/launch-quote-overlay';
-import { FINANCIAL_QUOTES } from '@/constants/quotes';
+import { FINANCIAL_QUOTES, getDailyQuote } from '@/constants/quotes';
 import { useAppLock } from '@/context/app-lock-context';
 import { usePreferences } from '@/context/expense-context';
-import {
-  readLastLaunchCountdownMode,
-  readLastLaunchQuoteIndex,
-  saveLastLaunchCountdownMode,
-  saveLastLaunchQuoteIndex,
-} from '@/storage/launch-quote-storage';
-import { getFirstName, pickLaunchQuoteIndex } from '@/utils/launch-quote';
+import { readLastLaunchCountdownMode, saveLastLaunchCountdownMode } from '@/storage/launch-quote-storage';
+import { getFirstName } from '@/utils/launch-quote';
 import { COUNTDOWN_MODES, getGreeting, getGreetingLabel, getYearProgress } from '@/utils/year-progress';
 
 /**
@@ -69,7 +64,7 @@ const styles = StyleSheet.create({
  * the user unlocks, never hidden behind the lock screen.
  */
 export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: ReactNode } {
-  const { showLaunchQuote, hasCompletedOnboarding, profile, firstDayOfWeek } = usePreferences();
+  const { showLaunchQuote, hasCompletedOnboarding, profile, firstDayOfWeek, quoteTopics } = usePreferences();
   const { isLocked } = useAppLock();
   // Decided once from the values at launch; later changes apply next launch.
   // The first launch belongs to onboarding, and the setting can turn it off.
@@ -78,7 +73,7 @@ export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: Re
       ? 'done'
       : 'pending',
   );
-  const [quoteIndex, setQuoteIndex] = useState<number | null>(null);
+  const [ready, setReady] = useState(false);
   const [countdownMode, setCountdownMode] = useState(0);
 
   useEffect(() => {
@@ -86,19 +81,15 @@ export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: Re
     if (phase !== 'pending') return;
 
     let cancelled = false;
-    void Promise.all([readLastLaunchQuoteIndex(), readLastLaunchCountdownMode()]).then(
-      ([lastIndex, lastMode]) => {
-        if (cancelled) return;
-        const index = pickLaunchQuoteIndex(FINANCIAL_QUOTES.length, lastIndex);
-        // Show a different unit each opening: days, then hours, then minutes.
-        const mode = lastMode === null ? 0 : (lastMode + 1) % COUNTDOWN_MODES;
-        setQuoteIndex(index);
-        setCountdownMode(mode);
-        setPhase('showing');
-        void saveLastLaunchQuoteIndex(index);
-        void saveLastLaunchCountdownMode(mode);
-      }
-    );
+    void readLastLaunchCountdownMode().then((lastMode) => {
+      if (cancelled) return;
+      // Show a different unit each opening: days, then hours, then minutes.
+      const mode = lastMode === null ? 0 : (lastMode + 1) % COUNTDOWN_MODES;
+      setCountdownMode(mode);
+      setReady(true);
+      setPhase('showing');
+      void saveLastLaunchCountdownMode(mode);
+    });
     return () => {
       cancelled = true;
     };
@@ -116,16 +107,17 @@ export function useLaunchQuote(): { active: boolean; shown: boolean; overlay: Re
   // 'en' like every other date in the app, so a Bengali-locale phone does not get one stray Bengali date.
   const dateLabel = new Intl.DateTimeFormat('en', { weekday: 'long', day: 'numeric', month: 'long' }).format(now);
   const yearProgress = getYearProgress(now, firstDayOfWeek);
+  // The day's quote: the same one the Home cover and the morning notification show.
+  const quote = useMemo(() => getDailyQuote(now, quoteTopics), [now, quoteTopics]);
 
-  const visible = phase === 'showing' && quoteIndex !== null && !isLocked;
-  const quote = quoteIndex !== null ? FINANCIAL_QUOTES[quoteIndex] : undefined;
+  const visible = phase === 'showing' && ready && !isLocked;
 
   return {
     active: phase !== 'done',
-    // A quote was picked this session, so its status bar entry has been mounted.
-    shown: quoteIndex !== null,
+    // The quote was shown this session, so its status bar entry has been mounted.
+    shown: ready,
     overlay:
-      visible && quote ? (
+      visible ? (
         <LaunchQuoteOverlay
           quote={quote}
           greeting={greeting}

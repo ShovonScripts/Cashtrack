@@ -1,4 +1,5 @@
 import type { CountryCode } from '@/constants/countries';
+import type { QuoteTopic } from '@/constants/quotes';
 
 export type GenderOption = 'woman' | 'man' | 'other' | '';
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -42,6 +43,8 @@ export type UserPreferences = {
   showExtras?: boolean;
   /** Shows a motivational quote screen each time the app is opened. On by default. */
   showLaunchQuote?: boolean;
+  /** Topics the daily quote is picked from. Empty means every topic. */
+  quoteTopics?: QuoteTopic[];
 };
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -66,5 +69,6 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   appLockEnabled: false,
   showExtras: false,
   showLaunchQuote: true,
+  quoteTopics: [],
 };
 

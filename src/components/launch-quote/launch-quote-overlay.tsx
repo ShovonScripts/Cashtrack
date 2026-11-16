@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { FinancialQuote } from '@/constants/quotes';
 import { Fonts, LaunchQuoteColors, Radius, Spacing, Typography } from '@/constants/theme';
-import { getQuoteSizeRole } from '@/utils/launch-quote';
+import { COMPACT_LAUNCH_HEIGHT, getQuoteSizeRole } from '@/utils/launch-quote';
 import { CountdownCard, countdownSentence } from '@/components/launch-quote/countdown-tiles';
 import { useSavedQuotes } from '@/hooks/use-saved-quotes';
 import { notify } from '@/utils/confirm';
@@ -78,7 +78,10 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
   const tapReady = useRef(false);
   const continued = useRef(false);
 
-  const sizeRole = getQuoteSizeRole(quote.quote);
+  // Phones under 820 dp tall get smaller tiles and text so the
+  // quote never runs into the continue hint.
+  const compact = height < COMPACT_LAUNCH_HEIGHT;
+  const sizeRole = getQuoteSizeRole(quote.quote, compact);
   const quoteType = Typography[sizeRole];
 
   useEffect(() => {
@@ -209,9 +212,10 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
         onPress={handleContinue}
         style={[
           styles.content,
+          compact && styles.contentCompact,
           {
-            paddingTop: insets.top + Spacing.four,
-            paddingBottom: insets.bottom + Spacing.four,
+            paddingTop: insets.top + (compact ? Spacing.three : Spacing.four),
+            paddingBottom: insets.bottom + (compact ? Spacing.three : Spacing.four),
             paddingLeft: insets.left + Spacing.four + 4,
             paddingRight: insets.right + Spacing.four + 4,
           },
@@ -252,6 +256,7 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
             progress={progress}
             countdownText={formatCountdownLeft(progress, countdownMode)}
             startDelay={reduceMotion ? 0 : 700}
+            compact={compact}
           />
         </Animated.View>
 
@@ -275,7 +280,7 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
                 maxFontSizeMultiplier={1.3}
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
-                numberOfLines={8}>
+                numberOfLines={compact ? 6 : 8}>
                 {quote.quote}
               </Text>
               <View style={styles.authorRow}>
@@ -381,6 +386,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: Spacing.four,
+  },
+  contentCompact: {
+    gap: Spacing.three,
   },
   header: {
     alignItems: 'flex-start',

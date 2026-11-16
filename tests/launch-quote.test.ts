@@ -17,6 +17,12 @@ test('getQuoteSizeRole steps down for long quotes', () => {
   assert.equal(getQuoteSizeRole('x'.repeat(200)), 'subtitle');
 });
 
+test('getQuoteSizeRole goes one step smaller on short phones', () => {
+  assert.equal(getQuoteSizeRole('Short and sweet.', true), 'title');
+  assert.equal(getQuoteSizeRole('x'.repeat(100), true), 'subtitle');
+  assert.equal(getQuoteSizeRole('x'.repeat(200), true), 'body');
+});
+
 test('showLaunchQuote is on by default and keeps a stored boolean', () => {
   assert.equal(DEFAULT_PREFERENCES.showLaunchQuote, true);
   assert.equal(sanitizePreferences({}).showLaunchQuote, true);

@@ -16,6 +16,7 @@ import { Brand, Elevation, glow, LaunchQuoteColors, Radius, Spacing, Typography 
 import type { YearProgress } from '@/utils/year-progress';
 
 const TILE_HEIGHT = 60;
+const TILE_HEIGHT_COMPACT = 48;
 const FLIP_MS = 520;
 const FLIP_STAGGER_MS = 90;
 const GROUP_TITLE_LINE = 14;
@@ -30,6 +31,8 @@ type CountdownCardProps = {
   countdownText: string;
   /** Wait this long (ms) before the first tile flips in, to line up with the screen's entrance. */
   startDelay?: number;
+  /** Short phones: smaller tiles and no year bar, so the quote below still fits. */
+  compact?: boolean;
 };
 
 function plural(count: number, one: string, many: string) {
@@ -50,7 +53,7 @@ export function countdownSentence(progress: YearProgress): string {
  * progress bar underneath. Read out by the parent button, so it is hidden from
  * screen readers here.
  */
-export function CountdownCard({ progress, countdownText, startDelay = 0 }: CountdownCardProps) {
+export function CountdownCard({ progress, countdownText, startDelay = 0, compact = false }: CountdownCardProps) {
   const reducedMotion = useReducedMotion();
   const colonOpacity = useSharedValue(1);
   const animate = !reducedMotion;
@@ -93,11 +96,11 @@ export function CountdownCard({ progress, countdownText, startDelay = 0 }: Count
       {/* Tiles */}
       <View style={styles.tilesLayout}>
         <TileGroup title={progress.monthLabel.toUpperCase()}>
-          <FlipTile value={progress.daysLeftInMonth} digits={2} caption="DAYS" delay={startDelay} animate={animate} />
-          <FlipTile value={progress.weeksLeftInMonth} digits={2} caption="WEEKS" delay={startDelay + FLIP_STAGGER_MS} animate={animate} />
+          <FlipTile value={progress.daysLeftInMonth} digits={2} caption="DAYS" delay={startDelay} animate={animate} compact={compact} />
+          <FlipTile value={progress.weeksLeftInMonth} digits={2} caption="WEEKS" delay={startDelay + FLIP_STAGGER_MS} animate={animate} compact={compact} />
         </TileGroup>
 
-        <View style={styles.colonColumn}>
+        <View style={[styles.colonColumn, compact && styles.colonColumnCompact]}>
           <Animated.View style={[styles.colon, colonStyle]}>
             <View style={styles.colonDot} />
             <View style={styles.colonDot} />
@@ -105,26 +108,30 @@ export function CountdownCard({ progress, countdownText, startDelay = 0 }: Count
         </View>
 
         <TileGroup title={String(progress.year)}>
-          <FlipTile value={progress.weeksLeftInYear} digits={2} caption="WEEKS" delay={startDelay + FLIP_STAGGER_MS * 2} animate={animate} />
-          <FlipTile value={progress.daysLeftInYear} digits={3} caption="DAYS" delay={startDelay + FLIP_STAGGER_MS * 3} animate={animate} />
+          <FlipTile value={progress.weeksLeftInYear} digits={2} caption="WEEKS" delay={startDelay + FLIP_STAGGER_MS * 2} animate={animate} compact={compact} />
+          <FlipTile value={progress.daysLeftInYear} digits={3} caption="DAYS" delay={startDelay + FLIP_STAGGER_MS * 3} animate={animate} compact={compact} />
         </TileGroup>
       </View>
 
-      {/* Year progress */}
-      <View style={styles.divider} />
-      <View style={styles.progressBlock}>
-        <View style={styles.progressRow}>
-          <Text style={styles.progressLabel} numberOfLines={1} maxFontSizeMultiplier={1.3}>
-            {`${progress.yearPercent}% of ${progress.year} done`}
-          </Text>
-          <Text style={styles.progressValue} numberOfLines={1} maxFontSizeMultiplier={1.3}>
-            {countdownText}
-          </Text>
-        </View>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${progress.yearPercent}%` }]} />
-        </View>
-      </View>
+      {/* Year progress (left out on short phones; the tiles already show the year) */}
+      {compact ? null : (
+        <>
+          <View style={styles.divider} />
+          <View style={styles.progressBlock}>
+            <View style={styles.progressRow}>
+              <Text style={styles.progressLabel} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+                {`${progress.yearPercent}% of ${progress.year} done`}
+              </Text>
+              <Text style={styles.progressValue} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+                {countdownText}
+              </Text>
+            </View>
+            <View style={styles.track}>
+              <View style={[styles.fill, { width: `${progress.yearPercent}%` }]} />
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -147,24 +154,26 @@ function FlipTile({
   caption,
   delay,
   animate,
+  compact,
 }: {
   value: number;
   digits: number;
   caption: string;
   delay: number;
   animate: boolean;
+  compact: boolean;
 }) {
   const text = String(Math.max(0, value)).padStart(digits, '0');
 
   return (
     <View style={styles.tileColumn}>
-      <View style={styles.tile}>
+      <View style={[styles.tile, compact && styles.tileCompact]}>
         <View pointerEvents="none" style={styles.tileTopHalf} />
         {/* New key = new digits, so the flip replays whenever the number changes. */}
         <Animated.Text
           key={text}
           entering={animate ? FlipInXUp.delay(delay).duration(FLIP_MS) : undefined}
-          style={styles.tileValue}
+          style={[styles.tileValue, compact && styles.tileValueCompact]}
           numberOfLines={1}
           maxFontSizeMultiplier={1.2}
           adjustsFontSizeToFit
@@ -264,6 +273,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     paddingHorizontal: 4,
     ...Elevation.onMedia,
+  },
+  tileCompact: {
+    height: TILE_HEIGHT_COMPACT,
+  },
+  tileValueCompact: {
+    ...Typography.title,
+  },
+  colonColumnCompact: {
+    height: TILE_HEIGHT_COMPACT,
   },
   tileTopHalf: {
     position: 'absolute',

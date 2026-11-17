@@ -1049,8 +1049,9 @@ When enabled, CashTrack sends:
 **Quotes page**
 
 - Open **More → Tools → Quotes**. Today's quote is at the top.
-- **Explore** lists every quote. Search by words or author, or tap a topic such as Saving or Debt.
-- **Saved** lists the quotes you saved, newest first. Tap the heart again to remove one; **Undo** puts it back.
+- Below it are the quotes **you** have saved, newest first. The page is your own collection, not the whole library: a new quote comes to you once a day, on the opening screen, the Home cover and the morning notification.
+- Tap the heart on any quote to keep it. Tap it again to remove it; **Undo** puts it back.
+- Once you have five or more saved, a search box appears. Search by words or author.
 - Long press any quote to copy it.
 - The settings button (top right) chooses the **Daily quote topics** your quote of the day comes from, and turns the opening quote and the morning quote on or off.
 - Saved quotes stay on your phone and are included in backups.

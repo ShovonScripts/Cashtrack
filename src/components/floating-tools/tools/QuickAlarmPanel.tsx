@@ -8,8 +8,10 @@ import { Button, SwitchRow } from '@/components/ui';
 import { MinTouchTarget, Palette, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useStopwatch, type StartAlarmResult } from '@/context/stopwatch-context';
 import { useTheme } from '@/hooks/use-theme';
+import { TimerDurationWheel } from '@/components/floating-tools/tools/TimerDurationWheel';
 import {
   MAX_ACTIVE_ALARMS,
+  MAX_TIMER_MS,
   QUICK_ALARM_MINUTES,
   SNOOZE_MS,
   formatCountdown,
@@ -200,6 +202,7 @@ export function QuickAlarmPanel() {
   const [minutes, setMinutes] = useState('');
   const [seconds, setSeconds] = useState('');
   const [busy, setBusy] = useState(false);
+  const [selectedMinutes, setSelectedMinutes] = useState(5);
 
   const customMs = parseDuration(hours, minutes, seconds);
   const hasInput = hours !== '' || minutes !== '' || seconds !== '';
@@ -287,13 +290,23 @@ export function QuickAlarmPanel() {
         />
       ))}
 
+      <TimerDurationWheel
+        minutes={selectedMinutes}
+        onMinutesChange={setSelectedMinutes}
+        onStart={() => void start(selectedMinutes * 60_000)}
+        loading={busy}
+      />
+
       <View style={styles.chipRow}>
         {QUICK_ALARM_MINUTES.map((m) => {
           const active = activeDurations.has(m * 60_000);
           return (
             <Pressable
               key={m}
-              onPress={() => void start(m * 60_000)}
+              onPress={() => {
+                setSelectedMinutes(m);
+                void start(m * 60_000);
+              }}
               accessibilityRole="button"
               accessibilityLabel={`Start ${m} minute timer`}
               accessibilityState={{ selected: active, busy }}
@@ -369,7 +382,12 @@ export function QuickAlarmPanel() {
             />
             <Button
               label="Start"
-              onPress={() => void startCustom()}
+              onPress={() => {
+                if (customMs !== null) {
+                  setSelectedMinutes(Math.min(Math.floor(MAX_TIMER_MS / 60_000), Math.max(1, Math.round(customMs / 60_000))));
+                }
+                void startCustom();
+              }}
               disabled={customMs === null}
               loading={busy}
               style={styles.flex}

@@ -143,6 +143,15 @@ Object.entries(skyStops).forEach(([phase, stops]) => {
   });
 });
 
+// Numbers stamped on the timer drums. Keep in sync with WheelColors in theme.ts.
+const wheelFace = '#101215';
+[
+  ['digit', '#F3F5F7'],
+  ['digitDim', '#8A9199'],
+].forEach(([name, hex]) => {
+  colorPairs.push({ Mode: 'Both', Context: `wheel ${name} on drum face`, Text: hex, Surface: wheelFace, Min: 4.5 });
+});
+
 let failed = false;
 const tableData = colorPairs.map((p) => {
   const ratio = contrastRatio(p.Text, p.Surface);

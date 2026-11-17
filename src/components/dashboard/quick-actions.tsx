@@ -51,7 +51,7 @@ const ACTIONS: QuickAction[] = [
     hint: 'Open Notes',
     icon: 'note-text-outline',
     route: '/notes',
-    color: '#C2410C',
+    color: FeatureColors.bronze,
   },
 ];
 

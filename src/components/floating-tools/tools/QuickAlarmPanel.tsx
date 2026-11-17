@@ -327,25 +327,13 @@ export function QuickAlarmPanel() {
             </Pressable>
           );
         })}
-        <Pressable
-          onPress={() => setCustomOpen((open) => !open)}
-          accessibilityRole="button"
-          accessibilityLabel={customOpen ? 'Close custom timer' : 'Create custom timer'}
-          accessibilityState={{ expanded: customOpen }}
-          style={({ pressed }) => [
-            styles.chip,
-            {
-              backgroundColor: customOpen ? theme.accentFill : theme.card,
-              borderColor: customOpen ? theme.accentFill : theme.border,
-            },
-            pressed && styles.pressed,
-          ]}>
-          <MaterialCommunityIcons name={customOpen ? 'close' : 'plus'} size={20} color={customOpen ? theme.onBrand : theme.accent} />
-          <ThemedText type="caption" style={[styles.chipUnit, { color: customOpen ? theme.onBrand : theme.textSecondary }]}>
-            custom
-          </ThemedText>
-        </Pressable>
       </View>
+
+      <Button
+        label={customOpen ? 'Close custom timer' : 'Name and save a timer'}
+        variant="ghost"
+        onPress={() => setCustomOpen((open) => !open)}
+      />
 
       {customOpen && (
         <View style={[styles.editor, { backgroundColor: theme.card, borderColor: theme.border }]}>
@@ -431,12 +419,20 @@ export function QuickAlarmPanel() {
         </View>
       )}
 
-      <SwitchRow
-        label="Run with stopwatch"
-        description="Timers start the stopwatch if needed and add lap markers. If a timer starts it, stopping the last linked alarm pauses it."
-        value={syncStopwatch}
-        onValueChange={setSyncStopwatch}
-      />
+      {/*
+        Set the timers up first, then this: it is a mode you choose once, not
+        part of the flow. The rule above it closes off the actions. The detail
+        about what happens when a timer started the stopwatch is in the user
+        manual, not here.
+      */}
+      <View style={[styles.modeRow, { borderTopColor: theme.border }]}>
+        <SwitchRow
+          label="Run with stopwatch"
+          description="Timers also start the stopwatch and add lap markers."
+          value={syncStopwatch}
+          onValueChange={setSyncStopwatch}
+        />
+      </View>
     </View>
   );
 }
@@ -452,6 +448,11 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 4 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   title: { fontSize: 11, letterSpacing: 0.5 },
+  // Pulled out to the card edges so the rule reads as a section divider.
+  modeRow: {
+    marginHorizontal: -Spacing.two,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   smallText: { fontSize: 11 },
   row: { borderWidth: 1, borderRadius: Radius.medium, padding: Spacing.two, gap: Spacing.two },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ThemedText } from '@/components/themed-text';
 import { FeatureColors, Radius, Spacing, withAlpha } from '@/constants/theme';
@@ -30,6 +31,14 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      {/*
+        A React Native Modal renders into its own native view tree, which the
+        GestureHandlerRootView in src/app/_layout.tsx does not reach. Without
+        this second root every gesture inside the sheet is silently dropped —
+        the timer wheel would not turn here even though it works on the full
+        Stopwatch page.
+      */}
+      <GestureHandlerRootView style={styles.gestureRoot}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}>
@@ -213,11 +222,13 @@ export function ToolsMenuModal({ visible, onClose }: ToolsMenuModalProps) {
         </View>
       </View>
       </KeyboardAvoidingView>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  gestureRoot: { flex: 1 },
   keyboardView: {
     flex: 1,
   },

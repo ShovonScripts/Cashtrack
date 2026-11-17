@@ -243,6 +243,42 @@ export const WeatherIconColors = {
 } as const;
 
 /**
+ * The brushed-metal timer drums on the Stopwatch page. These stay the same in
+ * light and dark on purpose: the control reads as one physical metal part, so
+ * it does not re-tint with the app theme. Digit contrast against `face` is
+ * checked in scripts/contrast-check.cjs.
+ */
+export const WheelColors = {
+  /** Faceplate holding the three drums, lit from the top left. */
+  housing: '#1C1F23',
+  housingTop: '#777E86',
+  housingLeft: '#4C535A',
+  housingRight: '#111316',
+  housingBottom: '#08090B',
+  /** The drum itself, sunk into the faceplate so the bevel runs the other way. */
+  face: '#101215',
+  faceTop: '#08090A',
+  faceLeft: '#090A0C',
+  faceRight: '#444B52',
+  faceBottom: '#666D74',
+  /** Knurled grip rails down each side of a drum. */
+  ridgeLight: '#C3C9D0',
+  ridgeLightTop: '#F3F5F7',
+  ridgeLightBottom: '#51575E',
+  ridgeDark: '#747B83',
+  ridgeDarkTop: '#A8AFB7',
+  ridgeDarkBottom: '#292D32',
+  /** Numbers stamped on the drum; the ones off-centre are turning away. */
+  digit: '#F3F5F7',
+  digitDim: '#8A9199',
+  /** Machined highlights and the cylinder falling away past the window. */
+  gloss: 'rgba(255, 255, 255, 0.34)',
+  glossSoft: 'rgba(255, 255, 255, 0.16)',
+  shade: 'rgba(0, 0, 0, 0.48)',
+  shadeStrong: 'rgba(0, 0, 0, 0.65)',
+} as const;
+
+/**
  * Sky gradients for the "Your time" card when there is no photo, by part of
  * the day. Every stop is dark enough for white text (checked in contrast-check.cjs).
  */

@@ -1,22 +1,38 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAudioPlayer } from 'expo-audio';
-import { useCallback, useEffect, useRef } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui';
-import { Elevation, MinTouchTarget, Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { formatClock, formatDurationLabel, MAX_TIMER_MS } from '@/utils/stopwatch';
+import { Elevation, MinTouchTarget, Radius, Spacing, WheelColors } from '@/constants/theme';
+import { formatDurationLabel, MAX_TIMER_MS } from '@/utils/stopwatch';
 
-const MINUTES_PER_NOTCH = 1;
+/** How far you drag sideways for the drum to turn by one minute. */
 const DRAG_PIXELS_PER_NOTCH = 12;
-const MAX_MINUTES = Math.floor(MAX_TIMER_MS / 60_000);
+/** One tick sound per notch gets noisy when a fast flick turns many at once. */
 const MAX_TICKS_PER_UPDATE = 4;
-const TICK_COUNT = 48;
+/** How far the drum rocks while you drag, as a share of the leftover drag. */
+const ROCK_FACTOR = 0.45;
+
+/** Rendered positions around the current value: ..-2, -1, centre, +1, +2. */
+const SLOTS = [-2, -1, 0, 1, 2] as const;
+/** Wide enough for the largest value the drum reaches (1439). */
+const ITEM_WIDTH = 56;
+const FACE_HEIGHT = 46;
+/** Knurled grip bands along the top and bottom edge of the drum. */
+const RAIL_HEIGHT = 8;
+const RIDGE_COUNT = 48;
+/** Rails run past both ends so the rock never slides a gap into view. */
+const RAIL_OVERSHOOT = 16;
+/** The cylinder curving away at each end of the window. */
+const EDGE_SHADE = 16;
+
+const MIN_MINUTES = 1;
+const MAX_MINUTES = Math.floor(MAX_TIMER_MS / 60_000);
 
 type TimerDurationWheelProps = {
   minutes: number;
@@ -25,20 +41,29 @@ type TimerDurationWheelProps = {
   loading: boolean;
 };
 
+/**
+ * Sets how many minutes a timer runs on a single brushed-metal drum. Drag it
+ * left or right, or tap either side of the window, to turn it. Seconds and
+ * hours are not on the drum on purpose: those go through the custom editor
+ * below, so this control stays a one-handed flick.
+ */
 export function TimerDurationWheel({ minutes, onMinutesChange, onStart, loading }: TimerDurationWheelProps) {
-  const theme = useTheme();
   const player = useAudioPlayer(require('../../../../assets/sounds/timer_tick.wav'));
-  const adjustRef = useRef<(steps: number) => void>(() => {});
-  const wheelDeltaRef = useRef(0);
-  const selectedMinutes = useSharedValue(minutes);
-  const wheelWidth = useSharedValue(0);
-  const dragDistance = useSharedValue(0);
-  const lastTranslationX = useSharedValue(0);
-  const rollerOffset = useSharedValue(0);
 
+  const rock = useSharedValue(0);
+  const leftover = useSharedValue(0);
+  const lastTranslationX = useSharedValue(0);
+  const faceWidth = useSharedValue(0);
+
+  const value = Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, Math.round(minutes)));
+
+  // A flick fires several notches before React re-renders, so the running
+  // value lives here: reading it from props would turn the drum by one and
+  // drop the rest.
+  const liveMinutes = useSharedValue(value);
   useEffect(() => {
-    selectedMinutes.set(minutes);
-  }, [minutes, selectedMinutes]);
+    liveMinutes.set(value);
+  }, [value, liveMinutes]);
 
   const playTick = useCallback(() => {
     void player
@@ -47,33 +72,34 @@ export function TimerDurationWheel({ minutes, onMinutesChange, onStart, loading 
       .catch((error: unknown) => console.warn('Timer wheel tick could not be played.', error));
   }, [player]);
 
-  const adjust = useCallback(
+  const step = useCallback(
     (steps: number) => {
       if (steps === 0) return;
-      const current = selectedMinutes.get();
-      const next = Math.min(MAX_MINUTES, Math.max(1, current + steps * MINUTES_PER_NOTCH));
-      const actualSteps = next - current;
-      if (actualSteps === 0) return;
 
-      selectedMinutes.set(next);
+      const current = liveMinutes.get();
+      const next = Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, current + steps));
+      const turned = Math.abs(next - current);
+      if (turned === 0) return;
+
+      liveMinutes.set(next);
       onMinutesChange(next);
-      for (let index = 0; index < Math.min(MAX_TICKS_PER_UPDATE, Math.abs(actualSteps)); index += 1) playTick();
-      rollerOffset.set(
-        withSequence(
-          withTiming(actualSteps > 0 ? -7 : 7, { duration: 45 }),
-          withTiming(0, { duration: 105 }),
-        ),
-      );
+      void Haptics.selectionAsync().catch(() => {});
+      for (let index = 0; index < Math.min(MAX_TICKS_PER_UPDATE, turned); index += 1) playTick();
     },
-    [onMinutesChange, playTick, rollerOffset, selectedMinutes],
+    [liveMinutes, onMinutesChange, playTick],
   );
 
+  // Only the web wheel listener needs this; the gestures below are rebuilt on
+  // every render, so they can call `step` straight.
+  const stepRef = useRef(step);
   useEffect(() => {
-    adjustRef.current = adjust;
-  }, [adjust]);
+    stepRef.current = step;
+  }, [step]);
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
+
+    let wheelDelta = 0;
 
     const handleWheel = (event: WheelEvent) => {
       const target = event.target;
@@ -81,11 +107,11 @@ export function TimerDurationWheel({ minutes, onMinutesChange, onStart, loading 
 
       event.preventDefault();
       const deltaScale = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 800 : 1;
-      wheelDeltaRef.current += event.deltaY * deltaScale;
-      const steps = Math.trunc(wheelDeltaRef.current / 100);
+      wheelDelta += event.deltaY * deltaScale;
+      const steps = Math.trunc(wheelDelta / 100);
       if (steps !== 0) {
-        wheelDeltaRef.current -= steps * 100;
-        adjustRef.current(-steps);
+        wheelDelta -= steps * 100;
+        stepRef.current(-steps);
       }
     };
 
@@ -93,70 +119,81 @@ export function TimerDurationWheel({ minutes, onMinutesChange, onStart, loading 
     return () => window.removeEventListener('wheel', handleWheel);
   }, []);
 
+  // Dragging right turns the drum up, so the next minute rolls in from the
+  // right and the strip slides left under your finger.
   const panGesture = Gesture.Pan()
     .activeOffsetX([-5, 5])
     .onBegin(() => {
-      dragDistance.set(0);
+      leftover.set(0);
       lastTranslationX.set(0);
     })
     .onStart((event) => {
-      dragDistance.set(event.translationX);
+      leftover.set(event.translationX);
       lastTranslationX.set(event.translationX);
-      rollerOffset.set(event.translationX * -0.45);
       const steps = Math.trunc(event.translationX / DRAG_PIXELS_PER_NOTCH);
       if (steps !== 0) {
-        dragDistance.set(event.translationX - steps * DRAG_PIXELS_PER_NOTCH);
-        scheduleOnRN(adjust, steps);
+        leftover.set(event.translationX - steps * DRAG_PIXELS_PER_NOTCH);
+        scheduleOnRN(step, steps);
       }
+      rock.set(leftover.get() * -ROCK_FACTOR);
     })
     .onUpdate((event) => {
       const movement = event.translationX - lastTranslationX.get();
       lastTranslationX.set(event.translationX);
-      dragDistance.set(dragDistance.get() + movement);
+      leftover.set(leftover.get() + movement);
 
-      const steps = Math.trunc(dragDistance.get() / DRAG_PIXELS_PER_NOTCH);
+      const steps = Math.trunc(leftover.get() / DRAG_PIXELS_PER_NOTCH);
       if (steps !== 0) {
-        dragDistance.set(dragDistance.get() - steps * DRAG_PIXELS_PER_NOTCH);
-        scheduleOnRN(adjust, steps);
+        leftover.set(leftover.get() - steps * DRAG_PIXELS_PER_NOTCH);
+        scheduleOnRN(step, steps);
       }
-      rollerOffset.set(dragDistance.get() * -0.45);
+      rock.set(leftover.get() * -ROCK_FACTOR);
     })
     .onEnd(() => {
-      dragDistance.set(0);
+      leftover.set(0);
       lastTranslationX.set(0);
-      rollerOffset.set(withSpring(0, { damping: 16, stiffness: 240 }));
+      rock.set(withSpring(0, { damping: 16, stiffness: 240 }));
     });
 
+  // Tapping a number you can see picks it: the one on the right is larger.
   const tapGesture = Gesture.Tap()
     .maxDistance(10)
     .onEnd((event, success) => {
-      if (success) scheduleOnRN(adjust, event.x < wheelWidth.get() / 2 ? -1 : 1);
+      if (success) scheduleOnRN(step, event.x < faceWidth.get() / 2 ? -1 : 1);
     });
-  const wheelGesture = Gesture.Race(panGesture, tapGesture);
 
-  const animatedRidgeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: rollerOffset.get() }],
-  }));
+  const animatedRoll = useAnimatedStyle(() => ({ transform: [{ translateX: rock.get() }] }));
 
-  const changeOneMinute = (direction: -1 | 1) => adjust(direction);
-  const selectedLabel = formatDurationLabel(minutes * 60_000);
+  const ridges = useMemo(
+    () =>
+      Array.from({ length: RIDGE_COUNT }, (_, index) => (
+        <View
+          key={index}
+          style={[
+            styles.ridge,
+            index % 2 === 0
+              ? { backgroundColor: WheelColors.ridgeLight, borderLeftColor: WheelColors.ridgeLightTop, borderRightColor: WheelColors.ridgeLightBottom }
+              : { backgroundColor: WheelColors.ridgeDark, borderLeftColor: WheelColors.ridgeDarkTop, borderRightColor: WheelColors.ridgeDarkBottom },
+          ]}
+        />
+      )),
+    [],
+  );
+
+  const selectedLabel = formatDurationLabel(value * 60_000);
 
   return (
     <View style={styles.selector}>
       <View style={styles.selectorHeader}>
-        <View style={styles.durationCopy}>
-          <ThemedText type="caption" themeColor="textSecondary">
-            SELECTED DURATION
-          </ThemedText>
-          <ThemedText
-            type="defaultBold"
-            style={[styles.duration, { color: theme.text }]}
-            accessibilityLiveRegion="polite">
-            {formatClock(minutes * 60)}
-          </ThemedText>
-        </View>
+        <ThemedText
+          type="caption"
+          themeColor="textSecondary"
+          style={styles.summary}
+          accessibilityLiveRegion="polite">
+          Rings in {selectedLabel}
+        </ThemedText>
         <Button
-          label="Start"
+          label="Start timer"
           accessibilityLabel={`Start timer for ${selectedLabel}`}
           onPress={onStart}
           loading={loading}
@@ -164,77 +201,55 @@ export function TimerDurationWheel({ minutes, onMinutesChange, onStart, loading 
         />
       </View>
 
-      <View style={styles.wheelRow}>
-        <Pressable
-          onPress={() => changeOneMinute(-1)}
-          disabled={minutes <= 1}
-          accessibilityRole="button"
-          accessibilityLabel="Decrease timer by one minute"
-          style={({ pressed }) => [
-            styles.stepButton,
-            { borderColor: theme.border, backgroundColor: theme.card },
-            minutes <= 1 && styles.disabled,
-            pressed && styles.pressed,
-          ]}>
-          <MaterialCommunityIcons name="minus" size={20} color={theme.textSecondary} />
-        </Pressable>
+      <View style={[styles.housing, Elevation.medium]}>
+        <View pointerEvents="none" style={styles.housingHighlight} />
 
-        <GestureDetector gesture={wheelGesture}>
+        <GestureDetector gesture={Gesture.Race(panGesture, tapGesture)}>
           <View
             nativeID="timer-duration-wheel"
-            onLayout={(event) => wheelWidth.set(event.nativeEvent.layout.width)}
+            onLayout={(event) => faceWidth.set(event.nativeEvent.layout.width)}
             accessible
             accessibilityRole="adjustable"
-            accessibilityLabel="Horizontal timer duration wheel"
-            accessibilityHint="Tap the left or right side, or drag horizontally, to adjust one minute at a time."
-            accessibilityValue={{
-              min: 1,
-              max: MAX_MINUTES,
-              now: minutes,
-              text: selectedLabel,
-            }}
-            style={[styles.wheelHousing, Elevation.medium]}>
-            <View style={styles.housingHighlight} />
-            <View style={styles.rollerTrack}>
-              <Animated.View style={[styles.ridgeStrip, animatedRidgeStyle]}>
-                {Array.from({ length: TICK_COUNT }, (_, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.ridge,
-                      {
-                        backgroundColor: index % 2 === 0 ? '#C3C9D0' : '#747B83',
-                        borderTopColor: index % 2 === 0 ? '#F3F5F7' : '#A8AFB7',
-                        borderLeftColor: index % 2 === 0 ? '#F3F5F7' : '#A8AFB7',
-                        borderRightColor: index % 2 === 0 ? '#636A72' : '#34383D',
-                        borderBottomColor: index % 2 === 0 ? '#51575E' : '#292D32',
-                      },
-                    ]}
-                  />
-                ))}
+            accessibilityLabel="Timer minutes"
+            accessibilityHint="Drag left or right, or tap either side of the number, to change it."
+            accessibilityValue={{ min: MIN_MINUTES, max: MAX_MINUTES, now: value, text: selectedLabel }}
+            accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
+            onAccessibilityAction={(event) => step(event.nativeEvent.actionName === 'increment' ? 1 : -1)}
+            style={styles.drum}>
+            <View style={styles.drumFace}>
+              <Animated.View style={[styles.rail, styles.railTop, animatedRoll]}>{ridges}</Animated.View>
+              <Animated.View style={[styles.rail, styles.railBottom, animatedRoll]}>{ridges}</Animated.View>
+
+              <Animated.View style={[styles.strip, animatedRoll]}>
+                {SLOTS.map((slot) => {
+                  const candidate = value + slot;
+                  const inRange = candidate >= MIN_MINUTES && candidate <= MAX_MINUTES;
+                  return (
+                    <View key={slot} style={styles.slot}>
+                      <ThemedText
+                        type="defaultBold"
+                        style={[styles.digit, { color: slot === 0 ? WheelColors.digit : WheelColors.digitDim }]}>
+                        {inRange ? String(candidate).padStart(2, '0') : ''}
+                      </ThemedText>
+                    </View>
+                  );
+                })}
               </Animated.View>
-              <View pointerEvents="none" style={styles.rollerTopHighlight} />
-              <View pointerEvents="none" style={styles.rollerBottomShade} />
-              <View pointerEvents="none" style={[styles.rollerBearing, styles.leftBearing]} />
-              <View pointerEvents="none" style={[styles.rollerBearing, styles.rightBearing]} />
+
+              <View pointerEvents="none" style={[styles.edgeShade, styles.edgeLeft]} />
+              <View pointerEvents="none" style={[styles.edgeShade, styles.edgeRight]} />
+              <View pointerEvents="none" style={styles.windowMark} />
+              <View pointerEvents="none" style={styles.faceHighlight} />
+              <View pointerEvents="none" style={styles.faceShade} />
             </View>
-            <View style={styles.housingBottomEdge} />
           </View>
         </GestureDetector>
 
-        <Pressable
-          onPress={() => changeOneMinute(1)}
-          disabled={minutes >= MAX_MINUTES}
-          accessibilityRole="button"
-          accessibilityLabel="Increase timer by one minute"
-          style={({ pressed }) => [
-            styles.stepButton,
-            { borderColor: theme.border, backgroundColor: theme.card },
-            minutes >= MAX_MINUTES && styles.disabled,
-            pressed && styles.pressed,
-          ]}>
-          <MaterialCommunityIcons name="plus" size={20} color={theme.textSecondary} />
-        </Pressable>
+        <ThemedText type="caption" style={styles.unitLabel}>
+          minutes
+        </ThemedText>
+
+        <View pointerEvents="none" style={styles.housingBottomEdge} />
       </View>
     </View>
   );
@@ -252,43 +267,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: Spacing.two,
   },
-  durationCopy: { flex: 1, gap: 1 },
-  duration: { fontSize: 20, fontVariant: ['tabular-nums'], letterSpacing: 0.5 },
+  summary: { flex: 1 },
   startButton: {
     minHeight: MinTouchTarget,
     paddingHorizontal: Spacing.two,
   },
-  wheelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-  },
-  stepButton: {
-    width: MinTouchTarget,
-    height: MinTouchTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius.medium,
-  },
-  wheelHousing: {
-    flex: 1,
-    height: 46,
-    justifyContent: 'center',
-    paddingHorizontal: 5,
-    paddingVertical: 4,
+
+  housing: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.one,
+    gap: 4,
     overflow: 'hidden',
     borderWidth: 1,
-    borderTopColor: '#777E86',
-    borderRightColor: '#111316',
-    borderBottomColor: '#08090B',
-    borderLeftColor: '#4C535A',
-    borderRadius: 7,
-    backgroundColor: '#1C1F23',
-    boxShadow: '0 3px 8px rgba(0, 0, 0, 0.45)',
-    cursor: 'ew-resize',
-    touchAction: 'pan-y',
-    userSelect: 'none',
+    borderTopColor: WheelColors.housingTop,
+    borderLeftColor: WheelColors.housingLeft,
+    borderRightColor: WheelColors.housingRight,
+    borderBottomColor: WheelColors.housingBottom,
+    borderRadius: Radius.medium,
+    backgroundColor: WheelColors.housing,
   },
   housingHighlight: {
     position: 'absolute',
@@ -296,79 +292,88 @@ const styles = StyleSheet.create({
     left: 8,
     right: 8,
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.34)',
+    backgroundColor: WheelColors.gloss,
   },
-  rollerTrack: {
-    height: 32,
+  housingBottomEdge: {
+    position: 'absolute',
+    left: 8,
+    right: 8,
+    bottom: 2,
+    height: 1,
+    backgroundColor: WheelColors.shadeStrong,
+  },
+  unitLabel: { fontSize: 11, textAlign: 'center', color: WheelColors.digitDim },
+
+  drum: {
+    width: '100%',
+    cursor: 'ew-resize',
+    touchAction: 'pan-y',
+    userSelect: 'none',
+  },
+  drumFace: {
+    height: FACE_HEIGHT,
     overflow: 'hidden',
     justifyContent: 'center',
     borderWidth: 1,
-    borderTopColor: '#08090A',
-    borderRightColor: '#444B52',
-    borderBottomColor: '#666D74',
-    borderLeftColor: '#090A0C',
-    borderRadius: 3,
-    backgroundColor: '#101215',
+    borderTopColor: WheelColors.faceTop,
+    borderLeftColor: WheelColors.faceLeft,
+    borderRightColor: WheelColors.faceRight,
+    borderBottomColor: WheelColors.faceBottom,
+    borderRadius: Radius.small,
+    backgroundColor: WheelColors.face,
   },
-  ridgeStrip: {
+
+  // Numbers ride the middle of the drum, between the two grip bands.
+  strip: {
     position: 'absolute',
-    left: -16,
-    right: -16,
-    height: 26,
+    left: 0,
+    right: 0,
+    top: RAIL_HEIGHT,
+    height: FACE_HEIGHT - RAIL_HEIGHT * 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  slot: { width: ITEM_WIDTH, alignItems: 'center', justifyContent: 'center' },
+  digit: { fontSize: 22, lineHeight: FACE_HEIGHT - RAIL_HEIGHT * 2, fontVariant: ['tabular-nums'] },
+
+  rail: {
+    position: 'absolute',
+    left: -RAIL_OVERSHOOT,
+    right: -RAIL_OVERSHOOT,
+    height: RAIL_HEIGHT,
     flexDirection: 'row',
     alignItems: 'stretch',
     justifyContent: 'space-around',
   },
+  railTop: { top: 0 },
+  railBottom: { bottom: 0 },
   ridge: {
     width: 3,
-    height: 26,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
     borderRadius: 1,
     marginHorizontal: 1,
   },
-  rollerTopHighlight: {
+
+  edgeShade: { position: 'absolute', top: 0, bottom: 0, width: EDGE_SHADE, backgroundColor: WheelColors.shade },
+  edgeLeft: { left: 0 },
+  edgeRight: { right: 0 },
+
+  // Frames the minute that is actually selected.
+  windowMark: {
     position: 'absolute',
-    top: 0,
-    left: 2,
-    right: 2,
-    height: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    top: RAIL_HEIGHT,
+    bottom: RAIL_HEIGHT,
+    left: '50%',
+    width: ITEM_WIDTH,
+    marginLeft: -ITEM_WIDTH / 2,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderLeftColor: WheelColors.shadeStrong,
+    borderRightColor: WheelColors.glossSoft,
   },
-  rollerBottomShade: {
-    position: 'absolute',
-    bottom: 0,
-    left: 2,
-    right: 2,
-    height: 5,
-    backgroundColor: 'rgba(0, 0, 0, 0.48)',
-  },
-  rollerBearing: {
-    position: 'absolute',
-    top: 1,
-    bottom: 1,
-    width: 5,
-    borderWidth: 1,
-    borderTopColor: '#B7BDC3',
-    borderRightColor: '#08090A',
-    borderBottomColor: '#08090A',
-    borderLeftColor: '#555C64',
-    borderRadius: 2,
-    backgroundColor: '#30363D',
-    zIndex: 1,
-  },
-  leftBearing: { left: 1 },
-  rightBearing: { right: 1 },
-  housingBottomEdge: {
-    position: 'absolute',
-    right: 8,
-    bottom: 2,
-    left: 8,
-    height: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-  },
-  disabled: { opacity: 0.45 },
-  pressed: { opacity: 0.78 },
+
+  faceHighlight: { position: 'absolute', top: 0, left: 2, right: 2, height: 4, backgroundColor: WheelColors.glossSoft },
+  faceShade: { position: 'absolute', bottom: 0, left: 2, right: 2, height: 4, backgroundColor: WheelColors.shade },
 });

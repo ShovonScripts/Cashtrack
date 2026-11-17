@@ -792,6 +792,17 @@ Open **Menu Hub → Stopwatch & Timer** or use the floating tools menu.
 
 The stopwatch, its laps and your running timers are saved, so they survive closing or reloading the app.
 
+#### Timer & alarm
+
+- **TIMER & ALARM** rings your phone when a countdown ends, even if CashTrack is closed.
+- Turn the metal **drum** left or right, or tap either side of it, to set the minutes.
+- Tap a preset (**1**, **5**, **10**, **15**, **30**) to start that timer straight away.
+- Tap **Name and save a timer** to set hours, minutes and seconds, name the timer, and keep it under **MY TIMERS**.
+- Up to five timers run at once. A finished timer can be **Snoozed** or **Dismissed**.
+- The **Stopwatch** chip in the card header links your timers to the stopwatch.
+
+With the **Stopwatch** chip on, starting a timer also starts the stopwatch if it is not already running, and every finished timer adds a lap marker. If a timer was what started the stopwatch, stopping the last linked timer pauses it again.
+
 ### 11.4 World Clocks
 
 Open **Menu Hub → World Clocks**.

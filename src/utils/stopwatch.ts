@@ -18,6 +18,8 @@ export type QuickAlarm = {
   durationMs: number;
   /** Epoch ms at which the alarm rings. */
   endAt: number;
+  /** Whether this timer was started with Run with stopwatch enabled. */
+  syncStopwatch?: boolean;
 };
 
 export type SavedTimer = {
@@ -209,6 +211,8 @@ export type StoredAlarms = {
   finished: QuickAlarm[];
   saved: SavedTimer[];
   syncStopwatch: boolean;
+  /** True only when a linked timer, rather than the user, started the stopwatch. */
+  stopwatchStartedByTimer: boolean;
 };
 
 const isQuickAlarm = (a: unknown): a is QuickAlarm => {
@@ -218,7 +222,8 @@ const isQuickAlarm = (a: unknown): a is QuickAlarm => {
     typeof v.id === 'string' &&
     typeof v.label === 'string' &&
     isFiniteNumber(v.durationMs) &&
-    isFiniteNumber(v.endAt)
+    isFiniteNumber(v.endAt) &&
+    (v.syncStopwatch === undefined || typeof v.syncStopwatch === 'boolean')
   );
 };
 
@@ -227,15 +232,29 @@ export function parseStoredAlarms(raw: string | null): StoredAlarms | null {
   try {
     const value = JSON.parse(raw) as Partial<StoredAlarms> | null;
     if (!value || typeof value !== 'object') return null;
-    const active = Array.isArray(value.active) ? value.active.filter(isQuickAlarm) : [];
-    const finished = Array.isArray(value.finished) ? value.finished.filter(isQuickAlarm).slice(-MAX_ACTIVE_ALARMS) : [];
+    const syncStopwatch = value.syncStopwatch === true;
+    const normalizeAlarm = (alarm: QuickAlarm): QuickAlarm => ({
+      ...alarm,
+      // Older saved timers used the global setting rather than storing it per timer.
+      syncStopwatch: alarm.syncStopwatch ?? syncStopwatch,
+    });
+    const active = Array.isArray(value.active) ? value.active.filter(isQuickAlarm).map(normalizeAlarm) : [];
+    const finished = Array.isArray(value.finished)
+      ? value.finished.filter(isQuickAlarm).slice(-MAX_ACTIVE_ALARMS).map(normalizeAlarm)
+      : [];
     const saved = Array.isArray(value.saved)
       ? value.saved.filter(
           (t): t is SavedTimer =>
             !!t && typeof t.id === 'string' && typeof t.label === 'string' && isFiniteNumber(t.durationMs),
         )
       : [];
-    return { active, finished, saved: saved.slice(0, MAX_SAVED_TIMERS), syncStopwatch: value.syncStopwatch === true };
+    return {
+      active,
+      finished,
+      saved: saved.slice(0, MAX_SAVED_TIMERS),
+      syncStopwatch,
+      stopwatchStartedByTimer: value.stopwatchStartedByTimer === true,
+    };
   } catch {
     return null;
   }

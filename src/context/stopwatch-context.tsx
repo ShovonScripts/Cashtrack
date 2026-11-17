@@ -53,12 +53,12 @@ type StopwatchContextType = {
   /** Finished alarms that are ringing right now (looping tone + vibration). */
   ringingIds: string[];
   savedTimers: SavedTimer[];
-  /** When on, starting a timer also starts the stopwatch and a finished timer drops a lap marker. */
+  /** Linked timers can start the stopwatch, add lap markers, and pause it after the last linked alarm is stopped. */
   syncStopwatch: boolean;
   setSyncStopwatch: (value: boolean) => void;
-  startQuickAlarm: (durationMs: number, label?: string) => Promise<StartAlarmResult>;
+  startQuickAlarm: (durationMs: number, label?: string, syncWithStopwatch?: boolean) => Promise<StartAlarmResult>;
   cancelQuickAlarm: (id: string) => void;
-  dismissFinishedAlarm: (id: string) => void;
+  dismissFinishedAlarm: (id: string, pauseWhenIdle?: boolean) => void;
   snoozeFinishedAlarm: (id: string) => Promise<StartAlarmResult>;
   saveTimer: (label: string, durationMs: number) => void;
   removeSavedTimer: (id: string) => void;
@@ -125,6 +125,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const alarmsRef = useRef<QuickAlarm[]>([]);
   const savedRef = useRef<SavedTimer[]>([]);
   const syncRef = useRef<boolean>(false);
+  const stopwatchStartedByTimerRef = useRef(false);
   const hydratedRef = useRef<boolean>(false);
   const finishedRef = useRef<QuickAlarm[]>([]);
   const backgroundRungRef = useRef<QuickAlarm[]>([]);
@@ -146,6 +147,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
         finished: finishedRef.current,
         saved: savedRef.current,
         syncStopwatch: syncRef.current,
+        stopwatchStartedByTimer: stopwatchStartedByTimerRef.current,
       }),
     ).catch(() => {});
   }, []);
@@ -231,6 +233,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
         savedRef.current = storedAlarms.saved;
         setSavedTimers(storedAlarms.saved);
         syncRef.current = storedAlarms.syncStopwatch;
+        stopwatchStartedByTimerRef.current = storedAlarms.stopwatchStartedByTimer;
         setSyncStopwatchState(storedAlarms.syncStopwatch);
       }
       hydratedRef.current = true;
@@ -301,15 +304,30 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     }
 
     const current = swRef.current;
-    if (syncRef.current && current.running) {
+    const linkedExpired = expired.filter((alarm) => alarm.syncStopwatch);
+    if (linkedExpired.length > 0 && current.running) {
       const total = elapsedMs(current, now);
       let laps = current.laps;
-      for (const alarm of expired) {
+      for (const alarm of linkedExpired) {
         laps = [makeLap(laps, total, `⏰ ${alarm.label}`), ...laps];
       }
       commitSw({ ...current, laps });
     }
   }, [commitAlarms, commitFinished, commitSw]);
+
+  /** Pause only a stopwatch that a linked timer started, once no linked timers remain. */
+  const pauseTimerIfNoLinkedAlarms = useCallback(() => {
+    if (!stopwatchStartedByTimerRef.current) return;
+    const hasLinkedAlarms = [...alarmsRef.current, ...finishedRef.current].some((alarm) => alarm.syncStopwatch);
+    if (hasLinkedAlarms) return;
+
+    stopwatchStartedByTimerRef.current = false;
+    const current = swRef.current;
+    if (current.running) {
+      commitSw({ ...current, running: false, baseMs: elapsedMs(current, Date.now()) });
+    }
+    persistAlarms();
+  }, [commitSw, persistAlarms]);
 
   /**
    * Catches up with the native pop-up alarm: Stop / Snooze pressed on the
@@ -323,14 +341,23 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     const actions = safely((n) => n.takeActions(), []);
     let active = alarmsRef.current;
     let finished = finishedRef.current;
+    let dismissedLinkedAlarm = false;
     for (const { id, action, endAt } of actions) {
       const known = finished.find((alarm) => alarm.id === id) ?? active.find((alarm) => alarm.id === id);
       finished = finished.filter((alarm) => alarm.id !== id);
       if (action === 'snooze' && endAt) {
         active = [
           ...active.filter((alarm) => alarm.id !== id),
-          { id, label: known?.label ?? 'Timer', durationMs: SNOOZE_MS, endAt },
+          {
+            id,
+            label: known?.label ?? 'Timer',
+            durationMs: SNOOZE_MS,
+            endAt,
+            syncStopwatch: known?.syncStopwatch ?? false,
+          },
         ];
+      } else if (action === 'dismiss' && known?.syncStopwatch) {
+        dismissedLinkedAlarm = true;
       }
     }
     if (actions.length > 0) {
@@ -341,7 +368,8 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     const nativeRinging = new Set(safely((n) => n.getRingingIds(), [] as string[]));
     const ringing = finished.filter((alarm) => nativeRinging.has(alarm.id)).map((alarm) => alarm.id);
     setRingingIds((prev) => (prev.length === ringing.length && prev.every((id, i) => id === ringing[i]) ? prev : ringing));
-  }, [commitAlarms, commitFinished, sweepAlarms]);
+    if (dismissedLinkedAlarm) pauseTimerIfNoLinkedAlarms();
+  }, [commitAlarms, commitFinished, pauseTimerIfNoLinkedAlarms, sweepAlarms]);
 
   useEffect(() => {
     syncNativeRef.current = syncNative;
@@ -401,19 +429,26 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   const startTimer = useCallback(() => {
     const current = swRef.current;
     if (current.running) return;
+    // A manual stopwatch start takes ownership away from the timer feature.
+    stopwatchStartedByTimerRef.current = false;
+    persistAlarms();
     commitSw({ ...current, running: true, startedAt: Date.now() });
-  }, [commitSw]);
+  }, [commitSw, persistAlarms]);
 
   const pauseTimer = useCallback(() => {
     const current = swRef.current;
+    stopwatchStartedByTimerRef.current = false;
+    persistAlarms();
     if (!current.running) return;
     commitSw({ ...current, running: false, baseMs: elapsedMs(current, Date.now()) });
-  }, [commitSw]);
+  }, [commitSw, persistAlarms]);
 
   const resetTimer = useCallback(() => {
     lastNotificationSecondRef.current = null;
+    stopwatchStartedByTimerRef.current = false;
+    persistAlarms();
     commitSw(INITIAL_SW);
-  }, [commitSw]);
+  }, [commitSw, persistAlarms]);
 
   const addLap = useCallback(() => {
     const current = swRef.current;
@@ -429,7 +464,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
   /* ---------- Quick alarm actions ---------- */
 
   const startQuickAlarm = useCallback(
-    async (durationMs: number, label?: string): Promise<StartAlarmResult> => {
+    async (durationMs: number, label?: string, syncWithStopwatch = syncRef.current): Promise<StartAlarmResult> => {
       if (alarmsRef.current.length >= MAX_ACTIVE_ALARMS) return 'limit';
       if (!(await prepareQuickAlarmsAsync())) return 'unavailable';
 
@@ -438,6 +473,7 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
         label: label?.trim() || defaultAlarmLabel(durationMs),
         durationMs,
         endAt: Date.now() + durationMs,
+        syncStopwatch: syncWithStopwatch,
       };
       if (!(await scheduleQuickAlarmAsync(alarm.id, alarm.label, alarm.endAt))) return 'unavailable';
 
@@ -448,30 +484,34 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
       }
       commitAlarms([...alarmsRef.current, alarm]);
 
-      if (syncRef.current && !swRef.current.running) {
+      if (syncWithStopwatch && !swRef.current.running) {
+        stopwatchStartedByTimerRef.current = true;
         commitSw({ ...swRef.current, running: true, startedAt: Date.now() });
+        persistAlarms();
       }
       refreshAlarmHealth();
       return 'ok';
     },
-    [commitAlarms, commitSw, refreshAlarmHealth],
+    [commitAlarms, commitSw, persistAlarms, refreshAlarmHealth],
   );
 
   const cancelQuickAlarm = useCallback(
     (id: string) => {
       commitAlarms(alarmsRef.current.filter((alarm) => alarm.id !== id));
       void cancelQuickAlarmAsync(id);
+      pauseTimerIfNoLinkedAlarms();
     },
-    [commitAlarms],
+    [commitAlarms, pauseTimerIfNoLinkedAlarms],
   );
 
   const dismissFinishedAlarm = useCallback(
-    (id: string) => {
+    (id: string, pauseWhenIdle = true) => {
       commitFinished(finishedRef.current.filter((alarm) => alarm.id !== id));
       setRingingIds((prev) => prev.filter((ringingId) => ringingId !== id));
       void cancelQuickAlarmAsync(id);
+      if (pauseWhenIdle) pauseTimerIfNoLinkedAlarms();
     },
-    [commitFinished],
+    [commitFinished, pauseTimerIfNoLinkedAlarms],
   );
 
   const fixAlarmHealth = useCallback((problem: keyof AlarmHealth) => {
@@ -482,8 +522,8 @@ export function StopwatchProvider({ children }: { children: React.ReactNode }) {
     async (id: string): Promise<StartAlarmResult> => {
       const target = finishedRef.current.find((alarm) => alarm.id === id);
       if (!target) return 'ok';
-      const result = await startQuickAlarm(SNOOZE_MS, target.label);
-      if (result === 'ok') dismissFinishedAlarm(id);
+      const result = await startQuickAlarm(SNOOZE_MS, target.label, target.syncStopwatch ?? false);
+      if (result === 'ok') dismissFinishedAlarm(id, false);
       return result;
     },
     [dismissFinishedAlarm, startQuickAlarm],

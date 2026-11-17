@@ -32,7 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { FinancialQuote } from '@/constants/quotes';
 import { Fonts, LaunchQuoteColors, Radius, Spacing, Typography } from '@/constants/theme';
 import { COMPACT_LAUNCH_HEIGHT, getQuoteSizeRole } from '@/utils/launch-quote';
-import { CountdownCard, countdownSentence } from '@/components/launch-quote/countdown-tiles';
+import { CountdownCard, countdownSentence, YearProgressFooter } from '@/components/launch-quote/countdown-tiles';
 import { useSavedQuotes } from '@/hooks/use-saved-quotes';
 import { notify } from '@/utils/confirm';
 import { shareQuote } from '@/utils/quote-share';
@@ -251,10 +251,11 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
         </Animated.View>
 
         {/* 1. Time left: watch-style countdown card */}
-        <Animated.View entering={enter(320, 650)} style={styles.countdownSection}>
+        <Animated.View
+          entering={enter(320, 650)}
+          style={[styles.countdownSection, compact && styles.countdownSectionCompact]}>
           <CountdownCard
             progress={progress}
-            countdownText={formatCountdownLeft(progress, countdownMode)}
             startDelay={reduceMotion ? 0 : 700}
             compact={compact}
           />
@@ -332,6 +333,14 @@ export function LaunchQuoteOverlay({ quote, greeting, dateLabel, period, progres
           </Animated.View>
         </View>
 
+        {/* Year progress stays visible near the bottom, including on compact screens. */}
+        <Animated.View entering={enter(1450, 600)}>
+          <YearProgressFooter
+            progress={progress}
+            countdownText={formatCountdownLeft(progress, countdownMode)}
+          />
+        </Animated.View>
+
         {/* 3. Continue hint */}
         <Animated.View
           entering={reduceMotion ? FadeIn.duration(200) : FadeIn.delay(1700).duration(700)}
@@ -385,6 +394,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     gap: Spacing.four,
   },
   contentCompact: {
@@ -422,6 +434,10 @@ const styles = StyleSheet.create({
   },
   countdownSection: {
     alignSelf: 'stretch',
+    marginTop: Spacing.three,
+  },
+  countdownSectionCompact: {
+    marginTop: Spacing.two,
   },
   // Takes the space between the countdown and the hint, quote centred in it.
   quoteSection: {

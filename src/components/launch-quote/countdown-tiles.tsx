@@ -27,8 +27,6 @@ const TILE_TOP_OFFSET = GROUP_TITLE_LINE + GROUP_GAP + BRACKET_HEIGHT + GROUP_GA
 
 type CountdownCardProps = {
   progress: YearProgress;
-  /** Year countdown text that rotates days → hours → minutes. */
-  countdownText: string;
   /** Wait this long (ms) before the first tile flips in, to line up with the screen's entrance. */
   startDelay?: number;
   /** Short phones: smaller tiles and no year bar, so the quote below still fits. */
@@ -53,7 +51,7 @@ export function countdownSentence(progress: YearProgress): string {
  * progress bar underneath. Read out by the parent button, so it is hidden from
  * screen readers here.
  */
-export function CountdownCard({ progress, countdownText, startDelay = 0, compact = false }: CountdownCardProps) {
+export function CountdownCard({ progress, startDelay = 0, compact = false }: CountdownCardProps) {
   const reducedMotion = useReducedMotion();
   const colonOpacity = useSharedValue(1);
   const animate = !reducedMotion;
@@ -113,25 +111,31 @@ export function CountdownCard({ progress, countdownText, startDelay = 0, compact
         </TileGroup>
       </View>
 
-      {/* Year progress (left out on short phones; the tiles already show the year) */}
-      {compact ? null : (
-        <>
-          <View style={styles.divider} />
-          <View style={styles.progressBlock}>
-            <View style={styles.progressRow}>
-              <Text style={styles.progressLabel} numberOfLines={1} maxFontSizeMultiplier={1.3}>
-                {`${progress.yearPercent}% of ${progress.year} done`}
-              </Text>
-              <Text style={styles.progressValue} numberOfLines={1} maxFontSizeMultiplier={1.3}>
-                {countdownText}
-              </Text>
-            </View>
-            <View style={styles.track}>
-              <View style={[styles.fill, { width: `${progress.yearPercent}%` }]} />
-            </View>
-          </View>
-        </>
-      )}
+    </View>
+  );
+}
+
+/** Year progress pinned near the bottom of the launch screen. */
+export function YearProgressFooter({
+  progress,
+  countdownText,
+}: {
+  progress: YearProgress;
+  countdownText: string;
+}) {
+  return (
+    <View style={styles.footerProgress}>
+      <View style={styles.progressRow}>
+        <Text style={styles.progressLabel} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+          {`${progress.yearPercent}% of ${progress.year} done`}
+        </Text>
+        <Text style={styles.progressValue} numberOfLines={1} maxFontSizeMultiplier={1.3}>
+          {countdownText}
+        </Text>
+      </View>
+      <View style={styles.track}>
+        <View style={[styles.fill, { width: `${progress.yearPercent}%` }]} />
+      </View>
     </View>
   );
 }
@@ -343,12 +347,9 @@ const styles = StyleSheet.create({
     backgroundColor: Brand.bright,
     boxShadow: glow(Brand.bright, 'strong'),
   },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: LaunchQuoteColors.hairline,
-  },
-  progressBlock: {
+  footerProgress: {
     gap: Spacing.two,
+    paddingHorizontal: 2,
   },
   progressRow: {
     flexDirection: 'row',

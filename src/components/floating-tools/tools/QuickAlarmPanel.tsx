@@ -433,7 +433,7 @@ export function QuickAlarmPanel() {
 
       <SwitchRow
         label="Run with stopwatch"
-        description="Starting a timer also starts the stopwatch, and a lap marker is added when it rings."
+        description="Timers start the stopwatch if needed and add lap markers. If a timer starts it, stopping the last linked alarm pauses it."
         value={syncStopwatch}
         onValueChange={setSyncStopwatch}
       />

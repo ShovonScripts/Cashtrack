@@ -15,6 +15,7 @@ import { IncomeProvider, useIncome } from '@/context/income-context';
 import { GoalProvider, useGoals } from '@/context/goal-context';
 import { FinancialRemindersProvider, useFinancialReminders } from '@/context/financial-reminders-context';
 import { useTheme, useIsDark } from '@/hooks/use-theme';
+import { resetReceivedGiftsState } from '@/hooks/use-received-gifts';
 import { resetSavedQuotesState } from '@/hooks/use-saved-quotes';
 import {
   cancelCalendarMomentNotificationsAsync,
@@ -53,11 +54,12 @@ function Navigation() {
   } = useExpenses();
   const { enableDailyReminder, enableDailyQuotes, enableCalendarMoments, quoteTopics } = usePreferences();
 
-  // "Erase all data" clears storage; drop the in-memory saved quotes with it.
+  // "Erase all data" clears storage; drop the in-memory saved quotes and gifts with it.
   useEffect(
     () =>
       registerResetHandler(async () => {
         resetSavedQuotesState();
+        resetReceivedGiftsState();
       }),
     [registerResetHandler],
   );
@@ -290,6 +292,9 @@ function Navigation() {
         <Stack.Screen name="debts/add" options={{ title: 'Add Debt', presentation: 'modal' }} />
         <Stack.Screen name="debts/[id]" options={{ title: 'Debt Details' }} />
         <Stack.Screen name="debts/[id]/edit" options={{ title: 'Edit Debt' }} />
+        <Stack.Screen name="gifts" options={{ title: 'Gifts Received' }} />
+        <Stack.Screen name="gifts/add" options={{ title: 'Add Gift', presentation: 'modal' }} />
+        <Stack.Screen name="gifts/[id]" options={{ title: 'Edit Gift' }} />
         <Stack.Screen name="bills" options={{ title: 'Bills & Reminders', headerRight: renderAddBillButton }} />
         <Stack.Screen name="bills/add" options={{ title: 'Add Bill / Reminder', presentation: 'modal' }} />
         <Stack.Screen name="bills/pay/[id]" options={{ title: 'Mark as Paid', presentation: 'modal' }} />

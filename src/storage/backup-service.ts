@@ -21,6 +21,14 @@ import {
   replaceSavedQuotes,
   SAVED_QUOTES_STORAGE_KEY,
 } from '@/storage/saved-quotes-storage';
+import {
+  getGiftCategoriesStrict,
+  getGiftsStrict,
+  GIFT_CATEGORIES_STORAGE_KEY,
+  GIFTS_STORAGE_KEY,
+  replaceGiftCategories,
+  replaceGifts,
+} from '@/storage/gifts-storage';
 import { loadPreferences, PREFERENCES_STORAGE_KEY, savePreferences } from '@/storage/preferences-storage';
 import {
   loadRecurringSkips,
@@ -62,6 +70,8 @@ const BACKUP_STORAGE_KEYS = [
   NOTES_STORAGE_KEY,
   TODOS_STORAGE_KEY,
   SAVED_QUOTES_STORAGE_KEY,
+  GIFTS_STORAGE_KEY,
+  GIFT_CATEGORIES_STORAGE_KEY,
   RECURRING_SKIPS_STORAGE_KEY,
   APP_LOCK_STORAGE_KEY,
 ];
@@ -198,6 +208,8 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
     notes,
     todos,
     savedQuotes,
+    gifts,
+    giftCategories,
     storedDebts,
     income,
     goals,
@@ -212,6 +224,8 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
     getNotesStrict(),
     getTodosStrict(),
     getSavedQuotesStrict(),
+    getGiftsStrict(),
+    getGiftCategoriesStrict(),
     snapshot.debts === undefined ? loadDebts() : Promise.resolve(null),
     getAllIncome(),
     getAllGoals(),
@@ -233,6 +247,8 @@ export async function createBackup(snapshot: BackupSnapshot = {}): Promise<Backu
     notes,
     todos,
     savedQuotes,
+    gifts,
+    giftCategories,
     debts: snapshot.debts ?? storedDebts ?? [],
     income,
     goals,
@@ -391,6 +407,8 @@ async function applyRestoreData(data: BackupData): Promise<void> {
   await replaceNotes(data.notes);
   await replaceTodos(data.todos ?? []);
   await replaceSavedQuotes(data.savedQuotes ?? []);
+  await replaceGifts(data.gifts ?? []);
+  await replaceGiftCategories(data.giftCategories ?? []);
   await replaceRecurringSkips(data.recurringSkips);
 }
 

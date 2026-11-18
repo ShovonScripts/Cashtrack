@@ -189,7 +189,7 @@ export default function DashboardScreen() {
           onAddExpense={addExpenseForPeriod}
         />
 
-        {/* 1. Quick actions: the four most common records, one tap away */}
+        {/* 1. Quick actions: four records to add and four everyday tools, one tap away */}
         <QuickActions />
 
         {/* 2. Needs attention: upcoming bills */}

@@ -22,7 +22,7 @@ export type PolicySection = {
 
 export const PRIVACY_APP_NAME = 'CashTrack';
 /** ISO date the policy last changed. */
-export const PRIVACY_UPDATED = '2026-11-07';
+export const PRIVACY_UPDATED = '2026-11-18';
 /**
  * Public copy of this policy (docs/privacy-policy.html served by GitHub Pages
  * from the /docs folder of main). This URL goes into the store listings, and the
@@ -35,7 +35,7 @@ export const SUPPORT_EMAIL = 'mr.nasir.online@gmail.com';
 export const PRIVACY_CONTACT_EMAIL = SUPPORT_EMAIL;
 
 export const PRIVACY_SUMMARY = [
-  'Your money records (expenses, income, budgets, bills, debts, goals, notes) stay on your phone. We never receive them.',
+  'Your money records (expenses, income, budgets, bills, debts, goals, gifts received, notes) stay on your phone. We never receive them.',
   'There are no ads, no analytics and no tracking SDKs.',
   'If you choose to join "Stay in touch", we receive your name, email, optional phone number and country. You can withdraw and delete them in the app at any time.',
 ];
@@ -64,6 +64,7 @@ export const PRIVACY_SECTIONS: PolicySection[] = [
         items: [
           'Expenses, income, categories, budgets and category limits.',
           'Bills, reminders, subscriptions, debts, savings pots and goals.',
+          'Gifts you record as received from others, the people who gave them, and your gift categories.',
           'Notes, to-do items, and receipt or profile photos you attach.',
           'Your profile name, country, currency and app settings.',
           'Your app lock setting. Fingerprint or Face ID is checked by your phone\'s operating system; the app only learns whether the check passed and never receives your biometric data.',

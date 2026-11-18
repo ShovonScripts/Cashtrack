@@ -16,17 +16,18 @@ A local-first personal finance app for iOS, Android, and the web.
 6. [Income](#6-income)
 7. [Savings Pots and Goals](#7-savings-pots-and-goals)
 8. [Debts and IOUs](#8-debts-and-ious)
-9. [Bills and Reminders](#9-bills-and-reminders)
-10. [Reports and Exports](#10-reports-and-exports)
-11. [Notes and Tools](#11-notes-and-tools)
-12. [Profile and Preferences](#12-profile-and-preferences)
-13. [App Lock](#13-app-lock)
-14. [Backup, Restore, and Data](#14-backup-restore-and-data)
-15. [Notifications](#15-notifications)
-16. [Privacy and Security](#16-privacy-and-security)
-17. [Troubleshooting and FAQ](#17-troubleshooting-and-faq)
-18. [Current Limitations](#18-current-limitations)
-19. [Quick Reference](#19-quick-reference)
+9. [Gifts Received](#9-gifts-received)
+10. [Bills and Reminders](#10-bills-and-reminders)
+11. [Reports and Exports](#11-reports-and-exports)
+12. [Notes and Tools](#12-notes-and-tools)
+13. [Profile and Preferences](#13-profile-and-preferences)
+14. [App Lock](#14-app-lock)
+15. [Backup, Restore, and Data](#15-backup-restore-and-data)
+16. [Notifications](#16-notifications)
+17. [Privacy and Security](#17-privacy-and-security)
+18. [Troubleshooting and FAQ](#18-troubleshooting-and-faq)
+19. [Current Limitations](#19-current-limitations)
+20. [Quick Reference](#20-quick-reference)
 
 ---
 
@@ -589,11 +590,43 @@ Deleting a debt record cannot be undone.
 
 ---
 
-## 9. Bills and Reminders
+## 9. Gifts Received
+
+Open **More → Gifts Received**. Here you write down what others have paid for you: a present, school fees your parents covered, a meal at an invitation, a holiday someone paid for, a doctor's bill someone settled, or a shop's discount (the discount came out of the shop's pocket, not yours).
+
+> Gifts are kept completely apart from your money. They are never counted as income or expenses, and never change your balance, budgets, reports or exports.
+
+### 9.1 The gifts screen
+
+- The big number at the top is everything others have paid for you. **≈** means some amounts are estimates.
+- **This year**, **People** and **Gifts** sit under it.
+- **By category** shows where it came from; **By person** shows the people who gave the most.
+- Below that, your gifts are listed by year. Tap a category chip to see only that category.
+
+### 9.2 Add a gift
+
+1. Tap **+** at the top right.
+2. Enter the **Value**: what it cost whoever paid. A best guess is fine; turn on **This is an estimate** if it is one.
+3. Choose a **Category**, or tap **+ New category** to make your own.
+4. Optionally fill in **From whom** (tap a recent name to reuse it) and **What was it**.
+5. Choose the **Date**. For something that lasted, such as years of school fees, turn on **It covered a period** and set **From** and **To**.
+6. Under **Gratitude**, mark **I have thanked them** and write **Why I am grateful** if you like.
+7. Tap **Save gift**.
+
+### 9.3 Categories, editing and deleting
+
+- Built-in categories: Education, Gift, Food & Invitations, Health & Medical, Holiday & Travel, Transport, Shopping Discount, Party & Celebration, Anniversary and Other.
+- Tap **Manage categories** at the bottom of the page to add, rename or delete your own. Built-in ones cannot be changed.
+- Deleting a category moves its gifts to **Other**; no gift is lost.
+- Tap a gift to edit it. **Delete gift** asks first, and **Undo** puts it back.
+
+Gifts and your own categories stay on your phone and are included in backups.
+
+## 10. Bills and Reminders
 
 Open **Menu Hub → Bills & Reminders**.
 
-### 9.1 The bills screen
+### 10.1 The bills screen
 
 The top card shows:
 
@@ -610,7 +643,7 @@ Filter tabs:
 - **Upcoming**
 - **Paid**
 
-### 9.2 Add a bill
+### 10.2 Add a bill
 
 1. Tap **Add Bill**.
 2. Enter the **BILL / REMINDER NAME**.
@@ -633,7 +666,7 @@ Filter tabs:
 8. Choose the **REPEAT FREQUENCY**: One-time, Weekly, Monthly, or Yearly.
 9. Tap **Save Reminder**.
 
-### 9.3 Mark a bill as paid
+### 10.3 Mark a bill as paid
 
 1. Tap **Mark Paid** on the bill, or open it from the list.
 2. Confirm the **PAYMENT AMOUNT**.
@@ -644,15 +677,15 @@ Filter tabs:
 
 For a recurring bill, a full payment advances the bill to its next due date. For a one-time bill, marking it paid closes it.
 
-### 9.4 Skip a recurring bill
+### 10.4 Skip a recurring bill
 
 Recurring bills have a **Skip** action. Skipping advances the bill to its next cycle without recording an expense.
 
-### 9.5 Delete a bill
+### 10.5 Delete a bill
 
 Deleting a reminder asks for confirmation and removes the bill and its scheduled notifications.
 
-### 9.6 Bill calendar
+### 10.6 Bill calendar
 
 Open **Menu Hub → Bill & Renewal Calendar**, or tap the calendar banner on the Bills screen.
 
@@ -664,7 +697,7 @@ The **Renewal Calendar** shows a monthly grid with bills on their due dates.
 
 The calendar always uses Sunday as the first day of the week, regardless of the **Week starts on** preference.
 
-### 9.7 Subscriptions and recurring hub
+### 10.7 Subscriptions and recurring hub
 
 Open **Menu Hub → Subscriptions & Recurring Hub**, or tap the link on the Home screen.
 
@@ -679,9 +712,9 @@ The monthly outflow converts weekly, monthly, and yearly bills to a monthly esti
 
 ---
 
-## 10. Reports and Exports
+## 11. Reports and Exports
 
-### 10.1 Analytics & Reports
+### 11.1 Analytics & Reports
 
 Open the **Analytics** tab.
 
@@ -708,7 +741,7 @@ Charts:
 - **Category Proportions** — tap a category to see its share of the monthly total.
 - **Category Breakdown** — monthly spending versus category limits.
 
-### 10.2 Monthly exports
+### 11.2 Monthly exports
 
 At the bottom of Analytics:
 
@@ -721,7 +754,7 @@ At the bottom of Analytics:
 
 The monthly CSV columns are: **Date, Category, Amount, Currency, Memo**.
 
-### 10.3 Daily report
+### 11.3 Daily report
 
 Tap the Daily or Yesterday cost card on Home.
 
@@ -737,7 +770,7 @@ The **Daily Expense Breakdown** screen shows:
 
 Use the arrows to move to the previous or next day. The daily PDF is available on all platforms; on the web it opens the print dialog.
 
-### 10.4 Weekly and yearly reports
+### 11.4 Weekly and yearly reports
 
 Tap the Weekly or Yearly cost card on Home.
 
@@ -749,7 +782,7 @@ These period reports show:
 
 Weekly and yearly period reports do not have an export button. Use the monthly PDF/CSV or the daily PDF instead.
 
-### 10.5 All-time CSV from Profile
+### 11.5 All-time CSV from Profile
 
 Open **Profile & Settings → Data → Export transactions**.
 
@@ -757,9 +790,9 @@ This exports your full recorded expense ledger, not just one month. The columns 
 
 ---
 
-## 11. Notes and Tools
+## 12. Notes and Tools
 
-### 11.1 Keep Notes
+### 12.1 Keep Notes
 
 Open **Menu Hub → Keep Notes** or use the floating tools menu.
 
@@ -771,7 +804,7 @@ Open **Menu Hub → Keep Notes** or use the floating tools menu.
 - Notes support colors and are stored locally.
 - Delete a note from its editor.
 
-### 11.2 Quick Calculator
+### 12.2 Quick Calculator
 
 Open **Menu Hub → Quick Calculator** or use the floating tools menu.
 
@@ -780,7 +813,7 @@ Open **Menu Hub → Quick Calculator** or use the floating tools menu.
 - Tap a history item to reuse it.
 - Clear history with the history header action.
 
-### 11.3 Stopwatch & Timer
+### 12.3 Stopwatch & Timer
 
 Open **Menu Hub → Stopwatch & Timer** or use the floating tools menu.
 
@@ -803,7 +836,7 @@ The stopwatch, its laps and your running timers are saved, so they survive closi
 
 With the **Stopwatch** chip on, starting a timer also starts the stopwatch if it is not already running, and every finished timer adds a lap marker. If a timer was what started the stopwatch, stopping the last linked timer pauses it again.
 
-### 11.4 World Clocks
+### 12.4 World Clocks
 
 Open **Menu Hub → World Clocks**.
 
@@ -813,7 +846,7 @@ Open **Menu Hub → World Clocks**.
 - Tap **Add City** to search by city or country.
 - Tap a pinned city's remove button to unpin it.
 
-### 11.5 Currency Converter
+### 12.5 Currency Converter
 
 Open **Menu Hub → Currency Converter** or use the floating tools menu.
 
@@ -826,7 +859,7 @@ Open **Menu Hub → Currency Converter** or use the floating tools menu.
 
 Currency conversion does not change your app's accounting currency. To change the accounting currency, use **Menu Hub → Country & Currency**.
 
-### 11.6 Weather
+### 12.6 Weather
 
 Tap the Weather slide on Home, or open **More → Weather**.
 
@@ -838,19 +871,19 @@ Tap the Weather slide on Home, or open **More → Weather**.
 
 Live weather needs location permission and a connection. Without them, CashTrack says so and offers a button to turn on location or try again; it never shows made-up weather. A reading is reused for 15 minutes, and refreshes when you come back to the app. Pull down to refresh.
 
-### 11.7 Calendar
+### 12.7 Calendar
 
 The Calendar tool in the floating menu opens the bill and renewal calendar.
 
 ---
 
-## 12. Profile and Preferences
+## 13. Profile and Preferences
 
 Open **Menu Hub → Profile & Preferences**, or tap your profile on Home.
 
 The screen is titled **Profile & settings**.
 
-### 12.1 Profile
+### 13.1 Profile
 
 The header shows your banner, photo, name, a **Private** badge, and three counts: **Transactions**, **Savings pots**, and **My categories**.
 
@@ -860,22 +893,22 @@ The header shows your banner, photo, name, a **Private** badge, and three counts
 
 The **Profile** tab contains **Name**, **Money goal or short bio**, **Age**, and **Gender** (Woman, Man, Other, or Not set). All are optional and stay on your phone.
 
-### 12.2 Save profile changes
+### 13.2 Save profile changes
 
 When you change your profile, a bar appears at the bottom with **Discard** and **Save**. If you try to leave without saving, CashTrack asks whether to discard your changes; photos you picked but did not save are removed. Age must be a whole number from 1 to 120.
 
 The Settings and Alerts tabs apply straight away and need no Save.
 
-### 12.3 Settings
+### 13.3 Settings
 
 - **Appearance → Theme**: **Auto** (follows your phone), **Light**, or **Dark**.
-- **Security → App Lock**: see [App Lock](#13-app-lock).
+- **Security → App Lock**: see [App Lock](#14-app-lock).
 - **Region and formats**:
   - **Country & Currency**: changes the currency label, not existing amounts.
   - **Temperature**: **°C** or **°F**. Until you choose, it follows your country (°F in the US).
   - **Week starts on**: **Monday** or **Sunday**. Affects weekly totals and the year progress card. The bill calendar still starts on Sunday.
 
-### 12.4 Alerts
+### 13.4 Alerts
 
 - **Money reminders**: **Bill reminders**, **Budget warnings** (80% and 100% of a category limit), **Daily check-in**.
 - **Motivation**: **Morning quote** (today's quote at 8:00 AM) and **Quote when the app opens** (needs no notification permission). Quote topics are in **More → Quotes**.
@@ -883,16 +916,16 @@ The Settings and Alerts tabs apply straight away and need no Save.
 
 Turning a reminder on asks for notification permission. If you refuse, the switch stays off and CashTrack explains how to allow it in Settings.
 
-### 12.5 Data
+### 13.5 Data
 
 - **Stay in touch**: the optional sign-up.
 - **Your data**: **Export transactions** (CSV), **Back up everything** (one file with photos and receipts), **Restore from a backup** (phone app only).
 - **Help and info**: **Replay the walkthrough**, **User Manual**, **About CashTrack**, **Privacy Policy**.
 - **Danger zone → Erase all data**: asks twice, and cannot be undone.
 
-See [Backup, Restore, and Data](#14-backup-restore-and-data).
+See [Backup, Restore, and Data](#15-backup-restore-and-data).
 
-### 12.6 About
+### 13.6 About
 
 The About screen describes the app's privacy approach, how it works, and the version.
 
@@ -900,11 +933,11 @@ It also includes a voluntary **Buy me a coffee** link. Donations are optional; n
 
 ---
 
-## 13. App Lock
+## 14. App Lock
 
 Open **Profile & settings → Preferences → App Lock**.
 
-### 13.1 Turn on App Lock
+### 14.1 Turn on App Lock
 
 1. Make sure your device has a screen lock, Face ID, or fingerprint set up.
 2. Turn on **Require device authentication**.
@@ -917,25 +950,25 @@ When App Lock is on:
 - It uses Face ID, fingerprint, or your existing device passcode.
 - CashTrack does **not** create or store a separate PIN.
 
-### 13.2 Test the lock
+### 14.2 Test the lock
 
 When App Lock is on, the **Check it works** card appears.
 
 Tap **Lock now** to lock the app immediately.
 
-### 13.3 If device security is unavailable
+### 14.3 If device security is unavailable
 
 If your device has no screen lock, App Lock cannot be enabled. The app explains that you need to set up device security first.
 
 If you remove your device screen lock later, you can turn App Lock off from the lock screen so you are not trapped.
 
-### 13.4 Web
+### 14.4 Web
 
 App Lock is available in the iOS and Android app only. The web version reports that it is unsupported.
 
 ---
 
-## 14. Backup, Restore, and Data
+## 15. Backup, Restore, and Data
 
 CashTrack is local-only. There is no automatic cloud backup. Make a backup before:
 
@@ -945,7 +978,7 @@ CashTrack is local-only. There is no automatic cloud backup. Make a backup befor
 - Resetting the device
 - Making large edits you might want to undo
 
-### 14.1 Export expenses as CSV
+### 15.1 Export expenses as CSV
 
 **Profile & Settings → Data → Export transactions**
 
@@ -956,7 +989,7 @@ CashTrack is local-only. There is no automatic cloud backup. Make a backup befor
 
 CSV is for spreadsheets and analysis. It does not include income, pots, debts, bills, notes, or settings. Use a full backup for those.
 
-### 14.2 Create a full backup
+### 15.2 Create a full backup
 
 **Profile & Settings → Data → Back up everything**
 
@@ -978,7 +1011,7 @@ Save the file somewhere safe.
 
 **Security note:** backup files are plain JSON and are not encrypted or password-protected. Treat them like sensitive financial documents.
 
-### 14.3 Restore a backup
+### 15.3 Restore a backup
 
 **Profile & Settings → Data → Restore from a backup**
 
@@ -992,13 +1025,13 @@ Restore **replaces everything currently on the device** with the backup. It cann
 - On the web, CashTrack explains that restore is available in the native app.
 - If a restore fails partway through, your previous data may be incomplete. Keep a recent backup and try again.
 
-### 14.4 Replay the walkthrough
+### 15.4 Replay the walkthrough
 
 **Profile & Settings → Data → Replay the walkthrough**
 
 This opens the onboarding tour again. It does not delete your data.
 
-### 14.5 Wipe all local data
+### 15.5 Wipe all local data
 
 **Profile & Settings → Data → Danger zone → Erase all data**
 
@@ -1013,11 +1046,11 @@ This cannot be undone. Make a backup first if you might need the data.
 
 ---
 
-## 15. Notifications
+## 16. Notifications
 
 Notifications are available on iOS and Android. The web version does not send notifications.
 
-### 15.1 Bill reminders
+### 16.1 Bill reminders
 
 When **Bill Reminders** is enabled and notifications are allowed, CashTrack schedules:
 
@@ -1027,11 +1060,11 @@ When **Bill Reminders** is enabled and notifications are allowed, CashTrack sche
 
 If **High-Priority Alarm Mode** is on and an exact alarm time is set, the due-date notification uses that time instead.
 
-### 15.2 Budget alerts
+### 16.2 Budget alerts
 
 When **Budget warnings** is enabled and notifications are allowed, CashTrack can alert you at 80%, 100%, and over-limit.
 
-### 15.3 Daily check-in and motivation
+### 16.3 Daily check-in and motivation
 
 When enabled, CashTrack sends:
 
@@ -1056,7 +1089,7 @@ When enabled, CashTrack sends:
 - The settings button (top right) chooses the **Daily quote topics** your quote of the day comes from, and turns the opening quote and the morning quote on or off.
 - Saved quotes stay on your phone and are included in backups.
 
-### 15.4 Test alarm
+### 16.4 Test alarm
 
 **Profile & Settings → Alerts → Send a test alarm**
 
@@ -1066,7 +1099,7 @@ CashTrack schedules a test notification after 5 seconds.
 - On Android, the high-priority alarm channel uses maximum importance and vibration.
 - If notifications are off, the test does not schedule.
 
-### 15.5 Notification limitations
+### 16.5 Notification limitations
 
 - CashTrack uses the system notification sound. It does not include a custom ringtone.
 - It cannot loop like a phone alarm.
@@ -1074,7 +1107,7 @@ CashTrack schedules a test notification after 5 seconds.
 - In Expo Go, notification behavior may differ from a standalone build. Use a development or production build to test alarms reliably.
 - Android exact alarms may require the **SCHEDULE_EXACT_ALARM** permission and appropriate device settings.
 
-### 15.6 Managing permissions
+### 16.6 Managing permissions
 
 If notifications do not arrive:
 
@@ -1086,9 +1119,9 @@ If notifications do not arrive:
 
 ---
 
-## 16. Privacy and Security
+## 17. Privacy and Security
 
-### 16.1 What stays on your device
+### 17.1 What stays on your device
 
 - Expenses
 - Income
@@ -1111,7 +1144,7 @@ CashTrack does not create an account and does not upload your financial records 
 - If you are offline, your details wait on the phone and send the next time you are online.
 - Tap **Withdraw and delete my details** to remove them from the phone and ask for our copy to be deleted.
 
-### 16.2 Network features
+### 17.2 Network features
 
 These features may use the internet:
 
@@ -1121,20 +1154,20 @@ These features may use the internet:
 
 They do not upload your expense ledger.
 
-### 16.3 Device security
+### 17.3 Device security
 
 - Use a device screen lock and enable **App Lock** for extra protection.
 - Keep your device OS and the app updated.
 - Be careful where you save backup files.
 - Backup files are not encrypted.
 
-### 16.4 Ads and trackers
+### 17.4 Ads and trackers
 
 The About screen states that CashTrack contains no ads, analytics trackers, or third-party marketing SDKs.
 
 ---
 
-## 17. Troubleshooting and FAQ
+## 18. Troubleshooting and FAQ
 
 ### Weather says "Turn on location" or "Weather unavailable"
 
@@ -1217,7 +1250,7 @@ Most deletions cannot be undone. Restore a backup if you have one. This is why r
 
 ---
 
-## 18. Current Limitations
+## 19. Current Limitations
 
 These are known behaviors in CashTrack 1.0.0. They are documented so you can plan around them.
 
@@ -1282,7 +1315,7 @@ Contributions are tracked inside the pot. They do not automatically reduce your 
 
 ---
 
-## 19. Quick Reference
+## 20. Quick Reference
 
 ### Common tasks
 

@@ -12,6 +12,8 @@ import type { IncomeRecord } from '@/types/income';
 import type { Note, NoteColor } from '@/types/note';
 import type { TodoCategory, TodoItem, TodoPriority } from '@/types/todo';
 import type { SavedQuote } from '@/types/saved-quote';
+import type { GiftCategory, ReceivedGift } from '@/types/gift';
+import { isBuiltInGiftCategory } from '../constants/gift-categories.ts';
 import type { UserPreferences } from '@/types/preferences';
 import { sanitizePreferences } from './preferences.ts';
 import type {
@@ -48,6 +50,10 @@ export type BackupData = {
   todos?: TodoItem[];
   /** Absent in backups made before saved quotes existed. */
   savedQuotes?: SavedQuote[];
+  /** Absent in backups made before Gifts Received existed. */
+  gifts?: ReceivedGift[];
+  /** The person's own gift categories; built-in ones live in code. */
+  giftCategories?: GiftCategory[];
   debts: DebtRecord[];
   income: IncomeRecord[];
   goals: MoneyGoal[];
@@ -280,6 +286,40 @@ function parseSavedQuote(raw: unknown, index: number): SavedQuote {
     quote: asNonEmptyString(row.quote, `${label} text`),
     author: asNonEmptyString(row.author, `${label} author`),
     savedAt: asDateString(row.savedAt, `${label} saved date`),
+  };
+}
+
+function parseGift(raw: unknown, index: number): ReceivedGift {
+  const label = `Gift ${index + 1}`;
+  const row = asRecord(raw, label);
+  const createdAt = asDateString(row.createdAt, `${label} created date`);
+  return {
+    id: asNonEmptyString(row.id, `${label} id`),
+    amount: asPositiveNumber(row.amount, `${label} value`),
+    isEstimate: optionalBoolean(row.isEstimate, `${label} estimate flag`) ?? false,
+    categoryId: asNonEmptyString(row.categoryId, `${label} category`),
+    giver: optionalString(row.giver, `${label} giver`) ?? '',
+    date: asDateString(row.date, `${label} date`),
+    endDate: optionalDateStringOrNull(row.endDate, `${label} end date`) ?? null,
+    note: optionalString(row.note, `${label} note`) ?? '',
+    thanked: optionalBoolean(row.thanked, `${label} thanked flag`) ?? false,
+    gratitudeNote: optionalString(row.gratitudeNote, `${label} gratitude note`) ?? '',
+    createdAt,
+    updatedAt: row.updatedAt === undefined ? createdAt : asDateString(row.updatedAt, `${label} updated date`),
+  };
+}
+
+function parseGiftCategory(raw: unknown, index: number): GiftCategory {
+  const label = `Gift category ${index + 1}`;
+  const row = asRecord(raw, label);
+  const id = asNonEmptyString(row.id, `${label} id`);
+  // A custom category may never shadow a built-in one.
+  if (isBuiltInGiftCategory(id)) fail(`${label} uses a reserved id.`);
+  return {
+    id,
+    name: asNonEmptyString(row.name, `${label} name`),
+    icon: asNonEmptyString(row.icon, `${label} icon`),
+    hue: asNonEmptyString(row.hue, `${label} colour`),
   };
 }
 
@@ -568,6 +608,10 @@ export function parseBackup(raw: string): BackupFile {
   const savedQuotes = data.savedQuotes === undefined
     ? []
     : asArray(data.savedQuotes, 'Saved quotes').map(parseSavedQuote);
+  const gifts = data.gifts === undefined ? [] : asArray(data.gifts, 'Gifts').map(parseGift);
+  const giftCategories = data.giftCategories === undefined
+    ? []
+    : asArray(data.giftCategories, 'Gift categories').map(parseGiftCategory);
   const debts = asArray(data.debts, 'Debts').map(parseDebt);
   const income = asArray(data.income, 'Income').map(parseIncome);
   const goals = asArray(data.goals, 'Goals').map(parseGoal);
@@ -578,6 +622,8 @@ export function parseBackup(raw: string): BackupFile {
   assertUniqueIds(expenses, 'Expenses');
   assertUniqueIds(todos, 'Todos');
   assertUniqueIds(savedQuotes, 'Saved quotes');
+  assertUniqueIds(gifts, 'Gifts');
+  assertUniqueIds(giftCategories, 'Gift categories');
   assertUniqueIds(notes, 'Notes');
   assertUniqueIds(debts, 'Debts');
   assertUniqueIds(income, 'Income');
@@ -601,6 +647,8 @@ export function parseBackup(raw: string): BackupFile {
       notes,
       todos,
       savedQuotes,
+      gifts,
+      giftCategories,
       debts,
       income,
       goals,

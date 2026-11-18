@@ -1,3 +1,4 @@
+export { ActionTile } from './action-tile';
 export { AmountField } from './amount-field';
 export { Badge } from './badge';
 export { Button } from './button';

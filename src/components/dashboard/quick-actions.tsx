@@ -1,93 +1,66 @@
 import { router } from 'expo-router';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { FeatureColors, Radius, Spacing, withAlpha } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { ActionTile } from '@/components/ui';
+import type { GlyphName } from '@/constants/icons';
+import { FeatureColors, Spacing } from '@/constants/theme';
 import { triggerHaptic } from '@/utils/haptics';
 
 type QuickAction = {
   id: string;
   label: string;
+  /** Spoken label: what the tap does. */
   hint: string;
-  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon: GlyphName;
   route: string;
+  /** Omitted only for Expense, which takes the brand accent as the main action. */
   color?: string;
 };
 
+/**
+ * Two rows of four. The top row adds a record, so its glyphs carry a plus;
+ * the bottom row opens a tool.
+ *
+ * Hues follow two rules: every icon keeps at least 3:1 against its tinted
+ * badge in light and dark (the minimum for icons), and no two tiles that touch,
+ * across or down, share a colour family. That is why these differ from some
+ * More menu hues (amber, orange, coral and azure fall near 2:1 on a light tile).
+ */
 const ACTIONS: QuickAction[] = [
-  { id: 'expense', label: 'Expense', hint: 'Add an expense', icon: 'cart-plus', route: '/add-expense' },
-  { id: 'income', label: 'Income', hint: 'Record income', icon: 'wallet-plus-outline', route: '/income' },
-  { id: 'bill', label: 'Bill', hint: 'Add a bill reminder', icon: 'calendar-plus', route: '/bills/add' },
-  { id: 'debt', label: 'Debt', hint: 'Track money lent or borrowed', icon: 'account-cash-outline', route: '/debts/add' },
-  {
-    id: 'stopwatch',
-    label: 'Stopwatch & Timer',
-    hint: 'Open Stopwatch & Timer',
-    icon: 'timer-outline',
-    route: '/stopwatch',
-    color: FeatureColors.bronze,
-  },
-  {
-    id: 'todo',
-    label: 'To-Do',
-    hint: 'Open To-Do List',
-    icon: 'checkbox-marked-circle-outline',
-    route: '/todo',
-    color: FeatureColors.crimson,
-  },
-  {
-    id: 'calculator',
-    label: 'Calculator',
-    hint: 'Open Calculator',
-    icon: 'calculator-variant-outline',
-    route: '/calculator',
-    color: FeatureColors.blue,
-  },
-  {
-    id: 'notes',
-    label: 'Notes',
-    hint: 'Open Notes',
-    icon: 'note-text-outline',
-    route: '/notes',
-    color: FeatureColors.bronze,
-  },
+  { id: 'expense', label: 'Expense', hint: 'Add an expense', icon: 'receipt-text-plus-outline', route: '/add-expense' },
+  { id: 'income', label: 'Income', hint: 'Record income', icon: 'wallet-plus-outline', route: '/income', color: FeatureColors.emerald },
+  { id: 'bill', label: 'Bill', hint: 'Add a bill reminder', icon: 'calendar-plus-outline', route: '/bills/add', color: FeatureColors.bronze },
+  { id: 'debt', label: 'Debt', hint: 'Track money lent or borrowed', icon: 'account-cash-outline', route: '/debts/add', color: FeatureColors.crimson },
+  { id: 'stopwatch', label: 'Stopwatch', hint: 'Open Stopwatch & Timer', icon: 'timer-outline', route: '/stopwatch', color: FeatureColors.violet },
+  { id: 'todo', label: 'To-Do', hint: 'Open To-Do List', icon: 'checkbox-marked-circle-outline', route: '/todo', color: FeatureColors.red },
+  { id: 'calculator', label: 'Calculator', hint: 'Open Calculator', icon: 'calculator-variant-outline', route: '/calculator', color: FeatureColors.sky },
+  { id: 'notes', label: 'Notes', hint: 'Open Notes', icon: 'note-text-outline', route: '/notes', color: FeatureColors.teal },
 ];
 
-/** One-tap shortcuts to common records and tools. */
-export function QuickActions() {
-  const theme = useTheme();
+const PER_ROW = 4;
+const ROWS = Array.from({ length: Math.ceil(ACTIONS.length / PER_ROW) }, (_, index) =>
+  ACTIONS.slice(index * PER_ROW, index * PER_ROW + PER_ROW),
+);
 
+/** One-tap shortcuts to the four records people add most, and four everyday tools. */
+export function QuickActions() {
   return (
     <View style={styles.rows}>
-      {[ACTIONS.slice(0, 4), ACTIONS.slice(4)].map((row) => (
+      {ROWS.map((row) => (
         <View key={row[0].id} style={styles.row}>
-          {row.map((action) => {
-            const iconColor = action.color ?? theme.accent;
-            return (
-              <Pressable
-                key={action.id}
-                onPress={() => {
-                  triggerHaptic();
-                  router.push(action.route as never);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={action.hint}
-                style={({ pressed }) => [
-                  styles.action,
-                  { backgroundColor: theme.card, borderColor: theme.border },
-                  pressed && styles.pressed,
-                ]}>
-                <View style={[styles.iconBadge, { backgroundColor: action.color ? withAlpha(iconColor, 0.12) : theme.accentMuted }]}>
-                  <MaterialCommunityIcons name={action.icon} size={22} color={iconColor} />
-                </View>
-                <ThemedText type="caption" style={styles.label} numberOfLines={2}>
-                  {action.label}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
+          {row.map((action) => (
+            <ActionTile
+              key={action.id}
+              label={action.label}
+              icon={action.icon}
+              color={action.color}
+              accessibilityLabel={action.hint}
+              onPress={() => {
+                triggerHaptic();
+                router.push(action.route as never);
+              }}
+            />
+          ))}
         </View>
       ))}
     </View>
@@ -95,37 +68,6 @@ export function QuickActions() {
 }
 
 const styles = StyleSheet.create({
-  rows: {
-    gap: Spacing.two,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  action: {
-    flex: 1,
-    minHeight: 88,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: Spacing.two,
-    paddingHorizontal: 2,
-    borderRadius: Radius.large,
-    borderWidth: StyleSheet.hairlineWidth,
-  },
-  iconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: Radius.medium,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.75,
-    transform: [{ scale: 0.97 }],
-  },
+  rows: { gap: Spacing.two },
+  row: { flexDirection: 'row', gap: Spacing.two },
 });

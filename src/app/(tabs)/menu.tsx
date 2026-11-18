@@ -116,6 +116,15 @@ export default function MenuScreen() {
         keywords: 'goal pot savings save target',
       },
       {
+        id: 'gifts',
+        title: 'Gifts Received',
+        subtitle: 'What others have paid for you',
+        icon: 'gift',
+        color: FeatureColors.rose,
+        route: '/gifts',
+        keywords: 'gift gifts present received gratitude grateful thankful thanks shukriya blessing discount dawat',
+      },
+      {
         id: 'budgets',
         title: 'Category Limits',
         subtitle: 'Monthly spending caps',

@@ -216,6 +216,8 @@ export const FeatureColors = {
   lime: '#4ADE80',
   orange: '#F2994A',
   crimson: '#E11D48',
+  /** Gifts Received. Keeps 3:1 on a tinted icon badge in light and dark. */
+  rose: '#DB2777',
 } as const;
 
 /**

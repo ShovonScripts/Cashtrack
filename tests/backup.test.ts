@@ -178,6 +178,71 @@ describe('backup round trip', () => {
     assert.deepEqual(parsed.data.savedQuotes, [savedQuote]);
   });
 
+  it('keeps gifts and custom gift categories through a round trip', () => {
+    const gift = {
+      id: 'gift-1',
+      amount: 25000,
+      isEstimate: true,
+      categoryId: 'gift-cat-1',
+      giver: 'Abbu',
+      date: '2015-01-01T12:00:00.000Z',
+      endDate: '2020-12-31T12:00:00.000Z',
+      note: 'School fees until SSC',
+      thanked: true,
+      gratitudeNote: 'He never once complained.',
+      createdAt: '2026-11-18T08:00:00.000Z',
+      updatedAt: '2026-11-18T08:00:00.000Z',
+    };
+    const category = { id: 'gift-cat-1', name: 'Eid Salami', icon: 'tag-heart-outline', hue: 'slate' };
+    const parsed = parseBackup(
+      serializeBackup(buildFile({ ...buildData(), gifts: [gift], giftCategories: [category] })),
+    );
+
+    assert.deepEqual(parsed.data.gifts, [gift]);
+    assert.deepEqual(parsed.data.giftCategories, [category]);
+  });
+
+  it('reads older backups without gifts as empty lists', () => {
+    const data = { ...buildData() };
+    delete data.gifts;
+    delete data.giftCategories;
+    const parsed = parseBackup(JSON.stringify(buildFile(data)));
+
+    assert.deepEqual(parsed.data.gifts, []);
+    assert.deepEqual(parsed.data.giftCategories, []);
+  });
+
+  it('rejects a gift with no value, a duplicate gift, or a category that shadows a built-in', () => {
+    const good = {
+      id: 'gift-1',
+      amount: 10,
+      categoryId: 'gift',
+      date: '2026-11-18T08:00:00.000Z',
+      createdAt: '2026-11-18T08:00:00.000Z',
+    };
+    assert.throws(() => parseBackup(JSON.stringify(buildFile({ ...buildData(), gifts: [{ ...good, amount: 0 }] as never }))), BackupParseError);
+    assert.throws(() => parseBackup(JSON.stringify(buildFile({ ...buildData(), gifts: [good, good] as never }))), BackupParseError);
+    assert.throws(
+      () => parseBackup(JSON.stringify(buildFile({
+        ...buildData(),
+        giftCategories: [{ id: 'education', name: 'Mine', icon: 'tag-heart-outline', hue: 'slate' }],
+      }))),
+      /reserved id/,
+    );
+    // Optional fields from a minimal gift fill in with safe defaults.
+    const parsed = parseBackup(JSON.stringify(buildFile({ ...buildData(), gifts: [good] as never })));
+    assert.deepEqual(parsed.data.gifts?.[0], {
+      ...good,
+      isEstimate: false,
+      giver: '',
+      endDate: null,
+      note: '',
+      thanked: false,
+      gratitudeNote: '',
+      updatedAt: good.createdAt,
+    });
+  });
+
   it('reads older backups without saved quotes as an empty list', () => {
     const data = { ...buildData() };
     delete data.savedQuotes;

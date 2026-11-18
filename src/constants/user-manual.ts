@@ -596,6 +596,60 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
     ],
   },
   {
+    id: 'gifts',
+    title: 'Gifts Received',
+    summary: 'Write down what others have paid for you, and be thankful for it.',
+    icon: 'gift-outline',
+    color: '#DB2777',
+    blocks: [
+      {
+        type: 'paragraph',
+        text: "Open **More → Gifts Received**. Here you write down what others have paid for you: a present, school fees your parents covered, a meal at an invitation, a holiday someone paid for, a doctor's bill someone settled, or a shop's discount (the discount came out of the shop's pocket, not yours).",
+      },
+      {
+        type: 'note',
+        text: "Gifts are kept completely apart from your money. They are never counted as income or expenses, and never change your balance, budgets, reports or exports.",
+      },
+      { type: 'heading', text: 'The gifts screen' },
+      {
+        type: 'bullets',
+        items: [
+          "The big number at the top is everything others have paid for you. **≈** means some amounts are estimates.",
+          "**This year**, **People** and **Gifts** sit under it.",
+          "**By category** shows where it came from; **By person** shows the people who gave the most.",
+          "Below that, your gifts are listed by year. Tap a category chip to see only that category.",
+        ],
+      },
+      { type: 'heading', text: 'Add a gift' },
+      {
+        type: 'steps',
+        items: [
+          "Tap **+** at the top right.",
+          "Enter the **Value**: what it cost whoever paid. A best guess is fine; turn on **This is an estimate** if it is one.",
+          "Choose a **Category**, or tap **+ New category** to make your own.",
+          "Optionally fill in **From whom** (tap a recent name to reuse it) and **What was it**.",
+          "Choose the **Date**. For something that lasted, such as years of school fees, turn on **It covered a period** and set **From** and **To**.",
+          "Under **Gratitude**, mark **I have thanked them** and write **Why I am grateful** if you like.",
+          "Tap **Save gift**.",
+        ],
+      },
+      { type: 'heading', text: 'Categories, editing and deleting' },
+      {
+        type: 'bullets',
+        items: [
+          "Built-in categories: Education, Gift, Food & Invitations, Health & Medical, Holiday & Travel, Transport, Shopping Discount, Party & Celebration, Anniversary and Other.",
+          "Tap **Manage categories** at the bottom of the page to add, rename or delete your own. Built-in ones cannot be changed.",
+          "Deleting a category moves its gifts to **Other**; no gift is lost.",
+          "Tap a gift to edit it. **Delete gift** asks first, and **Undo** puts it back.",
+        ],
+      },
+      {
+        type: 'note',
+        text: "Gifts and your own categories stay on your phone and are included in backups.",
+      },
+    ],
+  },
+  {
     id: 'bills',
     title: 'Bills and Reminders',
     summary: 'Add bills, mark payments, skip cycles, and use the renewal calendar.',

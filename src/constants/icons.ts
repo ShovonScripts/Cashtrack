@@ -31,6 +31,7 @@ export const Icons = {
   bill: 'calendar-clock',
   calendar: 'calendar-month-outline',
   debt: 'account-cash-outline',
+  gift: 'gift-outline',
   pot: 'piggy-bank-outline',
   budget: 'scale-balance',
   report: 'chart-box-outline',

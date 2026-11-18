@@ -15,7 +15,10 @@ import {
   addGiftCategory,
   allGiftCategories,
   createGiftId,
+  filterGifts,
   groupGiftsByYear,
+  isGiftFilterActive,
+  NO_GIFT_FILTER,
   moveGiftsToOther,
   normalizeGiver,
   recentGivers,
@@ -150,9 +153,34 @@ describe('gift totals', () => {
 
   it('totals by giver, merging case and spacing, skipping unknown givers', () => {
     assert.deepEqual(totalsByGiver(gifts), [
-      { giver: 'Abbu', total: 6500, count: 2 },
-      { giver: 'Daraz', total: 300, count: 1 },
+      { giver: 'Abbu', total: 6500, count: 2, thanked: 1 },
+      { giver: 'Daraz', total: 300, count: 1, thanked: 0 },
     ]);
+  });
+
+  it('filters by category, giver, thanks and words, all at once', () => {
+    const notes = [
+      gift({ note: 'School fees', giver: 'Abbu', categoryId: 'education', thanked: true }),
+      gift({ note: 'Café lunch', giver: 'Rahim', categoryId: 'food' }),
+      gift({ note: 'Shirt', giver: 'Aarong', categoryId: 'discount' }),
+      gift({ note: 'Eid money', giver: ' abbu ', categoryId: 'deleted-category' }),
+    ];
+    const ids = (filter: Partial<typeof NO_GIFT_FILTER>) =>
+      filterGifts(notes, { ...NO_GIFT_FILTER, ...filter }, custom).map((item) => item.note);
+
+    assert.equal(ids({}).length, 4);
+    assert.deepEqual(ids({ categoryId: 'education' }), ['School fees']);
+    // A gift in a deleted category is found under Other.
+    assert.deepEqual(ids({ categoryId: OTHER_GIFT_CATEGORY_ID }), ['Eid money']);
+    assert.deepEqual(ids({ giver: 'ABBU' }), ['School fees', 'Eid money']);
+    assert.deepEqual(ids({ notThankedOnly: true, giver: 'abbu' }), ['Eid money']);
+    // Accents, case, and words in any field (here: a category name).
+    assert.deepEqual(ids({ query: 'cafe' }), ['Café lunch']);
+    assert.deepEqual(ids({ query: 'shopping shirt' }), ['Shirt']);
+    assert.deepEqual(ids({ query: 'lunch abbu' }), []);
+    assert.equal(isGiftFilterActive(NO_GIFT_FILTER), false);
+    assert.equal(isGiftFilterActive({ ...NO_GIFT_FILTER, query: '  ' }), false);
+    assert.equal(isGiftFilterActive({ ...NO_GIFT_FILTER, notThankedOnly: true }), true);
   });
 
   it('groups by year, newest first, with a total per year', () => {

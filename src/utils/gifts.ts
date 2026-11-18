@@ -110,7 +110,13 @@ export function totalsByCategory(gifts: readonly ReceivedGift[], custom: readonl
   return [...totals.values()].sort((a, b) => b.total - a.total || a.category.name.localeCompare(b.category.name));
 }
 
-export type GiverTotal = { giver: string; total: number; count: number };
+export type GiverTotal = {
+  giver: string;
+  total: number;
+  count: number;
+  /** How many of their gifts you have marked as thanked. */
+  thanked: number;
+};
 
 /**
  * Largest first. Names that differ only in case or spacing are one person,
@@ -121,9 +127,10 @@ export function totalsByGiver(gifts: readonly ReceivedGift[]): GiverTotal[] {
   for (const gift of gifts) {
     const key = giverKey(gift.giver);
     if (!key) continue;
-    const entry = totals.get(key) ?? { giver: normalizeGiver(gift.giver), total: 0, count: 0, latest: '' };
+    const entry = totals.get(key) ?? { giver: normalizeGiver(gift.giver), total: 0, count: 0, thanked: 0, latest: '' };
     entry.total += gift.amount;
     entry.count += 1;
+    if (gift.thanked) entry.thanked += 1;
     if (gift.date >= entry.latest) {
       entry.latest = gift.date;
       entry.giver = normalizeGiver(gift.giver);
@@ -132,7 +139,7 @@ export function totalsByGiver(gifts: readonly ReceivedGift[]): GiverTotal[] {
   }
   return [...totals.values()]
     .sort((a, b) => b.total - a.total || a.giver.localeCompare(b.giver))
-    .map(({ giver, total, count }) => ({ giver, total, count }));
+    .map(({ giver, total, count, thanked }) => ({ giver, total, count, thanked }));
 }
 
 export type GiftYear = { year: number; total: number; gifts: ReceivedGift[] };
@@ -236,4 +243,45 @@ export function moveGiftsToOther(gifts: readonly ReceivedGift[], categoryId: str
   return gifts.map((gift) =>
     gift.categoryId === categoryId ? { ...gift, categoryId: OTHER_GIFT_CATEGORY_ID, updatedAt: now } : gift,
   );
+}
+
+export type GiftFilter = {
+  categoryId: string | null;
+  /** A giver's name; matched ignoring case and spacing. */
+  giver: string | null;
+  notThankedOnly: boolean;
+  query: string;
+};
+
+export const NO_GIFT_FILTER: GiftFilter = { categoryId: null, giver: null, notThankedOnly: false, query: '' };
+
+export function isGiftFilterActive(filter: GiftFilter): boolean {
+  return filter.categoryId !== null || filter.giver !== null || filter.notThankedOnly || filter.query.trim() !== '';
+}
+
+/** Lower-case, accent-free text, so "cafe" finds "Café". */
+function fold(text: string): string {
+  return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase();
+}
+
+/**
+ * Gifts matching every part of the filter. The search looks at what it was,
+ * who gave it, the category name and the gratitude note; every word must match.
+ */
+export function filterGifts(
+  gifts: readonly ReceivedGift[],
+  filter: GiftFilter,
+  custom: readonly GiftCategory[],
+): ReceivedGift[] {
+  const words = fold(filter.query).split(/\s+/).filter(Boolean);
+  const giver = filter.giver === null ? null : giverKey(filter.giver);
+  return gifts.filter((gift) => {
+    const category = resolveGiftCategory(gift.categoryId, custom);
+    if (filter.categoryId !== null && category.id !== filter.categoryId) return false;
+    if (giver !== null && giverKey(gift.giver) !== giver) return false;
+    if (filter.notThankedOnly && gift.thanked) return false;
+    if (words.length === 0) return true;
+    const haystack = fold([gift.note, gift.giver, category.name, gift.gratitudeNote].join(' '));
+    return words.every((word) => haystack.includes(word));
+  });
 }

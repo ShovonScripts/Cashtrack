@@ -6,7 +6,7 @@ import { GiftForm } from '@/components/gifts/gift-form';
 import { Screen, SkeletonList } from '@/components/ui';
 import { useToast } from '@/context/toast-context';
 import { useReceivedGifts } from '@/hooks/use-received-gifts';
-import { confirmDelete, notify } from '@/utils/confirm';
+import { notify } from '@/utils/confirm';
 
 export default function EditGiftScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -38,12 +38,17 @@ export default function EditGiftScreen() {
     );
   }
 
-  const deleteGift = () =>
-    confirmDelete('Delete this gift?', 'You can undo this straight after.', async () => {
-      try {
-        const removed = await remove(gift.id);
-        router.back();
-        if (removed) {
+  return (
+    <GiftForm
+      // Remount when switching gifts so the fields start from the right one.
+      key={gift.id}
+      initial={gift}
+      submitLabel="Save changes"
+      onSubmit={(draft) => update(gift.id, draft)}
+      onDelete={async () => {
+        try {
+          const removed = await remove(gift.id);
+          if (!removed) return;
           toast.show({
             message: 'Gift deleted',
             actionLabel: 'Undo',
@@ -51,23 +56,10 @@ export default function EditGiftScreen() {
               restore(removed).catch(() => notify('Could not undo', 'The gift could not be put back.'));
             },
           });
+        } catch {
+          notify('Could not delete', 'The gift could not be deleted. Please try again.');
         }
-      } catch {
-        notify('Could not delete', 'The gift could not be deleted. Please try again.');
-      }
-    });
-
-  return (
-    <GiftForm
-      // Remount when switching gifts so the fields start from the right one.
-      key={gift.id}
-      initial={gift}
-      submitLabel="Save changes"
-      onSubmit={async (draft) => {
-        await update(gift.id, draft);
-        router.back();
       }}
-      onDelete={deleteGift}
     />
   );
 }

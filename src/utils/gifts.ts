@@ -171,12 +171,16 @@ export type GiftFormInput = {
   endDate: Date;
 };
 
-/** Returns a message for the first problem, or null when the form can be saved. */
-export function validateGiftForm(input: GiftFormInput): string | null {
+export type GiftFormProblem = { field: 'amount' | 'period'; message: string };
+
+/** The first problem and the field it belongs to, or null when the form can be saved. */
+export function validateGiftForm(input: GiftFormInput): GiftFormProblem | null {
   const amount = input.amountText.trim() === '' ? Number.NaN : Number(input.amountText);
-  if (!Number.isFinite(amount) || amount <= 0) return 'Enter a value greater than zero. A best guess is fine.';
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { field: 'amount', message: 'Enter an amount greater than zero. A best guess is fine.' };
+  }
   if (input.coversPeriod && startOfDay(input.endDate) < startOfDay(input.date)) {
-    return 'The end date cannot be before the start date.';
+    return { field: 'period', message: 'The end date cannot be before the start date.' };
   }
   return null;
 }

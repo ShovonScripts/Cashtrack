@@ -606,12 +606,13 @@ Open **More → Gifts Received**. Here you write down what others have paid for 
 ### 9.2 Add a gift
 
 1. Tap **+** at the top right.
-2. Enter the **Value**: what it cost whoever paid. A best guess is fine; turn on **This is an estimate** if it is one.
-3. Choose a **Category**, or tap **+ New category** to make your own.
-4. Optionally fill in **From whom** (tap a recent name to reuse it) and **What was it**.
-5. Choose the **Date**. For something that lasted, such as years of school fees, turn on **It covered a period** and set **From** and **To**.
-6. Under **Gratitude**, mark **I have thanked them** and write **Why I am grateful** if you like.
-7. Tap **Save gift**.
+2. Under **What did you receive?**, tap the kind of gift. Tap **New category** to make your own.
+3. Enter how much it cost whoever paid. For a **Shopping Discount** the field becomes **Discount amount**: the money taken off the price.
+4. Choose **Exact**, or **Best guess** if you are not sure. A guess shows with **≈**.
+5. Optionally fill in **From whom** (tap a recent name to reuse it) and **What was it**. The examples change with the category.
+6. Choose **On one day** and a date, or **Over a period** with **From** and **To** for something that lasted, such as years of school fees.
+7. Under **Gratitude**, turn on **I have thanked them** and write **Why I am grateful** if you like.
+8. Tap **Save gift**. If you leave with something typed and not saved, CashTrack asks before throwing it away.
 
 ### 9.3 Categories, editing and deleting
 

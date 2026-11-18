@@ -7,6 +7,7 @@ import {
   BUILT_IN_GIFT_CATEGORIES,
   GIFT_HUES,
   OTHER_GIFT_CATEGORY_ID,
+  giftCategoryHint,
   isGiftHue,
 } from '../src/constants/gift-categories.ts';
 import type { GiftCategory, ReceivedGift } from '../src/types/gift.ts';
@@ -56,6 +57,16 @@ describe('gift categories', () => {
     assert.ok(ids.includes(OTHER_GIFT_CATEGORY_ID));
     for (const category of BUILT_IN_GIFT_CATEGORIES) assert.ok(isGiftHue(category.hue), category.id);
     assert.ok(GIFT_HUES.length > 0);
+  });
+
+  it('gives every category form wording, and a discount its own', () => {
+    for (const category of BUILT_IN_GIFT_CATEGORIES) {
+      const hint = giftCategoryHint(category.id);
+      assert.ok(hint.valueLabel && hint.valueHelper && hint.notePlaceholder && hint.giverPlaceholder, category.id);
+    }
+    assert.equal(giftCategoryHint('discount').valueLabel, 'Discount amount');
+    assert.equal(giftCategoryHint('gift-cat-a').valueLabel, 'Value');
+    assert.notEqual(giftCategoryHint('discount').notePlaceholder, giftCategoryHint('education').notePlaceholder);
   });
 
   it('lists built-ins, then custom ones, with Other last', () => {
@@ -167,12 +178,12 @@ describe('gift form', () => {
 
   it('rejects an empty, zero or bad value', () => {
     for (const amountText of ['', '0', 'abc', '-5']) {
-      assert.match(validateGiftForm({ ...base, amountText }) ?? '', /greater than zero/);
+      assert.equal(validateGiftForm({ ...base, amountText })?.field, 'amount', amountText);
     }
   });
 
   it('rejects a period that ends before it starts, but allows the same day', () => {
-    assert.match(validateGiftForm({ ...base, coversPeriod: true }) ?? '', /end date/);
+    assert.equal(validateGiftForm({ ...base, coversPeriod: true })?.field, 'period');
     assert.equal(validateGiftForm({ ...base, coversPeriod: true, endDate: new Date(2026, 0, 10, 23) }), null);
   });
 

@@ -285,3 +285,16 @@ export function filterGifts(
     return words.every((word) => haystack.includes(word));
   });
 }
+
+/**
+ * One gift to look back on today. The same all day and on every screen,
+ * a different one tomorrow, and every gift comes round in turn.
+ */
+export function pickGiftToRemember(gifts: readonly ReceivedGift[], date: Date = new Date()): ReceivedGift | null {
+  if (gifts.length === 0) return null;
+  // A fixed order (oldest added first), so the pick only moves when the day
+  // changes or the number of gifts does.
+  const pool = [...gifts].sort((a, b) => a.createdAt.localeCompare(b.createdAt) || a.id.localeCompare(b.id));
+  const day = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000);
+  return pool[day % pool.length];
+}

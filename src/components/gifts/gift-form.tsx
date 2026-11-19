@@ -21,6 +21,8 @@ import { allGiftCategories, GIFT_LIMITS, normalizeGiver, recentGivers, validateG
 type GiftFormProps = {
   /** The gift being edited; leave out to add a new one. */
   initial?: ReceivedGift;
+  /** For a new gift: the category to start on, such as one picked from the empty page. */
+  startCategoryId?: string;
   submitLabel: string;
   /** Saves the draft. The form goes back by itself once this resolves. */
   onSubmit: (draft: GiftDraft) => Promise<void>;
@@ -46,14 +48,14 @@ const DEFAULT_CATEGORY_ID = 'gift';
  *   that then reveals another field.
  * - Leaving with unsaved changes asks first, so a swipe never loses a memory.
  */
-export function GiftForm({ initial, submitLabel, onSubmit, onDelete }: GiftFormProps) {
+export function GiftForm({ initial, startCategoryId, submitLabel, onSubmit, onDelete }: GiftFormProps) {
   const theme = useTheme();
   const isDark = useIsDark();
   const { country } = usePreferences();
   const { gifts, categories, addCategory, renameCategory, deleteCategory } = useReceivedGifts();
   const allCategories = useMemo(() => allGiftCategories(categories), [categories]);
 
-  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? DEFAULT_CATEGORY_ID);
+  const [categoryId, setCategoryId] = useState(initial?.categoryId ?? startCategoryId ?? DEFAULT_CATEGORY_ID);
   const [amountText, setAmountText] = useState(initial ? String(initial.amount) : '');
   const [certainty, setCertainty] = useState<Certainty>(initial?.isEstimate ? 'estimate' : 'exact');
   const [giver, setGiver] = useState(initial?.giver ?? '');

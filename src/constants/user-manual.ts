@@ -614,10 +614,15 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
       {
         type: 'bullets',
         items: [
-          "The big number at the top is everything others have paid for you. **≈** means some amounts are estimates.",
+          "The big number at the top is everything others have paid for you. **≈** means some amounts are best guesses. Beside it, **Thanked for 3 of 8** shows how many gifts you have said thank you for.",
           "**This year**, **People** and **Gifts** sit under it.",
-          "**By category** shows where it came from; **By person** shows the people who gave the most.",
-          "Below that, your gifts are listed by year. Tap a category chip to see only that category.",
+          "Switch between **Gifts**, **Categories** and **People**.",
+          "**Gifts** lists everything by year, newest first. Use the chips to show one category, or **Not thanked yet** to see who you still want to thank. Once you have six or more gifts, a search box appears.",
+          "**Categories** shows where it came from, largest first. Tap a category to see its gifts.",
+          "**People** shows who gave, most first, and how many of their gifts you have thanked them for. Tap someone to see what they gave.",
+          "Tap the heart on any gift to mark that you have thanked them, without opening it. Tap it again to take the mark off; **Undo** works too.",
+          "With three or more gifts, **To remember today** brings one back each day with what you wrote under **Why I am grateful**, or asks you to write it.",
+          "On an empty page, tap a starter such as **School fees** or **A discount** to open the form ready for that kind of gift.",
         ],
       },
       { type: 'heading', text: 'Add a gift' },
@@ -639,7 +644,7 @@ export const USER_MANUAL_SECTIONS: ManualSection[] = [
         type: 'bullets',
         items: [
           "Built-in categories: Education, Gift, Food & Invitations, Health & Medical, Holiday & Travel, Transport, Shopping Discount, Party & Celebration, Anniversary and Other.",
-          "Tap **Manage categories** at the bottom of the page to add, rename or delete your own. Built-in ones cannot be changed.",
+          "To add, rename or delete your own categories, open **Categories** and tap the settings button, or tap **New category** while adding a gift. Built-in ones cannot be changed.",
           "Deleting a category moves its gifts to **Other**; no gift is lost.",
           "Tap a gift to edit it. **Delete gift** asks first, and **Undo** puts it back.",
         ],

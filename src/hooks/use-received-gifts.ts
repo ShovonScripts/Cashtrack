@@ -129,6 +129,17 @@ export function useReceivedGifts() {
     return removed;
   }, []);
 
+  /** Marks a gift thanked (or not) straight from the list, without opening the form. */
+  const setThanked = useCallback(async (id: string, thanked: boolean): Promise<void> => {
+    const current = state.gifts.find((gift) => gift.id === id);
+    if (!current || current.thanked === thanked) return;
+    const updatedAt = new Date().toISOString();
+    await persistGifts(
+      state.gifts.map((gift) => (gift.id === id ? { ...gift, thanked, updatedAt } : gift)),
+      () => mutateGifts((rows) => rows.map((row) => (row.id === id ? { ...row, thanked, updatedAt } : row))),
+    );
+  }, []);
+
   /** Puts a removed gift back exactly as it was (undo). */
   const restore = useCallback(async (gift: ReceivedGift): Promise<void> => {
     if (state.gifts.some((item) => item.id === gift.id)) return;
@@ -178,6 +189,7 @@ export function useReceivedGifts() {
     update,
     remove,
     restore,
+    setThanked,
     addCategory,
     renameCategory,
     deleteCategory,

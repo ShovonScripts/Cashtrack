@@ -23,6 +23,7 @@ type CategoryListProps = {
 
 /** Where the gifts came from: each category's share, largest first. Tap to see its gifts. */
 export function GiftCategoryTotals({ rows, lifetime, formatAmount, onOpen }: CategoryListProps) {
+  const theme = useTheme();
   const isDark = useIsDark();
 
   return (
@@ -58,7 +59,7 @@ export function GiftCategoryTotals({ rows, lifetime, formatAmount, onOpen }: Cat
                     {percent}%
                   </ThemedText>
                 </View>
-                <Icon name="next" size="sm" color={undefined} />
+                <Icon name="next" size="sm" color={theme.textSecondary} />
               </View>
               {/* The meter repeats the row's words, so a screen reader hears them once, on the row. */}
               <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>

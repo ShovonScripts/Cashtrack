@@ -19,6 +19,7 @@ import {
   groupGiftsByYear,
   isGiftFilterActive,
   NO_GIFT_FILTER,
+  pickGiftToRemember,
   moveGiftsToOther,
   normalizeGiver,
   recentGivers,
@@ -188,6 +189,20 @@ describe('gift totals', () => {
       groupGiftsByYear(gifts).map((year) => [year.year, year.total, year.gifts.length]),
       [[2026, 5300, 2], [2025, 1500, 1], [2024, 200, 1]],
     );
+  });
+
+  it('picks one gift to remember per day, the same all day, cycling through all', () => {
+    assert.equal(pickGiftToRemember([]), null);
+    const morning = new Date(2026, 10, 19, 6);
+    const night = new Date(2026, 10, 19, 23);
+    assert.equal(pickGiftToRemember(gifts, morning)?.id, pickGiftToRemember(gifts, night)?.id);
+    const seen = new Set<string>();
+    for (let offset = 0; offset < gifts.length; offset += 1) {
+      seen.add(pickGiftToRemember(gifts, new Date(2026, 10, 19 + offset, 12))!.id);
+    }
+    assert.equal(seen.size, gifts.length);
+    // Order of the input does not matter.
+    assert.equal(pickGiftToRemember([...gifts].reverse(), morning)?.id, pickGiftToRemember(gifts, morning)?.id);
   });
 
   it('sorts newest first and offers recent givers once each', () => {

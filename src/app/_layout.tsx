@@ -86,7 +86,7 @@ function Navigation() {
       void cancelQuoteNotificationsAsync();
       return;
     }
-    // Re-runs when the topics change, so the next 14 mornings match the new topics.
+    // Re-runs when the topics change, so the scheduled mornings match the new topics.
     void scheduleDailyQuoteNotificationsAsync(quoteTopics).catch((error) => {
       console.error('[cashtrack] Failed to schedule daily quote notifications', error);
     });

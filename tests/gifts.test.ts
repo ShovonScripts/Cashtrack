@@ -144,6 +144,14 @@ describe('gift totals', () => {
     });
   });
 
+  it('adds money exactly, with no floating-point drift', () => {
+    const cents = [gift({ amount: 0.1 }), gift({ amount: 0.2 }), gift({ amount: 0.7 })];
+    // Plain floats give 0.30000000000000004 after the first two; paisa maths does not.
+    assert.equal(summarizeGifts(cents, now).lifetime, 1);
+    assert.equal(totalsByCategory(cents.slice(0, 2), custom)[0].total, 0.3);
+    assert.equal(groupGiftsByYear(cents.slice(0, 2))[0].total, 0.3);
+  });
+
   it('totals by category, largest first', () => {
     const totals = totalsByCategory(gifts, custom);
     assert.deepEqual(

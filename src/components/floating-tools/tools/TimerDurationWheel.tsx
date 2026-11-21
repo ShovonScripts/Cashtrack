@@ -13,8 +13,6 @@ import { formatDurationLabel, MAX_TIMER_MS } from '@/utils/stopwatch';
 
 /** How far you drag sideways for the drum to turn by one minute. */
 const DRAG_PIXELS_PER_NOTCH = 12;
-/** One tick sound per notch gets noisy when a fast flick turns many at once. */
-const MAX_TICKS_PER_UPDATE = 4;
 /** How far the drum rocks while you drag, as a share of the leftover drag. */
 const ROCK_FACTOR = 0.45;
 
@@ -78,13 +76,15 @@ export function TimerDurationWheel({ minutes, onMinutesChange, onStart, loading 
 
       const current = liveMinutes.get();
       const next = Math.min(MAX_MINUTES, Math.max(MIN_MINUTES, current + steps));
-      const turned = Math.abs(next - current);
-      if (turned === 0) return;
+      if (next === current) return;
 
       liveMinutes.set(next);
       onMinutesChange(next);
       void Haptics.selectionAsync().catch(() => {});
-      for (let index = 0; index < Math.min(MAX_TICKS_PER_UPDATE, turned); index += 1) playTick();
+      // One tick per update. A single player can only sound once at a time, so
+      // asking it to play several times in a row was still one tick; a fast flick
+      // sends many small updates, and each of those ticks.
+      playTick();
     },
     [liveMinutes, onMinutesChange, playTick],
   );

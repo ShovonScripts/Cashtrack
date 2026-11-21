@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { getSpendingReminderMessage } from '@/constants/spending-reminders';
+import { dailyNudgeDays } from '@/utils/notification-budget';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -44,7 +45,8 @@ export async function cancelSpendingReminderNotificationsAsync(): Promise<void> 
 }
 
 /**
- * Schedules daily evening spending check notifications for the next 14 days.
+ * Schedules daily evening spending check notifications for the next 14 days
+ * (7 on iOS, to leave room for bill reminders; see notification-budget).
  * Evening time defaults to 8:00 PM (20:00).
  * Rotates messages daily using getSpendingReminderMessage(targetDate).
  */
@@ -60,7 +62,7 @@ export async function scheduleDailySpendingReminderNotificationsAsync(
   await cancelSpendingReminderNotificationsAsync();
 
   const now = new Date();
-  const DAYS_TO_SCHEDULE = 14;
+  const DAYS_TO_SCHEDULE = dailyNudgeDays(Platform.OS);
 
   for (let i = 0; i < DAYS_TO_SCHEDULE; i++) {
     const targetDate = new Date();

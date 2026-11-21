@@ -13,6 +13,10 @@ import {
   isBuiltInGiftCategory,
 } from '../constants/gift-categories.ts';
 import type { GiftCategory, ReceivedGift } from '../types/gift.ts';
+import { sumMoney } from './money.ts';
+
+/** Adds money in whole paisa, like the rest of the app, so totals never drift. */
+const addMoney = (total: number, amount: number) => sumMoney([total, amount]);
 
 export const GIFT_LIMITS = {
   giver: 50,
@@ -84,8 +88,8 @@ export function summarizeGifts(gifts: readonly ReceivedGift[], now: Date = new D
   let hasEstimates = false;
 
   for (const gift of gifts) {
-    lifetime += gift.amount;
-    if (new Date(gift.date).getFullYear() === year) thisYear += gift.amount;
+    lifetime = addMoney(lifetime, gift.amount);
+    if (new Date(gift.date).getFullYear() === year) thisYear = addMoney(thisYear, gift.amount);
     if (!gift.thanked) notThanked += 1;
     if (gift.isEstimate) hasEstimates = true;
     const key = giverKey(gift.giver);
@@ -103,7 +107,7 @@ export function totalsByCategory(gifts: readonly ReceivedGift[], custom: readonl
   for (const gift of gifts) {
     const category = resolveGiftCategory(gift.categoryId, custom);
     const entry = totals.get(category.id) ?? { category, total: 0, count: 0 };
-    entry.total += gift.amount;
+    entry.total = addMoney(entry.total, gift.amount);
     entry.count += 1;
     totals.set(category.id, entry);
   }
@@ -128,7 +132,7 @@ export function totalsByGiver(gifts: readonly ReceivedGift[]): GiverTotal[] {
     const key = giverKey(gift.giver);
     if (!key) continue;
     const entry = totals.get(key) ?? { giver: normalizeGiver(gift.giver), total: 0, count: 0, thanked: 0, latest: '' };
-    entry.total += gift.amount;
+    entry.total = addMoney(entry.total, gift.amount);
     entry.count += 1;
     if (gift.thanked) entry.thanked += 1;
     if (gift.date >= entry.latest) {
@@ -150,7 +154,7 @@ export function groupGiftsByYear(gifts: readonly ReceivedGift[]): GiftYear[] {
   for (const gift of sortGifts(gifts)) {
     const year = new Date(gift.date).getFullYear();
     const entry = years.get(year) ?? { year, total: 0, gifts: [] };
-    entry.total += gift.amount;
+    entry.total = addMoney(entry.total, gift.amount);
     entry.gifts.push(gift);
     years.set(year, entry);
   }

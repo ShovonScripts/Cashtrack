@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { getUpcomingCalendarMoments } from '@/utils/calendar-moments';
+import { CALENDAR_MOMENT_SLOTS } from '@/utils/notification-budget';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -55,7 +56,7 @@ export async function scheduleUpcomingCalendarMomentsAsync(now: Date = new Date(
 
   await cancelCalendarMomentNotificationsAsync();
 
-  const moments = getUpcomingCalendarMoments(now, { horizonDays: 400, limit: 8 });
+  const moments = getUpcomingCalendarMoments(now, { horizonDays: 400, limit: CALENDAR_MOMENT_SLOTS });
   for (const moment of moments) {
     try {
       await NotificationsModule.scheduleNotificationAsync({

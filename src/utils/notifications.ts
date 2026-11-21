@@ -1,7 +1,9 @@
 import { Platform } from 'react-native';
 import '@/utils/notification-handler';
 
+import type { DebtRecord } from '@/types/debt';
 import type { Expense } from '@/types/expense';
+import { getRemainingBalance } from '@/utils/debt';
 import { sumAmounts } from '@/utils/expense';
 
 let NotificationsModule: any = null;
@@ -124,7 +126,7 @@ export async function checkAndTriggerDebtNotifications({
   onDebtNotified,
   formatAmount,
 }: {
-  debts: any[];
+  debts: DebtRecord[];
   notifiedDebts?: Record<string, string>;
   onDebtNotified: (key: string, dateKey: string) => void;
   formatAmount?: (amount: number) => string;
@@ -141,6 +143,7 @@ export async function checkAndTriggerDebtNotifications({
   const yearMonthDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   for (const debt of activeDebts) {
+    if (!debt.dueDate) continue;
     const dueDate = new Date(debt.dueDate);
     if (Number.isNaN(dueDate.getTime())) continue;
 
@@ -156,7 +159,10 @@ export async function checkAndTriggerDebtNotifications({
       if (notifiedDebts[trackingKey]) continue;
 
       const isLent = debt.type === 'lent';
-      const formattedAmount = formatAmount ? formatAmount(debt.amount) : String(debt.amount);
+      // What is still owed after any part-payments, not the original loan.
+      const remaining = getRemainingBalance(debt);
+      if (remaining <= 0) continue;
+      const formattedAmount = formatAmount ? formatAmount(remaining) : String(remaining);
       const title = isLent ? (isToday ? 'Lent Debt Due Today' : 'Overdue Debt Notice') : (isToday ? 'Borrowed Debt Due Today' : 'Overdue Loan Reminder');
       const message = isLent
         ? `${debt.personName}'s lent debt of ${formattedAmount} is ${isToday ? 'due today' : 'past due'}.`

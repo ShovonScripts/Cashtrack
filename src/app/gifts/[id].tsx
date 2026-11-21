@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 
 import { Card } from '@/components/card';
 import { EmptyState } from '@/components/empty-state';
@@ -12,7 +13,14 @@ export default function EditGiftScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { status, gifts, update, remove, restore } = useReceivedGifts();
   const toast = useToast();
-  const gift = gifts.find((item) => item.id === id);
+  const found = gifts.find((item) => item.id === id);
+
+  // Deleting goes back first, then removes the gift. The removal lands while
+  // this screen is still sliding away, so keep showing the last copy we had
+  // instead of flashing "This gift is gone" during the animation.
+  const [lastSeen, setLastSeen] = useState(found);
+  if (found && found !== lastSeen) setLastSeen(found);
+  const gift = found ?? lastSeen;
 
   if (status === 'idle' || status === 'loading') {
     return (

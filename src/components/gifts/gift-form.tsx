@@ -27,8 +27,10 @@ type GiftFormProps = {
   /** Saves the draft. The form goes back by itself once this resolves. */
   onSubmit: (draft: GiftDraft) => Promise<void>;
   /**
-   * Deletes the gift. Runs after the form has already gone back, so the screen
-   * never flashes "this gift is gone"; it should show its own undo or error.
+   * Deletes the gift. Runs right after the form starts going back; it should
+   * show its own undo or error. The removal lands while this screen is still
+   * sliding away, so the screen must keep rendering its last copy of the gift
+   * (Edit Gift does) rather than its "gift is gone" state.
    */
   onDelete?: () => Promise<void>;
 };

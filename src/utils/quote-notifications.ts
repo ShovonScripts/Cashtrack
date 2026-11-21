@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { getDailyQuote, type QuoteTopic } from '@/constants/quotes';
+import { dailyNudgeDays } from '@/utils/notification-budget';
 
 let NotificationsModule: any = null;
 if (Platform.OS !== 'web') {
@@ -44,7 +45,8 @@ export async function cancelQuoteNotificationsAsync(): Promise<void> {
 }
 
 /**
- * Schedules daily morning quote notifications for the next 14 days.
+ * Schedules daily morning quote notifications for the next 14 days (7 on iOS,
+ * to leave room for bill reminders; see notification-budget).
  * Morning time defaults to 8:00 AM.
  * Each scheduled notification uses getDailyQuote(targetDate, topics), so the
  * morning notification matches the opening screen and the Home cover. Call it
@@ -63,7 +65,7 @@ export async function scheduleDailyQuoteNotificationsAsync(
   await cancelQuoteNotificationsAsync();
 
   const now = new Date();
-  const DAYS_TO_SCHEDULE = 14;
+  const DAYS_TO_SCHEDULE = dailyNudgeDays(Platform.OS);
 
   for (let i = 0; i < DAYS_TO_SCHEDULE; i++) {
     const targetDate = new Date();

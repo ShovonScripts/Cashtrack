@@ -78,7 +78,6 @@ export function UpcomingBillsWidget({ formatAmount }: { formatAmount: (amount: n
       <View style={[styles.billsHeroCard, overdueCount > 0 && styles.billsHeroCardAlert]}>
         <View pointerEvents="none" style={styles.heroOrbLarge} />
         <View pointerEvents="none" style={styles.heroOrbSmall} />
-        {overdueCount > 0 && <View pointerEvents="none" style={styles.heroOrbRedAlert} />}
 
         <View style={styles.billsHeroContent}>
           {/* Top Eyebrow & View All Link */}
@@ -298,15 +297,6 @@ const styles = StyleSheet.create({
     left: -40,
     bottom: -50,
     backgroundColor: 'rgba(20, 231, 253, 0.2)',
-  },
-  heroOrbRedAlert: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    right: 10,
-    top: -40,
-    backgroundColor: 'rgba(225, 29, 72, 0.25)',
   },
   billsHeroContent: {
     gap: Spacing.three,

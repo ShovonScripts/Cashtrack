@@ -16,7 +16,8 @@ import { ToolsMenuModal } from './ToolsMenuModal';
 import { Elevation, Palette } from '@/constants/theme';
 
 const BUTTON_SIZE = 48;
-const RUNNING_WIDTH = 104;
+/** The stopwatch half of the capsule, beside the tools button while it runs. */
+const TIME_WIDTH = 104;
 const EDGE_GAP = 16;
 /** Matches the tab bar in (tabs)/_layout.tsx: 62 plus the bottom inset (at least 10). */
 const TAB_BAR_BASE = 62;
@@ -41,7 +42,7 @@ function FloatingToolsButtonInner() {
   const [side, setSide] = useState<Side>('right');
   const [savedY, setSavedY] = useState<number | null>(null);
 
-  const currentWidth = isRunning ? RUNNING_WIDTH : BUTTON_SIZE;
+  const currentWidth = isRunning ? BUTTON_SIZE + TIME_WIDTH : BUTTON_SIZE;
   const currentHeight = BUTTON_SIZE;
 
   const minY = insets.top + EDGE_GAP;
@@ -127,17 +128,19 @@ function FloatingToolsButtonInner() {
     return `${String(remMins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-  const handlePress = () => {
+  const openTools = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (isRunning) {
-      router.push('/stopwatch' as any);
-    } else {
-      setIsInteracting(true);
-      setModalVisible(true);
-    }
+    setIsInteracting(true);
+    setModalVisible(true);
   };
 
   const pathname = usePathname();
+
+  const openStopwatch = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    // Already there: pushing again would stack a second copy to back out of.
+    if (pathname !== '/stopwatch') router.push('/stopwatch');
+  };
   const hideButton = !isRunning && (
     pathname === '/todo' ||
     pathname === '/calculator' ||
@@ -153,42 +156,60 @@ function FloatingToolsButtonInner() {
   // rebuild it mid-typing, which crashed the app and wiped the form.
   const showButton = !hideButton && !keyboardVisible;
 
+  const toolsButton = (
+    <Pressable
+      onPressIn={() => setIsInteracting(true)}
+      onPressOut={() => {
+        if (!modalVisible) setIsInteracting(false);
+      }}
+      onPress={openTools}
+      accessibilityRole="button"
+      accessibilityLabel="Open quick tools"
+      accessibilityHint="Drag to move the button"
+      style={({ pressed }) => [
+        styles.toolsButton,
+        isRunning ? styles.toolsSegment : styles.round,
+        {
+          backgroundColor: theme.accentFill,
+          opacity: isInteracting || pressed || isRunning || modalVisible ? 1 : 0.85,
+        },
+        pressed && (isRunning ? styles.segmentPressed : styles.roundPressed),
+      ]}>
+      <MaterialCommunityIcons name="view-grid" size={22} color={Palette.white} />
+    </Pressable>
+  );
+
+  const stopwatchButton = (
+    <Pressable
+      onPress={openStopwatch}
+      accessibilityRole="button"
+      accessibilityLabel={`Stopwatch running, ${formatTime(seconds)}. Open stopwatch.`}
+      accessibilityHint="Drag to move the button"
+      style={({ pressed }) => [styles.timeSegment, pressed && styles.segmentPressed]}>
+      <View style={[styles.liveDot, { backgroundColor: theme.accent }]} />
+      <ThemedText type="smallBold" style={[styles.pillText, { color: theme.text }]}>
+        {formatTime(seconds)}
+      </ThemedText>
+      <MaterialCommunityIcons name="timer-outline" size={14} color={theme.accent} />
+    </Pressable>
+  );
+
   return (
     <>
       {showButton && (
       <GestureDetector gesture={panGesture}>
         <Animated.View style={[styles.floatingContainer, animatedStyle]}>
-          <Pressable
-            onPressIn={() => setIsInteracting(true)}
-            onPressOut={() => {
-              if (!modalVisible) setIsInteracting(false);
-            }}
-            onPress={handlePress}
-            accessibilityRole="button"
-            accessibilityLabel={isRunning ? `Stopwatch running, ${formatTime(seconds)}. Open stopwatch.` : 'Open quick tools'}
-            accessibilityHint="Drag to move the button"
-            style={({ pressed }) => [
-              styles.button,
-              isRunning && styles.runningPill,
-              {
-                backgroundColor: isRunning ? theme.card : theme.accentFill,
-                borderColor: isRunning ? theme.accent : 'transparent',
-                opacity: isInteracting || pressed || isRunning || modalVisible ? 1 : 0.85,
-              },
-              pressed && { transform: [{ scale: 0.93 }] },
-            ]}>
-            {isRunning ? (
-              <>
-                <View style={[styles.liveDot, { backgroundColor: theme.accent }]} />
-                <ThemedText type="smallBold" style={[styles.pillText, { color: theme.text }]}>
-                  {formatTime(seconds)}
-                </ThemedText>
-                <MaterialCommunityIcons name="timer-outline" size={14} color={theme.accent} />
-              </>
-            ) : (
-              <MaterialCommunityIcons name="view-grid" size={22} color={Palette.white} />
-            )}
-          </Pressable>
+          {isRunning ? (
+            // While the stopwatch runs, both stay one tap away in one capsule.
+            // The tools half sits on the screen edge, exactly where the round
+            // button was, and the running time slides out beside it.
+            <View style={[styles.capsule, { backgroundColor: theme.card, borderColor: theme.accent }]}>
+              {side === 'left' ? toolsButton : stopwatchButton}
+              {side === 'left' ? stopwatchButton : toolsButton}
+            </View>
+          ) : (
+            toolsButton
+          )}
         </Animated.View>
       </GestureDetector>
       )}
@@ -209,23 +230,39 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: 9999,
   },
-  button: {
+  toolsButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  // Stopwatch off: the round button on its own.
+  round: {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
     borderRadius: BUTTON_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
     ...Elevation.high,
   },
-  runningPill: {
-    width: RUNNING_WIDTH,
+  roundPressed: { transform: [{ scale: 0.93 }] },
+  // Stopwatch on: one capsule holding both halves. The capsule clips them to its
+  // rounded ends; the shadow is drawn outside the clip, so it survives.
+  capsule: {
+    width: BUTTON_SIZE + TIME_WIDTH,
     height: BUTTON_SIZE,
     borderRadius: BUTTON_SIZE / 2,
-    flexDirection: 'row',
-    paddingHorizontal: 10,
-    justifyContent: 'space-between',
     borderWidth: 1.5,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    ...Elevation.high,
   },
+  toolsSegment: { width: BUTTON_SIZE - 1.5, alignSelf: 'stretch' },
+  timeSegment: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  // Inside the clipped capsule a scale would look torn, so the halves just dim.
+  segmentPressed: { opacity: 0.7 },
   liveDot: {
     width: 6,
     height: 6,

@@ -527,13 +527,13 @@ describe('attachment helpers', () => {
 
   it('drops unregistered local paths but keeps remote references', () => {
     const data = buildData();
-    data.expenses[0].receiptUri = 'file:///data/user/0/com.shovon.spendly/files/cashtrack.db';
+    data.expenses[0].receiptUri = 'file:///data/user/0/com.shovon.cashtrack/files/cashtrack.db';
     data.preferences = {
       ...preferences,
       profile: {
         ...preferences.profile,
         coverPhotoUri: 'https://example.com/cover.jpg',
-        profilePhotoUri: 'file:///data/user/0/com.shovon.spendly/files/secrets.txt',
+        profilePhotoUri: 'file:///data/user/0/com.shovon.cashtrack/files/secrets.txt',
       },
     };
 

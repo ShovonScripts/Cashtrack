@@ -9,13 +9,13 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/images/ios-icon.png",
-      "bundleIdentifier": "com.shovon.spendly",
+      "bundleIdentifier": "com.shovon.cashtrack",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.shovon.spendly",
+      "package": "com.shovon.cashtrack",
       "adaptiveIcon": {
         "backgroundColor": "#00109D",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -79,7 +79,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow CashTrack to access your photos to set your cover and profile picture."
+          "photosPermission": "Allow CashTrack to access your photos to set your cover and profile picture.",
+          "microphonePermission": false
         }
       ],
       [
@@ -96,7 +97,12 @@
           }
         }
       ],
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-asset",
       "expo-status-bar",
       "expo-web-browser"
@@ -113,9 +119,9 @@
         }
       },
       "eas": {
-        "projectId": "a7917023-afab-48ba-8f45-bfbdf31092bb"
+        "projectId": "3d82ffd2-3080-4445-85ff-f8b3be5a7f59"
       }
     },
-    "owner": "shovonscripts"
+    "owner": "nasdigitals-team"
   }
 }

@@ -7,7 +7,7 @@ import {
   resolveFileUriPath,
 } from '../src/utils/safe-path.ts';
 
-const DOCUMENT = 'file:///data/user/0/com.shovon.spendly/files/';
+const DOCUMENT = 'file:///data/user/0/com.shovon.cashtrack/files/';
 
 describe('safe-path', () => {
   it('resolves normalized file paths', () => {
@@ -32,14 +32,14 @@ describe('safe-path', () => {
   });
 
   it('only allows deleting CashTrack image files inside the document directory', () => {
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/receipts/r.jpg', DOCUMENT), true);
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/backup-restore/r.jpg', DOCUMENT), true);
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/cover-123.jpg', DOCUMENT), true);
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/avatar-123.png', DOCUMENT), true);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/receipts/r.jpg', DOCUMENT), true);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/backup-restore/r.jpg', DOCUMENT), true);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/cover-123.jpg', DOCUMENT), true);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/avatar-123.png', DOCUMENT), true);
 
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/cashtrack.db', DOCUMENT), false);
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/cover.jpg', DOCUMENT), false);
-    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.spendly/files/receipts/../cashtrack.db', DOCUMENT), false);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/cashtrack.db', DOCUMENT), false);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/cover.jpg', DOCUMENT), false);
+    assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.shovon.cashtrack/files/receipts/../cashtrack.db', DOCUMENT), false);
     assert.equal(isSafeImageDeletionUri('file:///data/user/0/com.other/files/receipts/r.jpg', DOCUMENT), false);
     assert.equal(isSafeImageDeletionUri('https://example.com/a.jpg', DOCUMENT), false);
     assert.equal(isSafeImageDeletionUri(undefined, DOCUMENT), false);

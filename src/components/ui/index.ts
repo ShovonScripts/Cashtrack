@@ -7,6 +7,7 @@ export { FormField } from './form-field';
 export { HeroCard } from './hero-card';
 export { Icon } from './icon';
 export { IconButton } from './icon-button';
+export { KeyboardAvoider } from './keyboard-avoider';
 export { ListRow } from './list-row';
 export { ProgressMeter } from './progress-meter';
 export { Screen } from './screen';

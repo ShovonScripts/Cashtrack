@@ -1,13 +1,24 @@
 import { router, usePreventRemove } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Card, CardDivider } from '@/components/card';
 import { DatePicker } from '@/components/date-picker';
 import { GiftCategoriesSheet } from '@/components/gifts/gift-categories-sheet';
 import { giftGlyph, giftHueColor } from '@/components/gifts/gift-style';
 import { ThemedText } from '@/components/themed-text';
-import { AmountField, Button, Chip, FormField, Icon, Screen, Section, SegmentedControl, SwitchRow } from '@/components/ui';
+import {
+  AmountField,
+  Button,
+  Chip,
+  FormField,
+  Icon,
+  KeyboardAvoider,
+  Screen,
+  Section,
+  SegmentedControl,
+  SwitchRow,
+} from '@/components/ui';
 import { giftCategoryHint, OTHER_GIFT_CATEGORY_ID } from '@/constants/gift-categories';
 import { MinTouchTarget, PressFeedback, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { usePreferences } from '@/context/expense-context';
@@ -153,10 +164,7 @@ export function GiftForm({ initial, startCategoryId, submitLabel, onSubmit, onDe
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}>
+    <KeyboardAvoider>
       <Screen topInset={false}>
         <Section title="What did you receive?" subtitle="Something someone else paid for, so you did not have to.">
           <View accessibilityRole="radiogroup" accessibilityLabel="Category" style={styles.grid}>
@@ -359,7 +367,7 @@ export function GiftForm({ initial, startCategoryId, submitLabel, onSubmit, onDe
         onDelete={deleteCategory}
         onCreated={(category) => setCategoryId(category.id)}
       />
-    </KeyboardAvoidingView>
+    </KeyboardAvoider>
   );
 }
 
